@@ -27,7 +27,8 @@ export const darkVeinsDeck: CharacterDeck = {
       id: "1",
       name: "Ambrose Gristlethwaite",
       role: "CEO, ACMC",
-      age: "63",
+          age: "63",
+      portrait: "gristlethwaite.jpg",
       traits: {
         personality: [
           "Cold and calculating",

@@ -1,4 +1,8 @@
 <script lang="ts">
+  import { darkVeinsDeck } from '$lib/mock/dark-veins';
+  import CharacterCardFront from '$lib/components/CharacterCardFront.svelte';
+  import CharacterCardBack from '$lib/components/CharacterCardBack.svelte';
+  
   let showCropMarks = true;
 
   // Function to get the corresponding back position for a card
@@ -9,6 +13,8 @@
     const col = (frontPosition - 1) % 3; // 0-based column number
     return row * 3 + (2 - col) + 1; // Reverse column position within same row
   }
+
+  const { characters } = darkVeinsDeck;
 </script>
 
 <div class="print-container">
@@ -25,45 +31,25 @@
 
   <!-- Front page -->
   <div class="page">
-    <div class="card-grid" class:show-crop-marks={showCropMarks}>
-      {#each Array(9) as _, i}
-        <div class="card front">
-          <div class="card-inner">
-            Card Front {i + 1}
-            <div class="position-debug">Position: {i + 1}</div>
-          </div>
-          {#if showCropMarks}
-            <div class="crop-marks">
-              <div class="mark top"></div>
-              <div class="mark right"></div>
-              <div class="mark bottom"></div>
-              <div class="mark left"></div>
-            </div>
-          {/if}
-        </div>
+    <div class="card-grid">
+      {#each characters as character}
+        <CharacterCardFront 
+          {character}
+          {showCropMarks}
+        />
       {/each}
     </div>
   </div>
 
   <!-- Back page -->
   <div class="page">
-    <div class="card-grid" class:show-crop-marks={showCropMarks}>
-      {#each Array(9) as _, i}
-        {@const backNumber = getBackPosition(i + 1)}
-        <div class="card back">
-          <div class="card-inner">
-            Back of Card {backNumber}
-            <div class="position-debug">Position: {i + 1}, Back of: {backNumber}</div>
-          </div>
-          {#if showCropMarks}
-            <div class="crop-marks">
-              <div class="mark top"></div>
-              <div class="mark right"></div>
-              <div class="mark bottom"></div>
-              <div class="mark left"></div>
-            </div>
-          {/if}
-        </div>
+    <div class="card-grid">
+      {#each characters as character, i}
+        <CharacterCardBack 
+          {character}
+          gridPosition={getBackPosition(i + 1)}
+          {showCropMarks}
+        />
       {/each}
     </div>
   </div>
@@ -105,67 +91,9 @@
     padding-top: 5mm;
   }
 
-  .card {
-    position: relative;
-    width: 63.5mm;
-    height: 88.9mm;
-    background: white;
-    border: 1px solid #ddd;
-  }
-
-  .card-inner {
-    padding: 3mm;
-    height: 100%;
-    box-sizing: border-box;
-  }
-
-  .position-debug {
-    font-size: 0.8em;
-    color: #666;
-    margin-top: 1em;
-  }
-
-  /* Crop marks */
-  .crop-marks {
-    position: absolute;
-    top: -3mm;
-    left: -3mm;
-    right: -3mm;
-    bottom: -3mm;
-    pointer-events: none;
-  }
-
-  .mark {
-    position: absolute;
-    background: black;
-  }
-
-  .mark.top, .mark.bottom {
-    width: 6mm;
-    height: 0.3mm;
-    left: 50%;
-    transform: translateX(-50%);
-  }
-
-  .mark.left, .mark.right {
-    width: 0.3mm;
-    height: 6mm;
-    top: 50%;
-    transform: translateY(-50%);
-  }
-
-  .mark.top { top: 0; }
-  .mark.right { right: 0; }
-  .mark.bottom { bottom: 0; }
-  .mark.left { left: 0; }
-
   /* Print styles */
   @media print {
     .no-print {
-      display: none;
-    }
-
-    .position-debug {
       display: none;
     }
 
