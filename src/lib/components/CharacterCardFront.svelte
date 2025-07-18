@@ -5,150 +5,133 @@
   export let showCropMarks = true;
 </script>
 
-<div class="card front">
-  <div class="card-inner">
-    <div class="card-header">
-      <h2>{character.name}</h2>
-      <div class="role">{character.role}</div>
-      <div class="age">Age: {character.age}</div>
-    </div>
-    {#if character.portrait}
-      <div class="portrait">
-        <img src={`/portraits/${character.portrait}`} alt={character.name} />
-      </div>
-    {/if}
-    <div class="traits">
-      <h3>Traits</h3>
-      <div class="trait-section">
-        <h4>Personality</h4>
-        <ul>
-          {#each character.traits.personality as trait}
-            <li>{trait}</li>
-          {/each}
-        </ul>
-      </div>
-    </div>
-  </div>
-  {#if showCropMarks}
-    <div class="crop-marks">
-      <div class="mark top"></div>
-      <div class="mark right"></div>
-      <div class="mark bottom"></div>
-      <div class="mark left"></div>
-    </div>
-  {/if}
-</div>
+<article 
+  class="card" 
+  class:show-crop-marks={showCropMarks}
+  style:background-image={character.portrait ? `url(/portraits/${character.portrait})` : undefined}
+>
+  <header>
+    <h2>{character.name}</h2>
+    <p class="role">{character.role}</p>
+    <p class="age">Age: {character.age}</p>
+  </header>
+  <ul class="traits">
+    {#each character.traits.personality as trait}
+      <li>{trait}</li>
+    {/each}
+  </ul>
+</article>
 
 <style>
   .card {
     position: relative;
     width: 63.5mm;
     height: 88.9mm;
-    background: white;
-    border: 1px solid #ddd;
-  }
-
-  .card-inner {
-    padding: 3mm;
-    height: 100%;
-    box-sizing: border-box;
+    background-color: white;
+    background-size: cover;
+    background-position: center;
     display: flex;
     flex-direction: column;
+    justify-content: flex-end;
+    padding: 3mm;
+    box-sizing: border-box;
     font-size: 8pt;
+    gap: 2mm;
   }
 
-  .card-header {
+  header {
     text-align: center;
-    margin-bottom: 2mm;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 2mm;
+    border-radius: 1mm;
+    margin: 0 -1mm;
   }
 
-  .card-header h2 {
+  h2 {
     margin: 0;
     font-size: 10pt;
     font-weight: bold;
   }
 
   .role {
+    margin: 1mm 0 0;
     font-style: italic;
-    margin-top: 1mm;
   }
 
   .age {
+    margin: 0.5mm 0 0;
     font-size: 7pt;
     color: #666;
   }
 
-  .portrait {
-    margin: 2mm 0;
-    text-align: center;
+  .traits {
+    list-style-type: none;
+    padding: 0;
+    margin: 0 -1mm;
+    display: grid;
+    gap: 1mm;
   }
 
-  .portrait img {
-    max-width: 80%;
-    max-height: 30mm;
-    object-fit: contain;
-  }
-
-  .traits h3 {
-    font-size: 9pt;
-    margin: 2mm 0 1mm;
-  }
-
-  .traits ul {
-    margin: 0;
-    padding-left: 4mm;
+  .traits li {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 1.5mm 2mm;
+    border-radius: 1mm;
     font-size: 7pt;
   }
 
-  .trait-section h4 {
-    margin: 1mm 0;
-    font-size: 8pt;
-  }
-
-  /* Crop marks */
-  .crop-marks {
+  /* Crop marks as pseudo elements */
+  .show-crop-marks::before,
+  .show-crop-marks::after {
+    content: '';
     position: absolute;
-    top: -3mm;
-    left: -3mm;
-    right: -3mm;
-    bottom: -3mm;
-    pointer-events: none;
-  }
-
-  .mark {
-    position: absolute;
-    background: black;
-  }
-
-  .mark.top, .mark.bottom {
-    width: 6mm;
-    height: 0.3mm;
     left: 50%;
     transform: translateX(-50%);
+    width: 6mm;
+    border-top: 0.3mm solid black;
   }
 
-  .mark.left, .mark.right {
-    width: 0.3mm;
-    height: 6mm;
+  .show-crop-marks::before {
+    top: -3mm;
+  }
+
+  .show-crop-marks::after {
+    bottom: -3mm;
+  }
+
+  .show-crop-marks::after {
+    content: '';
+    position: absolute;
+  }
+
+  /* Using the first and last child for vertical marks */
+  .show-crop-marks > :first-child::before,
+  .show-crop-marks > :last-child::after {
+    content: '';
+    position: absolute;
     top: 50%;
     transform: translateY(-50%);
+    height: 6mm;
+    border-left: 0.3mm solid black;
   }
 
-  .mark.top { top: 0; }
-  .mark.right { right: 0; }
-  .mark.bottom { bottom: 0; }
-  .mark.left { left: 0; }
+  .show-crop-marks > :first-child::before {
+    left: -3mm;
+  }
+
+  .show-crop-marks > :last-child::after {
+    right: -3mm;
+  }
 
   /* Hide redundant crop marks */
-  /* Middle column (2,5,8) - hide side marks */
-  :global(.card-grid > :nth-child(3n-1)) .mark.left,
-  :global(.card-grid > :nth-child(3n-1)) .mark.right {
+  /* Middle column (2,5,8) - hide vertical marks */
+  :global(.card-grid > :nth-child(3n-1).show-crop-marks) > :first-child::before,
+  :global(.card-grid > :nth-child(3n-1).show-crop-marks) > :last-child::after {
     display: none;
   }
 
-  /* Middle row (4,5,6) - hide top/bottom marks */
-  :global(.card-grid > :nth-child(n+4):nth-child(-n+6)) .mark.top,
-  :global(.card-grid > :nth-child(n+4):nth-child(-n+6)) .mark.bottom {
+  /* Middle row (4,5,6) - hide horizontal marks */
+  :global(.card-grid > :nth-child(n+4):nth-child(-n+6).show-crop-marks)::before,
+  :global(.card-grid > :nth-child(n+4):nth-child(-n+6).show-crop-marks)::after {
     display: none;
   }
 </style> 
