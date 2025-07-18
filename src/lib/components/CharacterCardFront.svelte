@@ -10,16 +10,15 @@
   class:show-crop-marks={showCropMarks}
   style:background-image={character.portrait ? `url(/portraits/${character.portrait})` : undefined}
 >
-  <header>
+  <section>
     <h2>{character.name}</h2>
-    <p class="role">{character.role}</p>
-    <p class="age">Age: {character.age}</p>
-  </header>
-  <ul class="traits">
-    {#each character.traits.personality as trait}
-      <li>{trait}</li>
-    {/each}
-  </ul>
+    <p class="role">{character.role}. Age {character.age}</p>
+    <ul class="traits">
+      {#each character.traits as trait}
+        <li>{trait}</li>
+      {/each}
+    </ul>
+  </section>
 </article>
 
 <style>
@@ -39,7 +38,7 @@
     gap: 2mm;
   }
 
-  header {
+  section {
     text-align: center;
     background: rgba(255, 255, 255, 0.95);
     padding: 2mm;
@@ -58,24 +57,16 @@
     font-style: italic;
   }
 
-  .age {
-    margin: 0.5mm 0 0;
-    font-size: 7pt;
-    color: #666;
-  }
-
   .traits {
     list-style-type: none;
     padding: 0;
     margin: 0 -1mm;
-    display: grid;
     gap: 1mm;
+    text-align: left;
   }
 
   .traits li {
-    background: rgba(255, 255, 255, 0.95);
-    padding: 1.5mm 2mm;
-    border-radius: 1mm;
+    padding: 0.5mm 2mm;
     font-size: 7pt;
   }
 
