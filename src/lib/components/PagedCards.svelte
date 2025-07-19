@@ -3,27 +3,42 @@
   import type { Character } from '$lib/types';
   import CharacterCardFront from './CharacterCardFront.svelte';
   import CharacterCardBack from './CharacterCardBack.svelte';
+  import { currentDeck } from '$lib/stores/cards';
 
-  export let characters: Character[];
   export let showCropMarks: boolean;
-  export let onCharacterChange: (id: string, updates: Partial<Character>) => void;
+  export let onCharacterChange: (id: string, updates: Partial<Character>) => Promise<void>;
 
   // Calculate how many full pages of 9 cards we need
-  $: totalPages = Math.ceil(characters.length / 9);
+  $: totalPages = Math.ceil($currentDeck?.characters.length || 0 / 9);
   
   // Get characters for a specific page (0-based index)
   function getPageCharacters(pageIndex: number): Character[] {
     const start = pageIndex * 9;
-    return characters.slice(start, start + 9);
+    return $currentDeck?.characters.slice(start, start + 9) || [];
+  }
+
+  // Create reactive references for each page's characters
+  $: pages = Array(totalPages).fill(null)
+    .map((_, i) => ({
+      index: i,
+      characters: getPageCharacters(i)
+    }))
+    .filter(page => page.characters.length > 0);  // Only keep pages with characters
+
+  // Calculate back card position
+  function getBackPosition(frontPosition: number): number {
+    const row = Math.floor((frontPosition - 1) / 3);
+    const col = (frontPosition - 1) % 3;
+    return (row * 3) + (2 - col) + 1;
   }
 </script>
 
-{#each Array(totalPages) as _, pageIndex}
+{#each pages as page (page.index)}
   <!-- Front page -->
   <div class="page">
     <div class="card-grid">
-      {#each getPageCharacters(pageIndex) as character (character.id)}
-        <div>
+      {#each page.characters as character (character.id)}
+        <div class="card-wrapper">
           <CharacterCardFront 
             {character}
             {showCropMarks}
@@ -37,8 +52,8 @@
   <!-- Back page -->
   <div class="page">
     <div class="card-grid back-grid">
-      {#each getPageCharacters(pageIndex) as character (character.id)}
-        <div>
+      {#each page.characters as character, index (character.id)}
+        <div class="card-wrapper" style:order={getBackPosition(index + 1)}>
           <CharacterCardBack 
             {character}
             {showCropMarks}
@@ -76,23 +91,16 @@
     direction: rtl;
   }
 
+  /* Card wrapper */
+  .card-wrapper {
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }
+
   /* Reset direction for card content */
-  .back-grid > div {
+  .back-grid .card-wrapper {
     direction: ltr;
-  }
-
-  /* Hide crop marks for middle column */
-  .card-grid > div:nth-child(3n-1) :global(.show-crop-marks::before),
-  .card-grid > div:nth-child(3n-1) :global(.show-crop-marks::after) {
-    border-left-color: transparent;
-    border-right-color: transparent;
-  }
-
-  /* Hide crop marks for middle row */
-  .card-grid > div:nth-child(n+4):nth-child(-n+6) :global(.show-crop-marks::before),
-  .card-grid > div:nth-child(n+4):nth-child(-n+6) :global(.show-crop-marks::after) {
-    border-top-color: transparent;
-    border-bottom-color: transparent;
   }
 
   /* Print styles */

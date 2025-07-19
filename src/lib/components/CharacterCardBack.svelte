@@ -8,6 +8,17 @@
   export let onChange: (updates: Partial<Character>) => void;
 
   let bioElement: HTMLElement;
+  let nameElement: HTMLElement;
+
+  // Update DOM elements when character changes
+  $: {
+    if (nameElement && nameElement.innerText !== character.name) {
+      nameElement.innerText = character.name;
+    }
+    if (bioElement && bioElement.innerText !== character.bio) {
+      bioElement.innerText = character.bio;
+    }
+  }
 
   onMount(() => {
     // Ensure bio text doesn't overflow
@@ -19,9 +30,20 @@
     }
   });
 
-  function updateBio(event: Event) {
+  async function updateBio(event: Event) {
     const target = event.target as HTMLElement;
-    onChange({ bio: target.innerText });
+    const newBio = target.innerText;
+    if (newBio !== character.bio) {
+      await onChange({ bio: newBio });
+    }
+  }
+
+  async function updateName(event: Event) {
+    const target = event.target as HTMLElement;
+    const newName = target.innerText;
+    if (newName !== character.name) {
+      await onChange({ name: newName });
+    }
   }
 </script>
 
@@ -32,7 +54,8 @@
   >
     <h2 
       contenteditable="true" 
-      on:blur={updateBio}
+      on:blur={updateName}
+      bind:this={nameElement}
     >{character.name}</h2>
     <p 
       class="bio" 

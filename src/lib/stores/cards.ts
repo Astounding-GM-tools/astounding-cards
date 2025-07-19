@@ -1,16 +1,46 @@
-import { writable, get } from 'svelte/store';
+import { writable, get, derived } from 'svelte/store';
 import { browser } from '$app/environment';
 import type { Character, CharacterDeck, ValidationError } from '$lib/types';
 import { validateCharacter, validateDeck } from '$lib/types';
+import { toasts } from './toast';
 
-// Store for the current deck
-export const currentDeck = writable<CharacterDeck | null>(null);
-
-// Store for tracking changes that need saving
-const isDirty = writable(false);
+// Internal store for the current deck ID
+const currentDeckId = writable<string | null>(null);
 
 // Store for validation errors
 export const validationErrors = writable<ValidationError[]>([]);
+
+// Derived store that syncs with DB
+export const currentDeck = derived<typeof currentDeckId, CharacterDeck | null>(
+  currentDeckId,
+  ($currentDeckId, set) => {
+    if (!$currentDeckId) {
+      set(null);
+      return;
+    }
+
+    // Load deck from DB
+    loadDeck($currentDeckId)
+      .then(deck => {
+        if (deck) {
+          // Compare with current value to prevent unnecessary updates
+          const current = get(currentDeck);
+          if (!current || JSON.stringify(current) !== JSON.stringify(deck)) {
+            set(deck);
+          }
+        } else {
+          set(null);
+        }
+      })
+      .catch(error => {
+        console.error('Failed to load deck:', error);
+        set(null);
+      });
+  }
+);
+
+// Store for tracking changes that need saving
+const isDirty = writable(false);
 
 // IndexedDB setup
 const DB_NAME = 'character-cards';
@@ -88,6 +118,13 @@ export async function saveDeck(deck: CharacterDeck, allowEmpty = false) {
       request.onsuccess = () => {
         isDirty.set(false);
         validationErrors.set([]);
+        // Update currentDeckId to trigger reload if this is the current deck
+        const currentId = get(currentDeckId);
+        if (currentId === deck.id) {
+          // Force a refresh
+          currentDeckId.set(null);
+          currentDeckId.set(deck.id);
+        }
         resolve();
       };
     });
@@ -113,8 +150,6 @@ export async function loadDeck(id: string): Promise<CharacterDeck | null> {
       request.onsuccess = () => {
         const deck = request.result as CharacterDeck;
         if (deck) {
-          currentDeck.set(deck);
-          isDirty.set(false);
           validationErrors.set([]);
         }
         resolve(deck);
@@ -168,84 +203,101 @@ export async function deleteDeck(id: string) {
 }
 
 // Update character in current deck
-export function updateCharacter(id: string, updates: Partial<Character>) {
-  currentDeck.update(deck => {
-    if (!deck) return null;
+export async function updateCharacter(id: string, updates: Partial<Character>) {
+  const currentId = get(currentDeckId);
+  if (!currentId) return;
 
-    const charIndex = deck.characters.findIndex(c => c.id === id);
-    if (charIndex === -1) return deck;
+  const deck = await loadDeck(currentId);
+  if (!deck) return;
 
-    // Create updated character
-    const updatedChar = {
-      ...deck.characters[charIndex],
-      ...updates
-    };
+  const charIndex = deck.characters.findIndex(c => c.id === id);
+  if (charIndex === -1) return;
 
-    // Validate the updated character
-    const errors = validateCharacter(updatedChar);
-    if (errors.length > 0) {
-      validationErrors.set(errors);
-      return deck;  // Return unchanged if validation fails
-    }
+  // Create updated character
+  const updatedChar = {
+    ...deck.characters[charIndex],
+    ...updates
+  };
 
-    // Apply the update if validation passes
-    const newDeck = {
-      ...deck,
-      characters: [...deck.characters]
-    };
-    newDeck.characters[charIndex] = updatedChar;
+  // Validate the updated character
+  const errors = validateCharacter(updatedChar);
+  if (errors.length > 0) {
+    validationErrors.set(errors);
+    toasts.error('Failed to update character: ' + errors.map(e => e.message).join(', '));
+    return;
+  }
 
-    isDirty.set(true);
-    validationErrors.set([]);
-    return newDeck;
-  });
+  // Create new deck with the update
+  const newDeck = {
+    ...deck,
+    meta: {
+      ...deck.meta,
+      lastEdited: Date.now()
+    },
+    characters: [...deck.characters]
+  };
+  newDeck.characters[charIndex] = updatedChar;
+
+  try {
+    // Save to DB
+    await saveDeck(newDeck);
+    
+    // Show success toast
+    const fieldName = Object.keys(updates)[0];
+    toasts.success(`Updated ${fieldName} for ${updatedChar.name}`);
+  } catch (error) {
+    console.error('Failed to save character update:', error);
+    toasts.error('Failed to save changes. Please try again.');
+  }
 }
 
 // Add new character to current deck
 export function addCharacter() {
-  currentDeck.update(deck => {
-    if (!deck) return deck;
+  const currentId = get(currentDeckId);
+  if (!currentId) return;
 
-    // Check URL size before adding
-    const currentSize = new TextEncoder().encode(deckToUrl(deck)).length;
-    if (currentSize > 30000) { // Leave some margin below Chrome's limit
-      validationErrors.set([{ 
-        field: 'deck', 
-        message: 'URL size limit approaching. Consider creating a new deck.' 
-      }]);
-      return deck;
-    }
+  const deck = get(currentDeck);
+  if (!deck) return;
 
-    const newChar: Character = {
-      id: crypto.randomUUID(),
-      name: "New Character",
-      role: "Role",
-      age: "30",
-      portrait: null,
-      traits: ["New trait"],
-      bio: "Character background..."
-    };
+  // Check URL size before adding
+  const currentSize = new TextEncoder().encode(deckToUrl(deck)).length;
+  if (currentSize > 30000) { // Leave some margin below Chrome's limit
+    validationErrors.set([{ 
+      field: 'deck', 
+      message: 'URL size limit approaching. Consider creating a new deck.' 
+    }]);
+    return;
+  }
 
-    // Validate the new character
-    const errors = validateCharacter(newChar);
-    if (errors.length > 0) {
-      validationErrors.set(errors);
-      return deck;
-    }
+  const newChar: Character = {
+    id: crypto.randomUUID(),
+    name: "New Character",
+    role: "Role",
+    age: "30",
+    portrait: null,
+    traits: ["New trait"],
+    bio: "Character background..."
+  };
 
-    const newDeck = {
-      ...deck,
-      meta: {
-        ...deck.meta,
-        lastEdited: Date.now()
-      },
-      characters: [...deck.characters, newChar]
-    };
+  // Validate the new character
+  const errors = validateCharacter(newChar);
+  if (errors.length > 0) {
+    validationErrors.set(errors);
+    return;
+  }
 
-    isDirty.set(true);
-    validationErrors.set([]);
-    return newDeck;
-  });
+  const newDeck = {
+    ...deck,
+    meta: {
+      ...deck.meta,
+      lastEdited: Date.now()
+    },
+    characters: [...deck.characters, newChar]
+  };
+
+  isDirty.set(true);
+  validationErrors.set([]);
+  return newDeck;
 }
 
 // Remove character from current deck
@@ -264,7 +316,7 @@ export async function deleteCharacters(deckId: string, characterIds: string[]) {
 
   await saveDeck(updatedDeck);
   if (get(currentDeck)?.id === deckId) {
-    currentDeck.set(updatedDeck);
+    currentDeckId.set(null); // Force reload
   }
   return updatedDeck;
 }
@@ -411,4 +463,9 @@ export async function copyCharactersTo(
 
   await saveDeck(updatedDeck);
   return updatedDeck;
+} 
+
+// Set current deck
+export function setCurrentDeck(deck: CharacterDeck | null) {
+  currentDeckId.set(deck?.id || null);
 } 

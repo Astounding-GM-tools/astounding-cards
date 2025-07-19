@@ -2,6 +2,7 @@
   import type { Character } from '$lib/types';
   import { debounce } from '$lib/utils/debounce';
   import Card from './Card.svelte';
+  import { onMount } from 'svelte';
 
   export let character: Character;
   export let showCropMarks = true;
@@ -9,52 +10,81 @@
 
   let imageUrl = '';
   let showImageInput = false;
+  let nameElement: HTMLElement;
+  let roleElement: HTMLElement;
+  let traitElements: HTMLElement[] = [];
+
+  // Update DOM elements when character changes
+  $: {
+    if (nameElement && nameElement.innerText !== character.name) {
+      nameElement.innerText = character.name;
+    }
+    if (roleElement && roleElement.innerText !== character.role) {
+      roleElement.innerText = character.role;
+    }
+    traitElements.forEach((el, i) => {
+      if (el && el.innerText !== character.traits[i]) {
+        el.innerText = character.traits[i];
+      }
+    });
+  }
 
   // For contentEditable elements, use blur
-  function updateName(event: Event) {
+  async function updateName(event: Event) {
     const target = event.target as HTMLElement;
-    onChange({ name: target.innerText });
-  }
-
-  function updateRole(event: Event) {
-    const target = event.target as HTMLElement;
-    onChange({ role: target.innerText });
-  }
-
-  function updateTrait(index: number, event: Event) {
-    const target = event.target as HTMLElement;
-    const newTraits = [...character.traits];
-    newTraits[index] = target.innerText;
-    onChange({ traits: newTraits });
-  }
-
-  // Debounced age update
-  const debouncedAgeUpdate = debounce((age: string) => {
-    onChange({ age });
-  }, 300);
-
-  function updateAge(event: Event) {
-    const target = event.target as HTMLInputElement;
-    const age = target.value || "0";
-    if (parseInt(age) > 0) {
-      debouncedAgeUpdate(age);
+    const newName = target.innerText;
+    if (newName !== character.name) {
+      await onChange({ name: newName });
     }
   }
 
-  function addTrait() {
+  async function updateRole(event: Event) {
+    const target = event.target as HTMLElement;
+    const newRole = target.innerText;
+    if (newRole !== character.role) {
+      await onChange({ role: newRole });
+    }
+  }
+
+  async function updateTrait(index: number, event: Event) {
+    const target = event.target as HTMLElement;
+    const newTraitText = target.innerText;
+    if (newTraitText !== character.traits[index]) {
+      const newTraits = [...character.traits];
+      newTraits[index] = newTraitText;
+      await onChange({ traits: newTraits });
+    }
+  }
+
+  // Debounced age update
+  const debouncedAgeUpdate = debounce(async (age: string) => {
+    if (age !== character.age) {
+      await onChange({ age });
+    }
+  }, 300);
+
+  async function updateAge(event: Event) {
+    const target = event.target as HTMLInputElement;
+    const age = target.value || "0";
+    if (parseInt(age) > 0) {
+      await debouncedAgeUpdate(age);
+    }
+  }
+
+  async function addTrait() {
     if (character.traits.length >= 5) return;
     const newTraits = [...character.traits, "New trait"];
-    onChange({ traits: newTraits });
+    await onChange({ traits: newTraits });
   }
 
-  function removeTrait(index: number) {
+  async function removeTrait(index: number) {
     const newTraits = character.traits.filter((_: string, i: number) => i !== index);
-    onChange({ traits: newTraits });
+    await onChange({ traits: newTraits });
   }
 
-  function updatePortrait() {
+  async function updatePortrait() {
     if (!imageUrl) return;
-    onChange({ portrait: imageUrl });
+    await onChange({ portrait: imageUrl });
     imageUrl = '';
     showImageInput = false;
   }
@@ -69,6 +99,7 @@
       <h2 
         contenteditable="true" 
         on:blur={updateName}
+        bind:this={nameElement}
         class="editable"
       >{character.name}</h2>
       
@@ -76,6 +107,7 @@
         <p 
           contenteditable="true" 
           on:blur={updateRole}
+          bind:this={roleElement}
           class="role editable"
         >{character.role}</p>
         <p class="age">Age: <input 
@@ -93,6 +125,7 @@
             <span 
               contenteditable="true" 
               on:blur={(e) => updateTrait(i, e)}
+              bind:this={traitElements[i]}
               class="editable"
             >{trait}</span>
             <button 

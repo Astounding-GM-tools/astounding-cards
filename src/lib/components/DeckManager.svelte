@@ -9,10 +9,6 @@
 
   export let deck: CharacterDeck;
   
-  // Log locale information
-  console.log('Navigator language:', navigator.language);
-  console.log('Navigator languages:', navigator.languages);
-  
   const dispatch = createEventDispatcher<{
     deckChange: { action: 'update' | 'delete' | 'duplicate' | 'copy' | 'deleteCharacters', deckId: string }
   }>();
@@ -553,7 +549,6 @@
               <CharacterCardBack
                 character={previewCard}
                 showCropMarks={false}
-                gridPosition={1}
                 onChange={() => {}}
               />
             </div>

@@ -35,10 +35,28 @@
   - [x] Automatic dismissal
   - [x] Consistent styling
   - [x] Accessible notifications
+- [x] Layout Improvements
+  - [x] Fix back card positioning for any number of cards (1-32)
+  - [x] Remove artificial 9-card limit
+  - [x] Support multiple sheets (up to 4 double-sided pages)
+  - [x] Maintain proper double-sided printing alignment
+  - [x] Handle gaps in grid gracefully
+  - [x] Proper RTL/LTR handling for back cards
+  - [x] Maintain scroll position during edits
+  - [x] Optimize re-renders and updates
 
 ## Next Steps (Priority Order)
 
-### 1. Theme Implementation
+### 1. Print Layout Polish
+- [ ] Add page navigation/preview
+- [ ] Show sheet numbers and card positions
+- [ ] Add visual page breaks in edit mode
+- [ ] Test with different paper sizes
+- [ ] Improve print preview mode
+- [ ] Add print instructions
+- [ ] Handle printer margins better
+
+### 2. Theme Implementation
 - [ ] Apply theme styles to cards
   - [ ] Implement theme CSS application
   - [ ] Create theme assets (patterns, borders)
@@ -47,26 +65,14 @@
   - [ ] Ensure print compatibility
   - [ ] Add theme customization options
 
-### 2. Basic URL Sharing (Quick Win)
-- [ ] Implement proper GUID system
-- [ ] Auto-update URL on changes
-- [ ] Add "Copy URL" button
+### 3. URL Sharing Improvements
+- [x] Add "Copy URL" button
+- [x] Clear URL after import
 - [ ] Add URL validation
 - [ ] Show URL size indicator
 - [ ] Add sharing instructions
-- [ ] Clear URL after import
 - [ ] Handle URL import conflicts
-
-### 3. Layout Improvements
-- [x] Fix back card positioning for any number of cards (1-32)
-  - [x] Remove artificial 9-card limit
-  - [x] Support multiple sheets (up to 4 double-sided pages)
-  - [ ] Add page navigation/preview
-  - [ ] Show sheet numbers and card positions
-  - [ ] Maintain proper double-sided printing alignment
-  - [ ] Test with different card counts
-  - [ ] Handle gaps in grid gracefully
-  - [ ] Add visual page breaks in edit mode
+- [ ] Add version tracking for shared decks
 
 ### 4. Advanced URL Sharing & Collaboration
 - [ ] Support different collaboration modes:

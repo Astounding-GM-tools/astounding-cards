@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { currentDeck } from '$lib/stores/cards';
-  import { updateCharacter, loadDeck, deckFromUrl, addCharacter, saveDeck, listDecks } from '$lib/stores/cards';
+  import { updateCharacter, loadDeck, deckFromUrl, addCharacter, saveDeck, listDecks, setCurrentDeck } from '$lib/stores/cards';
   import type { Character } from '$lib/types';
   import CharacterCardFront from '$lib/components/CharacterCardFront.svelte';
   import CharacterCardBack from '$lib/components/CharacterCardBack.svelte';
@@ -14,7 +14,7 @@
   import PagedCards from '$lib/components/PagedCards.svelte';
 
   let showCropMarks = true;
-  let loading = true;
+  let loading = true;  // Start with loading true
   let error: string | null = null;
   let deckDialog: HTMLDialogElement;
 
@@ -31,56 +31,62 @@
     }
   }
 
-  onMount(async () => {
-    try {
-      // Try to load deck from URL first
-      const urlDeck = deckFromUrl(new URL(window.location.href));
-      if (urlDeck) {
-        currentDeck.set(urlDeck);
-        // Clear the URL without triggering navigation
-        history.replaceState(null, '', window.location.pathname);
-        toasts.info('Deck loaded from URL. The URL has been cleared to prevent overwriting your changes.');
-        loading = false;
-        return;
-      }
+  // Load initial deck
+  $: {
+    if (!$currentDeck) {  // Remove loading check to ensure initial load
+      (async () => {
+        try {
+          // Try to load deck from URL first
+          const urlDeck = deckFromUrl(new URL(window.location.href));
+          if (urlDeck) {
+            await saveDeck(urlDeck);
+            setCurrentDeck(urlDeck);
+            // Clear the URL without triggering navigation
+            history.replaceState(null, '', window.location.pathname);
+            toasts.info('Deck loaded from URL. The URL has been cleared to prevent overwriting your changes.');
+            loading = false;
+            return;
+          }
 
-      // Get all decks and find the most recently edited one
-      const decks = await listDecks();
-      if (decks.length > 0) {
-        // Sort by lastEdited timestamp (newest first)
-        const sortedDecks = decks.sort((a, b) => b.meta.lastEdited - a.meta.lastEdited);
-        const mostRecentDeck = sortedDecks[0];
-        
-        // Load the most recent deck
-        const loadedDeck = await loadDeck(mostRecentDeck.id);
-        if (loadedDeck) {
-          currentDeck.set(loadedDeck);
+          // Get all decks and find the most recently edited one
+          const decks = await listDecks();
+          if (decks.length > 0) {
+            // Sort by lastEdited timestamp (newest first)
+            const sortedDecks = decks.sort((a, b) => b.meta.lastEdited - a.meta.lastEdited);
+            const mostRecentDeck = sortedDecks[0];
+            
+            // Load the most recent deck
+            const loadedDeck = await loadDeck(mostRecentDeck.id);
+            if (loadedDeck) {
+              setCurrentDeck(loadedDeck);
+              loading = false;
+              return;
+            }
+          }
+
+          // If no decks exist, create a new empty one
+          const newDeck = {
+            id: crypto.randomUUID(),
+            meta: {
+              name: 'New Deck',
+              theme: 'default',
+              lastEdited: Date.now(),
+              createdAt: Date.now()
+            },
+            characters: []
+          };
+          
+          // Save the new deck to IndexedDB, allowing empty deck during initialization
+          await saveDeck(newDeck, true);
+          setCurrentDeck(newDeck);
           loading = false;
-          return;
+        } catch (e) {
+          error = e instanceof Error ? e.message : 'Failed to load deck';
+          loading = false;
         }
-      }
-
-      // If no decks exist, create a new empty one
-      const newDeck = {
-        id: crypto.randomUUID(), // Use UUID instead of 'default'
-        meta: {
-          name: 'New Deck',
-          theme: 'default',
-          lastEdited: Date.now(),
-          createdAt: Date.now()
-        },
-        characters: []
-      };
-      
-      // Save the new deck to IndexedDB, allowing empty deck during initialization
-      await saveDeck(newDeck, true);
-      currentDeck.set(newDeck);
-      loading = false;
-    } catch (e) {
-      error = e instanceof Error ? e.message : 'Failed to load deck';
-      loading = false;
+      })();
     }
-  });
+  }
 
   // Subscribe to deck changes to show URL reset notification
   $: if ($currentDeck) {
@@ -91,8 +97,8 @@
     }
   }
 
-  function handleCharacterUpdate(id: string, updates: Partial<Character>) {
-    updateCharacter(id, updates);
+  async function handleCharacterUpdate(id: string, updates: Partial<Character>) {
+    await updateCharacter(id, updates);
   }
 
   // Function to get the corresponding back position for a card
@@ -178,17 +184,18 @@
   </dialog>
 
   <!-- Main content -->
-  {#if !$currentDeck}
-    <div class="message">Loading...</div>
-  {:else if $currentDeck.characters.length === 0}
-    <div class="message">No characters in deck</div>
-  {:else if $currentDeck}
-    <PagedCards 
-      characters={$currentDeck.characters}
-      {showCropMarks}
-      onCharacterChange={handleCharacterUpdate}
-    />
-  {/if}
+  <div class="cards-scroll-container">
+    {#if !$currentDeck}
+      <div class="message">Loading...</div>
+    {:else if $currentDeck.characters.length === 0}
+      <div class="message">No characters in deck</div>
+    {:else if $currentDeck}
+      <PagedCards 
+        {showCropMarks}
+        onCharacterChange={handleCharacterUpdate}
+      />
+    {/if}
+  </div>
 </div>
 
   <style>
@@ -388,6 +395,18 @@
     .print-container {
       margin: 0;
       padding: 0;
+    }
+
+    .print-container {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    .cards-scroll-container {
+      flex: 1;
+      overflow-y: auto;
+      position: relative;
     }
 
     /* Print styles */
