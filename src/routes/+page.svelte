@@ -10,24 +10,24 @@
   import DeckList from '$lib/components/DeckList.svelte';
   import Toasts from '$lib/components/Toasts.svelte';
   import { toasts } from '$lib/stores/toast';
+  import { deckToUrl } from '$lib/stores/cards';
 
   let showCropMarks = true;
   let loading = true;
   let error: string | null = null;
   let deckDialog: HTMLDialogElement;
 
-  let toastIndex = 0;
-  const testToasts = [
-    { type: 'success' as const, message: 'Success toast test!' },
-    { type: 'info' as const, message: 'Info toast test!' },
-    { type: 'warning' as const, message: 'Warning toast test!' },
-    { type: 'error' as const, message: 'Error toast test!' }
-  ];
-
-  function showTestToast() {
-    const toast = testToasts[toastIndex];
-    toasts[toast.type](toast.message);
-    toastIndex = (toastIndex + 1) % testToasts.length;
+  async function copyShareUrl() {
+    if (!$currentDeck) return;
+    
+    try {
+      const shareUrl = deckToUrl($currentDeck);
+      await navigator.clipboard.writeText(shareUrl);
+      toasts.success('Share URL copied! Send this URL to share your deck.');
+    } catch (err) {
+      console.error('Failed to copy URL:', err);
+      toasts.error('Failed to copy URL to clipboard');
+    }
   }
 
   onMount(async () => {
@@ -112,31 +112,38 @@
   <div class="settings no-print">
     <div class="settings-row">
       <button 
-        class="deck-button"
+        class="action-button"
         onclick={() => deckDialog.showModal()}
       >
-        Manage Decks
+        📚 Manage Decks
       </button>
       <button 
-        class="test-toast"
-        onclick={showTestToast}
+        class="action-button"
+        onclick={copyShareUrl}
+        disabled={!$currentDeck}
       >
-        Test Toast
+        🔗 Copy Share URL
       </button>
-      <label>
-        <input type="checkbox" bind:checked={showCropMarks}>
-        Show crop marks
-      </label>
-    </div>
-    <div class="print-info">
-      Print double-sided, flip on long edge (like a book)
-    </div>
-    {#if $currentDeck}
-      <div class="deck-controls">
-        <button onclick={addCharacter}>Add Character</button>
-        <UrlSizeIndicator deck={$currentDeck} />
+      {#if $currentDeck}
+        <button 
+          class="action-button"
+          onclick={addCharacter}
+        >
+          ➕ Add Character
+        </button>
+      {/if}
+      <div class="right-controls">
+        <label class="crop-marks">
+          <input type="checkbox" bind:checked={showCropMarks}>
+          Show crop marks
+        </label>
+        {#if $currentDeck}
+          <div class="url-size">
+            <UrlSizeIndicator deck={$currentDeck} />
+          </div>
+        {/if}
       </div>
-    {/if}
+    </div>
   </div>
 
   <dialog 
@@ -144,7 +151,7 @@
     class="deck-dialog"
   >
     <div class="dialog-header">
-      <h2>Deck Management</h2>
+      <h2>📚 Deck Management</h2>
       <button 
         class="close-button"
         onclick={() => deckDialog.close()}
@@ -167,11 +174,13 @@
     <div class="page">
       <div class="card-grid">
         {#each $currentDeck.characters as character (character.id)}
-          <CharacterCardFront 
-            {character}
-            {showCropMarks}
-            onChange={(updates) => handleCharacterUpdate(character.id, updates)}
-          />
+          <div>
+            <CharacterCardFront 
+              {character}
+              {showCropMarks}
+              onChange={(updates) => handleCharacterUpdate(character.id, updates)}
+            />
+          </div>
         {/each}
       </div>
     </div>
@@ -197,16 +206,94 @@
 <style>
   /* Print settings */
   .settings {
-    margin-bottom: 1rem;
     padding: 1rem;
-    background: #f0f0f0;
-    border-radius: 4px;
+    border-bottom: 1px solid #ddd;
   }
 
-  .print-info {
-    margin-top: 0.5rem;
-    font-style: italic;
+  .settings-row {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .right-controls {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-left: auto;
+  }
+
+  .action-button {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 36px;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+  }
+
+  /* Manage Decks - Blue */
+  .action-button:nth-child(1) {
+    background: #e3f2fd;
+    border-color: #90caf9;
+    color: #1976d2;
+  }
+  .action-button:nth-child(1):hover {
+    background: #bbdefb;
+  }
+
+  /* Share URL - Green */
+  .action-button:nth-child(2) {
+    background: #e8f5e9;
+    border-color: #a5d6a7;
+    color: #2e7d32;
+  }
+  .action-button:nth-child(2):hover {
+    background: #c8e6c9;
+  }
+  .action-button:nth-child(2):disabled {
+    background: #f5f5f5;
+    border-color: #ddd;
+    color: #999;
+    cursor: not-allowed;
+  }
+
+  /* Add Character - Purple */
+  .action-button:nth-child(3) {
+    background: #f3e5f5;
+    border-color: #ce93d8;
+    color: #7b1fa2;
+  }
+  .action-button:nth-child(3):hover {
+    background: #e1bee7;
+  }
+
+  .crop-marks {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
     color: #666;
+  }
+
+  .crop-marks input[type="checkbox"] {
+    margin: 0;
+  }
+
+  .url-size {
+    font-size: 0.9rem;
+    color: #666;
+  }
+
+  /* Remove unused styles */
+  .url-info, .print-info {
+    display: none;
   }
 
   /* A4 page setup */
@@ -423,5 +510,24 @@
 
   .test-toast:hover {
     background: #e0e0e0;
+  }
+
+  .share-button {
+    padding: 0.25rem 0.75rem;
+    font-size: 0.9rem;
+    background: #4caf50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  .share-button:hover {
+    background: #43a047;
+  }
+
+  .share-button:disabled {
+    background: #ccc;
+    cursor: not-allowed;
   }
 </style>

@@ -329,37 +329,6 @@
     background: #ddd;
   }
 
-  @media print {
-    .editable::after,
-    .remove-trait,
-    .add-trait,
-    .change-portrait,
-    .image-input {
-      display: none;
-    }
-
-    .meta {
-      display: inline;
-    }
-
-    .role {
-      display: inline;
-    }
-
-    .role::after {
-      content: ". ";
-    }
-
-    .age {
-      display: inline;
-      margin: 0;
-    }
-
-    .age input {
-      border: none;
-    }
-  }
-
   /* Crop marks as pseudo elements */
   .show-crop-marks::before,
   .show-crop-marks::after {
@@ -400,14 +369,50 @@
 
   /* Hide redundant crop marks */
   /* Middle column (2,5,8) - hide vertical marks */
-  :global(.card-grid > :nth-child(3n-1).show-crop-marks) > :first-child::before,
-  :global(.card-grid > :nth-child(3n-1).show-crop-marks) > :last-child::after {
+  :global(.card-grid > div:nth-child(3n-1) .show-crop-marks) > :first-child::before,
+  :global(.card-grid > div:nth-child(3n-1) .show-crop-marks) > :last-child::after {
     display: none;
   }
 
   /* Middle row (4,5,6) - hide horizontal marks */
-  :global(.card-grid > :nth-child(n+4):nth-child(-n+6).show-crop-marks)::before,
-  :global(.card-grid > :nth-child(n+4):nth-child(-n+6).show-crop-marks)::after {
+  :global(.card-grid > div:nth-child(n+4):nth-child(-n+6) .show-crop-marks)::before,
+  :global(.card-grid > div:nth-child(n+4):nth-child(-n+6) .show-crop-marks)::after {
     display: none;
+  }
+
+  @media print {
+    .editable::after,
+    .remove-trait,
+    .add-trait,
+    .change-portrait,
+    .image-input {
+      display: none;
+    }
+
+    .meta {
+      display: inline;
+    }
+
+    .role {
+      display: inline;
+    }
+
+    .role::after {
+      content: ". ";
+    }
+
+    .age {
+      display: inline;
+      margin: 0;
+    }
+
+    .age input {
+      border: none;
+    }
+
+    .card {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
   }
 </style> 

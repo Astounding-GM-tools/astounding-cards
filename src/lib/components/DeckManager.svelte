@@ -17,26 +17,6 @@
     deckChange: { action: 'update' | 'delete' | 'duplicate' | 'copy' | 'deleteCharacters', deckId: string }
   }>();
 
-  let showShareTooltip = false;
-  let shareTooltipTimer: number;
-
-  async function copyShareUrl() {
-    const origin = window.location.origin;
-    const deckData = encodeURIComponent(JSON.stringify(deck));
-    const shareUrl = `${origin}/?deck=${deckData}`;
-    
-    try {
-      await navigator.clipboard.writeText(shareUrl);
-      showShareTooltip = true;
-      if (shareTooltipTimer) clearTimeout(shareTooltipTimer);
-      shareTooltipTimer = window.setTimeout(() => {
-        showShareTooltip = false;
-      }, 2000);
-    } catch (err) {
-      console.error('Failed to copy URL:', err);
-    }
-  }
-
   const themes = Object.values(baseThemes).map(theme => ({
     id: theme.id,
     name: theme.name,
@@ -320,17 +300,6 @@
       <div class="info-line cards">{deck.characters.length} cards</div>
       <div class="info-line date">Created {formatDate(deck.meta.createdAt)}</div>
       <div class="info-line date">Updated {formatDate(deck.meta.lastEdited)}</div>
-      <div class="info-line share">
-        <button 
-          class="share-button"
-          on:click={copyShareUrl}
-        >
-          Copy Share URL
-          {#if showShareTooltip}
-            <span class="tooltip">Copied!</span>
-          {/if}
-        </button>
-      </div>
     </div>
 
     <div class="actions">
