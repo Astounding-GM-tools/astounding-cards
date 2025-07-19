@@ -17,6 +17,26 @@
     deckChange: { action: 'update' | 'delete' | 'duplicate' | 'copy' | 'deleteCharacters', deckId: string }
   }>();
 
+  let showShareTooltip = false;
+  let shareTooltipTimer: number;
+
+  async function copyShareUrl() {
+    const origin = window.location.origin;
+    const deckData = encodeURIComponent(JSON.stringify(deck));
+    const shareUrl = `${origin}/?deck=${deckData}`;
+    
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      showShareTooltip = true;
+      if (shareTooltipTimer) clearTimeout(shareTooltipTimer);
+      shareTooltipTimer = window.setTimeout(() => {
+        showShareTooltip = false;
+      }, 2000);
+    } catch (err) {
+      console.error('Failed to copy URL:', err);
+    }
+  }
+
   const themes = Object.values(baseThemes).map(theme => ({
     id: theme.id,
     name: theme.name,
@@ -300,6 +320,17 @@
       <div class="info-line cards">{deck.characters.length} cards</div>
       <div class="info-line date">Created {formatDate(deck.meta.createdAt)}</div>
       <div class="info-line date">Updated {formatDate(deck.meta.lastEdited)}</div>
+      <div class="info-line share">
+        <button 
+          class="share-button"
+          on:click={copyShareUrl}
+        >
+          Copy Share URL
+          {#if showShareTooltip}
+            <span class="tooltip">Copied!</span>
+          {/if}
+        </button>
+      </div>
     </div>
 
     <div class="actions">
@@ -1060,5 +1091,42 @@
     display: flex;
     justify-content: flex-end;
     gap: 0.5rem;
+  }
+
+  .share-button {
+    font-size: 0.8rem;
+    padding: 2px 4px;
+    border: 1px solid #eee;
+    border-radius: 3px;
+    background: white;
+    color: #666;
+    cursor: pointer;
+    text-align: left;
+    width: 100%;
+    position: relative;
+  }
+
+  .share-button:hover {
+    border-color: #ccc;
+    background: #f9f9f9;
+  }
+
+  .tooltip {
+    position: absolute;
+    right: -4rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: #333;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 0.75rem;
+    pointer-events: none;
+    animation: fadeIn 0.2s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
   }
 </style> 
