@@ -1,4 +1,4 @@
-import { writable } from 'svelte/store';
+import { writable, get } from 'svelte/store';
 import { browser } from '$app/environment';
 import type { Character, CharacterDeck, ValidationError } from '$lib/types';
 import { validateCharacter, validateDeck } from '$lib/types';
@@ -68,10 +68,15 @@ export async function saveDeck(deck: CharacterDeck, allowEmpty = false) {
       const transaction = db.transaction(['decks'], 'readwrite');
       const store = transaction.objectStore('decks');
 
-      // Ensure deck has an ID
+      // Update deck metadata
       const deckToSave = {
         ...deck,
-        id: deck.id || crypto.randomUUID()
+        id: deck.id || crypto.randomUUID(),
+        meta: {
+          ...deck.meta,
+          lastEdited: Date.now(),
+          createdAt: deck.meta.createdAt || Date.now()
+        }
       };
 
       const request = store.put(deckToSave);
@@ -199,7 +204,17 @@ export function updateCharacter(id: string, updates: Partial<Character>) {
 // Add new character to current deck
 export function addCharacter() {
   currentDeck.update(deck => {
-    if (!deck || deck.characters.length >= 9) return deck;
+    if (!deck) return deck;
+
+    // Check URL size before adding
+    const currentSize = new TextEncoder().encode(deckToUrl(deck)).length;
+    if (currentSize > 30000) { // Leave some margin below Chrome's limit
+      validationErrors.set([{ 
+        field: 'deck', 
+        message: 'URL size limit approaching. Consider creating a new deck.' 
+      }]);
+      return deck;
+    }
 
     const newChar: Character = {
       id: crypto.randomUUID(),
@@ -220,6 +235,10 @@ export function addCharacter() {
 
     const newDeck = {
       ...deck,
+      meta: {
+        ...deck.meta,
+        lastEdited: Date.now()
+      },
       characters: [...deck.characters, newChar]
     };
 
@@ -230,26 +249,24 @@ export function addCharacter() {
 }
 
 // Remove character from current deck
-export function removeCharacter(id: string) {
-  currentDeck.update(deck => {
-    if (!deck) return null;
+export async function deleteCharacters(deckId: string, characterIds: string[]) {
+  const deck = await loadDeck(deckId);
+  if (!deck) throw new StorageError('Deck not found');
 
-    const newDeck = {
-      ...deck,
-      characters: deck.characters.filter(c => c.id !== id)
-    };
+  const updatedDeck = {
+    ...deck,
+    meta: {
+      ...deck.meta,
+      lastEdited: Date.now()
+    },
+    characters: deck.characters.filter(c => !characterIds.includes(c.id))
+  };
 
-    // Validate the deck after removal
-    const errors = validateDeck(newDeck);
-    if (errors.length > 0) {
-      validationErrors.set(errors);
-      return deck;
-    }
-
-    isDirty.set(true);
-    validationErrors.set([]);
-    return newDeck;
-  });
+  await saveDeck(updatedDeck);
+  if (get(currentDeck)?.id === deckId) {
+    currentDeck.set(updatedDeck);
+  }
+  return updatedDeck;
 }
 
 // URL serialization
@@ -278,6 +295,19 @@ export function deckFromUrl(url: URL): CharacterDeck | null {
     validationErrors.set([{ field: 'url', message: 'Invalid deck data in URL' }]);
     return null;
   }
+}
+
+// Add deck switching functionality
+export async function switchDeck(id: string) {
+  // Save current deck if dirty
+  const currentDirty = get(isDirty);
+  if (currentDirty) {
+    const current = get(currentDeck);
+    if (current) await saveDeck(current);
+  }
+  
+  // Load new deck
+  await loadDeck(id);
 }
 
 // Auto-save when dirty
@@ -315,4 +345,70 @@ if (browser) {
       }, SAVE_DEBOUNCE);
     }
   });
+} 
+
+// Duplicate an existing deck
+export async function duplicateDeck(deck: CharacterDeck, newName?: string): Promise<CharacterDeck> {
+  const newDeck: CharacterDeck = {
+    id: crypto.randomUUID(),
+    meta: {
+      name: newName || `${deck.meta.name} (Copy)`,
+      theme: deck.meta.theme,
+      lastEdited: Date.now(),
+      createdAt: Date.now()
+    },
+    characters: deck.characters.map(char => ({
+      ...char,
+      id: crypto.randomUUID()
+    }))
+  };
+
+  await saveDeck(newDeck, true);
+  return newDeck;
+}
+
+// Copy characters to a deck
+export async function copyCharactersTo(
+  characters: Character[],
+  targetDeckId: string | 'new',
+  newDeckName?: string
+): Promise<CharacterDeck> {
+  // Create new deck if needed
+  if (targetDeckId === 'new') {
+    const newDeck: CharacterDeck = {
+      id: crypto.randomUUID(),
+      meta: {
+        name: newDeckName || 'New Deck',
+        theme: 'default',
+        lastEdited: Date.now(),
+        createdAt: Date.now()
+      },
+      characters: []
+    };
+    targetDeckId = newDeck.id;
+    await saveDeck(newDeck, true);
+  }
+
+  // Load target deck
+  const targetDeck = await loadDeck(targetDeckId);
+  if (!targetDeck) throw new StorageError('Target deck not found');
+
+  // Copy characters with new IDs
+  const copiedChars = characters.map(char => ({
+    ...char,
+    id: crypto.randomUUID()
+  }));
+
+  // Add to target deck
+  const updatedDeck = {
+    ...targetDeck,
+    meta: {
+      ...targetDeck.meta,
+      lastEdited: Date.now()
+    },
+    characters: [...targetDeck.characters, ...copiedChars]
+  };
+
+  await saveDeck(updatedDeck);
+  return updatedDeck;
 } 

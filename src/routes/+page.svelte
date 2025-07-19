@@ -5,10 +5,14 @@
   import type { Character } from '$lib/types';
   import CharacterCardFront from '$lib/components/CharacterCardFront.svelte';
   import CharacterCardBack from '$lib/components/CharacterCardBack.svelte';
+  import UrlSizeIndicator from '$lib/components/UrlSizeIndicator.svelte';
+  import DeckSelector from '$lib/components/DeckSelector.svelte';
+  import DeckList from '$lib/components/DeckList.svelte';
 
   let showCropMarks = true;
   let loading = true;
   let error: string | null = null;
+  let deckDialog: HTMLDialogElement;
 
   onMount(async () => {
     try {
@@ -77,17 +81,47 @@
 <div class="print-container">
   <!-- Print settings -->
   <div class="settings no-print">
-    <label>
-      <input type="checkbox" bind:checked={showCropMarks}>
-      Show crop marks
-    </label>
+    <div class="settings-row">
+      <button 
+        class="deck-button"
+        onclick={() => deckDialog.showModal()}
+      >
+        Manage Decks
+      </button>
+      <label>
+        <input type="checkbox" bind:checked={showCropMarks}>
+        Show crop marks
+      </label>
+    </div>
     <div class="print-info">
       Print double-sided, flip on long edge (like a book)
     </div>
-    {#if ($currentDeck?.characters?.length ?? 0) < 9}
-      <button onclick={addCharacter}>Add Character</button>
+    {#if $currentDeck}
+      <div class="deck-controls">
+        <button onclick={addCharacter}>Add Character</button>
+        <UrlSizeIndicator deck={$currentDeck} />
+      </div>
     {/if}
   </div>
+
+  <dialog 
+    bind:this={deckDialog}
+    class="deck-dialog"
+  >
+    <div class="dialog-header">
+      <h2>Deck Management</h2>
+      <button 
+        class="close-button"
+        onclick={() => deckDialog.close()}
+      >
+        ×
+      </button>
+    </div>
+    <div class="dialog-content">
+      <DeckSelector />
+      <DeckList />
+    </div>
+  </dialog>
 
   {#if loading}
     <div class="message">Loading...</div>
@@ -213,5 +247,133 @@
 
   button:hover {
     background: #357abd;
+  }
+
+  .deck-controls {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+
+  .settings-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  /* Hide deck management in print mode */
+  @media print {
+    .no-print {
+      display: none;
+    }
+  }
+
+  .deck-management {
+    position: relative;
+  }
+
+  .deck-management summary {
+    cursor: pointer;
+    padding: 0.5rem 1rem;
+    background: #f5f5f5;
+    border-radius: 4px;
+    user-select: none;
+  }
+
+  .deck-management summary:hover {
+    background: #e8e8e8;
+  }
+
+  .management-content {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    margin-top: 0.5rem;
+    background: white;
+    border: 1px solid #eee;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    z-index: 100;
+    min-width: 300px;
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+
+  @media print {
+    .no-print {
+      display: none;
+    }
+  }
+
+  .deck-button {
+    padding: 0.5rem 1rem;
+    background: #4a90e2;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+  }
+
+  .deck-button:hover {
+    background: #357abd;
+  }
+
+  .deck-dialog {
+    border: none;
+    border-radius: 8px;
+    padding: 0;
+    max-width: 90vw;
+    max-height: 90vh;
+    width: 600px;
+  }
+
+  .deck-dialog::backdrop {
+    background: rgba(0, 0, 0, 0.5);
+  }
+
+  .dialog-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: #f5f5f5;
+    border-bottom: 1px solid #eee;
+    border-radius: 8px 8px 0 0;
+  }
+
+  .dialog-header h2 {
+    margin: 0;
+    font-size: 1.2rem;
+    color: #333;
+  }
+
+  .close-button {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: #666;
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+  }
+
+  .close-button:hover {
+    background: #e8e8e8;
+    color: #333;
+  }
+
+  .dialog-content {
+    padding: 1rem;
+    overflow-y: auto;
+    max-height: calc(90vh - 4rem);
+  }
+
+  @media print {
+    .no-print {
+      display: none;
+    }
   }
 </style>
