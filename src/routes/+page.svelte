@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { currentDeck } from '$lib/stores/cards';
-  import { updateCharacter, loadDeck, deckFromUrl, addCharacter, saveDeck } from '$lib/stores/cards';
+  import { updateCharacter, loadDeck, deckFromUrl, addCharacter, saveDeck, listDecks } from '$lib/stores/cards';
   import type { Character } from '$lib/types';
   import CharacterCardFront from '$lib/components/CharacterCardFront.svelte';
   import CharacterCardBack from '$lib/components/CharacterCardBack.svelte';
@@ -43,17 +43,25 @@
         return;
       }
 
-      // Then try to load from IndexedDB
-      const savedDeck = await loadDeck('default');
-      if (savedDeck) {
-        currentDeck.set(savedDeck);
-        loading = false;
-        return;
+      // Get all decks and find the most recently edited one
+      const decks = await listDecks();
+      if (decks.length > 0) {
+        // Sort by lastEdited timestamp (newest first)
+        const sortedDecks = decks.sort((a, b) => b.meta.lastEdited - a.meta.lastEdited);
+        const mostRecentDeck = sortedDecks[0];
+        
+        // Load the most recent deck
+        const loadedDeck = await loadDeck(mostRecentDeck.id);
+        if (loadedDeck) {
+          currentDeck.set(loadedDeck);
+          loading = false;
+          return;
+        }
       }
 
-      // If no deck exists, create a new empty one
+      // If no decks exist, create a new empty one
       const newDeck = {
-        id: 'default',
+        id: crypto.randomUUID(), // Use UUID instead of 'default'
         meta: {
           name: 'New Deck',
           theme: 'default',
