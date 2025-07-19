@@ -1,15 +1,6 @@
 import type { InferSelectModel } from 'drizzle-orm';
 import { pgTable, text } from 'drizzle-orm/pg-core';
-
-export const characters = pgTable('characters', {
-  id: text('id').primaryKey(),
-  name: text('name').notNull(),
-  role: text('role').notNull(),
-  age: text('age').notNull(),
-  portrait: text('portrait'),
-  traits: text('traits').array().notNull(),
-  bio: text('bio').notNull(),
-});
+import type { Character, CharacterDeck } from '$lib/types';
 
 export const decks = pgTable('decks', {
   id: text('id').primaryKey(),
@@ -17,15 +8,43 @@ export const decks = pgTable('decks', {
   theme: text('theme').notNull(),
 });
 
-// Types
-export type Character = InferSelectModel<typeof characters>;
-export type Deck = InferSelectModel<typeof decks>;
+export const characters = pgTable('characters', {
+  id: text('id').primaryKey(),
+  deckId: text('deck_id').notNull().references(() => decks.id),
+  name: text('name').notNull(),
+  role: text('role').notNull(),
+  age: text('age').notNull(),
+  portrait: text('portrait'),
+  traits: text('traits').array().notNull(),
+  bio: text('bio').notNull(),
+  notes: text('notes'),  // Optional notes field
+});
 
-// For mock data structure
-export type CharacterDeck = {
-  meta: {
-    name: string;
-    theme: string;
-  };
-  characters: Character[];
-};
+// Types
+export type DbCharacter = InferSelectModel<typeof characters>;
+export type DbDeck = InferSelectModel<typeof decks>;
+
+// Type guards for runtime validation
+export function isCharacter(obj: unknown): obj is Character {
+  const char = obj as Character;
+  return (
+    typeof char?.id === 'string' &&
+    typeof char?.name === 'string' &&
+    typeof char?.role === 'string' &&
+    typeof char?.age === 'string' &&
+    (char?.portrait === null || typeof char?.portrait === 'string') &&
+    Array.isArray(char?.traits) &&
+    typeof char?.bio === 'string'
+  );
+}
+
+export function isCharacterDeck(obj: unknown): obj is CharacterDeck {
+  const deck = obj as CharacterDeck;
+  return (
+    typeof deck?.id === 'string' &&
+    typeof deck?.meta?.name === 'string' &&
+    typeof deck?.meta?.theme === 'string' &&
+    Array.isArray(deck?.characters) &&
+    deck.characters.every(isCharacter)
+  );
+}

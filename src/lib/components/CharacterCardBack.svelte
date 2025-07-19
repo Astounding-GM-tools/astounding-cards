@@ -1,9 +1,28 @@
 <script lang="ts">
-  import type { Character } from '$lib/server/db/schema';
+  import type { Character } from '$lib/types';
+  import { onMount } from 'svelte';
 
   export let character: Character;
   export let gridPosition: number;
   export let showCropMarks = true;
+  export let onChange: (updates: Partial<Character>) => void;
+
+  let bioElement: HTMLElement;
+
+  onMount(() => {
+    // Ensure bio text doesn't overflow
+    if (bioElement) {
+      const maxHeight = bioElement.style.maxHeight;
+      if (bioElement.scrollHeight > parseInt(maxHeight)) {
+        bioElement.textContent = bioElement.textContent?.slice(0, -10) + '...';
+      }
+    }
+  });
+
+  function updateBio(event: Event) {
+    const target = event.target as HTMLElement;
+    onChange({ bio: target.innerText });
+  }
 </script>
 
 <article 
@@ -12,10 +31,19 @@
   class:show-crop-marks={showCropMarks}
   style:container-type="inline-size"
 >
-  <h2>{character.name}</h2>
-  <p class="bio">{character.bio}</p>
+  <h2 
+    contenteditable="true" 
+    on:blur={updateBio}
+  >{character.name}</h2>
+  <p 
+    class="bio" 
+    contenteditable="true"
+    on:blur={updateBio}
+    bind:this={bioElement}
+  >{character.bio}</p>
   <section class="notes">
     <h3>Notes</h3>
+    <div class="notes-content"></div>
   </section>
 </article>
 
@@ -75,6 +103,11 @@
     font-weight: normal;
   }
 
+  .notes-content {
+    margin-top: 2mm;
+    min-height: 40mm;
+  }
+
   /* Crop marks as pseudo elements */
   .show-crop-marks::before,
   .show-crop-marks::after {
@@ -115,14 +148,21 @@
 
   /* Hide redundant crop marks */
   /* Middle column (2,5,8) - hide vertical marks */
-  :global(.card-grid > :nth-child(3n-1).show-crop-marks) > :first-child::before,
-  :global(.card-grid > :nth-child(3n-1).show-crop-marks) > :last-child::after {
+  :global(.card-grid > div:nth-child(3n-1) .show-crop-marks) > :first-child::before,
+  :global(.card-grid > div:nth-child(3n-1) .show-crop-marks) > :last-child::after {
     display: none;
   }
 
   /* Middle row (4,5,6) - hide horizontal marks */
-  :global(.card-grid > :nth-child(n+4):nth-child(-n+6).show-crop-marks)::before,
-  :global(.card-grid > :nth-child(n+4):nth-child(-n+6).show-crop-marks)::after {
+  :global(.card-grid > div:nth-child(n+4):nth-child(-n+6) .show-crop-marks)::before,
+  :global(.card-grid > div:nth-child(n+4):nth-child(-n+6) .show-crop-marks)::after {
     display: none;
+  }
+
+  @media print {
+    .card {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
   }
 </style> 
