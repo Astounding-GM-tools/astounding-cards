@@ -1,0 +1,62 @@
+<script lang="ts">
+  export let showCropMarks = true;
+  export let children: () => any;
+</script>
+
+<div class="card" class:show-crop-marks={showCropMarks}>
+  {@render children()}
+</div>
+
+<style>
+  .card {
+    position: relative;
+    width: 69mm;
+    height: 97mm;
+    padding: 3mm;
+    box-sizing: border-box;
+    background: white;
+  }
+
+  /* Crop marks using gradient borders */
+  .show-crop-marks {
+    position: relative;
+  }
+
+  .show-crop-marks::before,
+  .show-crop-marks::after {
+    content: '';
+    position: absolute;
+    inset: -0.3mm;
+    pointer-events: none;
+  }
+
+  /* Horizontal marks */
+  .show-crop-marks::before {
+    border-top: 0.3mm solid;
+    border-bottom: 0.3mm solid;
+    border-image: linear-gradient(
+      to right,
+      black 0,
+      black 12mm,
+      transparent 12mm,
+      transparent calc(100% - 12mm),
+      black calc(100% - 12mm),
+      black 100%
+    ) 1;
+  }
+
+  /* Vertical marks */
+  .show-crop-marks::after {
+    border-left: 0.3mm solid;
+    border-right: 0.3mm solid;
+    border-image: linear-gradient(
+      to bottom,
+      black 0,
+      black 12mm,
+      transparent 12mm,
+      transparent calc(100% - 12mm),
+      black calc(100% - 12mm),
+      black 100%
+    ) 1;
+  }
+</style> 

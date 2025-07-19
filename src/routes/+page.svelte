@@ -204,7 +204,53 @@
 </div>
 
 <style>
-  /* Print settings */
+  /* A4 page setup */
+  .page {
+    width: 210mm;
+    height: 297mm;
+    padding: 3mm;
+    margin: 0 auto 2rem;
+    background: white;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    position: relative;
+  }
+
+  /* Card grid */
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 69mm);
+    grid-auto-rows: 97mm;
+    justify-content: center;
+    margin-top: 3mm; /* Reduced from 6mm for better balance */
+  }
+
+  /* Hide crop marks for middle column */
+  .card-grid > div:nth-child(3n-1) :global(.show-crop-marks::before),
+  .card-grid > div:nth-child(3n-1) :global(.show-crop-marks::after) {
+    border-left-color: transparent;
+    border-right-color: transparent;
+  }
+
+  /* Hide crop marks for middle row */
+  .card-grid > div:nth-child(n+4):nth-child(-n+6) :global(.show-crop-marks::before),
+  .card-grid > div:nth-child(n+4):nth-child(-n+6) :global(.show-crop-marks::after) {
+    border-top-color: transparent;
+    border-bottom-color: transparent;
+  }
+
+  /* Loading and error messages */
+  .message {
+    text-align: center;
+    padding: 2rem;
+    font-size: 1.2rem;
+    color: #666;
+  }
+
+  .error {
+    color: #d00;
+  }
+
+  /* Header/Settings section */
   .settings {
     padding: 1rem;
     border-bottom: 1px solid #ddd;
@@ -224,6 +270,7 @@
     margin-left: auto;
   }
 
+  /* Action buttons */
   .action-button {
     padding: 0.5rem 1rem;
     font-size: 0.9rem;
@@ -274,6 +321,7 @@
     background: #e1bee7;
   }
 
+  /* Crop marks checkbox */
   .crop-marks {
     display: inline-flex;
     align-items: center;
@@ -286,6 +334,7 @@
     margin: 0;
   }
 
+  /* URL size indicator */
   .url-size {
     font-size: 0.9rem;
     color: #666;
@@ -296,153 +345,7 @@
     display: none;
   }
 
-  /* A4 page setup */
-  .page {
-    width: 210mm;
-    height: 297mm;
-    padding: 8mm;
-    margin: 0 auto 2rem;
-    background: white;
-    box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    position: relative;
-  }
-
-  /* Card grid */
-  .card-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 63.5mm);
-    grid-auto-rows: 88.9mm;
-    gap: 5mm;
-    justify-content: center;
-    padding-top: 5mm;
-  }
-
-  .card-grid > div {
-    width: 100%;
-    height: 100%;
-  }
-
-  /* Print styles */
-  @media print {
-    .no-print {
-      display: none;
-    }
-
-    .print-container {
-      margin: 0;
-      padding: 0;
-    }
-
-    .page {
-      margin: 0;
-      box-shadow: none;
-      page-break-after: always;
-    }
-
-    /* Ensure clean page breaks */
-    @page {
-      size: A4;
-      margin: 0;
-    }
-  }
-
-  .message {
-    text-align: center;
-    padding: 2rem;
-    font-size: 1.2rem;
-    color: #666;
-  }
-
-  .error {
-    color: #d00;
-  }
-
-  button {
-    margin-top: 1rem;
-    padding: 0.5rem 1rem;
-    background: #4a90e2;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-  }
-
-  button:hover {
-    background: #357abd;
-  }
-
-  .deck-controls {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-top: 1rem;
-  }
-
-  .settings-row {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 0.5rem;
-  }
-
-  /* Hide deck management in print mode */
-  @media print {
-    .no-print {
-      display: none;
-    }
-  }
-
-  .deck-management {
-    position: relative;
-  }
-
-  .deck-management summary {
-    cursor: pointer;
-    padding: 0.5rem 1rem;
-    background: #f5f5f5;
-    border-radius: 4px;
-    user-select: none;
-  }
-
-  .deck-management summary:hover {
-    background: #e8e8e8;
-  }
-
-  .management-content {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    margin-top: 0.5rem;
-    background: white;
-    border: 1px solid #eee;
-    border-radius: 4px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    z-index: 100;
-    min-width: 300px;
-    max-height: 80vh;
-    overflow-y: auto;
-  }
-
-  @media print {
-    .no-print {
-      display: none;
-    }
-  }
-
-  .deck-button {
-    padding: 0.5rem 1rem;
-    background: #4a90e2;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 1rem;
-  }
-
-  .deck-button:hover {
-    background: #357abd;
-  }
-
+  /* Dialog styles */
   .deck-dialog {
     border: none;
     border-radius: 8px;
@@ -493,41 +396,26 @@
     max-height: calc(90vh - 4rem);
   }
 
+  /* Print styles */
   @media print {
     .no-print {
       display: none;
     }
-  }
 
-  .test-toast {
-    padding: 0.25rem 0.75rem;
-    font-size: 0.9rem;
-    background: #f0f0f0;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    cursor: pointer;
-  }
+    .print-container {
+      margin: 0;
+      padding: 0;
+    }
 
-  .test-toast:hover {
-    background: #e0e0e0;
-  }
+    .page {
+      margin: 0;
+      box-shadow: none;
+      page-break-after: always;
+    }
 
-  .share-button {
-    padding: 0.25rem 0.75rem;
-    font-size: 0.9rem;
-    background: #4caf50;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-  }
-
-  .share-button:hover {
-    background: #43a047;
-  }
-
-  .share-button:disabled {
-    background: #ccc;
-    cursor: not-allowed;
+    @page {
+      size: A4;
+      margin: 0;
+    }
   }
 </style>

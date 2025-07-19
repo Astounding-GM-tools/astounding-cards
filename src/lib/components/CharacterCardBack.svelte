@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { Character } from '$lib/types';
   import { onMount } from 'svelte';
+  import Card from './Card.svelte';
 
   export let character: Character;
   export let gridPosition: number;
@@ -25,35 +26,33 @@
   }
 </script>
 
-<article 
-  class="card" 
-  data-position={gridPosition}
-  class:show-crop-marks={showCropMarks}
-  style:container-type="inline-size"
->
-  <h2 
-    contenteditable="true" 
-    on:blur={updateBio}
-  >{character.name}</h2>
-  <p 
-    class="bio" 
-    contenteditable="true"
-    on:blur={updateBio}
-    bind:this={bioElement}
-  >{character.bio}</p>
-  <section class="notes">
-    <h3>Notes</h3>
-    <div class="notes-content"></div>
-  </section>
-</article>
+<Card {showCropMarks}>
+  <article 
+    class="card-content" 
+    data-position={gridPosition}
+    style:container-type="inline-size"
+  >
+    <h2 
+      contenteditable="true" 
+      on:blur={updateBio}
+    >{character.name}</h2>
+    <p 
+      class="bio" 
+      contenteditable="true"
+      on:blur={updateBio}
+      bind:this={bioElement}
+    >{character.bio}</p>
+    <section class="notes">
+      <h3>Notes</h3>
+      <div class="notes-content"></div>
+    </section>
+  </article>
+</Card>
 
 <style>
-  .card {
-    position: relative;
-    width: 63.5mm;
-    height: 88.9mm;
-    padding: 3mm;
-    box-sizing: border-box;
+  .card-content {
+    width: 100%;
+    height: 100%;
     font-size: 8pt;
     display: flex;
     flex-direction: column;
@@ -106,57 +105,6 @@
   .notes-content {
     margin-top: 2mm;
     min-height: 40mm;
-  }
-
-  /* Crop marks as pseudo elements */
-  .show-crop-marks::before,
-  .show-crop-marks::after {
-    content: '';
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 6mm;
-    border-top: 0.3mm solid black;
-  }
-
-  .show-crop-marks::before {
-    top: -3mm;
-  }
-
-  .show-crop-marks::after {
-    bottom: -3mm;
-  }
-
-  /* Using first and last child for vertical marks */
-  .show-crop-marks > :first-child::before,
-  .show-crop-marks > :last-child::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    height: 6mm;
-    border-left: 0.3mm solid black;
-  }
-
-  .show-crop-marks > :first-child::before {
-    left: -3mm;
-  }
-
-  .show-crop-marks > :last-child::after {
-    right: -3mm;
-  }
-
-  /* Hide redundant crop marks */
-  /* Middle column (2,5,8) - hide vertical marks */
-  :global(.card-grid > div:nth-child(3n-1) .show-crop-marks) > :first-child::before,
-  :global(.card-grid > div:nth-child(3n-1) .show-crop-marks) > :last-child::after {
-    display: none;
-  }
-
-  /* Middle row (4,5,6) - hide horizontal marks */
-  :global(.card-grid > div:nth-child(n+4):nth-child(-n+6) .show-crop-marks)::before,
-  :global(.card-grid > div:nth-child(n+4):nth-child(-n+6) .show-crop-marks)::after {
-    display: none;
   }
 
   @media print {

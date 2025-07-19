@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { Character } from '$lib/types';
   import { debounce } from '$lib/utils/debounce';
+  import Card from './Card.svelte';
 
   export let character: Character;
   export let showCropMarks = true;
@@ -59,88 +60,88 @@
   }
 </script>
 
-<article 
-  class="card" 
-  class:show-crop-marks={showCropMarks}
-  style:background-image={character.portrait ? `url(/portraits/${character.portrait})` : undefined}
->
-  <section>
-    <h2 
-      contenteditable="true" 
-      on:blur={updateName}
-      class="editable"
-    >{character.name}</h2>
-    
-    <div class="meta">
-      <p 
-        contenteditable="true" 
-        on:blur={updateRole}
-        class="role editable"
-      >{character.role}</p>
-      <p class="age">Age: <input 
-        type="number" 
-        value={character.age}
-        on:input={updateAge}
-        min="1"
-        max="999"
-      /></p>
-    </div>
-
-    <ul class="traits">
-      {#each character.traits as trait, i}
-        <li>
-          <span 
-            contenteditable="true" 
-            on:blur={(e) => updateTrait(i, e)}
-            class="editable"
-          >{trait}</span>
-          <button 
-            class="remove-trait" 
-            on:click={() => removeTrait(i)}
-            title="Remove trait"
-          >×</button>
-        </li>
-      {/each}
-      {#if character.traits.length < 5}
-        <li>
-          <button class="add-trait" on:click={addTrait}>
-            + Add trait
-          </button>
-        </li>
-      {/if}
-    </ul>
-  </section>
-
-  <button 
-    class="change-portrait" 
-    on:click={() => showImageInput = !showImageInput}
-    title="Change portrait"
+<Card {showCropMarks}>
+  <article 
+    class="card-content" 
+    style:background-image={character.portrait ? `url(/portraits/${character.portrait})` : undefined}
   >
-    {#if character.portrait}
-      Change portrait
-    {:else}
-      Add portrait
-    {/if}
-  </button>
+    <section>
+      <h2 
+        contenteditable="true" 
+        on:blur={updateName}
+        class="editable"
+      >{character.name}</h2>
+      
+      <div class="meta">
+        <p 
+          contenteditable="true" 
+          on:blur={updateRole}
+          class="role editable"
+        >{character.role}</p>
+        <p class="age">Age: <input 
+          type="number" 
+          value={character.age}
+          on:input={updateAge}
+          min="1"
+          max="999"
+        /></p>
+      </div>
 
-  {#if showImageInput}
-    <div class="image-input">
-      <input 
-        type="text"
-        bind:value={imageUrl}
-        placeholder="Enter image URL"
-      />
-      <button on:click={updatePortrait}>Set</button>
-      <button on:click={() => showImageInput = false}>Cancel</button>
-    </div>
-  {/if}
-</article>
+      <ul class="traits">
+        {#each character.traits as trait, i}
+          <li>
+            <span 
+              contenteditable="true" 
+              on:blur={(e) => updateTrait(i, e)}
+              class="editable"
+            >{trait}</span>
+            <button 
+              class="remove-trait" 
+              on:click={() => removeTrait(i)}
+              title="Remove trait"
+            >×</button>
+          </li>
+        {/each}
+        {#if character.traits.length < 5}
+          <li>
+            <button class="add-trait" on:click={addTrait}>
+              + Add trait
+            </button>
+          </li>
+        {/if}
+      </ul>
+    </section>
+
+    <button 
+      class="change-portrait" 
+      on:click={() => showImageInput = !showImageInput}
+      title="Change portrait"
+    >
+      {#if character.portrait}
+        Change portrait
+      {:else}
+        Add portrait
+      {/if}
+    </button>
+
+    {#if showImageInput}
+      <div class="image-input">
+        <input 
+          type="text"
+          bind:value={imageUrl}
+          placeholder="Enter image URL"
+        />
+        <button on:click={updatePortrait}>Set</button>
+        <button on:click={() => showImageInput = false}>Cancel</button>
+      </div>
+    {/if}
+  </article>
+</Card>
 
 <style>
-  .card {
-    position: relative;
-    width: 63.5mm;
-    height: 88.9mm;
+  .card-content {
+    width: 100%;
+    height: 100%;
     background-color: white;
     background-size: cover;
     background-position: center;
@@ -289,7 +290,7 @@
     font-size: 7pt;
   }
 
-  .card:hover .change-portrait {
+  .card-content:hover .change-portrait {
     opacity: 0.8;
   }
 
@@ -329,57 +330,6 @@
     background: #ddd;
   }
 
-  /* Crop marks as pseudo elements */
-  .show-crop-marks::before,
-  .show-crop-marks::after {
-    content: '';
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 6mm;
-    border-top: 0.3mm solid black;
-  }
-
-  .show-crop-marks::before {
-    top: -3mm;
-  }
-
-  .show-crop-marks::after {
-    bottom: -3mm;
-  }
-
-  /* Using first and last child for vertical marks */
-  .show-crop-marks > :first-child::before,
-  .show-crop-marks > :last-child::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    height: 6mm;
-    border-left: 0.3mm solid black;
-  }
-
-  .show-crop-marks > :first-child::before {
-    left: -3mm;
-  }
-
-  .show-crop-marks > :last-child::after {
-    right: -3mm;
-  }
-
-  /* Hide redundant crop marks */
-  /* Middle column (2,5,8) - hide vertical marks */
-  :global(.card-grid > div:nth-child(3n-1) .show-crop-marks) > :first-child::before,
-  :global(.card-grid > div:nth-child(3n-1) .show-crop-marks) > :last-child::after {
-    display: none;
-  }
-
-  /* Middle row (4,5,6) - hide horizontal marks */
-  :global(.card-grid > div:nth-child(n+4):nth-child(-n+6) .show-crop-marks)::before,
-  :global(.card-grid > div:nth-child(n+4):nth-child(-n+6) .show-crop-marks)::after {
-    display: none;
-  }
-
   @media print {
     .editable::after,
     .remove-trait,
@@ -410,7 +360,7 @@
       border: none;
     }
 
-    .card {
+    .card-content {
       break-inside: avoid;
       page-break-inside: avoid;
     }
