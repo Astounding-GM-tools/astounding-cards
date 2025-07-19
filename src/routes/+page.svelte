@@ -8,11 +8,27 @@
   import UrlSizeIndicator from '$lib/components/UrlSizeIndicator.svelte';
   import DeckSelector from '$lib/components/DeckSelector.svelte';
   import DeckList from '$lib/components/DeckList.svelte';
+  import Toasts from '$lib/components/Toasts.svelte';
+  import { toasts } from '$lib/stores/toast';
 
   let showCropMarks = true;
   let loading = true;
   let error: string | null = null;
   let deckDialog: HTMLDialogElement;
+
+  let toastIndex = 0;
+  const testToasts = [
+    { type: 'success' as const, message: 'Success toast test!' },
+    { type: 'info' as const, message: 'Info toast test!' },
+    { type: 'warning' as const, message: 'Warning toast test!' },
+    { type: 'error' as const, message: 'Error toast test!' }
+  ];
+
+  function showTestToast() {
+    const toast = testToasts[toastIndex];
+    toasts[toast.type](toast.message);
+    toastIndex = (toastIndex + 1) % testToasts.length;
+  }
 
   onMount(async () => {
     try {
@@ -20,6 +36,9 @@
       const urlDeck = deckFromUrl(new URL(window.location.href));
       if (urlDeck) {
         currentDeck.set(urlDeck);
+        // Clear the URL without triggering navigation
+        history.replaceState(null, '', window.location.pathname);
+        toasts.info('Deck loaded from URL. The URL has been cleared to prevent overwriting your changes.');
         loading = false;
         return;
       }
@@ -54,6 +73,15 @@
     }
   });
 
+  // Subscribe to deck changes to show URL reset notification
+  $: if ($currentDeck) {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('deck')) {
+      history.replaceState(null, '', window.location.pathname);
+      toasts.info('URL was reset. Create a new share URL to share your changes.');
+    }
+  }
+
   function handleCharacterUpdate(id: string, updates: Partial<Character>) {
     updateCharacter(id, updates);
   }
@@ -79,6 +107,7 @@
 </script>
 
 <div class="print-container">
+  <Toasts />
   <!-- Print settings -->
   <div class="settings no-print">
     <div class="settings-row">
@@ -87,6 +116,12 @@
         onclick={() => deckDialog.showModal()}
       >
         Manage Decks
+      </button>
+      <button 
+        class="test-toast"
+        onclick={showTestToast}
+      >
+        Test Toast
       </button>
       <label>
         <input type="checkbox" bind:checked={showCropMarks}>
@@ -375,5 +410,18 @@
     .no-print {
       display: none;
     }
+  }
+
+  .test-toast {
+    padding: 0.25rem 0.75rem;
+    font-size: 0.9rem;
+    background: #f0f0f0;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  .test-toast:hover {
+    background: #e0e0e0;
   }
 </style>

@@ -27,13 +27,40 @@
   - [x] Show current deck name
   - [x] Basic deck deletion with confirmation
   - [x] URL size monitoring and warnings
+  - [x] Character deletion and copying
+  - [x] Theme selection UI with preview
+- [x] User Feedback System
+  - [x] Toast notification component
+  - [x] Success/info/warning/error states
+  - [x] Automatic dismissal
+  - [x] Consistent styling
+  - [x] Accessible notifications
 
 ## Next Steps (Priority Order)
 
-### 1. Layout Improvements
-- [ ] Fix back card positioning for any number of cards (1-32)
-  - [ ] Remove artificial 9-card limit
-  - [ ] Support multiple sheets (up to 4 double-sided pages)
+### 1. Theme Implementation
+- [ ] Apply theme styles to cards
+  - [ ] Implement theme CSS application
+  - [ ] Create theme assets (patterns, borders)
+  - [ ] Test all themes
+  - [ ] Add theme previews in selector
+  - [ ] Ensure print compatibility
+  - [ ] Add theme customization options
+
+### 2. Basic URL Sharing (Quick Win)
+- [ ] Implement proper GUID system
+- [ ] Auto-update URL on changes
+- [ ] Add "Copy URL" button
+- [ ] Add URL validation
+- [ ] Show URL size indicator
+- [ ] Add sharing instructions
+- [ ] Clear URL after import
+- [ ] Handle URL import conflicts
+
+### 3. Layout Improvements
+- [x] Fix back card positioning for any number of cards (1-32)
+  - [x] Remove artificial 9-card limit
+  - [x] Support multiple sheets (up to 4 double-sided pages)
   - [ ] Add page navigation/preview
   - [ ] Show sheet numbers and card positions
   - [ ] Maintain proper double-sided printing alignment
@@ -41,7 +68,24 @@
   - [ ] Handle gaps in grid gracefully
   - [ ] Add visual page breaks in edit mode
 
-### 2. Mobile Experience
+### 4. Advanced URL Sharing & Collaboration
+- [ ] Support different collaboration modes:
+  - [ ] Self-sync across devices
+    - [ ] Clear "last synced" indicator
+    - [ ] Quick device-to-device sharing
+    - [ ] Optional auto-sync via URL
+  - [ ] Author/Resource sharing
+    - [ ] Mark decks as "official" or "modified"
+    - [ ] Track source/parent deck
+    - [ ] Support for errata updates
+    - [ ] Fork/variant handling
+  - [ ] Conflict Resolution
+    - [ ] Compare versions
+    - [ ] Show visual diffs
+    - [ ] Merge options
+    - [ ] Keep history
+
+### 5. Mobile Experience
 - [ ] Create dedicated mobile routes and views
   - [ ] Separate from print layout components
   - [ ] Mobile-first navigation pattern
@@ -62,19 +106,7 @@
   - [ ] Share sheet integration
   - [ ] Camera integration for portraits
 
-### 3. URL Sharing & Collaboration
-- [ ] Support different collaboration modes:
-  - [ ] Self-sync across devices
-    - [ ] Clear "last synced" indicator
-    - [ ] Quick device-to-device sharing
-    - [ ] Optional auto-sync via URL
-  - [ ] Author/Resource sharing
-    - [ ] Mark decks as "official" or "modified"
-    - [ ] Track source/parent deck
-    - [ ] Support for errata updates
-    - [ ] Fork/variant handling
-
-### 4. Image Handling
+### 6. Image Handling
 - [ ] Change from local /portraits/ to full URLs
 - [ ] Add image URL validation
 - [ ] Add hosting suggestions:
@@ -87,7 +119,7 @@
   - [ ] Supported formats
   - [ ] Hosting considerations
 
-### 5. PWA & Offline Support
+### 7. PWA & Offline Support
 - [ ] Basic PWA setup
   - [ ] Web manifest
   - [ ] Service worker registration
@@ -102,30 +134,4 @@
   - [ ] Offline-first approach
   - [ ] Background sync for changes
   - [ ] Network status indicators
-  - [ ] Graceful degradation
-
-## Future Features
-- [ ] Theme switching for different card styles
-- [ ] Export/Import functionality for decks
-- [ ] Support for different card sizes and paper formats:
-  - [ ] Tarot size cards (3 per A4/Letter)
-  - [ ] A5 format support
-  - [ ] US Letter format support
-  - [ ] US Legal format support
-  - [ ] Larger text options for improved readability
-  - [ ] Adjustable margins for different printers
-  - [ ] Custom crop mark positions for different sizes
-- [ ] Real-time Collaboration Features
-  - [ ] Server infrastructure for real-time sync
-  - [ ] Selective card sharing (GM to players)
-  - [ ] Permission levels (view/edit/admin)
-  - [ ] Player note layers
-  - [ ] Progressive card reveals
-  - [ ] Support for "Murder Wall" scenarios
-    - [ ] Player-added connections
-    - [ ] Shared notes and theories
-    - [ ] GM-only information layer
-  - [ ] Session management
-    - [ ] Temporary sharing during play
-    - [ ] Auto-cleanup after session
-    - [ ] Session history/notes 
+  - [ ] Graceful degradation 
