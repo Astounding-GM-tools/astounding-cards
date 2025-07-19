@@ -15,6 +15,8 @@ export type CharacterDeck = {
   meta: {
     name: string;
     theme: string;
+    lastEdited: number; // Unix timestamp
+    createdAt: number;  // Unix timestamp
   };
   characters: Character[];
 };
@@ -69,13 +71,8 @@ export function validateDeck(deck: Partial<CharacterDeck>, allowEmpty = false): 
 
   if (!Array.isArray(deck.characters)) {
     errors.push({ field: 'characters', message: 'Characters must be an array' });
-  } else {
-    if (!allowEmpty && deck.characters.length === 0) {
-      errors.push({ field: 'characters', message: 'At least one character is required' });
-    }
-    if (deck.characters.length > 9) {
-      errors.push({ field: 'characters', message: 'Maximum 9 characters allowed' });
-    }
+  } else if (!allowEmpty && deck.characters.length === 0) {
+    errors.push({ field: 'characters', message: 'At least one character is required' });
   }
 
   return errors;

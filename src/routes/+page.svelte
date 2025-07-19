@@ -33,7 +33,9 @@
         id: 'default',
         meta: {
           name: 'New Deck',
-          theme: 'default'
+          theme: 'default',
+          lastEdited: Date.now(),
+          createdAt: Date.now()
         },
         characters: []
       };

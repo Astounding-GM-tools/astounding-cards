@@ -1,11 +1,14 @@
 import type { InferSelectModel } from 'drizzle-orm';
-import { pgTable, text } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, integer } from 'drizzle-orm/pg-core';
 import type { Character, CharacterDeck } from '$lib/types';
 
 export const decks = pgTable('decks', {
   id: text('id').primaryKey(),
   name: text('name').notNull(),
   theme: text('theme').notNull(),
+  lastEdited: timestamp('last_edited').notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  version: integer('version').notNull().default(1), // For conflict resolution
 });
 
 export const characters = pgTable('characters', {
@@ -17,7 +20,9 @@ export const characters = pgTable('characters', {
   portrait: text('portrait'),
   traits: text('traits').array().notNull(),
   bio: text('bio').notNull(),
-  notes: text('notes'),  // Optional notes field
+  notes: text('notes'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  version: integer('version').notNull().default(1), // For conflict resolution
 });
 
 // Types
