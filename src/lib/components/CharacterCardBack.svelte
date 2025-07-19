@@ -4,7 +4,6 @@
   import Card from './Card.svelte';
 
   export let character: Character;
-  export let gridPosition: number;
   export let showCropMarks = true;
   export let onChange: (updates: Partial<Character>) => void;
 
@@ -29,7 +28,6 @@
 <Card {showCropMarks}>
   <article 
     class="card-content" 
-    data-position={gridPosition}
     style:container-type="inline-size"
   >
     <h2 
@@ -73,6 +71,7 @@
     line-height: 1.4;
     overflow: hidden;
     max-height: calc(88.9mm - 6mm - 5mm - 6mm - 50mm); /* card height - padding - h2 - gaps - notes */
+    text-align: center;
   }
 
   @container (height < 20mm) {

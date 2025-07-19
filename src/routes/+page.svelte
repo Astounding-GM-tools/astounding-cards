@@ -11,6 +11,7 @@
   import Toasts from '$lib/components/Toasts.svelte';
   import { toasts } from '$lib/stores/toast';
   import { deckToUrl } from '$lib/stores/cards';
+  import PagedCards from '$lib/components/PagedCards.svelte';
 
   let showCropMarks = true;
   let loading = true;
@@ -114,8 +115,10 @@
   }
 </script>
 
+<!-- Root container -->
 <div class="print-container">
   <Toasts />
+  
   <!-- Print settings -->
   <div class="settings no-print">
     <div class="settings-row">
@@ -154,6 +157,7 @@
     </div>
   </div>
 
+  <!-- Deck management dialog -->
   <dialog 
     bind:this={deckDialog}
     class="deck-dialog"
@@ -173,257 +177,234 @@
     </div>
   </dialog>
 
-  {#if loading}
+  <!-- Main content -->
+  {#if !$currentDeck}
     <div class="message">Loading...</div>
-  {:else if error}
-    <div class="message error">{error}</div>
+  {:else if $currentDeck.characters.length === 0}
+    <div class="message">No characters in deck</div>
   {:else if $currentDeck}
-    <!-- Front page -->
-    <div class="page">
-      <div class="card-grid">
-        {#each $currentDeck.characters as character (character.id)}
-          <div>
-            <CharacterCardFront 
-              {character}
-              {showCropMarks}
-              onChange={(updates) => handleCharacterUpdate(character.id, updates)}
-            />
-          </div>
-        {/each}
-      </div>
-    </div>
-
-    <!-- Back page -->
-    <div class="page">
-      <div class="card-grid">
-        {#each $currentDeck.characters as character, index (character.id)}
-          <div style:order={getBackPosition(index + 1, $currentDeck.characters.length)}>
-            <CharacterCardBack 
-              {character}
-              {showCropMarks}
-              gridPosition={getBackPosition(index + 1, $currentDeck.characters.length)}
-              onChange={(updates) => handleCharacterUpdate(character.id, updates)}
-            />
-          </div>
-        {/each}
-      </div>
-    </div>
+    <PagedCards 
+      characters={$currentDeck.characters}
+      {showCropMarks}
+      onCharacterChange={handleCharacterUpdate}
+    />
   {/if}
 </div>
 
-<style>
-  /* A4 page setup */
-  .page {
-    width: 210mm;
-    height: 297mm;
-    padding: 3mm;
-    margin: 0 auto 2rem;
-    background: white;
-    box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    position: relative;
-  }
+  <style>
+    /* A4 page setup */
+    .page {
+      width: 210mm;
+      height: 297mm;
+      margin: 0 auto 2rem;
+      background: white;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      position: relative;
+    }
 
-  /* Card grid */
-  .card-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 69mm);
-    grid-auto-rows: 97mm;
-    justify-content: center;
-    margin-top: 3mm; /* Reduced from 6mm for better balance */
-  }
+    /* Card grid */
+    .card-grid {
+      display: grid;
+      /* Full width divided by 3 */
+      grid-template-columns: repeat(3, calc(210mm / 3));
+      /* Full height divided by 3 */
+      grid-auto-rows: calc(297mm / 3);
+    }
 
-  /* Hide crop marks for middle column */
-  .card-grid > div:nth-child(3n-1) :global(.show-crop-marks::before),
-  .card-grid > div:nth-child(3n-1) :global(.show-crop-marks::after) {
-    border-left-color: transparent;
-    border-right-color: transparent;
-  }
+    /* Hide crop marks for middle column */
+    .card-grid > div:nth-child(3n-1) :global(.show-crop-marks::before),
+    .card-grid > div:nth-child(3n-1) :global(.show-crop-marks::after) {
+      border-left-color: transparent;
+      border-right-color: transparent;
+    }
 
-  /* Hide crop marks for middle row */
-  .card-grid > div:nth-child(n+4):nth-child(-n+6) :global(.show-crop-marks::before),
-  .card-grid > div:nth-child(n+4):nth-child(-n+6) :global(.show-crop-marks::after) {
-    border-top-color: transparent;
-    border-bottom-color: transparent;
-  }
+    /* Hide crop marks for middle row */
+    .card-grid > div:nth-child(n+4):nth-child(-n+6) :global(.show-crop-marks::before),
+    .card-grid > div:nth-child(n+4):nth-child(-n+6) :global(.show-crop-marks::after) {
+      border-top-color: transparent;
+      border-bottom-color: transparent;
+    }
 
-  /* Loading and error messages */
-  .message {
-    text-align: center;
-    padding: 2rem;
-    font-size: 1.2rem;
-    color: #666;
-  }
+    /* Loading and error messages */
+    .message {
+      text-align: center;
+      padding: 2rem;
+      font-size: 1.2rem;
+      color: #666;
+    }
 
-  .error {
-    color: #d00;
-  }
+    .error {
+      color: #d00;
+    }
 
-  /* Header/Settings section */
-  .settings {
-    padding: 1rem;
-    border-bottom: 1px solid #ddd;
-  }
+    /* Settings section */
+    .settings {
+      padding: 1rem;
+      border-bottom: 1px solid #ddd;
+      margin-bottom: 1rem;
+    }
 
-  .settings-row {
-    display: flex;
-    gap: 0.75rem;
-    align-items: center;
-    flex-wrap: wrap;
-  }
+    .settings-row {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
 
-  .right-controls {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-left: auto;
-  }
+    .right-controls {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-left: auto;
+    }
 
-  /* Action buttons */
-  .action-button {
-    padding: 0.5rem 1rem;
-    font-size: 0.9rem;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    min-height: 36px;
-    white-space: nowrap;
-    transition: all 0.2s ease;
-  }
+    /* Action buttons */
+    .action-button {
+      padding: 0.5rem 1rem;
+      font-size: 0.9rem;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      min-height: 36px;
+      white-space: nowrap;
+      transition: all 0.2s ease;
+    }
 
-  /* Manage Decks - Blue */
-  .action-button:nth-child(1) {
-    background: #e3f2fd;
-    border-color: #90caf9;
-    color: #1976d2;
-  }
-  .action-button:nth-child(1):hover {
-    background: #bbdefb;
-  }
+    /* Manage Decks - Blue */
+    .action-button:nth-child(1) {
+      background: #e3f2fd;
+      border-color: #90caf9;
+      color: #1976d2;
+    }
+    .action-button:nth-child(1):hover {
+      background: #bbdefb;
+    }
 
-  /* Share URL - Green */
-  .action-button:nth-child(2) {
-    background: #e8f5e9;
-    border-color: #a5d6a7;
-    color: #2e7d32;
-  }
-  .action-button:nth-child(2):hover {
-    background: #c8e6c9;
-  }
-  .action-button:nth-child(2):disabled {
-    background: #f5f5f5;
-    border-color: #ddd;
-    color: #999;
-    cursor: not-allowed;
-  }
+    /* Share URL - Green */
+    .action-button:nth-child(2) {
+      background: #e8f5e9;
+      border-color: #a5d6a7;
+      color: #2e7d32;
+    }
+    .action-button:nth-child(2):hover {
+      background: #c8e6c9;
+    }
+    .action-button:nth-child(2):disabled {
+      background: #f5f5f5;
+      border-color: #ddd;
+      color: #999;
+      cursor: not-allowed;
+    }
 
-  /* Add Character - Purple */
-  .action-button:nth-child(3) {
-    background: #f3e5f5;
-    border-color: #ce93d8;
-    color: #7b1fa2;
-  }
-  .action-button:nth-child(3):hover {
-    background: #e1bee7;
-  }
+    /* Add Character - Purple */
+    .action-button:nth-child(3) {
+      background: #f3e5f5;
+      border-color: #ce93d8;
+      color: #7b1fa2;
+    }
+    .action-button:nth-child(3):hover {
+      background: #e1bee7;
+    }
 
-  /* Crop marks checkbox */
-  .crop-marks {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.9rem;
-    color: #666;
-  }
+    /* Crop marks checkbox */
+    .crop-marks {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.9rem;
+      color: #666;
+    }
 
-  .crop-marks input[type="checkbox"] {
-    margin: 0;
-  }
+    .crop-marks input[type="checkbox"] {
+      margin: 0;
+    }
 
-  /* URL size indicator */
-  .url-size {
-    font-size: 0.9rem;
-    color: #666;
-  }
+    /* URL size indicator */
+    .url-size {
+      font-size: 0.9rem;
+      color: #666;
+    }
 
-  /* Remove unused styles */
-  .url-info, .print-info {
-    display: none;
-  }
-
-  /* Dialog styles */
-  .deck-dialog {
-    border: none;
-    border-radius: 8px;
-    padding: 0;
-    max-width: 90vw;
-    max-height: 90vh;
-    width: 600px;
-  }
-
-  .deck-dialog::backdrop {
-    background: rgba(0, 0, 0, 0.5);
-  }
-
-  .dialog-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem;
-    background: #f5f5f5;
-    border-bottom: 1px solid #eee;
-    border-radius: 8px 8px 0 0;
-  }
-
-  .dialog-header h2 {
-    margin: 0;
-    font-size: 1.2rem;
-    color: #333;
-  }
-
-  .close-button {
-    background: none;
-    border: none;
-    font-size: 1.5rem;
-    color: #666;
-    cursor: pointer;
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
-  }
-
-  .close-button:hover {
-    background: #e8e8e8;
-    color: #333;
-  }
-
-  .dialog-content {
-    padding: 1rem;
-    overflow-y: auto;
-    max-height: calc(90vh - 4rem);
-  }
-
-  /* Print styles */
-  @media print {
-    .no-print {
+    /* Remove unused styles */
+    .url-info, .print-info {
       display: none;
     }
 
+    /* Dialog styles */
+    .deck-dialog {
+      border: none;
+      border-radius: 8px;
+      padding: 0;
+      max-width: 90vw;
+      max-height: 90vh;
+      width: 600px;
+    }
+
+    .deck-dialog::backdrop {
+      background: rgba(0, 0, 0, 0.5);
+    }
+
+    .dialog-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem;
+      background: #f5f5f5;
+      border-bottom: 1px solid #eee;
+      border-radius: 8px 8px 0 0;
+    }
+
+    .dialog-header h2 {
+      margin: 0;
+      font-size: 1.2rem;
+      color: #333;
+    }
+
+    .close-button {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      color: #666;
+      cursor: pointer;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+    }
+
+    .close-button:hover {
+      background: #e8e8e8;
+      color: #333;
+    }
+
+    .dialog-content {
+      padding: 1rem;
+      overflow-y: auto;
+      max-height: calc(90vh - 4rem);
+    }
+
+    /* Print container */
     .print-container {
       margin: 0;
       padding: 0;
     }
 
-    .page {
-      margin: 0;
-      box-shadow: none;
-      page-break-after: always;
-    }
+    /* Print styles */
+    @media print {
+      .no-print {
+        display: none;
+      }
 
-    @page {
-      size: A4;
-      margin: 0;
+      .page {
+        margin: 0;  /* Remove margins when printing */
+        box-shadow: none;
+        page-break-after: always;
+      }
+
+      @page {
+        size: A4;
+        margin: 0;
+      }
     }
-  }
-</style>
+  </style>
