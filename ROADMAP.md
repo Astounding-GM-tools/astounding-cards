@@ -116,14 +116,21 @@
 - [ ] Change from local /portraits/ to full URLs
 - [ ] Add image URL validation
 - [ ] Add hosting suggestions:
-  - [ ] Imgur
-  - [ ] ImgBB
-  - [ ] Postimages
-  - [ ] Other free options
+  - [ ] Imgur integration with size optimization
+    - [ ] Direct URL support
+    - [ ] Image picker component
+    - [ ] Automatic size selection
+    - [ ] Content moderation benefits
+  - [ ] Support for other sources (Midjourney, etc.)
+- [ ] Progressive image loading
+  - [ ] BlurHash implementation for beautiful loading states
+  - [ ] Support for modern formats (AVIF, WebP)
+  - [ ] JPEG XL investigation when browser support improves
 - [ ] Add guidance for:
   - [ ] Recommended image sizes
   - [ ] Supported formats
   - [ ] Hosting considerations
+  - [ ] CORS requirements
 
 ### 6. PWA & Offline Support
 - [ ] Basic PWA setup
