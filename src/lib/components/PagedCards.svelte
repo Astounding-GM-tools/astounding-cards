@@ -66,24 +66,34 @@
 {/each}
 
 <style>
-  /* A4 page setup */
+  /* A4 page setup for preview */
   .page {
-    width: 210mm;
+    width: 210mm;  /* A4 preview size */
     height: 297mm;
     margin: 0 auto 2rem;
+    padding: 4mm;  /* Safe margin for printers */
     background: white;
     box-shadow: 0 0 10px rgba(0,0,0,0.1);
     position: relative;
     page-break-after: always;
+    box-sizing: border-box;
+    /* Center grid vertically */
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
-  /* Card grid */
+  /* Card grid container */
   .card-grid {
+    /* Match card proportions: width is 3 units × 5, height is 3 units × 7 */
+    aspect-ratio: 15 / 21;
+    /* Take up available width minus padding */
+    width: calc(100% - 8mm);
+    /* Grid setup */
     display: grid;
-    /* Full width divided by 3 */
-    grid-template-columns: repeat(3, calc(210mm / 3));
-    /* Full height divided by 3 */
-    grid-auto-rows: calc(297mm / 3);
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 0;
   }
 
   /* Back page - reverse each row */
@@ -103,11 +113,38 @@
     direction: ltr;
   }
 
-  /* Print styles */
+  /* Print styles - adapt to any paper size */
   @media print {
     .page {
+      width: auto;
+      height: auto;
+      min-height: 100vh;  /* Use full page height */
       margin: 0;
+      padding: 4mm;  /* Keep safe margin for all printers */
       box-shadow: none;
+      page-break-after: always;
+    }
+
+    /* Ensure each page starts on a new sheet */
+    @page {
+      margin: 0;
+      size: auto;  /* Use printer's default paper size */
+    }
+
+    /* Adjust for US Letter (shorter height) */
+    @media (max-height: 280mm) {  /* Letter paper height */
+      .card-grid {
+        /* Slightly reduce height while maintaining readable proportions */
+        aspect-ratio: 15 / 20;  /* Slightly less tall than A4 ratio */
+      }
+    }
+
+    /* Extra space for Legal paper */
+    @media (min-height: 355mm) {  /* Legal paper height */
+      .card-grid {
+        /* Keep A4 proportions but scale to Letter width */
+        width: calc(215.9mm - 8mm);  /* Letter/Legal width minus padding */
+      }
     }
   }
 </style> 

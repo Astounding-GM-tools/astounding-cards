@@ -44,19 +44,19 @@
   - [x] Proper RTL/LTR handling for back cards
   - [x] Maintain scroll position during edits
   - [x] Optimize re-renders and updates
+- [x] Print Layout Polish
+  - [x] Add print instructions modal
+  - [x] Document printer margin handling
+  - [x] Maintain proper page breaks
+  - [x] Paper size agnostic layout
+  - [x] Consistent 4mm printer margins
+  - [x] Proper grid proportions (5:7)
+  - [x] US Letter/Legal adaptations
+  - [x] Centered grid with proper spacing
 
 ## Next Steps (Priority Order)
 
-### 1. Print Layout Polish
-- [ ] Add page navigation/preview
-- [ ] Show sheet numbers and card positions
-- [ ] Add visual page breaks in edit mode
-- [ ] Test with different paper sizes
-- [ ] Improve print preview mode
-- [ ] Add print instructions
-- [ ] Handle printer margins better
-
-### 2. Theme Implementation
+### 1. Theme Implementation
 - [ ] Apply theme styles to cards
   - [ ] Implement theme CSS application
   - [ ] Create theme assets (patterns, borders)
@@ -65,7 +65,7 @@
   - [ ] Ensure print compatibility
   - [ ] Add theme customization options
 
-### 3. URL Sharing Improvements
+### 2. URL Sharing Improvements
 - [x] Add "Copy URL" button
 - [x] Clear URL after import
 - [ ] Add URL validation
@@ -74,7 +74,7 @@
 - [ ] Handle URL import conflicts
 - [ ] Add version tracking for shared decks
 
-### 4. Advanced URL Sharing & Collaboration
+### 3. Advanced URL Sharing & Collaboration
 - [ ] Support different collaboration modes:
   - [ ] Self-sync across devices
     - [ ] Clear "last synced" indicator
@@ -91,7 +91,7 @@
     - [ ] Merge options
     - [ ] Keep history
 
-### 5. Mobile Experience
+### 4. Mobile Experience
 - [ ] Create dedicated mobile routes and views
   - [ ] Separate from print layout components
   - [ ] Mobile-first navigation pattern
@@ -112,7 +112,7 @@
   - [ ] Share sheet integration
   - [ ] Camera integration for portraits
 
-### 6. Image Handling
+### 5. Image Handling
 - [ ] Change from local /portraits/ to full URLs
 - [ ] Add image URL validation
 - [ ] Add hosting suggestions:
@@ -125,7 +125,7 @@
   - [ ] Supported formats
   - [ ] Hosting considerations
 
-### 7. PWA & Offline Support
+### 6. PWA & Offline Support
 - [ ] Basic PWA setup
   - [ ] Web manifest
   - [ ] Service worker registration

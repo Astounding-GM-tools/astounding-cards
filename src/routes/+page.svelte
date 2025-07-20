@@ -12,11 +12,13 @@
   import { toasts } from '$lib/stores/toast';
   import { deckToUrl } from '$lib/stores/cards';
   import PagedCards from '$lib/components/PagedCards.svelte';
+  import PrintInstructions from '$lib/components/PrintInstructions.svelte';
 
   let showCropMarks = true;
   let loading = true;  // Start with loading true
   let error: string | null = null;
   let deckDialog: HTMLDialogElement;
+  let printDialog: HTMLDialogElement;
 
   async function copyShareUrl() {
     if (!$currentDeck) return;
@@ -154,6 +156,12 @@
           <input type="checkbox" bind:checked={showCropMarks}>
           Show crop marks
         </label>
+        <button 
+          class="action-button info"
+          onclick={() => printDialog.showModal()}
+        >
+          🖨️ Print Instructions
+        </button>
         {#if $currentDeck}
           <div class="url-size">
             <UrlSizeIndicator deck={$currentDeck} />
@@ -182,6 +190,8 @@
       <DeckList />
     </div>
   </dialog>
+
+  <PrintInstructions bind:dialog={printDialog} />
 
   <!-- Main content -->
   <div class="cards-scroll-container">
@@ -425,5 +435,15 @@
         size: A4;
         margin: 0;
       }
+    }
+
+    /* Info button - Blue */
+    .action-button.info {
+      background: #e3f2fd;
+      border-color: #90caf9;
+      color: #1976d2;
+    }
+    .action-button.info:hover {
+      background: #bbdefb;
     }
   </style>

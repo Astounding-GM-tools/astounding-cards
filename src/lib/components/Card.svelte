@@ -15,6 +15,9 @@
     padding: 3mm;
     box-sizing: border-box;
     background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   /* Crop marks using gradient borders */
@@ -37,10 +40,10 @@
     border-image: linear-gradient(
       to right,
       black 0,
-      black 12mm,
-      transparent 12mm,
-      transparent calc(100% - 12mm),
-      black calc(100% - 12mm),
+      black 8mm,
+      transparent 8mm,
+      transparent calc(100% - 8mm),
+      black calc(100% - 8mm),
       black 100%
     ) 1;
   }
@@ -52,10 +55,10 @@
     border-image: linear-gradient(
       to bottom,
       black 0,
-      black 12mm,
-      transparent 12mm,
-      transparent calc(100% - 12mm),
-      black calc(100% - 12mm),
+      black 8mm,
+      transparent 8mm,
+      transparent calc(100% - 8mm),
+      black calc(100% - 8mm),
       black 100%
     ) 1;
   }
