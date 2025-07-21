@@ -75,7 +75,31 @@
   - [x] Print layout adjustments
 - [x] Update print instructions for both sizes
 
-### 3. URL Sharing Improvements
+### 3. Expanded Card Types
+- [ ] Add card type selector
+  - [ ] Characters (NPCs, allies, adversaries)
+  - [ ] Items (weapons, artifacts, books)
+  - [ ] Locations (taverns, dungeons, shops)
+  - [ ] Handouts (letters, maps, clues)
+- [ ] Front card (observable information)
+  - [ ] Type-specific templates
+  - [ ] Apparent traits (age, appearance, etc.)
+  - [ ] Observable features
+  - [ ] Public knowledge/rumors
+  - [ ] Clean layout for player handouts
+- [ ] Back card (GM information)
+  - [ ] Game stats (HP, AC, etc.)
+  - [ ] Hidden information
+  - [ ] Plot hooks and secrets
+  - [ ] GM notes section
+  - [ ] Prints blank for player handouts
+- [ ] Template suggestions by type
+  - [ ] Common attributes for each type
+  - [ ] Flexible attribute system
+  - [ ] Editable keys and values
+  - [ ] Optional attributes
+
+### 4. URL Sharing Improvements
 - [x] Add "Copy URL" button
 - [x] Clear URL after import
 - [ ] Add URL validation
@@ -84,7 +108,7 @@
 - [ ] Handle URL import conflicts
 - [ ] Add version tracking for shared decks
 
-### 4. Advanced URL Sharing & Collaboration
+### 5. Advanced URL Sharing & Collaboration
 - [ ] Support different collaboration modes:
   - [ ] Self-sync across devices
     - [ ] Clear "last synced" indicator
@@ -101,7 +125,7 @@
     - [ ] Merge options
     - [ ] Keep history
 
-### 5. Mobile Experience
+### 6. Mobile Experience
 - [ ] Create dedicated mobile routes and views
   - [ ] Separate from print layout components
   - [ ] Mobile-first navigation pattern
@@ -122,7 +146,7 @@
   - [ ] Share sheet integration
   - [ ] Camera integration for portraits
 
-### 6. Image Handling
+### 7. Image Handling
 - [ ] Change from local /portraits/ to full URLs
 - [ ] Add image URL validation
 - [ ] Add hosting suggestions:
@@ -142,7 +166,7 @@
   - [ ] Hosting considerations
   - [ ] CORS requirements
 
-### 7. PWA & Offline Support
+### 8. PWA & Offline Support
 - [ ] Basic PWA setup
   - [ ] Web manifest
   - [ ] Service worker registration
