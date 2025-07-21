@@ -1,0 +1,105 @@
+/* Declare typed custom properties */
+@property --content-bg {
+  syntax: '<color>';
+  initial-value: white;
+  inherits: true;
+}
+
+@property --content-text {
+  syntax: '<color>';
+  initial-value: black;
+  inherits: true;
+}
+
+@property --content-opacity {
+  syntax: '<number>';
+  initial-value: 1;
+  inherits: true;
+}
+
+@property --base-font-size {
+  syntax: '<length>';
+  initial-value: clamp(8pt, 1cqw, 14pt);
+  inherits: true;
+}
+
+@property --title-font-size {
+  syntax: '<length-percentage>';
+  initial-value: 1.4em;
+  inherits: true;
+}
+
+@property --role-font-size {
+  syntax: '<length-percentage>';
+  initial-value: 1em;
+  inherits: true;
+}
+
+@property --trait-font-size {
+  syntax: '<length-percentage>';
+  initial-value: 0.9em;
+  inherits: true;
+}
+
+@property --ui-font-size {
+  syntax: '<length-percentage>';
+  initial-value: 0.8em;
+  inherits: true;
+}
+
+/* Base theme variables */
+:root {
+  /* Colors */
+  --content-bg: white;
+  --content-text: black;
+  --content-opacity: 1;
+  
+  /* Typography */
+  --base-font-size: clamp(8pt, 1cqw, 14pt);
+  --title-font-size: 1.4em;
+  --role-font-size: 1em;
+  --trait-font-size: 0.9em;
+  --ui-font-size: 0.8em;
+}
+
+/* Theme overrides */
+:root[data-theme="artNouveau"] {
+  --content-bg: #F8F4E9;
+  --content-text: #2C2C2C;
+}
+
+:root[data-theme="bauhaus"] {
+  --content-bg: #FFFFFF;
+  --content-text: #000000;
+}
+
+:root[data-theme="medieval"] {
+  --content-bg: #F4E4BC;
+  --content-text: #2C1810;
+}
+
+:root[data-theme="elfin"] {
+  --content-bg: #F5F9F2;
+  --content-text: #2C3E50;
+}
+
+:root[data-theme="cyberpunk"] {
+  --content-bg: #0D0221;
+  --content-text: #FFFFFF;
+  --content-opacity: 0.8;
+}
+
+:root[data-theme="corporate"] {
+  --content-bg: #FFFFFF;
+  --content-text: #212121;
+}
+
+:root[data-theme="tradingCard"] {
+  --content-bg: #F5F5F5;
+  --content-text: #212121;
+}
+
+:root[data-theme="vintage"] {
+  --content-bg: #FFFDE7;
+  --content-text: #212121;
+} 

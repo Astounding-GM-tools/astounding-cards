@@ -220,21 +220,12 @@
     cursor: pointer;
     font-size: 0.9rem;
     transition: background-color 0.2s;
+    background: rgba(255, 255, 255, 0.95);
   }
 
-  .stat-display.character {
-    background: #e3f2fd;
-    color: #1976d2;
-  }
-
-  .stat-display.item {
-    background: #e8f5e9;
-    color: #2e7d32;
-  }
-
+  .stat-display.character,
+  .stat-display.item,
   .stat-display.location {
-    background: #fff3e0;
-    color: #e65100;
     display: flex;
     align-items: center;
     gap: 1mm;
@@ -242,9 +233,9 @@
 
   .stat-add {
     padding: 0.25rem 0.5rem;
-    border: 1px dashed #ccc;
+    border: 1px dashed #666;
     border-radius: 4px;
-    background: none;
+    background: rgba(255, 255, 255, 0.95);
     cursor: pointer;
     color: #666;
     font-size: 0.9rem;

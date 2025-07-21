@@ -44,9 +44,9 @@
     return traits?.map(trait => {
       const [label, ...rest] = trait.split(':');
       if (rest.length > 0) {
-        return `<strong class="trait-label">${label.trim()}</strong>:${rest.join(':')}`; // Added class
+        return `<strong class="trait-label">${label.trim()}:</strong> ${rest.join(':').trim()}`;
       }
-      return trait;
+      return trait; // If no colon, keep as is
     }).join('\n') || '';
   }
 
@@ -61,7 +61,19 @@
 
   async function updateTraits(event: Event) {
     const target = event.target as HTMLElement;
-    const newTraits = parseTraits(target.innerHTML);
+    // Split into lines and process each line
+    const newTraits = target.innerText
+      .split('\n')
+      .map(line => {
+        // If line already has a colon, ensure proper format
+        if (line.includes(':')) {
+          const [label, ...rest] = line.split(':');
+          return `${label.trim()}: ${rest.join(':').trim()}`;
+        }
+        // If no colon, return line as is
+        return line.trim();
+      })
+      .filter(t => t.length > 0);
 
     if (JSON.stringify(newTraits) !== JSON.stringify(character.traits)) {
       await onChange({ traits: newTraits });
@@ -80,6 +92,7 @@
   <article 
     class="card-content" 
     style:container-type="inline-size"
+    style:background-image={character.portrait ? `url('/portraits/${character.portrait}')` : 'none'}
   >
     <div class="stat-container">
       <CardStatSelector {character} {onChange} />
@@ -109,28 +122,25 @@
         </div>
       {/if}
     </div>
-    <div class="portrait">
-      {#if character.portrait}
-        <img src={`/portraits/${character.portrait}`} alt={character.name} />
-      {/if}
-    </div>
-    <h2 
-      contenteditable="true" 
-      on:blur={updateName}
-      bind:this={nameElement}
-    >{character.name}</h2>
-    <p 
-      class="role" 
-      contenteditable="true"
-      on:blur={updateRole}
-      bind:this={roleElement}
-    >{character.role}</p>
-    <div 
-      class="traits" 
-      contenteditable="true"
-      on:blur={updateTraits}
-      bind:this={traitsElement}
-    >{@html formatTraits(character.traits)}</div>
+    <section class="content">
+      <h2 
+        contenteditable="true" 
+        on:blur={updateName}
+        bind:this={nameElement}
+      >{character.name}</h2>
+      <p 
+        class="role" 
+        contenteditable="true"
+        on:blur={updateRole}
+        bind:this={roleElement}
+      >{character.role}</p>
+      <div 
+        class="traits" 
+        contenteditable="true"
+        on:blur={updateTraits}
+        bind:this={traitsElement}
+      >{@html formatTraits(character.traits)}</div>
+    </section>
   </article>
 </Card>
 
@@ -138,33 +148,47 @@
   .card-content {
     width: 100%;
     height: 100%;
-    font-size: 8pt;
+    font-size: var(--base-font-size);
     display: flex;
     flex-direction: column;
-    gap: 3mm;
+    justify-content: flex-end;
+    background-color: white;
+    background-size: cover;
+    background-position: top center;
+  }
+
+  .content {
+    background: var(--content-bg);
+    color: var(--content-text);
+    opacity: var(--content-opacity);
+    margin: 2mm;
+    padding: 2mm;
+    border-radius: 1mm;
   }
 
   .stat-container {
     position: absolute;
-    top: 2mm;
-    right: 2mm;
+    top: 4mm;
+    right: 4mm;
+    font-size: var(--ui-font-size);
   }
 
   .portrait-container {
     position: absolute;
-    top: 2mm;
-    left: 2mm;
+    top: 4mm;
+    left: 4mm;
   }
 
   .change-portrait {
-    background: rgba(255, 255, 255, 0.8);
+    background: var(--content-bg);
+    opacity: var(--content-opacity);
     border: none;
     padding: 1mm 2mm;
     border-radius: 1mm;
     cursor: pointer;
     opacity: 0;
     transition: opacity 0.2s;
-    font-size: 7pt;
+    font-size: var(--ui-font-size);
   }
 
   .card-content:hover .change-portrait {
@@ -189,12 +213,16 @@
     z-index: 10;
   }
 
+  .image-input input,
+  .image-input button {
+    font-size: var(--ui-font-size);
+  }
+
   .image-input input {
     border: 1px solid #ddd;
     padding: 1mm;
     border-radius: 0.5mm;
     min-width: 30mm;
-    font-size: 7pt;
   }
 
   .image-input button {
@@ -203,59 +231,37 @@
     padding: 1mm 2mm;
     border-radius: 0.5mm;
     cursor: pointer;
-    font-size: 7pt;
   }
 
   .image-input button:hover {
     background: #ddd;
   }
 
-  .portrait {
-    width: 100%;
-    aspect-ratio: 1;
-    background: #f5f5f5;
-    border-radius: 1mm;
-    overflow: hidden;
-  }
-
-  .portrait img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: top center;  /* Focus on the face/top of image */
-  }
-
   h2 {
     margin: 0;
-    font-size: 10pt;
+    font-size: var(--title-font-size);
     font-weight: bold;
     text-align: center;
   }
 
   .role {
-    margin: 0;
-    font-size: 8pt;
+    margin: 1mm 0 2mm;
+    font-size: var(--role-font-size);
     text-align: center;
     font-style: italic;
   }
 
   .traits {
-    margin: 0;
-    font-size: 7pt;
+    font-size: var(--trait-font-size);
     line-height: 1.4;
     white-space: pre-wrap;
-  }
-
-  .traits :global(strong) {
-    font-weight: bold;
-    color: #444;
   }
 
   .traits :global(.trait-label) {
     font-weight: bold;
     color: #444;
     display: inline-block;
-    min-width: 20mm;
+    min-width: clamp(20mm, 25cqw, 30mm);
   }
 
   @container (height < 20mm) {

@@ -52,9 +52,9 @@
     return secrets?.map(secret => {
       const [label, ...rest] = secret.split(':');
       if (rest.length > 0) {
-        return `<strong class="secret-label">${label.trim()}</strong>:${rest.join(':')}`; // Added class
+        return `<strong class="secret-label">${label.trim()}:</strong> ${rest.join(':').trim()}`;
       }
-      return secret;
+      return secret; // If no colon, keep as is
     }).join('\n') || '';
   }
 
@@ -69,7 +69,19 @@
 
   async function updateSecrets(event: Event) {
     const target = event.target as HTMLElement;
-    const newSecrets = parseSecrets(target.innerHTML);
+    // Split into lines and process each line
+    const newSecrets = target.innerText
+      .split('\n')
+      .map(line => {
+        // If line already has a colon, ensure proper format
+        if (line.includes(':')) {
+          const [label, ...rest] = line.split(':');
+          return `${label.trim()}: ${rest.join(':').trim()}`;
+        }
+        // If no colon, return line as is
+        return line.trim();
+      })
+      .filter(s => s.length > 0);
     
     if (JSON.stringify(newSecrets) !== JSON.stringify(character.secrets)) {
       await onChange({ secrets: newSecrets });
@@ -121,7 +133,7 @@
   .card-content {
     width: 100%;
     height: 100%;
-    font-size: 8pt;
+    font-size: clamp(7pt, 2.5cqw, 12pt);
     display: flex;
     flex-direction: column;
     gap: 3mm;
@@ -130,7 +142,7 @@
 
   h2 {
     margin: 0;
-    font-size: 10pt;
+    font-size: clamp(9pt, 3cqw, 14pt);
     font-weight: bold;
     text-align: center;
     height: 5mm;
@@ -138,7 +150,7 @@
 
   .desc {
     margin: 0;
-    font-size: 7pt;
+    font-size: clamp(7pt, 2.5cqw, 12pt);
     line-height: 1.4;
     overflow: hidden;
     max-height: calc(88.9mm - 6mm - 5mm - 6mm - 50mm); /* card height - padding - h2 - gaps - secrets */
@@ -167,7 +179,7 @@
   }
 
   .secrets legend {
-    font-size: 8pt;
+    font-size: clamp(7pt, 2.5cqw, 12pt);
     color: #666;
     font-weight: normal;
     padding: 0 1mm;
@@ -176,7 +188,7 @@
   .secrets-content {
     min-height: 40mm;
     white-space: pre-wrap;
-    font-size: 7pt;
+    font-size: clamp(7pt, 2.5cqw, 12pt);
     line-height: 1.4;
   }
 
@@ -189,7 +201,13 @@
     font-weight: bold;
     color: #444;
     display: inline-block;
-    min-width: 20mm;
+    min-width: clamp(20mm, 25cqw, 30mm);
+  }
+
+  .secrets-content :global(.separator) {
+    opacity: 0;
+    position: absolute;
+    pointer-events: none;
   }
 
   .add-secret {
@@ -202,7 +220,7 @@
     border-radius: 50%;
     background: #eee;
     color: #666;
-    font-size: 8pt;
+    font-size: clamp(7pt, 2.5cqw, 12pt);
     cursor: pointer;
     display: flex;
     align-items: center;
