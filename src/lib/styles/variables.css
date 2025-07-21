@@ -51,25 +51,25 @@
 /* Typography */
 @property --base-font-size {
   syntax: '<length>';
-  initial-value: 1.2cqw;
+  initial-value: 0.9cqw;
   inherits: true;
 }
 
 @property --title-font-size {
   syntax: '<length-percentage>';
-  initial-value: 1.6em;
+  initial-value: 1.4em;
   inherits: true;
 }
 
 @property --role-font-size {
   syntax: '<length-percentage>';
-  initial-value: 1.2em;
+  initial-value: 1em;
   inherits: true;
 }
 
 @property --trait-font-size {
   syntax: '<length-percentage>';
-  initial-value: 1.1em;
+  initial-value: 0.9em;
   inherits: true;
 }
 
@@ -94,10 +94,10 @@
   --border-color: #ddd;
   
   /* Typography */
-  --base-font-size: 1.2cqw;
-  --title-font-size: 1.6em;
-  --role-font-size: 1.2em;
-  --trait-font-size: 1.1em;
+  --base-font-size: 0.9cqw;
+  --title-font-size: 1.4em;
+  --role-font-size: 1em;
+  --trait-font-size: 0.9em;
   --ui-font-size: 0.9em;
 
   /* Layout constants */

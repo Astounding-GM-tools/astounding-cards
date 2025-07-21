@@ -22,14 +22,15 @@
   let showThemeDialog = false;
   let selectedTheme = deck.meta.theme;
   let showCardBack = false;
-  const exampleCharacter = {
+  const exampleCharacter: Character = {
     id: 'preview',
     name: 'Example Character',
     role: 'Preview Role',
-    age: '30',
     portrait: null,
     traits: ['Sample trait 1', 'Sample trait 2', 'Sample trait 3'],
+    secrets: ['Sample secret 1', 'Sample secret 2'],
     desc: 'This is an example character to preview the theme styling.',
+    stat: { type: 'character', value: '30' }
   };
 
   async function handleThemeChange() {
@@ -249,7 +250,6 @@
           on:blur={handleNameEdit}
           on:keydown={handleNameKeydown}
           placeholder="Enter deck name"
-          autofocus
         >
         <button 
           class="icon-button"
@@ -285,55 +285,26 @@
 
   <div class="deck-content">
     <div class="deck-info">
-      <div class="info-line theme">
-        <button 
-          class="theme-button"
-          on:click={() => showThemeDialog = true}
-        >
-          {baseThemes[deck.meta.theme]?.name || 'Select theme'}
-        </button>
-      </div>
       <div class="info-line cards">{deck.characters.length} cards</div>
-      <div class="info-line date">Created {formatDate(deck.meta.createdAt)}</div>
-      <div class="info-line date">Updated {formatDate(deck.meta.lastEdited)}</div>
+      <div class="info-line date">Last edited: {formatDate(deck.meta.lastEdited)}</div>
+      <div class="info-line theme">Theme: {deck.meta.theme}</div>
     </div>
 
     <div class="actions">
-      <fieldset class="action-group">
-        <legend>Card</legend>
-        <button 
-          class="action-button danger"
-          on:click={handleDeleteCharacters}
-        >
-          Delete
-        </button>
-        <button 
-          class="action-button"
-          on:click={handleCopyCharacters}
-        >
-          Copy
-        </button>
-      </fieldset>
-      <fieldset class="action-group">
-        <legend>Deck</legend>
-        <button 
-          class="action-button danger"
-          on:click={handleDelete}
-        >
-          Delete
-        </button>
+      <div class="action-group">
         <button 
           class="action-button"
           on:click={handleDuplicate}
+          disabled={duplicating}
         >
-          Duplicate
+          {duplicating ? 'Duplicating...' : 'Duplicate Deck'}
         </button>
-      </fieldset>
+      </div>
     </div>
   </div>
 
   {#if showDeleteConfirm || showDuplicateDialog || showCopyDialog || showDeleteCharactersDialog}
-    <div class="dialog-overlay" />
+    <div class="dialog-overlay"></div>
   {/if}
 
   {#if showDeleteConfirm}
@@ -508,7 +479,7 @@
   {/if}
 
   {#if showThemeDialog}
-    <div class="theme-dialog-overlay" />
+    <div class="theme-dialog-overlay"></div>
     <div class="theme-dialog">
       <div class="theme-dialog-header">
         <h3>Select Theme</h3>
@@ -582,17 +553,17 @@
 <style>
   .deck-manager {
     padding: 0.75rem;
-    border: 1px solid #eee;
+    border: 1px solid var(--ui-border);
     border-radius: 4px;
     margin-bottom: 0;
-    background: white;
+    background: var(--ui-bg);
     position: relative;
     display: flex;
     flex-direction: column;
   }
 
   .deck-manager:hover {
-    background: #f9f9f9;
+    background: var(--ui-hover-bg);
   }
 
   .title-section {
@@ -618,7 +589,7 @@
     font-size: 1rem;
     font-weight: bold;
     padding: 0.25rem 0.5rem;
-    border: 1px solid #ccc;
+    border: 1px solid var(--ui-border);
     border-radius: 4px;
   }
 
@@ -647,7 +618,7 @@
   }
 
   .info-line {
-    color: #666;
+    color: var(--ui-muted);
     line-height: 1.4;
   }
 
@@ -661,26 +632,7 @@
 
   .info-line.theme {
     font-size: 0.8rem;
-    color: #666;
-  }
-
-  .theme-select {
-    font-size: 0.8rem;
-    padding: 2px 4px;
-    border: 1px solid #eee;
-    border-radius: 3px;
-    background: white;
-    color: #666;
-    cursor: pointer;
-  }
-
-  .theme-select:hover {
-    border-color: #ccc;
-  }
-
-  .theme-select:focus {
-    outline: none;
-    border-color: #4a90e2;
+    color: var(--ui-muted);
   }
 
   .actions {
@@ -695,402 +647,44 @@
 
   .action-group {
     width: fit-content;
-    border: 1px solid #eee;
+    border: 1px solid var(--ui-border);
     border-radius: 3px;
     padding: 0.5rem;
     margin: 0;
   }
 
-  .action-group legend {
-    font-size: 0.75rem;
-    color: #666;
-    padding: 0 0.25rem;
-  }
-
   .action-button {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.8rem;
-    border: none;
-    border-radius: 3px;
-    background: #f0f0f0;
-    color: #333;
+    padding: calc(var(--content-gap) * 0.75) var(--content-gap);
+    border: 1px solid var(--button-border);
+    border-radius: 4px;
+    background: var(--button-bg);
+    color: var(--button-text);
+    font-size: var(--ui-font-size);
     cursor: pointer;
-    white-space: nowrap;
-  }
-
-  .action-button:not(:last-child) {
-    margin-right: 0.25rem;
+    transition: all 0.2s;
   }
 
   .action-button:hover {
-    background: #e0e0e0;
+    background: var(--button-hover-bg);
   }
 
-  .action-button.danger {
-    background: #ffebee;
-    color: #c62828;
-    border: 1px solid #ffcdd2;
-  }
-
-  .action-button.danger:hover {
-    background: #ef9a9a;
-    color: #fff;
-    border-color: #ef9a9a;
-  }
-
-  .dialog-overlay {
-    position: absolute;
-    inset: 0;
-    background: rgba(255, 255, 255, 0.8);
-    z-index: 1;
-    border-radius: 4px;
-  }
-
-  .dialog {
-    position: absolute;
-    right: 0;
-    top: 100%;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    background: white;
-    padding: 0.75rem;
-    border-radius: 4px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    z-index: 110;
-    border: 1px solid #eee;
-  }
-
-  .copy-dialog {
-    min-width: 300px;
-  }
-
-  .character-list {
-    max-height: 200px;
-    overflow-y: auto;
-    width: 100%;
-    border: 1px solid #eee;
-    border-radius: 4px;
-    padding: 0.5rem;
-  }
-
-  .character-item {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.25rem;
-    cursor: pointer;
-  }
-
-  .copy-options {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    margin-top: 0.5rem;
-  }
-
-  select, input {
-    padding: 0.5rem;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    font-size: 0.9rem;
-  }
-
-  .dialog-buttons {
-    display: flex;
-    justify-content: flex-end;
-    gap: 0.5rem;
-    margin-top: 0.5rem;
-  }
-
-  button {
-    padding: 0.5rem 1rem;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.9rem;
-  }
-
-  button:disabled {
+  .action-button:disabled {
     opacity: 0.5;
     cursor: not-allowed;
   }
 
-  .primary {
-    background: #4a90e2;
-    color: white;
-  }
-
-  .primary:hover:not(:disabled) {
-    background: #357abd;
-  }
-
-  .secondary {
-    background: #f5f5f5;
-    color: #333;
-  }
-
-  .secondary:hover:not(:disabled) {
-    background: #e0e0e0;
-  }
-
-  .danger {
-    background: #c62828;
-    color: white;
-  }
-
-  .danger.outline {
-    background: transparent;
-    border: 1px solid #c62828;
-    color: #c62828;
-  }
-
-  .danger:hover:not(:disabled) {
-    background: #b71c1c;
-  }
-
-  .name-display {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-
-  .name-edit {
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-  }
-
-  .name-edit input {
-    font-size: 1.1rem;
-    font-weight: bold;
-    min-width: 200px;
-  }
-
   .icon-button {
-    padding: 0.25rem;
-    width: 24px;
-    height: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    padding: 0.25rem 0.5rem;
     border: none;
     background: none;
     cursor: pointer;
-    border-radius: 4px;
     font-size: 1rem;
-    color: #666;
+    color: var(--ui-text);
+    opacity: 0.7;
+    transition: opacity 0.2s;
   }
 
   .icon-button:hover {
-    background: #f0f0f0;
-    color: #333;
-  }
-
-  .selection-controls {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin-bottom: 0.5rem;
-  }
-
-  .selection-count {
-    margin-left: auto;
-    font-size: 0.9rem;
-    color: #666;
-  }
-
-  button.small {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.8rem;
-  }
-
-  .character-info {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-  }
-
-  .character-role {
-    font-size: 0.8rem;
-    color: #666;
-  }
-
-  .theme-button {
-    font-size: 0.8rem;
-    padding: 2px 4px;
-    border: 1px solid #eee;
-    border-radius: 3px;
-    background: white;
-    color: #666;
-    cursor: pointer;
-    text-align: left;
-    width: 100%;
-  }
-
-  .theme-button:hover {
-    border-color: #ccc;
-  }
-
-  .theme-dialog-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 1000;
-  }
-
-  .theme-dialog {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    z-index: 1001;
-    width: 90vw;
-    max-width: 1000px;
-    max-height: 90vh;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .theme-dialog-header {
-    padding: 1rem;
-    border-bottom: 1px solid #eee;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .theme-dialog-header h3 {
-    margin: 0;
-    font-size: 1.2rem;
-  }
-
-  .theme-dialog-content {
-    display: flex;
-    gap: 2rem;
-    padding: 1rem;
-    overflow: auto;
-  }
-
-  .theme-list {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    min-width: 300px;
-  }
-
-  .theme-option {
-    display: flex;
-    gap: 0.5rem;
-    padding: 0.5rem;
-    border: 1px solid #eee;
-    border-radius: 4px;
-    cursor: pointer;
-  }
-
-  .theme-option:hover {
-    background: #f9f9f9;
-  }
-
-  .theme-info {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-  }
-
-  .theme-description {
-    font-size: 0.8rem;
-    color: #666;
-  }
-
-  .preview-section {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1rem;
-  }
-
-  .preview-card {
-    width: 63.5mm;
-    height: 88.9mm;
-    position: relative;
-    transform-style: preserve-3d;
-    transition: transform 0.6s;
-  }
-
-  .preview-card.flipped {
-    transform: rotateY(180deg);
-  }
-
-  .preview-front,
-  .preview-back {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    backface-visibility: hidden;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  }
-
-  .preview-back {
-    transform: rotateY(180deg);
-  }
-
-  .flip-button {
-    padding: 0.5rem 1rem;
-    background: #f0f0f0;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-  }
-
-  .theme-dialog-footer {
-    padding: 1rem;
-    border-top: 1px solid #eee;
-    display: flex;
-    justify-content: flex-end;
-    gap: 0.5rem;
-  }
-
-  .share-button {
-    font-size: 0.8rem;
-    padding: 2px 4px;
-    border: 1px solid #eee;
-    border-radius: 3px;
-    background: white;
-    color: #666;
-    cursor: pointer;
-    text-align: left;
-    width: 100%;
-    position: relative;
-  }
-
-  .share-button:hover {
-    border-color: #ccc;
-    background: #f9f9f9;
-  }
-
-  .tooltip {
-    position: absolute;
-    right: -4rem;
-    top: 50%;
-    transform: translateY(-50%);
-    background: #333;
-    color: white;
-    padding: 2px 6px;
-    border-radius: 3px;
-    font-size: 0.75rem;
-    pointer-events: none;
-    animation: fadeIn 0.2s ease-out;
-  }
-
-  @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    opacity: 1;
   }
 </style> 

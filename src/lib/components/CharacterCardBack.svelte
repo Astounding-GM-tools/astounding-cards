@@ -37,20 +37,36 @@
     }
   }
 
-  async function updateSecrets(event: Event) {
-    const target = event.target as HTMLElement;
-    const newSecrets = target.innerText
+  // Format secrets with strong labels
+  function formatSecrets(secrets: string[]) {
+    return secrets?.map(secret => {
+      const [label, ...rest] = secret.split(':');
+      if (rest.length > 0) {
+        return `<strong class="secret-label">${label.trim()}:</strong> ${rest.join(':').trim()}`;
+      }
+      return secret; // If no colon, keep as is
+    }).join('\n') || '';
+  }
+
+  // Parse HTML back to plain text for secrets
+  function parseSecrets(html: string) {
+    return html
+      .replace(/<strong[^>]*>|<\/strong>/g, '')  // Remove strong tags
       .split('\n')
       .map(s => s.trim())
       .filter(s => s.length > 0);
-    
+  }
+
+  async function updateSecrets(event: Event) {
+    const target = event.target as HTMLElement;
+    const newSecrets = parseSecrets(target.innerText);
     if (JSON.stringify(newSecrets) !== JSON.stringify(character.secrets)) {
       await onChange({ secrets: newSecrets });
     }
   }
 
   function addSecret() {
-    const newSecrets = [...(character.secrets || []), 'New secret'];
+    const newSecrets = [...(character.secrets || []), 'Label: Description'];
     onChange({ secrets: newSecrets });
   }
 </script>
@@ -78,7 +94,7 @@
           contenteditable={editable}
           on:blur={updateSecrets}
           bind:this={secretsElement}
-        >{character.secrets?.join('\n') || ''}</div>
+        >{@html formatSecrets(character.secrets)}</div>
         {#if editable}
           <button 
             class="add-secret" 
@@ -197,5 +213,13 @@
     .add-secret {
       display: none;
     }
+  }
+
+  .secrets-content :global(.secret-label) {
+    font-weight: bold;
+    color: var(--content-text);
+    opacity: 0.8;
+    display: inline-block;
+    min-width: clamp(20mm, 25cqw, 30mm);
   }
 </style> 

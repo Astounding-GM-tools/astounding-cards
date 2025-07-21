@@ -19,6 +19,16 @@
   let error: string | null = null;
   let deckDialog: HTMLDialogElement;
   let printDialog: HTMLDialogElement;
+  let scrollContainer: HTMLElement;
+
+  // Store scroll position before update
+  let lastScrollPosition = 0;
+
+  // Restore scroll position after update
+  $: if ($currentDeck && scrollContainer && lastScrollPosition > 0) {
+    scrollContainer.scrollTop = lastScrollPosition;
+    lastScrollPosition = 0;
+  }
 
   async function copyShareUrl() {
     if (!$currentDeck) return;
@@ -76,6 +86,9 @@
   }
 
   async function handleCharacterUpdate(id: string, updates: Partial<Character>) {
+    if (scrollContainer) {
+      lastScrollPosition = scrollContainer.scrollTop;
+    }
     await updateCharacter(id, updates);
   }
 
@@ -170,7 +183,7 @@
   <PrintInstructions bind:dialog={printDialog} />
 
   <!-- Main content -->
-  <div class="cards-scroll-container">
+  <div class="cards-scroll-container" bind:this={scrollContainer}>
     {#if loading}
       <div class="message">Loading...</div>
     {:else if error}

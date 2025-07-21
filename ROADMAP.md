@@ -1,5 +1,15 @@
 # Character Cards Roadmap
 
+## Implementation Notes
+
+### Store Update Pattern
+To prevent scroll jumps and maintain performance:
+- Use writable store for currentDeck (not derived)
+- Update store directly with set() when saving changes
+- Never force reloads by toggling currentDeckId
+- Let keyed each-blocks handle partial updates
+- This ensures only changed cards re-render and scroll position is maintained
+
 ## Current Progress
 - [x] Basic page layout and grid system
 - [x] Double-sided printing support

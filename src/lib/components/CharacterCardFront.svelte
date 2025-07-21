@@ -39,13 +39,29 @@
     }
   }
 
+  // Format traits with strong labels
+  function formatTraits(traits: string[]) {
+    return traits?.map(trait => {
+      const [label, ...rest] = trait.split(':');
+      if (rest.length > 0) {
+        return `<strong class="trait-label">${label.trim()}:</strong> ${rest.join(':').trim()}`;
+      }
+      return trait; // If no colon, keep as is
+    }).join('\n') || '';
+  }
+
+  // Parse HTML back to plain text for traits
+  function parseTraits(html: string) {
+    return html
+      .replace(/<strong[^>]*>|<\/strong>/g, '')  // Remove strong tags
+      .split('\n')
+      .map(s => s.trim())
+      .filter(s => s.length > 0);
+  }
+
   async function updateTraits(event: Event) {
     const target = event.target as HTMLElement;
-    const newTraits = target.innerText
-      .split('\n')
-      .map(t => t.trim())
-      .filter(t => t.length > 0);
-
+    const newTraits = parseTraits(target.innerText);
     if (JSON.stringify(newTraits) !== JSON.stringify(character.traits)) {
       await onChange({ traits: newTraits });
     }
@@ -109,7 +125,7 @@
         contenteditable="true"
         on:blur={updateTraits}
         bind:this={traitsElement}
-      >{character.traits.join('\n')}</div>
+      >{@html formatTraits(character.traits)}</div>
     </section>
   </article>
 </Card>
@@ -224,8 +240,16 @@
     white-space: pre-wrap;
   }
 
+  .traits :global(.trait-label) {
+    font-weight: bold;
+    color: var(--content-text);
+    opacity: 0.8;
+    display: inline-block;
+    min-width: clamp(20mm, 25cqw, 30mm);
+  }
+
   @container (height < 20mm) {
-    .portrait {
+    .portrait-container {
       display: none;
     }
   }

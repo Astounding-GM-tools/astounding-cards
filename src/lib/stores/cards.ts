@@ -4,40 +4,59 @@ import type { Character, CharacterDeck, ValidationError } from '$lib/types';
 import { validateCharacter, validateDeck } from '$lib/types';
 import { toasts } from './toast';
 
+/**
+ * IMPORTANT: Store Update Pattern
+ * 
+ * To prevent scroll jumps and unnecessary re-renders:
+ * 1. Use a writable store (not derived) for currentDeck
+ * 2. Update the store directly with set() when saving changes
+ * 3. Never force a full reload by setting currentDeckId to null/back
+ * 4. Let the keyed each-blocks in PagedCards handle partial updates
+ * 
+ * This pattern ensures that:
+ * - Only changed cards are re-rendered
+ * - Scroll position is maintained
+ * - No unnecessary DB loads
+ * 
+ * Previous approaches that DIDN'T work:
+ * - Using a derived store (caused full re-renders)
+ * - Forcing reloads with currentDeckId (lost scroll position)
+ * - Manual scroll position management (flickered)
+ */
+
 // Internal store for the current deck ID
 const currentDeckId = writable<string | null>(null);
 
 // Store for validation errors
 export const validationErrors = writable<ValidationError[]>([]);
 
-// Derived store that syncs with DB
-export const currentDeck = derived<typeof currentDeckId, CharacterDeck | null>(
-  currentDeckId,
-  ($currentDeckId, set) => {
-    if (!$currentDeckId) {
-      set(null);
+// Store for the current deck
+export const currentDeck = writable<CharacterDeck | null>(null);
+
+// Subscribe to currentDeckId changes to load deck from DB
+if (browser) {
+  currentDeckId.subscribe(async id => {
+    if (!id) {
+      currentDeck.set(null);
       return;
     }
 
-    // Load deck from DB
-    loadDeck($currentDeckId)
-      .then(deck => {
-        if (deck) {
-          // Compare with current value to prevent unnecessary updates
-          const current = get(currentDeck);
-          if (!current || JSON.stringify(current) !== JSON.stringify(deck)) {
-            set(deck);
-          }
-        } else {
-          set(null);
-        }
-      })
-      .catch(error => {
-        console.error('Failed to load deck:', error);
-        set(null);
-      });
-  }
-);
+    try {
+      const deck = await loadDeck(id);
+      if (deck) {
+        currentDeck.set(deck);
+      } else {
+        currentDeck.set(null);
+      }
+    } catch (error) {
+      console.error('Failed to load deck:', error);
+      currentDeck.set(null);
+    }
+  });
+}
+
+// Store for tracking scroll position
+const scrollPosition = writable(0);
 
 // Store for tracking changes that need saving
 const isDirty = writable(false);
@@ -118,12 +137,10 @@ export async function saveDeck(deck: CharacterDeck, allowEmpty = false) {
       request.onsuccess = () => {
         isDirty.set(false);
         validationErrors.set([]);
-        // Update currentDeckId to trigger reload if this is the current deck
+        // Update currentDeck directly
         const currentId = get(currentDeckId);
         if (currentId === deck.id) {
-          // Force a refresh
-          currentDeckId.set(null);
-          currentDeckId.set(deck.id);
+          currentDeck.set(deckToSave);
         }
         resolve();
       };
@@ -204,10 +221,18 @@ export async function deleteDeck(id: string) {
 
 // Update character in current deck
 export async function updateCharacter(id: string, updates: Partial<Character>) {
+  // Store current scroll position
+  if (browser) {
+    const container = document.querySelector('.cards-scroll-container');
+    if (container) {
+      scrollPosition.set(container.scrollTop);
+    }
+  }
+
   const currentId = get(currentDeckId);
   if (!currentId) return;
 
-  const deck = await loadDeck(currentId);
+  const deck = get(currentDeck);
   if (!deck) return;
 
   const charIndex = deck.characters.findIndex(c => c.id === id);
@@ -239,12 +264,23 @@ export async function updateCharacter(id: string, updates: Partial<Character>) {
   newDeck.characters[charIndex] = updatedChar;
 
   try {
-    // Save to DB
+    // Save to DB and update store
     await saveDeck(newDeck);
     
     // Show success toast
     const fieldName = Object.keys(updates)[0];
     toasts.success(`Updated ${fieldName} for ${updatedChar.name}`);
+
+    // Restore scroll position after a short delay
+    if (browser) {
+      setTimeout(() => {
+        const container = document.querySelector('.cards-scroll-container');
+        const savedPosition = get(scrollPosition);
+        if (container && savedPosition) {
+          container.scrollTop = savedPosition;
+        }
+      }, 0);
+    }
   } catch (error) {
     console.error('Failed to save character update:', error);
     toasts.error('Failed to save changes. Please try again.');
