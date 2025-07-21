@@ -65,7 +65,17 @@
   - [ ] Ensure print compatibility
   - [ ] Add theme customization options
 
-### 2. URL Sharing Improvements
+### 2. Card Size Options
+- [x] Add size toggle in deck settings
+  - [x] Poker size (3x3 grid, 9 cards per page)
+  - [x] Tarot size (2x2 grid, 4 cards per page)
+- [x] Implement responsive scaling
+  - [x] Grid layout adaptation
+  - [x] Automatic content scaling
+  - [x] Print layout adjustments
+- [x] Update print instructions for both sizes
+
+### 3. URL Sharing Improvements
 - [x] Add "Copy URL" button
 - [x] Clear URL after import
 - [ ] Add URL validation
@@ -74,7 +84,7 @@
 - [ ] Handle URL import conflicts
 - [ ] Add version tracking for shared decks
 
-### 3. Advanced URL Sharing & Collaboration
+### 4. Advanced URL Sharing & Collaboration
 - [ ] Support different collaboration modes:
   - [ ] Self-sync across devices
     - [ ] Clear "last synced" indicator
@@ -91,7 +101,7 @@
     - [ ] Merge options
     - [ ] Keep history
 
-### 4. Mobile Experience
+### 5. Mobile Experience
 - [ ] Create dedicated mobile routes and views
   - [ ] Separate from print layout components
   - [ ] Mobile-first navigation pattern
@@ -112,7 +122,7 @@
   - [ ] Share sheet integration
   - [ ] Camera integration for portraits
 
-### 5. Image Handling
+### 6. Image Handling
 - [ ] Change from local /portraits/ to full URLs
 - [ ] Add image URL validation
 - [ ] Add hosting suggestions:
@@ -132,7 +142,7 @@
   - [ ] Hosting considerations
   - [ ] CORS requirements
 
-### 6. PWA & Offline Support
+### 7. PWA & Offline Support
 - [ ] Basic PWA setup
   - [ ] Web manifest
   - [ ] Service worker registration
