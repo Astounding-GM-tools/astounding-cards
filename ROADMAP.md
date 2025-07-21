@@ -10,7 +10,7 @@
   - [x] Key traits section
   - [x] Printer-friendly text styles
 - [x] Card back design implementation
-  - [x] Bio text area
+  - [x] Description text area
   - [x] Notes section for handwritten notes
 - [x] Basic data handling
   - [x] ContentEditable card fields

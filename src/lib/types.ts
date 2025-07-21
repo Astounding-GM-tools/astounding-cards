@@ -20,16 +20,16 @@ export type CardStat = {
 };
 
 // Character and deck types
-export type Character = {
+export interface Character {
   id: string;
   name: string;
   role: string;
   portrait: string | null;
   traits: string[];
-  bio: string;
+  desc: string;  // renamed from bio
   notes?: string;  // Optional notes field for back of card
   stat?: CardStat;  // Optional type-specific stat
-};
+}
 
 export type CharacterDeck = {
   id: string;
@@ -69,8 +69,8 @@ export function validateCharacter(char: Partial<Character>): ValidationError[] {
     errors.push({ field: 'traits', message: 'Maximum 5 traits allowed' });
   }
 
-  if (!char.bio?.trim()) {
-    errors.push({ field: 'bio', message: 'Bio is required' });
+  if (!char.desc?.trim()) {
+    errors.push({ field: 'desc', message: 'Description is required' });
   }
 
   if (char.stat?.type === 'character' && !char.stat.value?.trim()) {

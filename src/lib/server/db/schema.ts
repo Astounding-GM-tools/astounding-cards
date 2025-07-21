@@ -20,7 +20,7 @@ export const characters = pgTable('characters', {
   age: text('age').notNull(),
   portrait: text('portrait'),
   traits: text('traits').array().notNull(),
-  bio: text('bio').notNull(),
+  desc: text('desc').notNull(),  // renamed from bio
   notes: text('notes'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   version: integer('version').notNull().default(1), // For conflict resolution
@@ -40,7 +40,7 @@ export function isCharacter(obj: unknown): obj is Character {
     typeof char?.age === 'string' &&
     (char?.portrait === null || typeof char?.portrait === 'string') &&
     Array.isArray(char?.traits) &&
-    typeof char?.bio === 'string'
+    typeof char?.desc === 'string'
   );
 }
 

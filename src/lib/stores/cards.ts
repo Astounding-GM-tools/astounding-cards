@@ -276,7 +276,7 @@ export function addCharacter() {
     age: "30",
     portrait: null,
     traits: ["New trait"],
-    bio: "Character background..."
+    desc: "Character description..."
   };
 
   // Validate the new character

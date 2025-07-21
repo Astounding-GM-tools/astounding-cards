@@ -9,6 +9,7 @@
 
   let bioElement: HTMLElement;
   let nameElement: HTMLElement;
+  let descElement: HTMLElement;
 
   // Update DOM elements when character changes
   $: {
@@ -17,6 +18,23 @@
     }
     if (bioElement && bioElement.innerText !== character.bio) {
       bioElement.innerText = character.bio;
+    }
+  }
+
+  // Update the description text overflow check
+  $: {
+    if (descElement && descElement.innerText !== character.desc) {
+      descElement.innerText = character.desc;
+    }
+  }
+
+  // Ensure description text doesn't overflow
+  $: {
+    if (descElement) {
+      const maxHeight = descElement.style.maxHeight;
+      if (descElement.scrollHeight > parseInt(maxHeight)) {
+        descElement.textContent = descElement.textContent?.slice(0, -10) + '...';
+      }
     }
   }
 
@@ -45,6 +63,14 @@
       await onChange({ name: newName });
     }
   }
+
+  async function updateDesc(event: Event) {
+    const target = event.target as HTMLElement;
+    const newDesc = target.innerText;
+    if (newDesc !== character.desc) {
+      await onChange({ desc: newDesc });
+    }
+  }
 </script>
 
 <Card {showCropMarks}>
@@ -58,11 +84,11 @@
       bind:this={nameElement}
     >{character.name}</h2>
     <p 
-      class="bio" 
-      contenteditable="true"
-      on:blur={updateBio}
-      bind:this={bioElement}
-    >{character.bio}</p>
+      contenteditable={editable}
+      class="desc"
+      on:blur={updateDesc}
+      bind:this={descElement}
+    >{character.desc}</p>
     <section class="notes">
       <h3>Notes</h3>
       <div class="notes-content"></div>
@@ -134,6 +160,21 @@
     .card {
       break-inside: avoid;
       page-break-inside: avoid;
+    }
+  }
+
+  .desc {
+    margin: 0;
+    font-size: 7pt;
+    line-height: 1.4;
+    overflow: hidden;
+    max-height: calc(88.9mm - 6mm - 5mm - 6mm - 50mm); /* card height - padding - h2 - gaps - notes */
+    text-align: center;
+  }
+
+  @container (height < 20mm) {
+    .desc {
+      max-height: calc(88.9mm - 6mm - 5mm - 3mm); /* card height - padding - h2 - single gap */
     }
   }
 </style> 

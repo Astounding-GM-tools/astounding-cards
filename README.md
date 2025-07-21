@@ -1,21 +1,20 @@
-# Character Cards
+## Character Cards
 
-A tool for RPG Game Masters to create printable, double-sided character cards. Generate professional-looking character cards that can be printed, cut out, and optionally mounted on playing cards for a premium feel.
+A simple tool for creating and managing character cards for tabletop RPGs.
+
+Each card has:
+- Front: Name, portrait, and traits
+- Back: Detailed description and additional notes
 
 ## Features
 
-- Create double-sided character cards with:
-  - Front: Portrait, name, age, role, and key traits
-  - Back: Detailed bio and additional notes
-- Print-optimized layout:
-  - A4 paper size
-  - 9 cards per page (3×3 grid)
-  - Standard playing card size (63.5mm × 88.9mm)
-  - Print-friendly margins and crop marks
-- Flexible printing options:
-  - Double-sided printing with automatic back alignment
-  - Single-sided printing for mounting on playing cards
-  - Optional crop marks for precise cutting
+- [x] Create and edit character cards
+- [x] Add portraits
+- [x] Add traits
+- [x] Add description
+- [x] Print-friendly layout
+- [x] Multiple themes
+- [x] Share decks via URL
 
 ## Getting Started
 

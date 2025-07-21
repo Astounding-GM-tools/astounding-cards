@@ -22,14 +22,14 @@
   let showThemeDialog = false;
   let selectedTheme = deck.meta.theme;
   let showCardBack = false;
-  let previewCard = deck.characters[0] || {
+  const exampleCharacter = {
     id: 'preview',
     name: 'Example Character',
     role: 'Preview Role',
     age: '30',
     portrait: null,
     traits: ['Sample trait 1', 'Sample trait 2', 'Sample trait 3'],
-    bio: 'This is an example character to preview the theme styling.'
+    desc: 'This is an example character to preview the theme styling.',
   };
 
   async function handleThemeChange() {
@@ -540,14 +540,14 @@
           <div class="preview-card" class:flipped={showCardBack}>
             <div class="preview-front">
               <CharacterCardFront
-                character={previewCard}
+                character={exampleCharacter}
                 showCropMarks={false}
                 onChange={() => {}}
               />
             </div>
             <div class="preview-back">
               <CharacterCardBack
-                character={previewCard}
+                character={exampleCharacter}
                 showCropMarks={false}
                 onChange={() => {}}
               />
