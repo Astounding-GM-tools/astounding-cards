@@ -1,7 +1,35 @@
 # Character Cards Usage Guide
 
 ## Overview
-Character Cards is a flexible tool for creating, managing, and printing reference cards for RPG campaigns. While it started as a character management system, it works equally well for items, locations, clues, and other campaign elements.
+Character Cards is a flexible tool for creating, managing, and printing reference cards for RPG campaigns. While it started as a character management system, it works equally well for items, locations, and other campaign elements.
+
+## Card Types and Their Stats
+
+### Characters
+- **Age** (when known) appears in top right corner
+- Observable information on front
+- Game stats and secrets on back
+
+### Items
+- **Portability** in top right corner indicates how easily an item can be transported or concealed
+- Includes documents, artifacts, evidence, and other physical objects
+
+#### Portability Categories
+- **Negligible:** Can be palmed or slipped into a pocket (photos, documents, small evidence)
+- **Light:** Pocketable but detectable on search (pistol, dagger, book)
+- **Medium:** Designed to be carried but visible (sword, rifle, laptop)
+- **Heavy:** Carryable but obvious/awkward (spear, chair, large chest)
+- **Stationary:** Fixed in place or part of the scene (can be documented/recorded)
+
+### Locations
+- **Area** in top right corner shows where the location can be found
+- Can reference either:
+  - Another location card in the deck ("hard link")
+  - A named area or district ("soft link")
+- Examples:
+  - "Secret Chamber" area: [Banker's Guild] (hard link to another card)
+  - "Banker's Guild" area: "Bjørvika" (soft link to district)
+  - "Abandoned Warehouse" area: "The Docks" (soft link)
 
 ## Card Structure
 Each card has two sides:
@@ -10,52 +38,15 @@ Each card has two sides:
 
 For player handouts, print only the front sides (odd-numbered pages), leaving the backs blank for player notes.
 
-## Card Types
-- Characters (NPCs, allies, adversaries)
-- Items (artifacts, weapons, evidence)
-- Locations (buildings, rooms, scenes)
-- Handouts (documents, photos, clues)
-
-## Portability Categories
-Items, evidence, and artifacts use a portability system that reflects how they can be handled and concealed in the narrative:
-
-### Negligible
-- Can be palmed or slipped into a pocket
-- Easily hidden or transported
-- Examples: photos, documents, small evidence samples, USB drives
-- Note: Many stationary items can be converted to negligible through documentation
-
-### Light
-- Pocketable but detectable on search
-- Can be concealed but might be found
-- Examples: pistol, dagger, book, small lockbox
-- Think: "Would a pat-down reveal this?"
-
-### Medium
-- Designed to be carried but visible
-- Can be "concealed" but obviously carrying something
-- Examples: sword, rifle, laptop, large tome
-- Note: Might be concealed in containers but still obvious (rifle in guitar case)
-- Converting between concealed/usable states takes time
-
-### Heavy
-- Carryable but obvious/awkward
-- Cannot be effectively concealed
-- Examples: spear, chair, large chest, evidence boards
-- Think: "You can move it, but everyone will notice"
-
-### Stationary
-- Fixed in place or part of the scene
-- Can be documented/recorded
-- Examples: crime scenes, wall markings, building features
-- Note: Can often create negligible versions through photos/notes
-
 ## Usage Tips
 1. **Front Card Information**
    - Keep to observable facts
    - Use traits for notable features
-   - Include portability for relevant items
-   - Age for characters (when known)
+   - Include appropriate stat for card type:
+     - Characters: Age (if known)
+     - Items: Portability
+     - Locations: Area
+   - Use traits for other relationships/states
 
 2. **Back Card Information**
    - Game stats and mechanics
@@ -63,13 +54,19 @@ Items, evidence, and artifacts use a portability system that reflects how they c
    - GM notes and hooks
    - Secret relationships
 
-3. **Player Handouts**
+3. **Location Areas**
+   - Use hard links (other cards) for significant contained locations
+   - Use soft links (text) for districts and general areas
+   - Keep area names evocative and setting-appropriate
+   - Areas are optional but help organize related locations
+
+4. **Player Handouts**
    - Print odd-numbered pages only
    - Players get front information
    - Blank backs for their notes
    - Perfect for investigation handouts
 
-4. **GM Reference**
+5. **GM Reference**
    - Print all pages
    - Complete information
    - Quick reference during play

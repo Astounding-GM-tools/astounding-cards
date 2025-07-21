@@ -78,18 +78,24 @@
 ### 3. Expanded Card Types
 - [ ] Add card type selector
   - [ ] Characters (NPCs, allies, adversaries)
-  - [ ] Items (weapons, artifacts, books)
+  - [ ] Items (artifacts, weapons, evidence, documents)
   - [ ] Locations (buildings, rooms, scenes)
-  - [ ] Handouts (documents, photos, clues)
+- [ ] Implement corner stats
+  - [ ] Character age
+    - [ ] Input validation
+    - [ ] Optional field
+    - [ ] Clear display
+  - [ ] Item portability
+    - [ ] Five-category system
+    - [ ] Category selector
+    - [ ] Clear indicators
+  - [ ] Location areas
+    - [ ] Hard links to deck locations
+    - [ ] Soft links to named areas
+    - [ ] Area suggestions
+    - [ ] Flexible input
 - [ ] Front card (observable information)
   - [ ] Type-specific templates
-  - [ ] Age for characters
-  - [ ] Portability categories
-    - [ ] Negligible (easily hidden/transported)
-    - [ ] Light (pocketable but detectable)
-    - [ ] Medium (visible but portable)
-    - [ ] Heavy (obvious but moveable)
-    - [ ] Stationary (fixed in place)
   - [ ] Observable features
   - [ ] Clean layout for player handouts
 - [ ] Back card (GM information)
