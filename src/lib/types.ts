@@ -1,15 +1,34 @@
-// Character and deck types
+// Card stats and types
 export type CardSize = 'poker' | 'tarot';
 
+export type Portability = 'negligible' | 'light' | 'medium' | 'heavy' | 'stationary';
+
+export type AreaReference = {
+  type: 'hard' | 'soft';
+  value: string;  // Card ID for hard links, area name for soft links
+};
+
+export type CardStat = {
+  type: 'character';
+  value: string;  // age
+} | {
+  type: 'item';
+  value: Portability;
+} | {
+  type: 'location';
+  value: AreaReference;
+};
+
+// Character and deck types
 export type Character = {
   id: string;
   name: string;
   role: string;
-  age: string;
   portrait: string | null;
   traits: string[];
   bio: string;
   notes?: string;  // Optional notes field for back of card
+  stat?: CardStat;  // Optional type-specific stat
 };
 
 export type CharacterDeck = {
@@ -42,10 +61,6 @@ export function validateCharacter(char: Partial<Character>): ValidationError[] {
     errors.push({ field: 'role', message: 'Role is required' });
   }
 
-  if (!char.age || parseInt(char.age) <= 0) {
-    errors.push({ field: 'age', message: 'Age must be a positive number' });
-  }
-
   if (!Array.isArray(char.traits) || char.traits.length === 0) {
     errors.push({ field: 'traits', message: 'At least one trait is required' });
   }
@@ -56,6 +71,10 @@ export function validateCharacter(char: Partial<Character>): ValidationError[] {
 
   if (!char.bio?.trim()) {
     errors.push({ field: 'bio', message: 'Bio is required' });
+  }
+
+  if (char.stat?.type === 'character' && !char.stat.value?.trim()) {
+    errors.push({ field: 'stat.value', message: 'Age must be provided for characters' });
   }
 
   return errors;
