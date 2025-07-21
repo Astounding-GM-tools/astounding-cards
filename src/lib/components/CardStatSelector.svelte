@@ -13,12 +13,14 @@
 
   function openDialog() {
     tempStat = character.stat;
-    if (tempStat?.type === 'character') {
-      characterAge = tempStat.value;
-    } else if (tempStat?.type === 'item') {
-      itemPortability = tempStat.value;
-    } else if (tempStat?.type === 'location') {
-      locationArea = tempStat.value.value;
+    if (tempStat?.type === 'location' && tempStat.value.type === 'hard') {
+      if (!locationExists(tempStat.value.value)) {
+        // Convert broken hard link to soft link
+        tempStat = {
+          type: 'location',
+          value: { type: 'soft', value: tempStat.value.value }
+        };
+      }
     }
     dialog.showModal();
   }
@@ -57,6 +59,41 @@
   $: locationCards = ($currentDeck?.characters || [])
     .filter(c => c.stat?.type === 'location' && c.id !== character.id)
     .map(c => ({ id: c.id, name: c.name }));
+
+  // Format location display
+  function formatLocationDisplay(value: { type: 'hard' | 'soft', value: string }): string {
+    if (value.type === 'hard') {
+      const card = locationCards.find(c => c.id === value.value);
+      return card ? `📍 ${card.name}` : value.value;
+    }
+    return value.value;
+  }
+
+  // Check if a location ID exists
+  function locationExists(id: string): boolean {
+    return locationCards.some(c => c.id === id);
+  }
+
+  // Handle location input change
+  function handleLocationInput(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const value = input.value;
+    
+    // Check if value matches a location card ID
+    const locationCard = locationCards.find(c => c.id === value);
+    if (locationCard) {
+      tempStat = {
+        type: 'location',
+        value: { type: 'hard', value }
+      };
+    } else {
+      // Treat as soft link
+      tempStat = {
+        type: 'location',
+        value: { type: 'soft', value }
+      };
+    }
+  }
 </script>
 
 <!-- Stat Display/Trigger -->
@@ -70,7 +107,7 @@
     {:else if character.stat.type === 'item'}
       {character.stat.value}
     {:else if character.stat.type === 'location'}
-      {character.stat.value.value}
+      {formatLocationDisplay(character.stat.value)}
     {/if}
   </button>
 {:else}
@@ -147,15 +184,15 @@
             placeholder="Area"
             disabled={tempStat?.type !== 'location'}
             list="area-suggestions"
-            bind:value={locationArea}
-            on:input={setLocation}
+            value={tempStat?.type === 'location' ? tempStat.value.value : ''}
+            on:input={handleLocationInput}
           >
           <datalist id="area-suggestions">
             {#each locationCards as loc}
-              <option value={loc.id}>{loc.name}</option>
+              <option value={loc.id} label={`📍 ${loc.name}`}></option>
             {/each}
             {#each areaNames as area}
-              <option value={area}>{area}</option>
+              <option value={area}></option>
             {/each}
           </datalist>
         </div>
@@ -193,6 +230,9 @@
   .stat-display.location {
     background: #fff3e0;
     color: #e65100;
+    display: flex;
+    align-items: center;
+    gap: 1mm;
   }
 
   .stat-add {
