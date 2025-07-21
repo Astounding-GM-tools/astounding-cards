@@ -76,38 +76,38 @@
 - [x] Update print instructions for both sizes
 
 ### 3. Expanded Card Types
-- [ ] Add card type selector
-  - [ ] Characters (NPCs, allies, adversaries)
-  - [ ] Items (artifacts, weapons, evidence, documents)
-  - [ ] Locations (buildings, rooms, scenes)
-- [ ] Implement corner stats
-  - [ ] Character age
-    - [ ] Input validation
-    - [ ] Optional field
-    - [ ] Clear display
-  - [ ] Item portability
-    - [ ] Five-category system
-    - [ ] Category selector
-    - [ ] Clear indicators
-  - [ ] Location areas
-    - [ ] Hard links to deck locations
-    - [ ] Soft links to named areas
-    - [ ] Area suggestions
-    - [ ] Flexible input
-- [ ] Front card (observable information)
-  - [ ] Type-specific templates
-  - [ ] Observable features
-  - [ ] Clean layout for player handouts
+- [x] Add card type selector
+  - [x] Characters (NPCs, allies, adversaries)
+  - [x] Items (artifacts, weapons, evidence, documents)
+  - [x] Locations (buildings, rooms, scenes)
+- [x] Implement corner stats
+  - [x] Character age
+    - [x] Input validation
+    - [x] Optional field
+    - [x] Clear display
+  - [x] Item portability
+    - [x] Five-category system
+    - [x] Category selector
+    - [x] Clear indicators
+  - [x] Location areas
+    - [x] Hard links to deck locations
+    - [x] Soft links to named areas
+    - [x] Area suggestions
+    - [x] Flexible input
+- [x] Front card (observable information)
+  - [x] Type-specific templates
+  - [x] Observable features
+  - [x] Clean layout for player handouts
 - [ ] Back card (GM information)
   - [ ] Game stats
   - [ ] Hidden information
   - [ ] Plot hooks and secrets
   - [ ] GM notes section
   - [ ] Prints blank for player handouts
-- [ ] Documentation
-  - [ ] Usage guide with examples
-  - [ ] Print instructions for both GM/player use
-  - [ ] Templates and suggestions
+- [x] Documentation
+  - [x] Usage guide with examples
+  - [x] Print instructions for both GM/player use
+  - [x] Templates and suggestions
 
 ### 4. URL Sharing Improvements
 - [x] Add "Copy URL" button
