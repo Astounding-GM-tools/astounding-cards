@@ -78,6 +78,7 @@
     display: flex;
     flex-direction: column;
     gap: 3mm;
+    direction: ltr;  /* Ensure content is always LTR regardless of parent */
   }
 
   h2 {
