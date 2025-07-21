@@ -118,89 +118,91 @@
     class="stat-add"
     on:click={openDialog}
   >
-    Set Type/Stat +
+    Type
   </button>
 {/if}
 
 <!-- Type/Stat Selector Modal -->
 <dialog bind:this={dialog} class="stat-dialog">
   <div class="dialog-content">
-    <h2>Set Card Type & Stat</h2>
+    <h2>Card Type</h2>
 
-    <!-- Character Option -->
-    <label class="stat-option">
-      <input
-        type="radio"
-        name="stat-type"
-        checked={tempStat?.type === 'character'}
-        on:change={setCharacter}
-      >
-      <div class="stat-details">
-        <span>Character</span>
+    <div class="options-container">
+      <!-- Character Option -->
+      <label class="stat-option">
         <input
-          type="text"
-          placeholder="Age"
-          disabled={tempStat?.type !== 'character'}
-          bind:value={characterAge}
-          on:input={setCharacter}
+          type="radio"
+          name="stat-type"
+          checked={tempStat?.type === 'character'}
+          on:change={setCharacter}
         >
-      </div>
-    </label>
-
-    <!-- Item Option -->
-    <label class="stat-option">
-      <input
-        type="radio"
-        name="stat-type"
-        checked={tempStat?.type === 'item'}
-        on:change={setItem}
-      >
-      <div class="stat-details">
-        <span>Item</span>
-        <select
-          disabled={tempStat?.type !== 'item'}
-          bind:value={itemPortability}
-          on:change={setItem}
-        >
-          <option value="negligible">Negligible</option>
-          <option value="light">Light</option>
-          <option value="medium">Medium</option>
-          <option value="heavy">Heavy</option>
-          <option value="stationary">Stationary</option>
-        </select>
-      </div>
-    </label>
-
-    <!-- Location Option -->
-    <label class="stat-option">
-      <input
-        type="radio"
-        name="stat-type"
-        checked={tempStat?.type === 'location'}
-        on:change={setLocation}
-      >
-      <div class="stat-details">
-        <span>Location</span>
-        <div class="area-input">
+        <div class="stat-details">
+          <span class="type-label">Character</span>
           <input
             type="text"
-            placeholder="Area"
-            disabled={tempStat?.type !== 'location'}
-            list="area-suggestions"
-            value={tempStat?.type === 'location' ? tempStat.value.value : ''}
+            placeholder="Age"
+            disabled={tempStat?.type !== 'character'}
+            value={tempStat?.type === 'character' ? tempStat.value : ''}
             on:input={handleLocationInput}
           >
-          <datalist id="area-suggestions">
-            {#each locationCards as loc}
-              <option value={`📍 ${loc.name}`}></option>
-            {/each}
-            {#each areaNames as area}
-              <option value={area}></option>
-            {/each}
-          </datalist>
         </div>
-      </div>
-    </label>
+      </label>
+
+      <!-- Item Option -->
+      <label class="stat-option">
+        <input
+          type="radio"
+          name="stat-type"
+          checked={tempStat?.type === 'item'}
+          on:change={setItem}
+        >
+        <div class="stat-details">
+          <span class="type-label">Item</span>
+          <select
+            disabled={tempStat?.type !== 'item'}
+            bind:value={itemPortability}
+            on:change={setItem}
+          >
+            <option value="negligible">Negligible</option>
+            <option value="light">Light</option>
+            <option value="medium">Medium</option>
+            <option value="heavy">Heavy</option>
+            <option value="stationary">Stationary</option>
+          </select>
+        </div>
+      </label>
+
+      <!-- Location Option -->
+      <label class="stat-option">
+        <input
+          type="radio"
+          name="stat-type"
+          checked={tempStat?.type === 'location'}
+          on:change={setLocation}
+        >
+        <div class="stat-details">
+          <span class="type-label">Location</span>
+          <div class="area-input">
+            <input
+              type="text"
+              placeholder="Area"
+              disabled={tempStat?.type !== 'location'}
+              list="area-suggestions"
+              value={tempStat?.type === 'location' ? tempStat.value.value : ''}
+              on:input={handleLocationInput}
+            >
+            <datalist id="area-suggestions">
+              {#each locationCards as loc}
+                <option value={`📍 ${loc.name}`}></option>
+              {/each}
+              {#each areaNames as area}
+                <option value={area}></option>
+              {/each}
+            </datalist>
+          </div>
+        </div>
+      </label>
+    </div>
 
     <div class="dialog-buttons">
       <button class="clear" on:click={clearStat}>Clear Type</button>
@@ -256,7 +258,7 @@
     border: none;
     border-radius: 8px;
     padding: 0;
-    min-width: 300px;
+    min-width: 320px;
   }
 
   .stat-dialog::backdrop {
@@ -268,9 +270,16 @@
   }
 
   h2 {
-    margin: 0 0 1rem;
+    margin: 0 0 1.5rem;
     font-size: 1.2rem;
     color: #333;
+    font-weight: 500;
+  }
+
+  .options-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
   }
 
   .stat-option {
@@ -278,14 +287,21 @@
     align-items: center;
     gap: 1rem;
     padding: 1rem;
-    margin: 0.5rem 0;
     border: 1px solid #eee;
     border-radius: 4px;
     cursor: pointer;
+    transition: all 0.2s ease;
   }
 
   .stat-option:hover {
     background: #f9f9f9;
+    border-color: #e0e0e0;
+  }
+
+  .stat-option input[type="radio"] {
+    margin: 0;
+    width: 16px;
+    height: 16px;
   }
 
   .stat-details {
@@ -293,33 +309,52 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 1rem;
+  }
+
+  .type-label {
+    font-weight: 500;
+    color: #333;
+    min-width: 80px;
   }
 
   input[type="text"],
   select {
-    padding: 0.25rem 0.5rem;
+    padding: 0.5rem;
     border: 1px solid #ddd;
     border-radius: 4px;
     font-size: 0.9rem;
+    min-width: 120px;
+    transition: all 0.2s ease;
+  }
+
+  input[type="text"]:focus,
+  select:focus {
+    border-color: #2196f3;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.1);
   }
 
   input[type="text"]:disabled,
   select:disabled {
     background: #f5f5f5;
     color: #999;
+    border-color: #eee;
   }
 
   .area-input {
     position: relative;
     flex: 1;
-    max-width: 200px;
+    min-width: 120px;
   }
 
   .dialog-buttons {
     display: flex;
     justify-content: flex-end;
-    gap: 0.5rem;
-    margin-top: 1.5rem;
+    gap: 0.75rem;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #eee;
   }
 
   .dialog-buttons button {
@@ -328,6 +363,7 @@
     border-radius: 4px;
     cursor: pointer;
     font-size: 0.9rem;
+    transition: all 0.2s ease;
   }
 
   .clear {
@@ -335,10 +371,19 @@
     color: #666;
   }
 
+  .clear:hover {
+    background: #e0e0e0;
+  }
+
   .cancel {
     background: #fff;
     border: 1px solid #ddd;
     color: #666;
+  }
+
+  .cancel:hover {
+    background: #f5f5f5;
+    border-color: #ccc;
   }
 
   .save {
