@@ -21,16 +21,6 @@
     }
   }
 
-  // Ensure description text doesn't overflow
-  $: {
-    if (descElement) {
-      const maxHeight = descElement.style.maxHeight;
-      if (descElement.scrollHeight > parseInt(maxHeight)) {
-        descElement.textContent = descElement.textContent?.slice(0, -10) + '...';
-      }
-    }
-  }
-
   async function updateName(event: Event) {
     const target = event.target as HTMLElement;
     const newName = target.innerText;
@@ -47,40 +37,11 @@
     }
   }
 
-  // Format secrets with strong labels
-  function formatSecrets(secrets: string[]) {
-    return secrets?.map(secret => {
-      const [label, ...rest] = secret.split(':');
-      if (rest.length > 0) {
-        return `<strong class="secret-label">${label.trim()}:</strong> ${rest.join(':').trim()}`;
-      }
-      return secret; // If no colon, keep as is
-    }).join('\n') || '';
-  }
-
-  // Parse HTML back to plain text for secrets
-  function parseSecrets(html: string) {
-    return html
-      .replace(/<strong>|<\/strong>/g, '')  // Remove strong tags
-      .split('\n')
-      .map(s => s.trim())
-      .filter(s => s.length > 0);
-  }
-
   async function updateSecrets(event: Event) {
     const target = event.target as HTMLElement;
-    // Split into lines and process each line
     const newSecrets = target.innerText
       .split('\n')
-      .map(line => {
-        // If line already has a colon, ensure proper format
-        if (line.includes(':')) {
-          const [label, ...rest] = line.split(':');
-          return `${label.trim()}: ${rest.join(':').trim()}`;
-        }
-        // If no colon, return line as is
-        return line.trim();
-      })
+      .map(s => s.trim())
       .filter(s => s.length > 0);
     
     if (JSON.stringify(newSecrets) !== JSON.stringify(character.secrets)) {
@@ -89,43 +50,44 @@
   }
 
   function addSecret() {
-    const newSecrets = [...(character.secrets || []), 'Label: Description'];
+    const newSecrets = [...(character.secrets || []), 'New secret'];
     onChange({ secrets: newSecrets });
   }
 </script>
 
 <Card {showCropMarks}>
-  <article 
-    class="card-content" 
-    style:container-type="inline-size"
-  >
-    <h2 
-      contenteditable={editable}
-      on:blur={updateName}
-      bind:this={nameElement}
-    >{character.name}</h2>
-    <p 
-      contenteditable={editable}
-      class="desc"
-      on:blur={updateDesc}
-      bind:this={descElement}
-    >{character.desc}</p>
-    <fieldset class="secrets">
-      <legend>Secrets</legend>
-      <div 
-        class="secrets-content"
-        contenteditable={editable}
-        on:blur={updateSecrets}
-        bind:this={secretsElement}
-      >{@html formatSecrets(character.secrets)}</div>
-      {#if editable}
-        <button 
-          class="add-secret" 
-          on:click={addSecret}
-          title="Add secret"
-        >+</button>
-      {/if}
-    </fieldset>
+  <article class="card-content">
+    <section class="content">
+      <div class="top">
+        <h2 
+          contenteditable={editable}
+          on:blur={updateName}
+          bind:this={nameElement}
+        >{character.name}</h2>
+        <p 
+          contenteditable={editable}
+          class="desc"
+          on:blur={updateDesc}
+          bind:this={descElement}
+        >{character.desc}</p>
+      </div>
+      <fieldset class="secrets">
+        <legend>Secrets</legend>
+        <div 
+          class="secrets-content"
+          contenteditable={editable}
+          on:blur={updateSecrets}
+          bind:this={secretsElement}
+        >{character.secrets?.join('\n') || ''}</div>
+        {#if editable}
+          <button 
+            class="add-secret" 
+            on:click={addSecret}
+            title="Add secret"
+          >+</button>
+        {/if}
+      </fieldset>
+    </section>
   </article>
 </Card>
 
@@ -133,94 +95,82 @@
   .card-content {
     width: 100%;
     height: 100%;
-    font-size: clamp(7pt, 2.5cqw, 12pt);
+    font-size: var(--base-font-size);
     display: flex;
     flex-direction: column;
-    gap: 3mm;
+    justify-content: flex-end;
+    background-color: var(--content-bg);
+    container-type: inline-size;
     direction: ltr;  /* Ensure content is always LTR regardless of parent */
+  }
+
+  .content {
+    background: var(--content-bg);
+    color: var(--content-text);
+    opacity: var(--content-opacity);
+    margin: var(--content-gap);
+    padding: var(--content-gap);
+    border-radius: 1mm;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: calc(100% - var(--content-gap) * 2);
+  }
+
+  .top {
+    display: flex;
+    flex-direction: column;
+    gap: var(--content-gap);
   }
 
   h2 {
     margin: 0;
-    font-size: clamp(9pt, 3cqw, 14pt);
+    font-size: var(--title-font-size);
     font-weight: bold;
     text-align: center;
-    height: 5mm;
   }
 
   .desc {
     margin: 0;
-    font-size: clamp(7pt, 2.5cqw, 12pt);
+    font-size: var(--role-font-size);
     line-height: 1.4;
-    overflow: hidden;
-    max-height: calc(88.9mm - 6mm - 5mm - 6mm - 50mm); /* card height - padding - h2 - gaps - secrets */
     text-align: center;
-  }
-
-  @container (height < 20mm) {
-    .desc {
-      max-height: calc(88.9mm - 6mm - 5mm - 3mm); /* card height - padding - h2 - single gap */
-    }
   }
 
   .secrets {
     position: relative;
-    border: 1px solid #ddd;
-    padding: 1mm 2mm;
+    border: 1px solid var(--border-color);
+    padding: var(--content-gap);
     border-radius: 1mm;
-    min-height: 50mm;
-    margin-top: auto;
-  }
-
-  @container (height < 20mm) {
-    .secrets {
-      display: none;
-    }
+    min-height: 40mm;
+    margin: 0;
   }
 
   .secrets legend {
-    font-size: clamp(7pt, 2.5cqw, 12pt);
-    color: #666;
+    font-size: var(--ui-font-size);
+    color: var(--content-text);
     font-weight: normal;
     padding: 0 1mm;
   }
 
   .secrets-content {
-    min-height: 40mm;
+    min-height: 35mm;
     white-space: pre-wrap;
-    font-size: clamp(7pt, 2.5cqw, 12pt);
+    font-size: var(--trait-font-size);
     line-height: 1.4;
-  }
-
-  .secrets-content :global(strong) {
-    font-weight: bold;
-    color: #444;
-  }
-
-  .secrets-content :global(.secret-label) {
-    font-weight: bold;
-    color: #444;
-    display: inline-block;
-    min-width: clamp(20mm, 25cqw, 30mm);
-  }
-
-  .secrets-content :global(.separator) {
-    opacity: 0;
-    position: absolute;
-    pointer-events: none;
   }
 
   .add-secret {
     position: absolute;
-    bottom: 2mm;
-    right: 2mm;
+    bottom: var(--content-gap);
+    right: var(--content-gap);
     width: 5mm;
     height: 5mm;
     border: none;
     border-radius: 50%;
-    background: #eee;
-    color: #666;
-    font-size: clamp(7pt, 2.5cqw, 12pt);
+    background: var(--border-color);
+    color: var(--content-text);
+    font-size: var(--ui-font-size);
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -235,15 +185,15 @@
 
   .add-secret:hover {
     opacity: 1 !important;
-    background: #ddd;
+  }
+
+  @container (height < 20mm) {
+    .secrets {
+      display: none;
+    }
   }
 
   @media print {
-    .card {
-      break-inside: avoid;
-      page-break-inside: avoid;
-    }
-
     .add-secret {
       display: none;
     }

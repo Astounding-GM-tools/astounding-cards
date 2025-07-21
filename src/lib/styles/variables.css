@@ -1,4 +1,29 @@
-/* Declare typed custom properties */
+/* Card dimensions and spacing */
+@property --card-padding {
+  syntax: '<length>';
+  initial-value: 3mm;
+  inherits: true;
+}
+
+@property --page-margin {
+  syntax: '<length>';
+  initial-value: 4mm;
+  inherits: true;
+}
+
+@property --content-gap {
+  syntax: '<length>';
+  initial-value: 2mm;
+  inherits: true;
+}
+
+@property --page-gap {
+  syntax: '<length>';
+  initial-value: 2rem;
+  inherits: true;
+}
+
+/* Theme-specific colors (for cards only) */
 @property --content-bg {
   syntax: '<color>';
   initial-value: white;
@@ -17,89 +42,152 @@
   inherits: true;
 }
 
+@property --border-color {
+  syntax: '<color>';
+  initial-value: #ddd;
+  inherits: true;
+}
+
+/* Typography */
 @property --base-font-size {
   syntax: '<length>';
-  initial-value: clamp(8pt, 1cqw, 14pt);
+  initial-value: 1.2cqw;
   inherits: true;
 }
 
 @property --title-font-size {
   syntax: '<length-percentage>';
-  initial-value: 1.4em;
+  initial-value: 1.6em;
   inherits: true;
 }
 
 @property --role-font-size {
   syntax: '<length-percentage>';
-  initial-value: 1em;
+  initial-value: 1.2em;
   inherits: true;
 }
 
 @property --trait-font-size {
   syntax: '<length-percentage>';
-  initial-value: 0.9em;
+  initial-value: 1.1em;
   inherits: true;
 }
 
 @property --ui-font-size {
   syntax: '<length-percentage>';
-  initial-value: 0.8em;
+  initial-value: 0.9em;
   inherits: true;
 }
 
 /* Base theme variables */
 :root {
-  /* Colors */
+  /* Layout */
+  --card-padding: 3mm;
+  --page-margin: 4mm;
+  --content-gap: 2mm;
+  --page-gap: 2rem;
+  
+  /* Theme colors (for cards) */
   --content-bg: white;
   --content-text: black;
   --content-opacity: 1;
+  --border-color: #ddd;
   
   /* Typography */
-  --base-font-size: clamp(8pt, 1cqw, 14pt);
-  --title-font-size: 1.4em;
-  --role-font-size: 1em;
-  --trait-font-size: 0.9em;
-  --ui-font-size: 0.8em;
+  --base-font-size: 1.2cqw;
+  --title-font-size: 1.6em;
+  --role-font-size: 1.2em;
+  --trait-font-size: 1.1em;
+  --ui-font-size: 0.9em;
+
+  /* Layout constants */
+  --card-width: 63.5mm;  /* Poker card width */
+  --card-height: 88.9mm; /* Poker card height */
+  --card-aspect: calc(var(--card-height) / var(--card-width));
+
+  /* Page styles (for cards) */
+  --page-bg: white;
+  --page-shadow: 0 0 10px rgba(0,0,0,0.1);
+
+  /* UI styles (constant, not affected by theme) */
+  --ui-bg: white;
+  --ui-border: #e0e0e0;
+  --ui-hover-bg: #f5f5f5;
+  --ui-active-bg: #e0e0e0;
+  --ui-text: #333;
+  --ui-muted: #666;
+
+  /* Button styles (constant) */
+  --button-bg: white;
+  --button-text: #333;
+  --button-border: #e0e0e0;
+  --button-hover-bg: #f5f5f5;
+  --button-active-bg: #e0e0e0;
+  --button-primary-bg: #1976d2;
+  --button-primary-text: white;
+  --button-primary-hover: #1565c0;
+
+  /* Toast styles (constant) */
+  --toast-bg: white;
+  --toast-text: #333;
+  --toast-success: #4caf50;
+  --toast-error: #f44336;
+  --toast-info: #2196f3;
+  --toast-warning: #ff9800;
+
+  /* Dialog styles (constant) */
+  --dialog-bg: white;
+  --dialog-border: #e0e0e0;
+  --dialog-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  --dialog-overlay: rgba(0,0,0,0.5);
 }
 
-/* Theme overrides */
+/* Theme overrides - ONLY affect card-specific variables */
 :root[data-theme="artNouveau"] {
   --content-bg: #F8F4E9;
   --content-text: #2C2C2C;
+  --border-color: #2C5530;
 }
 
 :root[data-theme="bauhaus"] {
   --content-bg: #FFFFFF;
   --content-text: #000000;
+  --border-color: #1E56B8;
 }
 
 :root[data-theme="medieval"] {
   --content-bg: #F4E4BC;
   --content-text: #2C1810;
+  --border-color: #8B0000;
 }
 
 :root[data-theme="elfin"] {
   --content-bg: #F5F9F2;
   --content-text: #2C3E50;
+  --border-color: #4B6B55;
 }
 
 :root[data-theme="cyberpunk"] {
   --content-bg: #0D0221;
   --content-text: #FFFFFF;
   --content-opacity: 0.8;
+  --border-color: #FF0055;
 }
 
 :root[data-theme="corporate"] {
   --content-bg: #FFFFFF;
   --content-text: #212121;
+  --border-color: #1A237E;
 }
 
 :root[data-theme="tradingCard"] {
   --content-bg: #F5F5F5;
   --content-text: #212121;
+  --border-color: #1B5E20;
 }
 
 :root[data-theme="vintage"] {
   --content-bg: #FFFDE7;
   --content-text: #212121;
+  --border-color: #F57C00;
 } 

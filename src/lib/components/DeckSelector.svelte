@@ -122,83 +122,115 @@
   .deck-settings {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: var(--content-gap);
   }
 
-  .deck-selector, .size-selector {
-    border: 1px solid #ccc;
+  fieldset {
+    border: 1px solid var(--ui-border);
     border-radius: 4px;
-    padding: 1rem;
+    padding: var(--content-gap);
+    margin: 0;
+    background: var(--ui-bg);
   }
 
   legend {
-    padding: 0 0.5rem;
-    color: #666;
+    font-size: var(--ui-font-size);
+    color: var(--ui-muted);
+    padding: 0 var(--content-gap);
+    background: var(--ui-bg);
   }
 
   select {
     width: 100%;
-    padding: 0.5rem;
-    border: 1px solid #ccc;
+    padding: calc(var(--content-gap) * 0.75);
+    border: 1px solid var(--ui-border);
     border-radius: 4px;
-    background: white;
-    font-size: 1rem;
+    background: var(--ui-bg);
+    color: var(--ui-text);
+    font-size: var(--ui-font-size);
+    cursor: pointer;
+  }
+
+  select:hover {
+    border-color: var(--button-primary-bg);
+  }
+
+  select:focus {
+    outline: none;
+    border-color: var(--button-primary-bg);
+    box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.1);
   }
 
   .status {
-    font-size: 0.9rem;
-    color: #666;
+    display: block;
+    padding: calc(var(--content-gap) * 0.75);
+    color: var(--ui-muted);
+    font-size: var(--ui-font-size);
   }
 
   .error {
-    color: #c62828;
+    color: var(--toast-error);
   }
 
   .size-info {
-    margin: 0.5rem 0 0;
-    font-size: 0.9rem;
-    color: #666;
-    font-style: italic;
+    margin: var(--content-gap) 0 0;
+    font-size: var(--ui-font-size);
+    color: var(--ui-muted);
   }
 
-  .dev-controls {
-    margin-top: 1rem;
-    padding: 1rem;
-    border: 2px solid #ff4444;
+  button {
+    padding: calc(var(--content-gap) * 0.75) var(--content-gap);
+    border: 1px solid var(--button-border);
     border-radius: 4px;
-    display: flex;
-    gap: 1rem;
+    background: var(--button-bg);
+    color: var(--button-text);
+    font-size: var(--ui-font-size);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  button:hover {
+    background: var(--button-hover-bg);
+    border-color: var(--button-primary-bg);
+  }
+
+  button:active {
+    background: var(--button-active-bg);
+  }
+
+  /* Dev tools section */
+  .dev-controls {
+    border-color: var(--toast-warning);
+    background: rgba(255, 152, 0, 0.05);
   }
 
   .dev-controls legend {
-    color: #ff4444;
-    font-weight: bold;
-    padding: 0 0.5rem;
+    color: var(--toast-warning);
+    background: none;
   }
 
-  .danger {
-    background: #ff4444;
+  .dev-controls {
+    display: flex;
+    gap: var(--content-gap);
+  }
+
+  button.danger {
+    background: var(--toast-error);
+    border-color: var(--toast-error);
     color: white;
-    border: none;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    cursor: pointer;
   }
 
-  .danger:hover {
-    background: #ff0000;
+  button.danger:hover {
+    opacity: 0.9;
   }
 
-  .sample {
-    background: #44aa44;
-    color: white;
-    border: none;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    cursor: pointer;
+  button.sample {
+    background: var(--button-primary-bg);
+    border-color: var(--button-primary-bg);
+    color: var(--button-primary-text);
   }
 
-  .sample:hover {
-    background: #339933;
+  button.sample:hover {
+    background: var(--button-primary-hover);
   }
 </style> 

@@ -34,61 +34,37 @@
   }
 
   // Load initial deck
-  $: {
-    if (!$currentDeck) {  // Remove loading check to ensure initial load
-      (async () => {
-        try {
-          // Try to load deck from URL first
-          const urlDeck = deckFromUrl(new URL(window.location.href));
-          if (urlDeck) {
-            await saveDeck(urlDeck);
-            setCurrentDeck(urlDeck);
-            // Clear the URL without triggering navigation
-            history.replaceState(null, '', window.location.pathname);
-            toasts.info('Deck loaded from URL. The URL has been cleared to prevent overwriting your changes.');
-            loading = false;
-            return;
-          }
-
-          // Get all decks and find the most recently edited one
-          const decks = await listDecks();
-          if (decks.length > 0) {
-            // Sort by lastEdited timestamp (newest first)
-            const sortedDecks = decks.sort((a, b) => b.meta.lastEdited - a.meta.lastEdited);
-            const mostRecentDeck = sortedDecks[0];
-            
-            // Load the most recent deck
-            const loadedDeck = await loadDeck(mostRecentDeck.id);
-            if (loadedDeck) {
-              setCurrentDeck(loadedDeck);
-              loading = false;
-              return;
-            }
-          }
-
-          // If no decks exist, create a new empty one
-          const newDeck = {
-            id: crypto.randomUUID(),
-            meta: {
-              name: 'New Deck',
-              theme: 'default',
-              lastEdited: Date.now(),
-              createdAt: Date.now()
-            },
-            characters: []
-          };
-          
-          // Save the new deck to IndexedDB, allowing empty deck during initialization
-          await saveDeck(newDeck, true);
-          setCurrentDeck(newDeck);
+  onMount(async () => {
+    try {
+      // Check URL parameters first
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.has('deck')) {
+        const deckParam = urlParams.get('deck')!;
+        const url = new URL(window.location.href);
+        url.searchParams.set('deck', deckParam);
+        const deck = await deckFromUrl(url);
+        if (deck) {
+          await setCurrentDeck(deck);
           loading = false;
-        } catch (e) {
-          error = e instanceof Error ? e.message : 'Failed to load deck';
-          loading = false;
+          return;
         }
-      })();
+      }
+      
+      // No URL deck, load most recent
+      const decks = await listDecks();
+      if (decks.length > 0) {
+        // Sort by last edited and load most recent
+        const mostRecent = decks.sort((a, b) => b.meta.lastEdited - a.meta.lastEdited)[0];
+        await loadDeck(mostRecent.id);
+        await setCurrentDeck(mostRecent);
+      }
+      loading = false;
+    } catch (e) {
+      console.error('Failed to load deck:', e);
+      error = e instanceof Error ? e.message : 'Failed to load deck';
+      loading = false;
     }
-  }
+  });
 
   // Subscribe to deck changes to show URL reset notification
   $: if ($currentDeck) {
@@ -195,11 +171,15 @@
 
   <!-- Main content -->
   <div class="cards-scroll-container">
-    {#if !$currentDeck}
+    {#if loading}
       <div class="message">Loading...</div>
+    {:else if error}
+      <div class="message error">{error}</div>
+    {:else if !$currentDeck}
+      <div class="message">No decks found. Click "Manage Decks" to create your first deck.</div>
     {:else if $currentDeck.characters.length === 0}
       <div class="message">No characters in deck</div>
-    {:else if $currentDeck}
+    {:else}
       <PagedCards 
         {showCropMarks}
         onCharacterChange={handleCharacterUpdate}
@@ -208,242 +188,173 @@
   </div>
 </div>
 
-  <style>
-    /* A4 page setup */
-    .page {
-      width: 210mm;
-      height: 297mm;
-      margin: 0 auto 2rem;
-      background: white;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      position: relative;
-    }
+<style>
+  /* Print container */
+  .print-container {
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background: var(--ui-bg);
+    color: var(--ui-text);
+  }
 
-    /* Card grid */
-    .card-grid {
-      display: grid;
-      /* Full width divided by 3 */
-      grid-template-columns: repeat(3, calc(210mm / 3));
-      /* Full height divided by 3 */
-      grid-auto-rows: calc(297mm / 3);
-    }
+  .cards-scroll-container {
+    flex: 1;
+    overflow-y: auto;
+    position: relative;
+  }
 
-    /* Hide crop marks for middle column */
-    .card-grid > div:nth-child(3n-1) :global(.show-crop-marks::before),
-    .card-grid > div:nth-child(3n-1) :global(.show-crop-marks::after) {
-      border-left-color: transparent;
-      border-right-color: transparent;
-    }
+  /* Settings section */
+  .settings {
+    padding: var(--content-gap);
+    border-bottom: 1px solid var(--ui-border);
+    margin-bottom: var(--content-gap);
+    background: var(--ui-bg);
+  }
 
-    /* Hide crop marks for middle row */
-    .card-grid > div:nth-child(n+4):nth-child(-n+6) :global(.show-crop-marks::before),
-    .card-grid > div:nth-child(n+4):nth-child(-n+6) :global(.show-crop-marks::after) {
-      border-top-color: transparent;
-      border-bottom-color: transparent;
-    }
+  .settings-row {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    flex-wrap: wrap;
+  }
 
-    /* Loading and error messages */
-    .message {
-      text-align: center;
-      padding: 2rem;
-      font-size: 1.2rem;
-      color: #666;
-    }
+  .right-controls {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-left: auto;
+  }
 
-    .error {
-      color: #d00;
-    }
+  /* Action buttons */
+  .action-button {
+    padding: 0.5rem 1rem;
+    font-size: var(--ui-font-size);
+    border: 1px solid var(--button-border);
+    border-radius: 4px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 36px;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+    background: var(--button-bg);
+    color: var(--button-text);
+  }
 
-    /* Settings section */
-    .settings {
-      padding: 1rem;
-      border-bottom: 1px solid #ddd;
-      margin-bottom: 1rem;
-    }
+  .action-button:hover {
+    background: var(--button-hover-bg);
+  }
 
-    .settings-row {
-      display: flex;
-      gap: 0.75rem;
-      align-items: center;
-      flex-wrap: wrap;
-    }
+  .action-button:active {
+    background: var(--button-active-bg);
+  }
 
-    .right-controls {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      margin-left: auto;
-    }
+  .action-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 
-    /* Action buttons */
-    .action-button {
-      padding: 0.5rem 1rem;
-      font-size: 0.9rem;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      min-height: 36px;
-      white-space: nowrap;
-      transition: all 0.2s ease;
-    }
+  /* Info button - Blue */
+  .action-button.info {
+    background: var(--toast-info);
+    border-color: var(--toast-info);
+    color: white;
+  }
 
-    /* Manage Decks - Blue */
-    .action-button:nth-child(1) {
-      background: #e3f2fd;
-      border-color: #90caf9;
-      color: #1976d2;
-    }
-    .action-button:nth-child(1):hover {
-      background: #bbdefb;
-    }
+  .action-button.info:hover {
+    opacity: 0.9;
+  }
 
-    /* Share URL - Green */
-    .action-button:nth-child(2) {
-      background: #e8f5e9;
-      border-color: #a5d6a7;
-      color: #2e7d32;
-    }
-    .action-button:nth-child(2):hover {
-      background: #c8e6c9;
-    }
-    .action-button:nth-child(2):disabled {
-      background: #f5f5f5;
-      border-color: #ddd;
-      color: #999;
-      cursor: not-allowed;
-    }
+  /* Dialog styling */
+  .deck-dialog {
+    border: none;
+    border-radius: 8px;
+    padding: 0;
+    background: var(--ui-bg);
+    color: var(--ui-text);
+    box-shadow: var(--page-shadow);
+    max-width: 90vw;
+    max-height: 90vh;
+  }
 
-    /* Add Character - Purple */
-    .action-button:nth-child(3) {
-      background: #f3e5f5;
-      border-color: #ce93d8;
-      color: #7b1fa2;
-    }
-    .action-button:nth-child(3):hover {
-      background: #e1bee7;
-    }
+  .dialog-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--content-gap);
+    border-bottom: 1px solid var(--ui-border);
+  }
 
-    /* Crop marks checkbox */
-    .crop-marks {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      font-size: 0.9rem;
-      color: #666;
-    }
+  .dialog-header h2 {
+    margin: 0;
+    font-size: var(--title-font-size);
+  }
 
-    .crop-marks input[type="checkbox"] {
-      margin: 0;
-    }
+  .close-button {
+    border: none;
+    background: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 50%;
+    width: 2.5rem;
+    height: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ui-text);
+  }
 
-    /* URL size indicator */
-    .url-size {
-      font-size: 0.9rem;
-      color: #666;
-    }
+  .close-button:hover {
+    background: var(--ui-hover-bg);
+  }
 
-    /* Remove unused styles */
-    .url-info, .print-info {
+  .dialog-content {
+    padding: var(--content-gap);
+    overflow-y: auto;
+    max-height: calc(90vh - 4rem);
+  }
+
+  /* Loading and error messages */
+  .message {
+    text-align: center;
+    padding: 2rem;
+    font-size: var(--role-font-size);
+    color: var(--ui-muted);
+  }
+
+  /* Error message */
+  .message.error {
+    color: var(--toast-error);
+  }
+
+  /* Checkbox styling */
+  .crop-marks {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: var(--ui-font-size);
+    color: var(--ui-text);
+  }
+
+  .crop-marks input[type="checkbox"] {
+    width: 1rem;
+    height: 1rem;
+    margin: 0;
+  }
+
+  /* Print styles */
+  @media print {
+    .no-print {
       display: none;
     }
 
-    /* Dialog styles */
-    .deck-dialog {
-      border: none;
-      border-radius: 8px;
-      padding: 0;
-      max-width: 90vw;
-      max-height: 90vh;
-      width: 600px;
-    }
-
-    .deck-dialog::backdrop {
-      background: rgba(0, 0, 0, 0.5);
-    }
-
-    .dialog-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 1rem;
-      background: #f5f5f5;
-      border-bottom: 1px solid #eee;
-      border-radius: 8px 8px 0 0;
-    }
-
-    .dialog-header h2 {
-      margin: 0;
-      font-size: 1.2rem;
-      color: #333;
-    }
-
-    .close-button {
+    .print-container {
       background: none;
-      border: none;
-      font-size: 1.5rem;
-      color: #666;
-      cursor: pointer;
-      padding: 0.25rem 0.5rem;
-      border-radius: 4px;
     }
-
-    .close-button:hover {
-      background: #e8e8e8;
-      color: #333;
-    }
-
-    .dialog-content {
-      padding: 1rem;
-      overflow-y: auto;
-      max-height: calc(90vh - 4rem);
-    }
-
-    /* Print container */
-    .print-container {
-      margin: 0;
-      padding: 0;
-    }
-
-    .print-container {
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-    }
-
-    .cards-scroll-container {
-      flex: 1;
-      overflow-y: auto;
-      position: relative;
-    }
-
-    /* Print styles */
-    @media print {
-      .no-print {
-        display: none;
-      }
-
-      .page {
-        margin: 0;  /* Remove margins when printing */
-        box-shadow: none;
-        page-break-after: always;
-      }
-
-      @page {
-        size: A4;
-        margin: 0;
-      }
-    }
-
-    /* Info button - Blue */
-    .action-button.info {
-      background: #e3f2fd;
-      border-color: #90caf9;
-      color: #1976d2;
-    }
-    .action-button.info:hover {
-      background: #bbdefb;
-    }
-  </style>
+  }
+</style>

@@ -12,12 +12,9 @@
     position: relative;
     width: 100%;
     height: 100%;
-    padding: 3mm;
+    padding: var(--card-padding);
     box-sizing: border-box;
-    background: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    background: var(--content-bg);
   }
 
   /* Crop marks using gradient borders */
@@ -39,12 +36,12 @@
     border-bottom: 0.2mm solid;
     border-image: linear-gradient(
       to right,
-      black 0,
-      black 8mm,
+      var(--content-text) 0,
+      var(--content-text) 8mm,
       transparent 8mm,
       transparent calc(100% - 8mm),
-      black calc(100% - 8mm),
-      black 100%
+      var(--content-text) calc(100% - 8mm),
+      var(--content-text) 100%
     ) 1;
   }
 
@@ -54,26 +51,40 @@
     border-right: 0.2mm solid;
     border-image: linear-gradient(
       to bottom,
-      black 0,
-      black 8mm,
+      var(--content-text) 0,
+      var(--content-text) 8mm,
       transparent 8mm,
       transparent calc(100% - 8mm),
-      black calc(100% - 8mm),
-      black 100%
+      var(--content-text) calc(100% - 8mm),
+      var(--content-text) 100%
     ) 1;
   }
 
   /* Thinner borders for adjacent cards */
-  :global(.card-grid > div:not(:nth-child(3n))) .show-crop-marks::after {
-    border-right-width: 0.1mm; /* Right border thinner when not last in row */
+  :global(.card-grid[data-size="poker"] > div:not(:nth-child(3n))) .show-crop-marks::after {
+    border-right-width: 0.1mm;
   }
-  :global(.card-grid > div:not(:nth-child(3n + 1))) .show-crop-marks::after {
-    border-left-width: 0.1mm; /* Left border thinner when not first in row */
+  :global(.card-grid[data-size="poker"] > div:not(:nth-child(3n + 1))) .show-crop-marks::after {
+    border-left-width: 0.1mm;
   }
-  :global(.card-grid > div:nth-child(n+4)) .show-crop-marks::before {
-    border-top-width: 0.1mm; /* Top border thinner for rows 2 and 3 */
+  :global(.card-grid[data-size="poker"] > div:nth-child(n+4)) .show-crop-marks::before {
+    border-top-width: 0.1mm;
   }
-  :global(.card-grid > div:nth-child(-n+6)) .show-crop-marks::before {
-    border-bottom-width: 0.1mm; /* Bottom border thinner for rows 1 and 2 */
+  :global(.card-grid[data-size="poker"] > div:nth-child(-n+6)) .show-crop-marks::before {
+    border-bottom-width: 0.1mm;
+  }
+
+  /* Tarot size crop marks */
+  :global(.card-grid[data-size="tarot"] > div:not(:nth-child(2n))) .show-crop-marks::after {
+    border-right-width: 0.1mm;
+  }
+  :global(.card-grid[data-size="tarot"] > div:not(:nth-child(2n + 1))) .show-crop-marks::after {
+    border-left-width: 0.1mm;
+  }
+  :global(.card-grid[data-size="tarot"] > div:nth-child(n+3)) .show-crop-marks::before {
+    border-top-width: 0.1mm;
+  }
+  :global(.card-grid[data-size="tarot"] > div:nth-child(-n+2)) .show-crop-marks::before {
+    border-bottom-width: 0.1mm;
   }
 </style> 

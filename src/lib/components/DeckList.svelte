@@ -51,23 +51,30 @@
 
 <style>
   .deck-list {
-    padding: 1rem;
+    padding: var(--content-gap);
+    background: var(--ui-bg);
   }
 
   .decks {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: var(--content-gap);
   }
 
   .message {
     text-align: center;
-    padding: 2rem;
-    color: #666;
+    padding: calc(var(--content-gap) * 2);
+    color: var(--ui-muted);
+    font-size: var(--ui-font-size);
     font-style: italic;
+    background: var(--ui-bg);
+    border: 1px solid var(--ui-border);
+    border-radius: 4px;
   }
 
   .error {
-    color: #c62828;
+    color: var(--toast-error);
+    border-color: var(--toast-error);
+    background: rgba(244, 67, 54, 0.05);
   }
 </style> 

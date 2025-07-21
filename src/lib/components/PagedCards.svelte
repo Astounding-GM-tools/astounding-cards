@@ -66,10 +66,10 @@
   .page {
     width: 210mm;  /* A4 preview size */
     height: 297mm;
-    margin: 0 auto 2rem;
-    padding: 4mm;  /* Safe margin for printers */
-    background: white;
-    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    margin: 0 auto var(--page-gap);
+    padding: var(--page-margin);
+    background: var(--page-bg);
+    box-shadow: var(--page-shadow);
     position: relative;
     page-break-after: always;
     box-sizing: border-box;
@@ -84,7 +84,7 @@
     /* Match card proportions: width is 3 units × 5, height is 3 units × 7 */
     aspect-ratio: 15 / 21;
     /* Take up available width minus padding */
-    width: calc(100% - 8mm);
+    width: calc(100% - calc(var(--page-margin) * 2));
     /* Grid setup */
     display: grid;
     gap: 0;
@@ -126,7 +126,7 @@
       height: auto;
       min-height: 100vh;  /* Use full page height */
       margin: 0;
-      padding: 4mm;  /* Keep safe margin for all printers */
+      padding: var(--page-margin);
       box-shadow: none;
       page-break-after: always;
     }
@@ -149,7 +149,7 @@
     @media (min-height: 355mm) {  /* Legal paper height */
       .card-grid {
         /* Keep A4 proportions but scale to Letter width */
-        width: calc(215.9mm - 8mm);  /* Letter/Legal width minus padding */
+        width: calc(215.9mm - calc(var(--page-margin) * 2));  /* Letter/Legal width minus padding */
       }
     }
   }

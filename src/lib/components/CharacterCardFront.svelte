@@ -39,40 +39,11 @@
     }
   }
 
-  // Format traits with strong labels
-  function formatTraits(traits: string[]) {
-    return traits?.map(trait => {
-      const [label, ...rest] = trait.split(':');
-      if (rest.length > 0) {
-        return `<strong class="trait-label">${label.trim()}:</strong> ${rest.join(':').trim()}`;
-      }
-      return trait; // If no colon, keep as is
-    }).join('\n') || '';
-  }
-
-  // Parse HTML back to plain text for traits
-  function parseTraits(html: string) {
-    return html
-      .replace(/<strong>|<\/strong>/g, '')  // Remove strong tags
-      .split('\n')
-      .map(t => t.trim())
-      .filter(t => t.length > 0);
-  }
-
   async function updateTraits(event: Event) {
     const target = event.target as HTMLElement;
-    // Split into lines and process each line
     const newTraits = target.innerText
       .split('\n')
-      .map(line => {
-        // If line already has a colon, ensure proper format
-        if (line.includes(':')) {
-          const [label, ...rest] = line.split(':');
-          return `${label.trim()}: ${rest.join(':').trim()}`;
-        }
-        // If no colon, return line as is
-        return line.trim();
-      })
+      .map(t => t.trim())
       .filter(t => t.length > 0);
 
     if (JSON.stringify(newTraits) !== JSON.stringify(character.traits)) {
@@ -90,8 +61,7 @@
 
 <Card {showCropMarks}>
   <article 
-    class="card-content" 
-    style:container-type="inline-size"
+    class="card-content"
     style:background-image={character.portrait ? `url('/portraits/${character.portrait}')` : 'none'}
   >
     <div class="stat-container">
@@ -139,7 +109,7 @@
         contenteditable="true"
         on:blur={updateTraits}
         bind:this={traitsElement}
-      >{@html formatTraits(character.traits)}</div>
+      >{character.traits.join('\n')}</div>
     </section>
   </article>
 </Card>
@@ -152,38 +122,39 @@
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
-    background-color: white;
+    background-color: var(--content-bg);
     background-size: cover;
     background-position: top center;
+    container-type: inline-size;
   }
 
   .content {
     background: var(--content-bg);
     color: var(--content-text);
     opacity: var(--content-opacity);
-    margin: 2mm;
-    padding: 2mm;
+    margin: var(--content-gap);
+    padding: var(--content-gap);
     border-radius: 1mm;
   }
 
   .stat-container {
     position: absolute;
-    top: 4mm;
-    right: 4mm;
+    top: var(--page-margin);
+    right: var(--page-margin);
     font-size: var(--ui-font-size);
   }
 
   .portrait-container {
     position: absolute;
-    top: 4mm;
-    left: 4mm;
+    top: var(--page-margin);
+    left: var(--page-margin);
   }
 
   .change-portrait {
     background: var(--content-bg);
     opacity: var(--content-opacity);
     border: none;
-    padding: 1mm 2mm;
+    padding: var(--content-gap);
     border-radius: 1mm;
     cursor: pointer;
     opacity: 0;
@@ -197,44 +168,40 @@
 
   .change-portrait:hover {
     opacity: 1 !important;
-    background: rgba(255, 255, 255, 0.95);
   }
 
   .image-input {
     position: absolute;
     top: 100%;
     left: 0;
-    background: white;
-    padding: 2mm;
+    background: var(--content-bg);
+    padding: var(--content-gap);
     border-radius: 1mm;
     display: flex;
-    gap: 1mm;
+    gap: var(--content-gap);
     box-shadow: 0 1mm 2mm rgba(0,0,0,0.1);
     z-index: 10;
   }
 
-  .image-input input,
-  .image-input button {
-    font-size: var(--ui-font-size);
-  }
-
   .image-input input {
-    border: 1px solid #ddd;
+    border: 1px solid var(--border-color);
     padding: 1mm;
     border-radius: 0.5mm;
     min-width: 30mm;
+    font-size: var(--ui-font-size);
   }
 
   .image-input button {
     border: none;
-    background: #eee;
+    background: var(--border-color);
     padding: 1mm 2mm;
     border-radius: 0.5mm;
     cursor: pointer;
+    font-size: var(--ui-font-size);
   }
 
   .image-input button:hover {
-    background: #ddd;
+    opacity: 0.8;
   }
 
   h2 {
@@ -245,7 +212,7 @@
   }
 
   .role {
-    margin: 1mm 0 2mm;
+    margin: var(--content-gap) 0;
     font-size: var(--role-font-size);
     text-align: center;
     font-style: italic;
@@ -255,13 +222,6 @@
     font-size: var(--trait-font-size);
     line-height: 1.4;
     white-space: pre-wrap;
-  }
-
-  .traits :global(.trait-label) {
-    font-weight: bold;
-    color: #444;
-    display: inline-block;
-    min-width: clamp(20mm, 25cqw, 30mm);
   }
 
   @container (height < 20mm) {
