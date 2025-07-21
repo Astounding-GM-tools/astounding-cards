@@ -19,6 +19,12 @@ export type CardStat = {
   value: AreaReference;
 };
 
+// Trait type
+export interface Trait {
+  label: string;
+  description: string;
+}
+
 // Character and deck types
 export interface Character {
   id: string;
@@ -26,22 +32,23 @@ export interface Character {
   role: string;
   portrait: string | null;
   traits: string[];
-  desc: string;  // renamed from bio
-  notes?: string;  // Optional notes field for back of card
-  stat?: CardStat;  // Optional type-specific stat
+  secrets: string[];  // New array for back of card
+  desc: string;
+  type?: string;
+  stat?: CardStat;
 }
 
-export type CharacterDeck = {
+export interface CharacterDeck {
   id: string;
   meta: {
     name: string;
     theme: string;
     cardSize: CardSize;
-    lastEdited: number; // Unix timestamp
-    createdAt: number;  // Unix timestamp
+    lastEdited: number;  // Unix timestamp
+    createdAt: number;   // Unix timestamp
   };
   characters: Character[];
-};
+}
 
 // Validation types
 export type ValidationError = {
@@ -61,20 +68,16 @@ export function validateCharacter(char: Partial<Character>): ValidationError[] {
     errors.push({ field: 'role', message: 'Role is required' });
   }
 
-  if (!Array.isArray(char.traits) || char.traits.length === 0) {
-    errors.push({ field: 'traits', message: 'At least one trait is required' });
-  }
-
-  if (char.traits && char.traits.length > 5) {
-    errors.push({ field: 'traits', message: 'Maximum 5 traits allowed' });
-  }
-
   if (!char.desc?.trim()) {
     errors.push({ field: 'desc', message: 'Description is required' });
   }
 
-  if (char.stat?.type === 'character' && !char.stat.value?.trim()) {
-    errors.push({ field: 'stat.value', message: 'Age must be provided for characters' });
+  if (!Array.isArray(char.traits)) {
+    errors.push({ field: 'traits', message: 'Traits must be an array' });
+  }
+
+  if (!Array.isArray(char.secrets)) {
+    errors.push({ field: 'secrets', message: 'Secrets must be an array' });
   }
 
   return errors;

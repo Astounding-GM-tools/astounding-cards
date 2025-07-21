@@ -273,9 +273,9 @@ export function addCharacter() {
     id: crypto.randomUUID(),
     name: "New Character",
     role: "Role",
-    age: "30",
     portrait: null,
-    traits: ["New trait"],
+    traits: ["Appearance: Add a notable physical trait", "Personality: Add a defining characteristic"],
+    secrets: ["Hidden: A secret or hidden trait", "Plot: A plot hook or story element"],
     desc: "Character description..."
   };
 
@@ -406,6 +406,7 @@ export async function duplicateDeck(deck: CharacterDeck, newName?: string): Prom
     meta: {
       name: newName || `${deck.meta.name} (Copy)`,
       theme: deck.meta.theme,
+      cardSize: deck.meta.cardSize,  // Copy the card size from original deck
       lastEdited: Date.now(),
       createdAt: Date.now()
     },
@@ -432,6 +433,7 @@ export async function copyCharactersTo(
       meta: {
         name: newDeckName || 'New Deck',
         theme: 'default',
+        cardSize: 'poker',  // Default to poker size for new decks
         lastEdited: Date.now(),
         createdAt: Date.now()
       },
@@ -468,4 +470,149 @@ export async function copyCharactersTo(
 // Set current deck
 export function setCurrentDeck(deck: CharacterDeck | null) {
   currentDeckId.set(deck?.id || null);
+} 
+
+// Development helper to clear database
+export async function clearDatabase() {
+  try {
+    const db = await openDB();
+    return new Promise<void>((resolve, reject) => {
+      const transaction = db.transaction(['decks'], 'readwrite');
+      const store = transaction.objectStore('decks');
+      const request = store.clear();
+
+      request.onerror = () => {
+        const error = handleDbError(request);
+        reject(new StorageError('Failed to clear database', error));
+      };
+      request.onsuccess = () => {
+        console.log('Database cleared successfully');
+        resolve();
+      };
+    });
+  } catch (error) {
+    throw new StorageError('Failed to clear database', error instanceof Error ? error : undefined);
+  }
+} 
+
+// Sample data for development
+const sampleCharacters: Character[] = [
+  {
+    id: crypto.randomUUID(),
+    name: "Gristlethwaite",
+    role: "Eccentric Inventor",
+    portrait: "gristlethwaite.jpg",
+    traits: [
+      "Appearance: Wild gray hair and oil-stained hands",
+      "Workshop: Cluttered with brass contraptions",
+      "Personality: Talks to machines more than people"
+    ],
+    secrets: [
+      "Hidden: Actually a time traveler from 1876",
+      "Project: Building a device to contact parallel worlds",
+      "Fear: Terrified his inventions will be used for war"
+    ],
+    desc: "A brilliant but peculiar inventor who lives in a converted windmill filled with strange devices.",
+    type: "character",
+    stat: { type: "character", value: "63" }
+  },
+  {
+    id: crypto.randomUUID(),
+    name: "Lady Ravencroft",
+    role: "Mysterious Aristocrat",
+    portrait: null,
+    traits: [
+      "Appearance: Always wears dark Victorian dresses",
+      "Manor: Ancient family estate on the hill",
+      "Influence: Has connections in high society"
+    ],
+    secrets: [
+      "Identity: Last of an ancient vampire lineage",
+      "Mission: Protecting the town from supernatural threats",
+      "Weakness: Cannot enter a home uninvited"
+    ],
+    desc: "A noble woman who holds frequent evening gatherings at her estate. Few guests notice they never see her during daylight hours.",
+    type: "character",
+    stat: { type: "character", value: "247" }
+  },
+  {
+    id: crypto.randomUUID(),
+    name: "The Brass Compass",
+    role: "Mystical Artifact",
+    portrait: null,
+    traits: [
+      "Appearance: Intricate brass device with shifting parts",
+      "Function: Points to what the holder truly seeks",
+      "History: Found in an Egyptian tomb"
+    ],
+    secrets: [
+      "Power: Can reveal hidden doorways",
+      "Curse: Slowly drives its owner to obsession",
+      "Truth: Actually a trapped spirit seeking freedom"
+    ],
+    desc: "An ornate brass compass that seems to have a mind of its own. Its needle moves erratically when near sources of magic.",
+    type: "item",
+    stat: { type: "item", value: "negligible" }
+  },
+  {
+    id: crypto.randomUUID(),
+    name: "The Whispering Library",
+    role: "Haunted Location",
+    portrait: null,
+    traits: [
+      "Atmosphere: Dust motes dance in shifting shadows",
+      "Books: Ancient tomes line endless shelves",
+      "Sound: Pages rustle when no one is near"
+    ],
+    secrets: [
+      "Portal: Contains a gateway to the realm of stories",
+      "Guardian: Protected by an immortal librarian",
+      "Collection: Some books write themselves at night"
+    ],
+    desc: "A vast library where the books seem to rearrange themselves. Visitors report hearing whispered conversations from empty aisles.",
+    type: "location",
+    stat: { type: "location", value: { type: "soft", value: "University District" } }
+  },
+  {
+    id: crypto.randomUUID(),
+    name: "Dr. Ambrose Chen",
+    role: "Occult Scholar",
+    portrait: null,
+    traits: [
+      "Appearance: Wears a tweed jacket with strange symbols embroidered",
+      "Office: Walls covered in star charts and diagrams",
+      "Knowledge: Expert in forbidden mathematics"
+    ],
+    secrets: [
+      "Research: Close to proving magic is advanced geometry",
+      "Students: Running a secret study group in applied sorcery",
+      "Past: Lost three years in a time loop accident"
+    ],
+    desc: "A brilliant mathematician who discovered patterns in reality that shouldn't exist. His lectures often venture into strange territories.",
+    type: "character",
+    stat: { type: "character", value: "42" }
+  }
+];
+
+// Development helper to populate database with sample data
+export async function populateWithSampleData() {
+  try {
+    const sampleDeck: CharacterDeck = {
+      id: crypto.randomUUID(),
+      meta: {
+        name: "Tales of the Uncanny",
+        theme: "default",
+        cardSize: "poker",
+        lastEdited: Date.now(),
+        createdAt: Date.now()
+      },
+      characters: sampleCharacters
+    };
+
+    await saveDeck(sampleDeck, true);
+    console.log('Database populated with sample data');
+    return sampleDeck;
+  } catch (error) {
+    throw new StorageError('Failed to populate database', error instanceof Error ? error : undefined);
+  }
 } 

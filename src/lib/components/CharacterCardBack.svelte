@@ -1,28 +1,21 @@
 <script lang="ts">
   import type { Character } from '$lib/types';
-  import { onMount } from 'svelte';
   import Card from './Card.svelte';
 
   export let character: Character;
   export let showCropMarks = true;
   export let onChange: (updates: Partial<Character>) => void;
+  export let editable = true;
 
-  let bioElement: HTMLElement;
   let nameElement: HTMLElement;
   let descElement: HTMLElement;
+  let secretsElement: HTMLElement;
 
   // Update DOM elements when character changes
   $: {
     if (nameElement && nameElement.innerText !== character.name) {
       nameElement.innerText = character.name;
     }
-    if (bioElement && bioElement.innerText !== character.bio) {
-      bioElement.innerText = character.bio;
-    }
-  }
-
-  // Update the description text overflow check
-  $: {
     if (descElement && descElement.innerText !== character.desc) {
       descElement.innerText = character.desc;
     }
@@ -35,24 +28,6 @@
       if (descElement.scrollHeight > parseInt(maxHeight)) {
         descElement.textContent = descElement.textContent?.slice(0, -10) + '...';
       }
-    }
-  }
-
-  onMount(() => {
-    // Ensure bio text doesn't overflow
-    if (bioElement) {
-      const maxHeight = bioElement.style.maxHeight;
-      if (bioElement.scrollHeight > parseInt(maxHeight)) {
-        bioElement.textContent = bioElement.textContent?.slice(0, -10) + '...';
-      }
-    }
-  });
-
-  async function updateBio(event: Event) {
-    const target = event.target as HTMLElement;
-    const newBio = target.innerText;
-    if (newBio !== character.bio) {
-      await onChange({ bio: newBio });
     }
   }
 
@@ -71,6 +46,40 @@
       await onChange({ desc: newDesc });
     }
   }
+
+  // Format secrets with strong labels
+  function formatSecrets(secrets: string[]) {
+    return secrets?.map(secret => {
+      const [label, ...rest] = secret.split(':');
+      if (rest.length > 0) {
+        return `<strong class="secret-label">${label.trim()}</strong>:${rest.join(':')}`; // Added class
+      }
+      return secret;
+    }).join('\n') || '';
+  }
+
+  // Parse HTML back to plain text for secrets
+  function parseSecrets(html: string) {
+    return html
+      .replace(/<strong>|<\/strong>/g, '')  // Remove strong tags
+      .split('\n')
+      .map(s => s.trim())
+      .filter(s => s.length > 0);
+  }
+
+  async function updateSecrets(event: Event) {
+    const target = event.target as HTMLElement;
+    const newSecrets = parseSecrets(target.innerHTML);
+    
+    if (JSON.stringify(newSecrets) !== JSON.stringify(character.secrets)) {
+      await onChange({ secrets: newSecrets });
+    }
+  }
+
+  function addSecret() {
+    const newSecrets = [...(character.secrets || []), 'Label: Description'];
+    onChange({ secrets: newSecrets });
+  }
 </script>
 
 <Card {showCropMarks}>
@@ -79,7 +88,7 @@
     style:container-type="inline-size"
   >
     <h2 
-      contenteditable="true" 
+      contenteditable={editable}
       on:blur={updateName}
       bind:this={nameElement}
     >{character.name}</h2>
@@ -89,10 +98,22 @@
       on:blur={updateDesc}
       bind:this={descElement}
     >{character.desc}</p>
-    <section class="notes">
-      <h3>Notes</h3>
-      <div class="notes-content"></div>
-    </section>
+    <fieldset class="secrets">
+      <legend>Secrets</legend>
+      <div 
+        class="secrets-content"
+        contenteditable={editable}
+        on:blur={updateSecrets}
+        bind:this={secretsElement}
+      >{@html formatSecrets(character.secrets)}</div>
+      {#if editable}
+        <button 
+          class="add-secret" 
+          on:click={addSecret}
+          title="Add secret"
+        >+</button>
+      {/if}
+    </fieldset>
   </article>
 </Card>
 
@@ -115,22 +136,23 @@
     height: 5mm;
   }
 
-  .bio {
+  .desc {
     margin: 0;
     font-size: 7pt;
     line-height: 1.4;
     overflow: hidden;
-    max-height: calc(88.9mm - 6mm - 5mm - 6mm - 50mm); /* card height - padding - h2 - gaps - notes */
+    max-height: calc(88.9mm - 6mm - 5mm - 6mm - 50mm); /* card height - padding - h2 - gaps - secrets */
     text-align: center;
   }
 
   @container (height < 20mm) {
-    .bio {
+    .desc {
       max-height: calc(88.9mm - 6mm - 5mm - 3mm); /* card height - padding - h2 - single gap */
     }
   }
 
-  .notes {
+  .secrets {
+    position: relative;
     border: 1px solid #ddd;
     padding: 1mm 2mm;
     border-radius: 1mm;
@@ -139,21 +161,63 @@
   }
 
   @container (height < 20mm) {
-    .notes {
+    .secrets {
       display: none;
     }
   }
 
-  .notes h3 {
+  .secrets legend {
     font-size: 8pt;
-    margin: 0;
     color: #666;
     font-weight: normal;
+    padding: 0 1mm;
   }
 
-  .notes-content {
-    margin-top: 2mm;
+  .secrets-content {
     min-height: 40mm;
+    white-space: pre-wrap;
+    font-size: 7pt;
+    line-height: 1.4;
+  }
+
+  .secrets-content :global(strong) {
+    font-weight: bold;
+    color: #444;
+  }
+
+  .secrets-content :global(.secret-label) {
+    font-weight: bold;
+    color: #444;
+    display: inline-block;
+    min-width: 20mm;
+  }
+
+  .add-secret {
+    position: absolute;
+    bottom: 2mm;
+    right: 2mm;
+    width: 5mm;
+    height: 5mm;
+    border: none;
+    border-radius: 50%;
+    background: #eee;
+    color: #666;
+    font-size: 8pt;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .secrets:hover .add-secret {
+    opacity: 0.8;
+  }
+
+  .add-secret:hover {
+    opacity: 1 !important;
+    background: #ddd;
   }
 
   @media print {
@@ -161,20 +225,9 @@
       break-inside: avoid;
       page-break-inside: avoid;
     }
-  }
 
-  .desc {
-    margin: 0;
-    font-size: 7pt;
-    line-height: 1.4;
-    overflow: hidden;
-    max-height: calc(88.9mm - 6mm - 5mm - 6mm - 50mm); /* card height - padding - h2 - gaps - notes */
-    text-align: center;
-  }
-
-  @container (height < 20mm) {
-    .desc {
-      max-height: calc(88.9mm - 6mm - 5mm - 3mm); /* card height - padding - h2 - single gap */
+    .add-secret {
+      display: none;
     }
   }
 </style> 

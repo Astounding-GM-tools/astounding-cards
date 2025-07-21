@@ -1,8 +1,9 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { currentDeck } from '$lib/stores/cards';
+  import { currentDeck, clearDatabase, populateWithSampleData } from '$lib/stores/cards';
   import { listDecks, switchDeck, saveDeck } from '$lib/stores/cards';
   import type { CharacterDeck, CardSize } from '$lib/types';
+  import { devMode } from '$lib/stores/dev';
 
   let decks: CharacterDeck[] = [];
   let loading = true;
@@ -38,6 +39,20 @@
     };
     
     await saveDeck(updatedDeck);
+  }
+
+  async function handleClearDatabase() {
+    if (confirm('This will delete all decks. Are you sure?')) {
+      await clearDatabase();
+      window.location.reload(); // Refresh to clear everything
+    }
+  }
+
+  async function handlePopulateSampleData() {
+    if (confirm('Add sample deck with example cards?')) {
+      const deck = await populateWithSampleData();
+      window.location.reload(); // Refresh to show new data
+    }
   }
 
   $: sortedDecks = decks.sort((a, b) => b.meta.lastEdited - a.meta.lastEdited);
@@ -79,6 +94,26 @@
           ? 'Standard playing card size, 9 cards per page'
           : 'Larger cards with more readable text, 4 cards per page'}
       </p>
+    </fieldset>
+  {/if}
+
+  {#if $devMode}
+    <fieldset class="dev-controls">
+      <legend>Dev Tools - be careful!</legend>
+      <button 
+        class="danger" 
+        on:click={handleClearDatabase}
+        title="Development only: Clear all data"
+      >
+        Clear Database
+      </button>
+      <button 
+        class="sample" 
+        on:click={handlePopulateSampleData}
+        title="Development only: Add sample data"
+      >
+        Add Sample Data
+      </button>
     </fieldset>
   {/if}
 </div>
@@ -124,5 +159,46 @@
     font-size: 0.9rem;
     color: #666;
     font-style: italic;
+  }
+
+  .dev-controls {
+    margin-top: 1rem;
+    padding: 1rem;
+    border: 2px solid #ff4444;
+    border-radius: 4px;
+    display: flex;
+    gap: 1rem;
+  }
+
+  .dev-controls legend {
+    color: #ff4444;
+    font-weight: bold;
+    padding: 0 0.5rem;
+  }
+
+  .danger {
+    background: #ff4444;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  .danger:hover {
+    background: #ff0000;
+  }
+
+  .sample {
+    background: #44aa44;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  .sample:hover {
+    background: #339933;
   }
 </style> 

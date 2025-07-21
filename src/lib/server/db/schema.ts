@@ -1,6 +1,6 @@
 import type { InferSelectModel } from 'drizzle-orm';
-import { pgTable, text, timestamp, integer } from 'drizzle-orm/pg-core';
-import type { Character, CharacterDeck } from '$lib/types';
+import { pgTable, text, timestamp, integer, json } from 'drizzle-orm/pg-core';
+import type { Character, CharacterDeck, Trait } from '$lib/types';
 
 export const decks = pgTable('decks', {
   id: text('id').primaryKey(),
@@ -9,7 +9,7 @@ export const decks = pgTable('decks', {
   cardSize: text('card_size').notNull().default('poker'),
   lastEdited: timestamp('last_edited').notNull(),
   createdAt: timestamp('created_at').notNull().defaultNow(),
-  version: integer('version').notNull().default(1), // For conflict resolution
+  version: integer('version').notNull().default(1),
 });
 
 export const characters = pgTable('characters', {
@@ -17,41 +17,44 @@ export const characters = pgTable('characters', {
   deckId: text('deck_id').notNull().references(() => decks.id),
   name: text('name').notNull(),
   role: text('role').notNull(),
-  age: text('age').notNull(),
   portrait: text('portrait'),
-  traits: text('traits').array().notNull(),
-  desc: text('desc').notNull(),  // renamed from bio
-  notes: text('notes'),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  version: integer('version').notNull().default(1), // For conflict resolution
+  publicTraits: json('public_traits').$type<Trait[]>().default([]),  // Array of {label, description}
+  secretTraits: json('secret_traits').$type<Trait[]>().default([]),  // Array of {label, description}
+  desc: text('desc').notNull(),
+  type: text('type'),
+  stat: json('stat').$type<Character['stat']>(),  // Store stat as JSON
 });
 
-// Types
-export type DbCharacter = InferSelectModel<typeof characters>;
-export type DbDeck = InferSelectModel<typeof decks>;
-
-// Type guards for runtime validation
-export function isCharacter(obj: unknown): obj is Character {
-  const char = obj as Character;
+// Type guard for Character
+export function isCharacter(char: unknown): char is Character {
   return (
-    typeof char?.id === 'string' &&
-    typeof char?.name === 'string' &&
-    typeof char?.role === 'string' &&
-    typeof char?.age === 'string' &&
-    (char?.portrait === null || typeof char?.portrait === 'string') &&
-    Array.isArray(char?.traits) &&
-    typeof char?.desc === 'string'
+    typeof char === 'object' &&
+    char !== null &&
+    typeof (char as Character).id === 'string' &&
+    typeof (char as Character).name === 'string' &&
+    typeof (char as Character).role === 'string' &&
+    typeof (char as Character).desc === 'string' &&
+    Array.isArray((char as Character).publicTraits) &&
+    Array.isArray((char as Character).secretTraits) &&
+    (char as Character).publicTraits.every(trait => 
+      typeof trait?.label === 'string' && 
+      typeof trait?.description === 'string'
+    ) &&
+    (char as Character).secretTraits.every(trait => 
+      typeof trait?.label === 'string' && 
+      typeof trait?.description === 'string'
+    )
   );
 }
 
-export function isCharacterDeck(obj: unknown): obj is CharacterDeck {
-  const deck = obj as CharacterDeck;
+// Type guard for CharacterDeck
+export function isCharacterDeck(deck: unknown): deck is CharacterDeck {
   return (
-    typeof deck?.id === 'string' &&
-    typeof deck?.meta?.name === 'string' &&
-    typeof deck?.meta?.theme === 'string' &&
-    ['poker', 'tarot'].includes(deck?.meta?.cardSize) &&
-    Array.isArray(deck?.characters) &&
-    deck.characters.every(isCharacter)
+    typeof deck === 'object' &&
+    deck !== null &&
+    typeof (deck as CharacterDeck).id === 'string' &&
+    typeof (deck as CharacterDeck).name === 'string' &&
+    typeof (deck as CharacterDeck).theme === 'string' &&
+    Array.isArray((deck as CharacterDeck).characters)
   );
 }
