@@ -1,5 +1,6 @@
 <!-- PrintInstructions.svelte -->
 <script lang="ts">
+  import { currentDeck } from '$lib/stores/cards';
   export let dialog: HTMLDialogElement;
 </script>
 
@@ -16,37 +17,53 @@
       ×
     </button>
   </div>
-
   <div class="dialog-content">
-    <section>
-      <h3>Printer Settings</h3>
-      <ul>
-        <li>Paper Size: A4</li>
-        <li>Orientation: Portrait</li>
-        <li>Scale: 100% (Do not "Fit to page")</li>
-        <li>Margins: None/Minimum</li>
-        <li>Double-sided: Long-edge binding</li>
-      </ul>
-    </section>
+    <h3>Printer Settings</h3>
+    <ul>
+      <li>Set paper size to A4, US Letter, or Legal</li>
+      <li>Set orientation to Portrait</li>
+      <li>Set scale to 100% (no scaling)</li>
+      <li>Set margins to None or Minimum</li>
+      <li>Enable background graphics</li>
+    </ul>
 
-    <section>
-      <h3>Important Notes</h3>
-      <ul>
-        <li>Most printers have a minimum margin of 6.35mm - the crop marks will help you align the cards correctly.</li>
-        <li>For best results, use card stock paper (160-200gsm).</li>
-        <li>Test print a single page first to verify alignment.</li>
-        <li>When cutting, use the crop marks as guides - they're designed to be visible even with printer margins.</li>
-      </ul>
-    </section>
+    <h3>Card Layout</h3>
+    <p>
+      Current size: <strong>{$currentDeck?.meta.cardSize === 'poker' ? 'Poker' : 'Tarot'}</strong>
+      {#if $currentDeck?.meta.cardSize === 'poker'}
+        (9 cards per page, standard playing card size)
+      {:else}
+        (4 cards per page, larger size for better readability)
+      {/if}
+    </p>
+    <ul>
+      <li>Front and back pages are automatically aligned for double-sided printing</li>
+      <li>Each page has 4mm margins for printer safety</li>
+      <li>Crop marks show where to cut</li>
+      <li>Pages are automatically paginated for any number of cards</li>
+    </ul>
 
-    <section>
-      <h3>Card Dimensions</h3>
-      <ul>
-        <li>Each card is standard poker size: 63.5mm × 88.9mm</li>
-        <li>9 cards per page, arranged in a 3×3 grid</li>
-        <li>Back sides are automatically arranged to match when printed double-sided</li>
-      </ul>
-    </section>
+    <h3>Paper Handling</h3>
+    <ul>
+      <li>Print front pages first</li>
+      <li>Flip paper according to your printer's instructions</li>
+      <li>Print back pages</li>
+      <li>Cut along crop marks</li>
+    </ul>
+
+    <h3>Tips</h3>
+    <ul>
+      <li>Do a test print with regular paper first</li>
+      <li>Check alignment before printing on cardstock</li>
+      <li>Use thicker paper (160-200 gsm) for best results</li>
+      <li>
+        {#if $currentDeck?.meta.cardSize === 'poker'}
+          Cards will be standard poker size (2.5" × 3.5" / 63mm × 88mm)
+        {:else}
+          Cards will be larger tarot size (approximately 3.75" × 5.25" / 95mm × 133mm)
+        {/if}
+      </li>
+    </ul>
   </div>
 </dialog>
 
@@ -101,23 +118,32 @@
     max-height: calc(90vh - 4rem);
   }
 
-  section {
-    margin-bottom: 1.5rem;
+  h3 {
+    color: #2196f3;
+    margin: 1.5rem 0 0.5rem;
+    font-size: 1.1rem;
   }
 
-  h3 {
-    margin: 0 0 0.5rem;
-    font-size: 1.1rem;
-    color: #333;
+  h3:first-child {
+    margin-top: 0;
   }
 
   ul {
-    margin: 0;
+    margin: 0.5rem 0;
     padding-left: 1.5rem;
-    line-height: 1.5;
   }
 
   li {
-    margin-bottom: 0.5rem;
+    margin: 0.5rem 0;
+    line-height: 1.4;
+  }
+
+  p {
+    margin: 0.5rem 0;
+    line-height: 1.4;
+  }
+
+  strong {
+    color: #1976d2;
   }
 </style> 

@@ -6,6 +6,7 @@ export const decks = pgTable('decks', {
   id: text('id').primaryKey(),
   name: text('name').notNull(),
   theme: text('theme').notNull(),
+  cardSize: text('card_size').notNull().default('poker'),
   lastEdited: timestamp('last_edited').notNull(),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   version: integer('version').notNull().default(1), // For conflict resolution
@@ -49,6 +50,7 @@ export function isCharacterDeck(obj: unknown): obj is CharacterDeck {
     typeof deck?.id === 'string' &&
     typeof deck?.meta?.name === 'string' &&
     typeof deck?.meta?.theme === 'string' &&
+    ['poker', 'tarot'].includes(deck?.meta?.cardSize) &&
     Array.isArray(deck?.characters) &&
     deck.characters.every(isCharacter)
   );

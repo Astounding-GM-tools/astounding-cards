@@ -1,4 +1,6 @@
 // Character and deck types
+export type CardSize = 'poker' | 'tarot';
+
 export type Character = {
   id: string;
   name: string;
@@ -15,6 +17,7 @@ export type CharacterDeck = {
   meta: {
     name: string;
     theme: string;
+    cardSize: CardSize;
     lastEdited: number; // Unix timestamp
     createdAt: number;  // Unix timestamp
   };
@@ -67,6 +70,10 @@ export function validateDeck(deck: Partial<CharacterDeck>, allowEmpty = false): 
 
   if (!deck.meta?.theme?.trim()) {
     errors.push({ field: 'meta.theme', message: 'Theme is required' });
+  }
+
+  if (!deck.meta?.cardSize || !['poker', 'tarot'].includes(deck.meta.cardSize)) {
+    errors.push({ field: 'meta.cardSize', message: 'Invalid card size' });
   }
 
   if (!Array.isArray(deck.characters)) {

@@ -1,6 +1,6 @@
 <!-- PagedCards.svelte -->
 <script lang="ts">
-  import type { Character } from '$lib/types';
+  import type { Character, CardSize } from '$lib/types';
   import CharacterCardFront from './CharacterCardFront.svelte';
   import CharacterCardBack from './CharacterCardBack.svelte';
   import { currentDeck } from '$lib/stores/cards';
@@ -8,13 +8,17 @@
   export let showCropMarks: boolean;
   export let onCharacterChange: (id: string, updates: Partial<Character>) => Promise<void>;
 
-  // Calculate how many full pages of 9 cards we need
-  $: totalPages = Math.ceil($currentDeck?.characters.length || 0 / 9);
+  $: cardSize = $currentDeck?.meta.cardSize || 'poker';
+  $: cardsPerPage = cardSize === 'poker' ? 9 : 4;
+  $: gridColumns = cardSize === 'poker' ? 3 : 2;
+  
+  // Calculate how many full pages we need
+  $: totalPages = Math.ceil($currentDeck?.characters.length || 0 / cardsPerPage);
   
   // Get characters for a specific page (0-based index)
   function getPageCharacters(pageIndex: number): Character[] {
-    const start = pageIndex * 9;
-    return $currentDeck?.characters.slice(start, start + 9) || [];
+    const start = pageIndex * cardsPerPage;
+    return $currentDeck?.characters.slice(start, start + cardsPerPage) || [];
   }
 
   // Create reactive references for each page's characters
@@ -23,19 +27,20 @@
       index: i,
       characters: getPageCharacters(i)
     }))
-    .filter(page => page.characters.length > 0);  // Only keep pages with characters
+    .filter(page => page.characters.length > 0);
 
   // Calculate back card position
   function getBackPosition(frontPosition: number): number {
-    const row = Math.floor((frontPosition - 1) / 3);
-    const col = (frontPosition - 1) % 3;
-    return (row * 3) + (2 - col) + 1;
+    const cols = cardSize === 'poker' ? 3 : 2;
+    const row = Math.floor((frontPosition - 1) / cols);
+    const col = (frontPosition - 1) % cols;
+    return (row * cols) + (cols - 1 - col) + 1;
   }
 </script>
 
 {#each pages as page (page.index)}
   <!-- Front page -->
-  <div class="page">
+  <div class="page" data-size={cardSize}>
     <div class="card-grid">
       {#each page.characters as character (character.id)}
         <div class="card-wrapper">
@@ -50,7 +55,7 @@
   </div>
 
   <!-- Back page -->
-  <div class="page">
+  <div class="page" data-size={cardSize}>
     <div class="card-grid back-grid">
       {#each page.characters as character, index (character.id)}
         <div class="card-wrapper" style:order={getBackPosition(index + 1)}>
@@ -91,9 +96,19 @@
     width: calc(100% - 8mm);
     /* Grid setup */
     display: grid;
+    gap: 0;
+  }
+
+  /* Poker size grid (3x3) */
+  .page[data-size="poker"] .card-grid {
     grid-template-columns: repeat(3, 1fr);
     grid-template-rows: repeat(3, 1fr);
-    gap: 0;
+  }
+
+  /* Tarot size grid (2x2) */
+  .page[data-size="tarot"] .card-grid {
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(2, 1fr);
   }
 
   /* Back page - reverse each row */
