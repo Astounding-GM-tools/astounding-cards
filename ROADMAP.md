@@ -79,25 +79,29 @@
 - [ ] Add card type selector
   - [ ] Characters (NPCs, allies, adversaries)
   - [ ] Items (weapons, artifacts, books)
-  - [ ] Locations (taverns, dungeons, shops)
-  - [ ] Handouts (letters, maps, clues)
+  - [ ] Locations (buildings, rooms, scenes)
+  - [ ] Handouts (documents, photos, clues)
 - [ ] Front card (observable information)
   - [ ] Type-specific templates
-  - [ ] Apparent traits (age, appearance, etc.)
+  - [ ] Age for characters
+  - [ ] Portability categories
+    - [ ] Negligible (easily hidden/transported)
+    - [ ] Light (pocketable but detectable)
+    - [ ] Medium (visible but portable)
+    - [ ] Heavy (obvious but moveable)
+    - [ ] Stationary (fixed in place)
   - [ ] Observable features
-  - [ ] Public knowledge/rumors
   - [ ] Clean layout for player handouts
 - [ ] Back card (GM information)
-  - [ ] Game stats (HP, AC, etc.)
+  - [ ] Game stats
   - [ ] Hidden information
   - [ ] Plot hooks and secrets
   - [ ] GM notes section
   - [ ] Prints blank for player handouts
-- [ ] Template suggestions by type
-  - [ ] Common attributes for each type
-  - [ ] Flexible attribute system
-  - [ ] Editable keys and values
-  - [ ] Optional attributes
+- [ ] Documentation
+  - [ ] Usage guide with examples
+  - [ ] Print instructions for both GM/player use
+  - [ ] Templates and suggestions
 
 ### 4. URL Sharing Improvements
 - [x] Add "Copy URL" button
