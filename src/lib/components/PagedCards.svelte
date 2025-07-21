@@ -10,7 +10,6 @@
 
   $: cardSize = $currentDeck?.meta.cardSize || 'poker';
   $: cardsPerPage = cardSize === 'poker' ? 9 : 4;
-  $: gridColumns = cardSize === 'poker' ? 3 : 2;
   
   // Calculate how many full pages we need
   $: totalPages = Math.ceil($currentDeck?.characters.length || 0 / cardsPerPage);
@@ -28,14 +27,6 @@
       characters: getPageCharacters(i)
     }))
     .filter(page => page.characters.length > 0);
-
-  // Calculate back card position
-  function getBackPosition(frontPosition: number): number {
-    const cols = cardSize === 'poker' ? 3 : 2;
-    const row = Math.floor((frontPosition - 1) / cols);
-    const col = (frontPosition - 1) % cols;
-    return (row * cols) + (cols - 1 - col) + 1;
-  }
 </script>
 
 {#each pages as page (page.index)}
@@ -57,8 +48,8 @@
   <!-- Back page -->
   <div class="page" data-size={cardSize}>
     <div class="card-grid back-grid">
-      {#each page.characters as character, index (character.id)}
-        <div class="card-wrapper" style:order={getBackPosition(index + 1)}>
+      {#each page.characters as character (character.id)}
+        <div class="card-wrapper">
           <CharacterCardBack 
             {character}
             {showCropMarks}
