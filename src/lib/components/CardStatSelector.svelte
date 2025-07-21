@@ -79,13 +79,16 @@
     const input = event.target as HTMLInputElement;
     const value = input.value;
     
-    // Check if value matches a location card ID
-    const locationCard = locationCards.find(c => c.id === value);
-    if (locationCard) {
-      tempStat = {
-        type: 'location',
-        value: { type: 'hard', value }
-      };
+    // Check if value starts with our location icon
+    if (value.startsWith('📍 ')) {
+      // Find location card by name
+      const locationCard = locationCards.find(c => `📍 ${c.name}` === value);
+      if (locationCard) {
+        tempStat = {
+          type: 'location',
+          value: { type: 'hard', value: locationCard.id }
+        };
+      }
     } else {
       // Treat as soft link
       tempStat = {
@@ -189,7 +192,7 @@
           >
           <datalist id="area-suggestions">
             {#each locationCards as loc}
-              <option value={loc.id} label={`📍 ${loc.name}`}></option>
+              <option value={`📍 ${loc.name}`}></option>
             {/each}
             {#each areaNames as area}
               <option value={area}></option>
