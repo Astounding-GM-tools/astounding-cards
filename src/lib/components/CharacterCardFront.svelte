@@ -222,6 +222,7 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
+    object-position: top center;  /* Focus on the face/top of image */
   }
 
   h2 {
