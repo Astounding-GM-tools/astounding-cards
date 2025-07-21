@@ -64,6 +64,14 @@
         {/if}
       </li>
     </ul>
+
+    <h3>Player Handouts vs GM Reference</h3>
+    <ul>
+      <li>For player handouts: Print odd-numbered pages only (front cards)</li>
+      <li>For GM reference: Print all pages (complete double-sided cards)</li>
+      <li>Front cards contain observable information</li>
+      <li>Back cards contain GM-only information (stats, secrets, etc.)</li>
+    </ul>
   </div>
 </dialog>
 
