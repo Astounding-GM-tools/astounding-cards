@@ -10,6 +10,8 @@
   let nameElement: HTMLElement;
   let roleElement: HTMLElement;
   let traitsElement: HTMLElement;
+  let imageUrl = '';
+  let showImageInput = false;
 
   // Update DOM elements when character changes
   $: {
@@ -48,6 +50,13 @@
       await onChange({ traits: newTraits });
     }
   }
+
+  async function updatePortrait() {
+    if (!imageUrl) return;
+    await onChange({ portrait: imageUrl });
+    imageUrl = '';
+    showImageInput = false;
+  }
 </script>
 
 <Card {showCropMarks}>
@@ -58,9 +67,34 @@
     <div class="stat-container">
       <CardStatSelector {character} {onChange} />
     </div>
+    <div class="portrait-container">
+      <button 
+        class="change-portrait" 
+        on:click={() => showImageInput = !showImageInput}
+        title="Change portrait"
+      >
+        {#if character.portrait}
+          Change portrait
+        {:else}
+          Add portrait
+        {/if}
+      </button>
+
+      {#if showImageInput}
+        <div class="image-input">
+          <input 
+            type="text"
+            bind:value={imageUrl}
+            placeholder="Enter image name"
+          />
+          <button on:click={updatePortrait}>Set</button>
+          <button on:click={() => showImageInput = false}>Cancel</button>
+        </div>
+      {/if}
+    </div>
     <div class="portrait">
       {#if character.portrait}
-        <img src={character.portrait} alt={character.name} />
+        <img src={`/portraits/${character.portrait}`} alt={character.name} />
       {/if}
     </div>
     <h2 
@@ -97,6 +131,66 @@
     position: absolute;
     top: 2mm;
     right: 2mm;
+  }
+
+  .portrait-container {
+    position: absolute;
+    top: 2mm;
+    left: 2mm;
+  }
+
+  .change-portrait {
+    background: rgba(255, 255, 255, 0.8);
+    border: none;
+    padding: 1mm 2mm;
+    border-radius: 1mm;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s;
+    font-size: 7pt;
+  }
+
+  .card-content:hover .change-portrait {
+    opacity: 0.8;
+  }
+
+  .change-portrait:hover {
+    opacity: 1 !important;
+    background: rgba(255, 255, 255, 0.95);
+  }
+
+  .image-input {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: white;
+    padding: 2mm;
+    border-radius: 1mm;
+    display: flex;
+    gap: 1mm;
+    box-shadow: 0 1mm 2mm rgba(0,0,0,0.1);
+    z-index: 10;
+  }
+
+  .image-input input {
+    border: 1px solid #ddd;
+    padding: 1mm;
+    border-radius: 0.5mm;
+    min-width: 30mm;
+    font-size: 7pt;
+  }
+
+  .image-input button {
+    border: none;
+    background: #eee;
+    padding: 1mm 2mm;
+    border-radius: 0.5mm;
+    cursor: pointer;
+    font-size: 7pt;
+  }
+
+  .image-input button:hover {
+    background: #ddd;
   }
 
   .portrait {
@@ -136,6 +230,13 @@
 
   @container (height < 20mm) {
     .portrait {
+      display: none;
+    }
+  }
+
+  @media print {
+    .change-portrait,
+    .image-input {
       display: none;
     }
   }
