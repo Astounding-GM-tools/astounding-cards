@@ -87,75 +87,76 @@
     <div class="flourish portrait-flourish top-right"></div>
     {/if}
     
-    <!-- Portrait container -->
-    <div class="portrait-container">
-      {#if character.portrait}
-        <button 
-          class="change-portrait" 
-          on:click={() => showImageInput = !showImageInput}
-          title="Change portrait"
-        >
-          Change portrait
-        </button>
-      {:else}
-        <button 
-          class="change-portrait" 
-          on:click={() => showImageInput = !showImageInput}
-          title="Add portrait"
-        >
-          Add portrait
-        </button>
-      {/if}
+    <!-- Portrait area with controls and bottom flourishes -->
+    <div class="portrait-area">
+      <!-- Portrait controls -->
+      <div class="portrait-container">
+        {#if character.portrait}
+          <button 
+            class="change-portrait" 
+            on:click={() => showImageInput = !showImageInput}
+            title="Change portrait"
+          >
+            Change portrait
+          </button>
+        {:else}
+          <button 
+            class="change-portrait" 
+            on:click={() => showImageInput = !showImageInput}
+            title="Add portrait"
+          >
+            Add portrait
+          </button>
+        {/if}
 
-      {#if showImageInput}
-        <div class="image-input">
-          <input 
-            type="text"
-            bind:value={imageUrl}
-            placeholder="Enter image name"
-          />
-          <button on:click={updatePortrait}>Set</button>
-          <button on:click={() => showImageInput = false}>Cancel</button>
-        </div>
-      {/if}
-    </div>
+        {#if showImageInput}
+          <div class="image-input">
+            <input 
+              type="text"
+              bind:value={imageUrl}
+              placeholder="Enter image name"
+            />
+            <button on:click={updatePortrait}>Set</button>
+            <button on:click={() => showImageInput = false}>Cancel</button>
+          </div>
+        {/if}
+      </div>
 
-    <!-- Stat container -->
-    <div class="stat-container">
-      <CardStatSelector {character} {onChange} />
-    </div>
+      <!-- Stat container -->
+      <div class="stat-container">
+        <CardStatSelector {character} {onChange} />
+      </div>
 
-    <!-- Main content with bottom flourishes -->
-    <div class="content-wrapper">
       <!-- Bottom portrait flourishes -->
       <div class="bottom-flourishes">
         <div class="flourish portrait-flourish bottom-left"></div>
         <div class="flourish portrait-flourish bottom-right"></div>
       </div>
+    </div>
 
-      <div class="content">
-        <!-- Content flourishes -->
-        <div class="flourish content-flourish top-left"></div>
-        <div class="flourish content-flourish top-right"></div>
+    <!-- Content box -->
+    <div class="content">
+      <!-- Content flourishes -->
+      <div class="flourish content-flourish top-left"></div>
+      <div class="flourish content-flourish top-right"></div>
 
-        <h2 
-          contenteditable="true" 
-          on:blur={updateName}
-          bind:this={nameElement}
-        >{character.name}</h2>
-        <div 
-          class="role" 
-          contenteditable="true"
-          on:blur={updateRole}
-          bind:this={roleElement}
-        >{character.role}</div>
-        <div 
-          class="traits" 
-          contenteditable="true"
-          on:blur={updateTraits}
-          bind:this={traitsElement}
-        >{@html formatTraits(character.traits)}</div>
-      </div>
+      <h2 
+        contenteditable="true" 
+        on:blur={updateName}
+        bind:this={nameElement}
+      >{character.name}</h2>
+      <div 
+        class="role" 
+        contenteditable="true"
+        on:blur={updateRole}
+        bind:this={roleElement}
+      >{character.role}</div>
+      <div 
+        class="traits" 
+        contenteditable="true"
+        on:blur={updateTraits}
+        bind:this={traitsElement}
+      >{@html formatTraits(character.traits)}</div>
     </div>
   </div>
 </Card>
@@ -167,7 +168,6 @@
     height: 100%;
     display: flex;
     flex-direction: column;
-    justify-content: flex-end;
     background-color: var(--theme-background);
     background-size: cover;
     background-position: top center;
@@ -177,113 +177,86 @@
     padding: var(--content-gap);
   }
 
-  .content-wrapper {
-    position: relative;
-    margin-top: auto;
+  .portrait-area {
     display: flex;
     flex-direction: column;
-    gap: var(--content-gap);
+    flex: 1;
+  }
+
+  .bottom-flourishes {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%;
+    margin-top: auto;
+  }
+
+  .flourish {
+    width: var(--flourish-size);
+    aspect-ratio: var(--flourish-aspect);
+    pointer-events: none;
+    z-index: 2;
   }
 
   /* Portrait flourishes - large and light */
   .portrait-flourish {
     --flourish-size: min(35%, 5rem);
     --flourish-aspect: var(--portrait-flourish-aspect, 1);
-    position: absolute;
-    width: var(--flourish-size);
-    aspect-ratio: var(--flourish-aspect);
-    pointer-events: none;
-    z-index: 2;
-  }
-
-  /* Debug styles for flourishes */
-  :root[data-dev] .portrait-flourish {
-    border-top: 2px solid currentColor;
-    border-left: 2px solid currentColor;
-  }
-
-  :root[data-dev] .portrait-flourish.top-left {
-    background-color: rgba(255,0,0,0.3);
-  }
-
-  :root[data-dev] .portrait-flourish.top-right {
-    background-color: rgba(0,255,0,0.3);
-  }
-
-  :root[data-dev] .portrait-flourish.bottom-left {
-    background-color: rgba(0,0,255,0.3);
-  }
-
-  :root[data-dev] .portrait-flourish.bottom-right {
-    background-color: rgba(255,0,255,0.3);
   }
 
   .portrait-flourish.top-left {
+    position: absolute;
     left: 0;
     top: 0;
   }
 
   .portrait-flourish.top-right {
+    position: absolute;
     right: 0;
     top: 0;
     transform: rotate(90deg);
   }
 
   .portrait-flourish.bottom-left {
-    position: relative;
-    left: 0;
     transform: rotate(-90deg);
   }
 
   .portrait-flourish.bottom-right {
-    position: relative;
-    right: 0;
-    margin-left: auto;
     transform: rotate(180deg);
-  }
-
-  /* Add a container for bottom flourishes */
-  .bottom-flourishes {
-    display: flex;
-    justify-content: space-between;
-    width: 100%;
   }
 
   /* Content flourishes - small and dark */
   .content-flourish {
     --flourish-size: 2rem;
     --flourish-aspect: var(--content-flourish-aspect, 1);
-    position: absolute;
-    width: var(--flourish-size);
-    aspect-ratio: var(--flourish-aspect);
-    pointer-events: none;
-    z-index: 2;
-  }
-
-  /* Debug styles for content flourishes */
-  :root[data-dev] .content-flourish {
-    border-top: 2px solid currentColor;
-    border-left: 2px solid currentColor;
-  }
-
-  :root[data-dev] .content-flourish.top-left {
-    background-color: rgba(255,255,0,0.3);
-  }
-
-  :root[data-dev] .content-flourish.top-right {
-    background-color: rgba(0,255,255,0.3);
   }
 
   .content-flourish.top-left {
+    position: absolute;
     left: var(--content-gap);
     top: var(--content-gap);
   }
 
   .content-flourish.top-right {
+    position: absolute;
     right: var(--content-gap);
     top: var(--content-gap);
     transform: rotate(90deg);
   }
+
+  /* Debug styles for flourishes - only show in dev mode */
+  :global(.dev-mode) .flourish {
+    border-top: 2px solid #ff3e00;  /* Svelte orange for debug borders */
+    border-left: 2px solid #ff3e00;
+  }
+
+  :global(.dev-mode) .portrait-flourish.top-left { background-color: rgba(255,0,0,0.3); }
+  :global(.dev-mode) .portrait-flourish.top-right { background-color: rgba(0,255,0,0.3); }
+  :global(.dev-mode) .portrait-flourish.bottom-left { background-color: rgba(0,0,255,0.3); }
+  :global(.dev-mode) .portrait-flourish.bottom-right { background-color: rgba(255,0,255,0.3); }
+
+  :global(.dev-mode) .content-flourish.top-left { background-color: rgba(255,255,0,0.3); }
+  :global(.dev-mode) .content-flourish.top-right { background-color: rgba(0,255,255,0.3); }
 
   /* Portrait and stat containers */
   .portrait-container {

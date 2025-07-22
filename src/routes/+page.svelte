@@ -13,6 +13,7 @@
   import { deckToUrl } from '$lib/stores/cards';
   import PagedCards from '$lib/components/PagedCards.svelte';
   import PrintInstructions from '$lib/components/PrintInstructions.svelte';
+  import { devMode } from '$lib/stores/dev';
 
   let showCropMarks = true;
   let loading = true;  // Start with loading true
@@ -113,7 +114,7 @@
 </script>
 
 <!-- Root container -->
-<div class="print-container">
+<div class="print-container" class:dev-mode={$devMode}>
   <Toasts />
   
   <!-- Print settings -->
