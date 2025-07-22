@@ -58,6 +58,37 @@
   --texture-pattern: none;
   --texture-opacity: 0;
   --texture-blend-mode: normal;
+
+  /* Flourish System */
+  --show-flourishes: 1;  /* Master toggle for all flourishes */
+  
+  /* Portrait Flourishes */
+  --portrait-flourish-size: 45%;
+  --portrait-flourish-svg: var(--corner-flourish-svg);
+  --portrait-flourish-opacity: 0.6;
+  --portrait-flourish-aspect: 1;  /* Default square, can be overridden by themes */
+  --portrait-flourish-top-left-svg: var(--portrait-flourish-svg);
+  --portrait-flourish-top-right-svg: var(--portrait-flourish-svg);
+  --portrait-flourish-bottom-left-svg: var(--portrait-flourish-svg);
+  --portrait-flourish-bottom-right-svg: var(--portrait-flourish-svg);
+  
+  /* Content Flourishes */
+  --content-flourish-size: 2rem;
+  --content-flourish-svg: var(--corner-flourish-svg);
+  --content-flourish-opacity: 0.2;
+  --content-flourish-aspect: 1;  /* Default square, can be overridden by themes */
+  --content-flourish-top-left-svg: var(--content-flourish-svg);
+  --content-flourish-top-right-svg: var(--content-flourish-svg);
+  --content-flourish-bottom-left-svg: var(--content-flourish-svg);
+  --content-flourish-bottom-right-svg: var(--content-flourish-svg);
+  
+  /* Card Type Specific Flourishes */
+  --character-flourish-svg: var(--corner-flourish-svg);
+  --item-flourish-svg: var(--corner-flourish-svg);
+  --location-flourish-svg: var(--corner-flourish-svg);
+
+  /* Content Box Height (for bottom flourish positioning) */
+  --content-box-height: 30%;
 }
 
 /* Print Optimizations */
@@ -68,5 +99,7 @@
     --corner-flourish-opacity: 1;
     --texture-opacity: 0.03;
     --content-box-shadow: none;
+    --portrait-flourish-opacity: 0.4;  /* Lighter for print */
+    --content-flourish-opacity: 0.15;  /* Lighter for print */
   }
 } 

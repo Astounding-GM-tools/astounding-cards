@@ -81,10 +81,10 @@
     class="card-content"
     style:background-image={character.portrait ? `url('/portraits/${character.portrait}')` : 'none'}
   >
-    <!-- Portrait flourishes -->
-    <div class="flourish portrait-flourish top-left"></div>
+    <!-- Top portrait flourishes -->
+    <div class="flourish portrait-flourish top-left" style="background-color: rgba(255,0,0,0.3);"></div>
     {#if !character.stat}
-    <div class="flourish portrait-flourish top-right"></div>
+    <div class="flourish portrait-flourish top-right" style="background-color: rgba(0,255,0,0.3);"></div>
     {/if}
     
     <!-- Portrait container -->
@@ -125,28 +125,37 @@
       <CardStatSelector {character} {onChange} />
     </div>
 
-    <div class="content">
-      <!-- Content flourishes -->
-      <div class="flourish content-flourish top-left"></div>
-      <div class="flourish content-flourish top-right"></div>
+    <!-- Main content with bottom flourishes -->
+    <div class="content-wrapper">
+      <!-- Bottom portrait flourishes -->
+      <div class="bottom-flourishes">
+        <div class="flourish portrait-flourish bottom-left" style="background-color: rgba(0,0,255,0.3);"></div>
+        <div class="flourish portrait-flourish bottom-right" style="background-color: rgba(255,0,255,0.3);"></div>
+      </div>
 
-      <h2 
-        contenteditable="true" 
-        on:blur={updateName}
-        bind:this={nameElement}
-      >{character.name}</h2>
-      <div 
-        class="role" 
-        contenteditable="true"
-        on:blur={updateRole}
-        bind:this={roleElement}
-      >{character.role}</div>
-      <div 
-        class="traits" 
-        contenteditable="true"
-        on:blur={updateTraits}
-        bind:this={traitsElement}
-      >{@html formatTraits(character.traits)}</div>
+      <div class="content">
+        <!-- Content flourishes -->
+        <div class="flourish content-flourish top-left" style="background-color: rgba(255,255,0,0.3);"></div>
+        <div class="flourish content-flourish top-right" style="background-color: rgba(0,255,255,0.3);"></div>
+
+        <h2 
+          contenteditable="true" 
+          on:blur={updateName}
+          bind:this={nameElement}
+        >{character.name}</h2>
+        <div 
+          class="role" 
+          contenteditable="true"
+          on:blur={updateRole}
+          bind:this={roleElement}
+        >{character.role}</div>
+        <div 
+          class="traits" 
+          contenteditable="true"
+          on:blur={updateTraits}
+          bind:this={traitsElement}
+        >{@html formatTraits(character.traits)}</div>
+      </div>
     </div>
   </div>
 </Card>
@@ -165,46 +174,150 @@
     container-type: inline-size;
     width: 100%;
     font-size: var(--base-font-size);
+    padding: var(--content-gap);
   }
 
-  .flourish {
+  .content-wrapper {
+    position: relative;
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    gap: var(--content-gap);
+  }
+
+  /* Portrait flourishes - large and light */
+  .portrait-flourish {
+    --flourish-size: min(35%, 5rem);
+    --flourish-aspect: var(--portrait-flourish-aspect, 1);
     position: absolute;
-    width: var(--corner-flourish-size, 3rem);
-    height: var(--corner-flourish-size, 3rem);
-    background-image: var(--corner-flourish-svg);
-    background-size: contain;
-    background-repeat: no-repeat;
+    width: var(--flourish-size);
+    aspect-ratio: var(--flourish-aspect);
     pointer-events: none;
     z-index: 2;
+    border-top: 2px solid currentColor;
+    border-left: 2px solid currentColor;
   }
 
-  .portrait-flourish {
-    filter: invert(1) opacity(0.6);
+  .portrait-flourish.top-left {
+    left: 0;
+    top: 0;
   }
 
+  .portrait-flourish.top-right {
+    right: 0;
+    top: 0;
+    transform: rotate(90deg);
+  }
+
+  .portrait-flourish.bottom-left {
+    position: relative;
+    left: 0;
+    transform: rotate(-90deg);
+  }
+
+  .portrait-flourish.bottom-right {
+    position: relative;
+    right: 0;
+    margin-left: auto;
+    transform: rotate(180deg);
+  }
+
+  /* Add a container for bottom flourishes */
+  .bottom-flourishes {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  /* Content flourishes - small and dark */
   .content-flourish {
-    opacity: 0.2;
+    --flourish-size: 2rem;
+    --flourish-aspect: var(--content-flourish-aspect, 1);
+    position: absolute;
+    width: var(--flourish-size);
+    aspect-ratio: var(--flourish-aspect);
+    pointer-events: none;
+    z-index: 2;
+    border-top: 2px solid currentColor;
+    border-left: 2px solid currentColor;
   }
 
-  .flourish.top-left {
+  .content-flourish.top-left {
     left: var(--content-gap);
     top: var(--content-gap);
   }
 
-  .flourish.top-right {
+  .content-flourish.top-right {
     right: var(--content-gap);
     top: var(--content-gap);
+    transform: rotate(90deg);
   }
 
-  .content-flourish.top-left,
-  .content-flourish.top-right {
-    top: calc(-1 * var(--content-gap));
-  }
-
+  /* Portrait and stat containers */
   .portrait-container {
     position: absolute;
     top: var(--page-margin);
     left: var(--page-margin);
+  }
+
+  .stat-container {
+    position: absolute;
+    top: var(--page-margin);
+    right: var(--page-margin);
+  }
+
+  /* Content section */
+  .content {
+    position: relative;
+    background: var(--content-box-bg);
+    color: var(--theme-text);
+    opacity: var(--content-opacity, 1);
+    padding: var(--content-gap);
+    border-radius: var(--content-box-radius);
+    border: var(--content-box-border);
+    box-shadow: var(--content-box-shadow);
+  }
+
+  h2 {
+    margin: 0 auto;
+    max-width: 80%;
+    font-size: var(--title-font-size);
+    font-weight: var(--theme-title-weight);
+    font-family: var(--theme-title-font);
+    text-align: center;
+    position: relative;
+    z-index: 3;
+  }
+
+  .role {
+    margin: 0.25rem auto 0;
+    max-width: 80%;
+    font-style: italic;
+    text-align: center;
+    font-family: var(--theme-body-font);
+    position: relative;
+    z-index: 3;
+  }
+
+  .traits {
+    margin-top: var(--content-gap);
+    font-family: var(--theme-body-font);
+    border-top: calc(var(--divider-width) * var(--show-dividers)) var(--divider-style) var(--divider-color);
+    opacity: var(--divider-opacity);
+    padding-top: var(--content-gap);
+    white-space: pre-wrap;
+    line-height: 1.4;
+    font-size: var(--trait-font-size);
+    position: relative;
+    z-index: 3;
+  }
+
+  .traits :global(.trait-label) {
+    font-weight: bold;
+    color: var(--content-text);
+    opacity: 0.8;
+    display: inline-block;
+    min-width: clamp(20mm, 25cqw, 30mm);
   }
 
   .change-portrait {
@@ -259,68 +372,6 @@
 
   .image-input button:hover {
     opacity: 0.8;
-  }
-
-  .stat-container {
-    position: absolute;
-    top: var(--page-margin);
-    right: var(--page-margin);
-    font-size: var(--ui-font-size);
-  }
-
-  .content {
-    background: var(--content-box-bg);
-    color: var(--theme-text);
-    opacity: var(--content-opacity, 1);
-    margin: var(--content-gap);
-    padding: var(--content-gap);
-    border-radius: var(--content-box-radius);
-    border: var(--content-box-border);
-    box-shadow: var(--content-box-shadow);
-    position: relative;
-  }
-
-  /* Center the title with max-width */
-  h2 {
-    margin: 0 auto;
-    max-width: 80%;
-    font-size: var(--title-font-size);
-    font-weight: var(--theme-title-weight);
-    font-family: var(--theme-title-font);
-    text-align: center;
-    position: relative;
-    z-index: 3;
-  }
-
-  .role {
-    margin: 0.25rem auto 0;
-    max-width: 80%;
-    font-style: italic;
-    text-align: center;
-    font-family: var(--theme-body-font);
-    position: relative;
-    z-index: 3;
-  }
-
-  .traits {
-    margin-top: var(--content-gap);
-    font-family: var(--theme-body-font);
-    border-top: calc(var(--divider-width) * var(--show-dividers)) var(--divider-style) var(--divider-color);
-    opacity: var(--divider-opacity);
-    padding-top: var(--content-gap);
-    white-space: pre-wrap;
-    line-height: 1.4;
-    font-size: var(--trait-font-size);
-    position: relative;
-    z-index: 3;
-  }
-
-  .traits :global(.trait-label) {
-    font-weight: bold;
-    color: var(--content-text);
-    opacity: 0.8;
-    display: inline-block;
-    min-width: clamp(20mm, 25cqw, 30mm);
   }
 
   @container (height < 20mm) {
