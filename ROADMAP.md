@@ -10,6 +10,22 @@ To prevent scroll jumps and maintain performance:
 - Let keyed each-blocks handle partial updates
 - This ensures only changed cards re-render and scroll position is maintained
 
+### CSS Variables Pattern
+For consistent styling and theming:
+- Separate theme variables (affecting cards) from UI variables
+- Use CSS variables for all colors, spacing, and typography
+- Keep UI styling consistent regardless of theme
+- Use container queries for responsive sizing
+- Maintain print-friendly styles
+
+### Theme Component Pattern
+For consistent theme application:
+- Use regular elements for interactive/conditional decorations
+- Use pseudo-elements for static decorations
+- Maintain clear z-index layering
+- Support both light and dark versions of decorations
+- Keep flourishes and decorations accessible and print-friendly
+
 ## Current Progress
 - [x] Basic page layout and grid system
 - [x] Double-sided printing support
@@ -54,6 +70,8 @@ To prevent scroll jumps and maintain performance:
   - [x] Proper RTL/LTR handling for back cards
   - [x] Maintain scroll position during edits
   - [x] Optimize re-renders and updates
+  - [x] Consistent font sizing with container queries
+  - [x] Proper label formatting and alignment
 - [x] Print Layout Polish
   - [x] Add print instructions modal
   - [x] Document printer margin handling
@@ -63,73 +81,73 @@ To prevent scroll jumps and maintain performance:
   - [x] Proper grid proportions (5:7)
   - [x] US Letter/Legal adaptations
   - [x] Centered grid with proper spacing
+- [x] Accessibility Improvements
+  - [x] Proper ARIA roles for notifications
+  - [x] Keyboard navigation support
+  - [x] Semantic HTML structure
+  - [x] Consistent focus states
+  - [x] Screen reader friendly content
 
 ## Next Steps (Priority Order)
 
 ### 1. Theme Implementation
-- [ ] Apply theme styles to cards
-  - [ ] Implement theme CSS application
-  - [ ] Create theme assets (patterns, borders)
-  - [ ] Test all themes
+- [x] Basic theme structure and variables
+  - [x] Core color variables
+  - [x] Typography settings
+  - [x] Spacing and layout
+  - [x] Print optimizations
+- [x] Initial decorative elements
+  - [x] Corner flourishes with light/dark variants
+  - [x] Centered title with proper spacing
+  - [x] Content box styling
+  - [x] Proper z-index layering
+- [ ] Complete theme styles
+  - [ ] Create remaining theme assets (patterns, borders)
+  - [ ] Implement remaining themes (Nature, Modern, Tech, Vintage)
   - [ ] Add theme previews in selector
-  - [ ] Ensure print compatibility
   - [ ] Add theme customization options
+  - [ ] Ensure proper contrast ratios
+  - [ ] Test with different paper types
+- [ ] Theme-specific features
+  - [ ] Add theme-specific corner flourish designs
+  - [ ] Implement divider styles per theme
+  - [ ] Add optional texture overlays
+  - [ ] Create theme-specific frames
+  - [ ] Add theme-specific typography pairings
 
-### 2. Card Size Options
-- [x] Add size toggle in deck settings
-  - [x] Poker size (3x3 grid, 9 cards per page)
-  - [x] Tarot size (2x2 grid, 4 cards per page)
-- [x] Implement responsive scaling
-  - [x] Grid layout adaptation
-  - [x] Automatic content scaling
-  - [x] Print layout adjustments
-- [x] Update print instructions for both sizes
-
-### 3. Expanded Card Types
-- [x] Add card type selector
-  - [x] Characters (NPCs, allies, adversaries)
-  - [x] Items (artifacts, weapons, evidence, documents)
-  - [x] Locations (buildings, rooms, scenes)
-- [x] Implement corner stats
-  - [x] Character age
-    - [x] Input validation
-    - [x] Optional field
-    - [x] Clear display
-  - [x] Item portability
-    - [x] Five-category system
-    - [x] Category selector
-    - [x] Clear indicators
-  - [x] Location areas
-    - [x] Hard links to deck locations
-    - [x] Soft links to named areas
-    - [x] Area suggestions
-    - [x] Flexible input
-- [x] Front card (observable information)
-  - [x] Type-specific templates
-  - [x] Observable features
-  - [x] Clean layout for player handouts
-- [ ] Back card (GM information)
-  - [ ] Game stats
-  - [ ] Hidden information
-  - [ ] Plot hooks and secrets
-  - [ ] GM notes section
-  - [ ] Prints blank for player handouts
-- [x] Documentation
-  - [x] Usage guide with examples
-  - [x] Print instructions for both GM/player use
-  - [x] Templates and suggestions
-
-### 4. URL Sharing Improvements
-- [x] Add "Copy URL" button
-- [x] Clear URL after import
-- [ ] Add URL validation
-- [ ] Show URL size indicator
-- [ ] Add sharing instructions
-- [ ] Handle URL import conflicts
-- [ ] Add version tracking for shared decks
-
-### 5. Advanced URL Sharing & Collaboration
-- [ ] Support different collaboration modes:
+### 2. Import & Export System
+- [ ] URL Sharing
+  - [x] Add "Copy URL" button
+  - [x] Clear URL after import
+  - [ ] Add URL validation
+  - [ ] Show URL size indicator
+  - [ ] Add sharing instructions
+  - [ ] Handle URL import conflicts
+  - [ ] Add version tracking for shared decks
+- [ ] Direct JSON Import/Export
+  - [ ] Add JSON paste field with validation
+  - [ ] Export deck as formatted JSON
+  - [ ] Clear error messages for invalid JSON
+  - [ ] Preview before import
+  - [ ] Merge options (new deck/existing deck)
+- [ ] API Integration
+  - [ ] Support for endpoint URLs
+  - [ ] Authentication options (headers, tokens)
+  - [ ] Rate limiting and error handling
+  - [ ] Progress indicators
+  - [ ] Webhook support for external updates
+- [ ] Import Mapping
+  - [ ] Define mapping templates
+  - [ ] Custom field mapping UI
+  - [ ] Save/load mapping presets
+  - [ ] Handle nested data structures
+- [ ] AI Integration Documentation
+  - [ ] Clear JSON schema documentation
+  - [ ] Example prompts for different LLMs
+  - [ ] Structured data extraction guides
+  - [ ] Best practices for card generation
+  - [ ] Image suggestion strategies
+- [ ] Collaboration Features
   - [ ] Self-sync across devices
     - [ ] Clear "last synced" indicator
     - [ ] Quick device-to-device sharing
@@ -144,8 +162,14 @@ To prevent scroll jumps and maintain performance:
     - [ ] Show visual diffs
     - [ ] Merge options
     - [ ] Keep history
+- [ ] Example Integrations
+  - [ ] Adventure conversion examples
+  - [ ] NPC roster imports
+  - [ ] Location gazetteer imports
+  - [ ] Item catalog imports
+  - [ ] Integration guides for common systems
 
-### 6. Mobile Experience
+### 3. Mobile Experience
 - [ ] Create dedicated mobile routes and views
   - [ ] Separate from print layout components
   - [ ] Mobile-first navigation pattern
@@ -166,7 +190,7 @@ To prevent scroll jumps and maintain performance:
   - [ ] Share sheet integration
   - [ ] Camera integration for portraits
 
-### 7. Image Handling
+### 4. Image Handling
 - [ ] Change from local /portraits/ to full URLs
 - [ ] Add image URL validation
 - [ ] Add hosting suggestions:
@@ -186,7 +210,7 @@ To prevent scroll jumps and maintain performance:
   - [ ] Hosting considerations
   - [ ] CORS requirements
 
-### 8. PWA & Offline Support
+### 5. PWA & Offline Support
 - [ ] Basic PWA setup
   - [ ] Web manifest
   - [ ] Service worker registration

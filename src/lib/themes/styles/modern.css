@@ -1,0 +1,11 @@
+/* Modern Theme - Clean geometric shapes and strong typography */
+:root[data-theme="modern"] {
+  /* Core Theme Colors */
+  --theme-primary: #1A237E;    /* Deep blue */
+  --theme-secondary: #424242;  /* Charcoal */
+  --theme-accent: #B71C1C;     /* Deep red */
+  --theme-background: #FFFFFF; /* Pure white */
+  --theme-text: #212121;       /* Near black */
+
+  /* To be implemented */
+} 

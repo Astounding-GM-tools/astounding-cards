@@ -115,58 +115,107 @@
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
-    background-color: var(--content-bg);
+    background-color: var(--theme-background);
     container-type: inline-size;
     direction: ltr;  /* Ensure content is always LTR regardless of parent */
   }
 
   .content {
-    background: var(--content-bg);
-    color: var(--content-text);
-    opacity: var(--content-opacity);
+    background: var(--content-box-bg);
+    color: var(--theme-text);
+    opacity: var(--content-opacity, 1);
     margin: var(--content-gap);
     padding: var(--content-gap);
-    border-radius: 1mm;
+    border-radius: var(--content-box-radius);
+    border: var(--content-box-border);
+    box-shadow: var(--content-box-shadow);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     min-height: calc(100% - var(--content-gap) * 2);
+    position: relative;
   }
 
-  .top {
-    display: flex;
-    flex-direction: column;
-    gap: var(--content-gap);
+  /* Add corner flourishes if enabled */
+  .content::before,
+  .content::after {
+    content: '';
+    position: absolute;
+    width: calc(var(--corner-flourish-size) * var(--show-corner-flourish));
+    height: calc(var(--corner-flourish-size) * var(--show-corner-flourish));
+    background-image: var(--corner-flourish-svg);
+    background-size: contain;
+    background-repeat: no-repeat;
+    opacity: calc(var(--corner-flourish-opacity) * var(--show-corner-flourish));
+  }
+
+  .content::before {
+    top: var(--content-gap);
+    left: var(--content-gap);
+  }
+
+  .content::after {
+    top: var(--content-gap);
+    right: var(--content-gap);
+    transform: scaleX(-1);
+  }
+
+  /* Add bottom corners */
+  .content > :last-child::before,
+  .content > :last-child::after {
+    content: '';
+    position: absolute;
+    bottom: var(--content-gap);
+    width: calc(var(--corner-flourish-size) * var(--show-corner-flourish));
+    height: calc(var(--corner-flourish-size) * var(--show-corner-flourish));
+    background-image: var(--corner-flourish-svg);
+    background-size: contain;
+    background-repeat: no-repeat;
+    opacity: calc(var(--corner-flourish-opacity) * var(--show-corner-flourish));
+  }
+
+  .content > :last-child::before {
+    left: var(--content-gap);
+    transform: scaleY(-1);
+  }
+
+  .content > :last-child::after {
+    right: var(--content-gap);
+    transform: scale(-1);
   }
 
   h2 {
     margin: 0;
     font-size: var(--title-font-size);
-    font-weight: bold;
+    font-weight: var(--theme-title-weight);
+    font-family: var(--theme-title-font);
     text-align: center;
   }
 
   .desc {
-    margin: 0;
+    margin: var(--content-gap) 0;
     font-size: var(--role-font-size);
     line-height: 1.4;
     text-align: center;
+    font-family: var(--theme-body-font);
   }
 
   .secrets {
     position: relative;
-    border: 1px solid var(--border-color);
+    border: var(--content-box-border);
     padding: var(--content-gap);
-    border-radius: 1mm;
+    border-radius: var(--content-box-radius);
     min-height: 40mm;
     margin: 0;
+    font-family: var(--theme-body-font);
   }
 
   .secrets legend {
     font-size: var(--ui-font-size);
-    color: var(--content-text);
+    color: var(--theme-text);
     font-weight: normal;
     padding: 0 1mm;
+    font-family: var(--theme-body-font);
   }
 
   .secrets-content {

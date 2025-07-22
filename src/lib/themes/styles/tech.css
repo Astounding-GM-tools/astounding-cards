@@ -1,0 +1,11 @@
+/* Tech Theme - High-tech aesthetic with digital elements */
+:root[data-theme="tech"] {
+  /* Core Theme Colors */
+  --theme-primary: #FF0055;    /* Neon pink */
+  --theme-secondary: #00FFF5;  /* Cyan */
+  --theme-accent: #FFE600;     /* Yellow */
+  --theme-background: #0D0221; /* Deep space */
+  --theme-text: #FFFFFF;       /* White */
+
+  /* To be implemented */
+} 

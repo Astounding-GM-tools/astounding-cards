@@ -75,26 +75,37 @@
   }
 </script>
 
+{#if character}
 <Card {showCropMarks}>
-  <article 
+  <div 
     class="card-content"
     style:background-image={character.portrait ? `url('/portraits/${character.portrait}')` : 'none'}
   >
-    <div class="stat-container">
-      <CardStatSelector {character} {onChange} />
-    </div>
+    <!-- Portrait flourishes -->
+    <div class="flourish portrait-flourish top-left"></div>
+    {#if !character.stat}
+    <div class="flourish portrait-flourish top-right"></div>
+    {/if}
+    
+    <!-- Portrait container -->
     <div class="portrait-container">
-      <button 
-        class="change-portrait" 
-        on:click={() => showImageInput = !showImageInput}
-        title="Change portrait"
-      >
-        {#if character.portrait}
+      {#if character.portrait}
+        <button 
+          class="change-portrait" 
+          on:click={() => showImageInput = !showImageInput}
+          title="Change portrait"
+        >
           Change portrait
-        {:else}
+        </button>
+      {:else}
+        <button 
+          class="change-portrait" 
+          on:click={() => showImageInput = !showImageInput}
+          title="Add portrait"
+        >
           Add portrait
-        {/if}
-      </button>
+        </button>
+      {/if}
 
       {#if showImageInput}
         <div class="image-input">
@@ -108,56 +119,86 @@
         </div>
       {/if}
     </div>
-    <section class="content">
+
+    <!-- Stat container -->
+    <div class="stat-container">
+      <CardStatSelector {character} {onChange} />
+    </div>
+
+    <div class="content">
+      <!-- Content flourishes -->
+      <div class="flourish content-flourish top-left"></div>
+      <div class="flourish content-flourish top-right"></div>
+
       <h2 
         contenteditable="true" 
         on:blur={updateName}
         bind:this={nameElement}
       >{character.name}</h2>
-      <p 
+      <div 
         class="role" 
         contenteditable="true"
         on:blur={updateRole}
         bind:this={roleElement}
-      >{character.role}</p>
+      >{character.role}</div>
       <div 
         class="traits" 
         contenteditable="true"
         on:blur={updateTraits}
         bind:this={traitsElement}
       >{@html formatTraits(character.traits)}</div>
-    </section>
-  </article>
+    </div>
+  </div>
 </Card>
+{/if}
 
 <style>
   .card-content {
-    width: 100%;
+    position: relative;
     height: 100%;
-    font-size: var(--base-font-size);
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
-    background-color: var(--content-bg);
+    background-color: var(--theme-background);
     background-size: cover;
     background-position: top center;
     container-type: inline-size;
+    width: 100%;
+    font-size: var(--base-font-size);
   }
 
-  .content {
-    background: var(--content-bg);
-    color: var(--content-text);
-    opacity: var(--content-opacity);
-    margin: var(--content-gap);
-    padding: var(--content-gap);
-    border-radius: 1mm;
-  }
-
-  .stat-container {
+  .flourish {
     position: absolute;
-    top: var(--page-margin);
-    right: var(--page-margin);
-    font-size: var(--ui-font-size);
+    width: var(--corner-flourish-size, 3rem);
+    height: var(--corner-flourish-size, 3rem);
+    background-image: var(--corner-flourish-svg);
+    background-size: contain;
+    background-repeat: no-repeat;
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  .portrait-flourish {
+    filter: invert(1) opacity(0.6);
+  }
+
+  .content-flourish {
+    opacity: 0.2;
+  }
+
+  .flourish.top-left {
+    left: var(--content-gap);
+    top: var(--content-gap);
+  }
+
+  .flourish.top-right {
+    right: var(--content-gap);
+    top: var(--content-gap);
+  }
+
+  .content-flourish.top-left,
+  .content-flourish.top-right {
+    top: calc(-1 * var(--content-gap));
   }
 
   .portrait-container {
@@ -167,7 +208,7 @@
   }
 
   .change-portrait {
-    background: var(--content-bg);
+    background: var(--content-box-bg);
     opacity: var(--content-opacity);
     border: none;
     padding: var(--content-gap);
@@ -190,7 +231,7 @@
     position: absolute;
     top: 100%;
     left: 0;
-    background: var(--content-bg);
+    background: var(--content-box-bg);
     padding: var(--content-gap);
     border-radius: 1mm;
     display: flex;
@@ -220,24 +261,58 @@
     opacity: 0.8;
   }
 
+  .stat-container {
+    position: absolute;
+    top: var(--page-margin);
+    right: var(--page-margin);
+    font-size: var(--ui-font-size);
+  }
+
+  .content {
+    background: var(--content-box-bg);
+    color: var(--theme-text);
+    opacity: var(--content-opacity, 1);
+    margin: var(--content-gap);
+    padding: var(--content-gap);
+    border-radius: var(--content-box-radius);
+    border: var(--content-box-border);
+    box-shadow: var(--content-box-shadow);
+    position: relative;
+  }
+
+  /* Center the title with max-width */
   h2 {
-    margin: 0;
+    margin: 0 auto;
+    max-width: 80%;
     font-size: var(--title-font-size);
-    font-weight: bold;
+    font-weight: var(--theme-title-weight);
+    font-family: var(--theme-title-font);
     text-align: center;
+    position: relative;
+    z-index: 3;
   }
 
   .role {
-    margin: var(--content-gap) 0;
-    font-size: var(--role-font-size);
-    text-align: center;
+    margin: 0.25rem auto 0;
+    max-width: 80%;
     font-style: italic;
+    text-align: center;
+    font-family: var(--theme-body-font);
+    position: relative;
+    z-index: 3;
   }
 
   .traits {
-    font-size: var(--trait-font-size);
-    line-height: 1.4;
+    margin-top: var(--content-gap);
+    font-family: var(--theme-body-font);
+    border-top: calc(var(--divider-width) * var(--show-dividers)) var(--divider-style) var(--divider-color);
+    opacity: var(--divider-opacity);
+    padding-top: var(--content-gap);
     white-space: pre-wrap;
+    line-height: 1.4;
+    font-size: var(--trait-font-size);
+    position: relative;
+    z-index: 3;
   }
 
   .traits :global(.trait-label) {

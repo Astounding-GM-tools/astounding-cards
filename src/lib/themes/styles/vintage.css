@@ -1,0 +1,11 @@
+/* Vintage Theme - Retro aesthetics with aged effects */
+:root[data-theme="vintage"] {
+  /* Core Theme Colors */
+  --theme-primary: #F57C00;    /* Burnt orange */
+  --theme-secondary: #795548;  /* Brown */
+  --theme-accent: #FDD835;     /* Yellow */
+  --theme-background: #FFFDE7; /* Cream */
+  --theme-text: #212121;       /* Near black */
+
+  /* To be implemented */
+} 
