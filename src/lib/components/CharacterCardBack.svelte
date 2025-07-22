@@ -77,13 +77,13 @@
       <div class="top">
         <h2 
           contenteditable={editable}
-          on:blur={updateName}
+          onblur={updateName}
           bind:this={nameElement}
         >{character.name}</h2>
         <p 
           contenteditable={editable}
           class="desc"
-          on:blur={updateDesc}
+          onblur={updateDesc}
           bind:this={descElement}
         >{character.desc}</p>
       </div>
@@ -92,13 +92,13 @@
         <div 
           class="secrets-content"
           contenteditable={editable}
-          on:blur={updateSecrets}
+          onblur={updateSecrets}
           bind:this={secretsElement}
         >{@html formatSecrets(character.secrets)}</div>
         {#if editable}
           <button 
             class="add-secret" 
-            on:click={addSecret}
+            onclick={addSecret}
             title="Add secret"
           >+</button>
         {/if}

@@ -99,7 +99,7 @@
         {#if character.portrait}
           <button 
             class="change-portrait" 
-            on:click={() => showImageInput = !showImageInput}
+            onclick={() => showImageInput = !showImageInput}
             title="Change portrait"
           >
             Change portrait
@@ -107,7 +107,7 @@
         {:else}
           <button 
             class="change-portrait" 
-            on:click={() => showImageInput = !showImageInput}
+            onclick={() => showImageInput = !showImageInput}
             title="Add portrait"
           >
             Add portrait
@@ -121,8 +121,8 @@
               bind:value={imageUrl}
               placeholder="Enter image name"
             />
-            <button on:click={updatePortrait}>Set</button>
-            <button on:click={() => showImageInput = false}>Cancel</button>
+            <button onclick={updatePortrait}>Set</button>
+            <button onclick={() => showImageInput = false}>Cancel</button>
           </div>
         {/if}
       </div>
@@ -155,19 +155,19 @@
 
       <h2 
         contenteditable="true" 
-        on:blur={updateName}
+        onblur={updateName}
         bind:this={nameElement}
       >{character.name}</h2>
       <div 
         class="role" 
         contenteditable="true"
-        on:blur={updateRole}
+        onblur={updateRole}
         bind:this={roleElement}
       >{character.role}</div>
       <div 
         class="traits" 
         contenteditable="true"
-        on:blur={updateTraits}
+        onblur={updateTraits}
         bind:this={traitsElement}
       >{@html formatTraits(character.traits)}</div>
     </div>

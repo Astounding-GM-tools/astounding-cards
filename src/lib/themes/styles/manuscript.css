@@ -16,7 +16,7 @@
   /* Font Sizes - using size for emphasis since we don't have weights */
   --title-font-size: 2em;       /* Large for titles */
   --role-font-size: 5cqw;       /* Larger for flowing script */
-  --trait-font-size: 1.2em;     /* Regular for traits */
+  --trait-font-size: 1.6em;     /* Increased for better readability */
   --base-font-size: 1.1cqw;     /* Slightly larger base size */
 
   /* Role specific styles */
@@ -60,4 +60,12 @@
  *   - Top vs bottom corners
  *   - Different card types (character/location/item)
  *   - Front vs back of cards
+ */
+
+/* TODO: Optional Parchment Enhancement Ideas
+ * - Could add subtle texture/noise for aged look
+ * - Consider very light crackle effect in content box
+ * - Possibly add slight color variations to simulate aging
+ * - Any effects should be minimal to maintain readability
+ * - Must consider print impact (ink usage, visibility)
  */ 
