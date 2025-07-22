@@ -4,12 +4,27 @@
   --theme-primary: #8B0000;     /* Deep red */
   --theme-secondary: #2F4F4F;   /* Dark slate */
   --theme-accent: #DAA520;      /* Golden */
-  --theme-background: #F4E4BC;  /* Aged parchment */
   --theme-text: #2C1810;        /* Dark brown */
+  --theme-text-faded: #594D47;  /* Lighter brown for aged ink effect */
 
   /* Typography */
-  --theme-title-font: 'Cinzel', serif;
-  --theme-body-font: 'Crimson Text', serif;
+  --theme-title-font: 'Pirata One', cursive;      /* Ornate display font - only regular weight */
+  --theme-body-font: 'Jim Nightshade', cursive;   /* Flowing script font - only regular weight */
+  --theme-title-weight: 400;    /* Only regular available */
+  --theme-body-weight: 400;     /* Only regular available */
+  
+  /* Font Sizes - using size for emphasis since we don't have weights */
+  --title-font-size: 2em;       /* Large for titles */
+  --role-font-size: 5cqw;       /* Larger for flowing script */
+  --trait-font-size: 1.2em;     /* Regular for traits */
+  --base-font-size: 1.1cqw;     /* Slightly larger base size */
+
+  /* Role specific styles */
+  --role-font-family: var(--theme-body-font);  /* Use flowing script for role */
+
+  /* Strong/Emphasis styles - can't use weight, use size instead */
+  --strong-scale: 1.15;         /* Scale up instead of bold */
+  --emphasis-skew: 0deg;        /* No skew needed - font is already script-like */
 
   /* Frame Style */
   --frame-style: double;
@@ -28,7 +43,21 @@
   --content-flourish-size: 2.5rem;  /* Larger than default */
   --content-flourish-opacity: 0.6;
 
-  /* Content Box Style */
-  --content-box-radius: 0;  /* Sharp corners */
+  /* Content Box Style - Front Only */
+  --content-box-bg: #F4E4BC;    /* Aged parchment, only for front content area */
+  --content-box-radius: 0;      /* Sharp corners */
   --content-box-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-} 
+
+  /* Back Card Style */
+  --back-content-box-bg: transparent;  /* No background on back */
+  --back-content-text: var(--theme-text-faded);  /* Faded ink effect */
+}
+
+/* TODO: Future Flourish Possibilities
+ * - Add ornate corner flourishes in top corners of content box
+ * - Consider bottom corner flourishes that adapt to content height
+ * - Could use different flourish designs for:
+ *   - Top vs bottom corners
+ *   - Different card types (character/location/item)
+ *   - Front vs back of cards
+ */ 

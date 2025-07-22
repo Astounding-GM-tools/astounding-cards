@@ -311,9 +311,9 @@
   .role {
     margin: 0.25rem auto 0;
     max-width: 80%;
-    font-style: italic;
     text-align: center;
-    font-family: var(--theme-body-font);
+    font-family: var(--role-font-family, var(--theme-body-font));  /* Use role font if set, otherwise body font */
+    font-size: var(--role-font-size);
     position: relative;
     z-index: 3;
   }

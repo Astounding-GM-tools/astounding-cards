@@ -324,10 +324,37 @@ Recommended font pairings for different theme styles:
 ## Print Considerations
 
 Themes should consider print optimization:
+- Avoid background colors - they consume excessive ink/toner
+- Use white background for all themes to maximize ink efficiency
 - Reduce opacity for better print contrast
 - Adjust line weights for printer capabilities
 - Test on both color and B&W printers
-- Consider ink usage
+
+### Ink-Efficient Design
+
+1. **Colors**:
+   - Keep card backgrounds white
+   - Use background colors sparingly and only in content boxes
+   - Use dark text for contrast
+   - Apply color sparingly in decorative elements
+   - Consider grayscale printing
+   ```css
+   /* Example: Selective background color */
+   :root[data-theme="manuscript"] {
+     --content-box-bg: #F4E4BC;    /* Background only for content area */
+     --theme-text: #2C1810;        /* Dark text for contrast */
+   }
+   ```
+
+2. **Line Weights**:
+   - Thinner lines use less ink
+   - Adjust for different printers
+   - Test minimum visible thickness
+
+3. **Opacity**:
+   - Lower opacity means less ink
+   - Balance visibility with efficiency
+   - Test different opacity levels
 
 ## Debugging
 

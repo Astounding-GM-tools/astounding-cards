@@ -221,6 +221,7 @@
     font-size: 0.9rem;
     transition: background-color 0.2s;
     background: rgba(255, 255, 255, 0.95);
+    font-family: var(--theme-title-font);  /* Use theme's display font */
   }
 
   .stat-display.character,

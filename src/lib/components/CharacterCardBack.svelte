@@ -121,8 +121,8 @@
   }
 
   .content {
-    background: var(--content-box-bg);
-    color: var(--theme-text);
+    background: var(--back-content-box-bg, var(--content-box-bg));  /* Use back-specific bg if set */
+    color: var(--back-content-text, var(--theme-text));  /* Use back-specific text color if set */
     opacity: var(--content-opacity, 1);
     margin: var(--content-gap);
     padding: var(--content-gap);
