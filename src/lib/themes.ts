@@ -34,61 +34,35 @@ export type CardTheme = {
 
 // Base themes
 export const baseThemes: Record<string, CardTheme> = {
-  artNouveau: {
-    id: 'artNouveau',
-    name: 'Art Nouveau',
-    description: 'Elegant, organic flowing lines with natural motifs',
+  classic: {
+    id: 'classic',
+    name: 'Classic',
+    description: 'Clean, minimalist design focused on readability',
     colors: {
-      primary: '#2C5530',
-      secondary: '#A87B00',
-      accent: '#D4AF37',
-      text: '#2C2C2C',
-      background: '#F8F4E9'
-    },
-    typography: {
-      titleFont: 'Rozha One, serif',
-      bodyFont: 'Cormorant Garamond, serif',
-      nameSize: '1.8rem',
-      roleSize: '1.2rem',
-      bodySize: '1rem'
-    },
-    decoration: {
-      borderStyle: 'flowing-organic',
-      cornerStyle: 'floral',
-      frameStyle: 'nouveau-frame',
-      patternUrl: '/themes/artnouveau/pattern.svg'
-    }
-  },
-
-  bauhaus: {
-    id: 'bauhaus',
-    name: 'Bauhaus',
-    description: 'Geometric, modern, with bold primary colors',
-    colors: {
-      primary: '#D53D27',
-      secondary: '#1E56B8',
-      accent: '#F2C94C',
+      primary: '#000000',
+      secondary: '#333333',
+      accent: '#666666',
       text: '#000000',
-      background: '#FFFFFF'
+      background: '#ffffff'
     },
     typography: {
-      titleFont: 'Futura, sans-serif',
-      bodyFont: 'Helvetica Neue, sans-serif',
-      nameSize: '1.6rem',
-      roleSize: '1.1rem',
+      titleFont: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      bodyFont: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      nameSize: '1.4rem',
+      roleSize: '1rem',
       bodySize: '0.9rem'
     },
     decoration: {
-      borderStyle: 'geometric',
-      cornerStyle: 'square',
-      frameStyle: 'bauhaus-grid',
-      patternUrl: '/themes/bauhaus/pattern.svg'
+      borderStyle: 'solid',
+      cornerStyle: 'simple',
+      frameStyle: 'classic',
+      patternUrl: '/flourishes/classic.svg'
     }
   },
 
-  medieval: {
-    id: 'medieval',
-    name: 'Medieval',
+  manuscript: {
+    id: 'manuscript',
+    name: 'Manuscript',
     description: 'Rich textures and illuminated manuscript style',
     colors: {
       primary: '#8B0000',
@@ -98,24 +72,50 @@ export const baseThemes: Record<string, CardTheme> = {
       background: '#F4E4BC'
     },
     typography: {
-      titleFont: 'UnifrakturMaguntia, serif',
+      titleFont: 'Cinzel, serif',
       bodyFont: 'Crimson Text, serif',
       nameSize: '1.7rem',
       roleSize: '1.2rem',
       bodySize: '1rem'
     },
     decoration: {
-      borderStyle: 'illuminated',
-      cornerStyle: 'celtic',
+      borderStyle: 'double',
+      cornerStyle: 'illuminated',
       frameStyle: 'manuscript',
-      patternUrl: '/themes/medieval/pattern.svg'
+      patternUrl: '/flourishes/manuscript.svg'
     }
   },
 
-  elfin: {
-    id: 'elfin',
-    name: 'Elfin',
-    description: 'Ethereal and naturalistic with delicate details',
+  modern: {
+    id: 'modern',
+    name: 'Modern',
+    description: 'Clean geometric shapes and strong typography',
+    colors: {
+      primary: '#1A237E',
+      secondary: '#424242',
+      accent: '#B71C1C',
+      text: '#212121',
+      background: '#FFFFFF'
+    },
+    typography: {
+      titleFont: 'Montserrat, sans-serif',
+      bodyFont: 'Open Sans, sans-serif',
+      nameSize: '1.4rem',
+      roleSize: '1rem',
+      bodySize: '0.9rem'
+    },
+    decoration: {
+      borderStyle: 'solid',
+      cornerStyle: 'geometric',
+      frameStyle: 'modern',
+      patternUrl: '/flourishes/modern.svg'
+    }
+  },
+
+  nature: {
+    id: 'nature',
+    name: 'Nature',
+    description: 'Organic shapes and natural motifs',
     colors: {
       primary: '#4B6B55',
       secondary: '#A3B5C0',
@@ -131,17 +131,17 @@ export const baseThemes: Record<string, CardTheme> = {
       bodySize: '0.95rem'
     },
     decoration: {
-      borderStyle: 'leafy',
-      cornerStyle: 'branch',
-      frameStyle: 'nature-frame',
-      patternUrl: '/themes/elfin/pattern.svg'
+      borderStyle: 'organic',
+      cornerStyle: 'leafy',
+      frameStyle: 'nature',
+      patternUrl: '/flourishes/nature.svg'
     }
   },
 
-  cyberpunk: {
-    id: 'cyberpunk',
-    name: 'Cyberpunk',
-    description: 'High-tech, neon aesthetics with digital glitch effects',
+  tech: {
+    id: 'tech',
+    name: 'Tech',
+    description: 'High-tech aesthetic with digital elements',
     colors: {
       primary: '#FF0055',
       secondary: '#00FFF5',
@@ -160,66 +160,14 @@ export const baseThemes: Record<string, CardTheme> = {
       borderStyle: 'circuit',
       cornerStyle: 'tech',
       frameStyle: 'digital',
-      patternUrl: '/themes/cyberpunk/pattern.svg'
-    }
-  },
-
-  corporate: {
-    id: 'corporate',
-    name: 'Corporate',
-    description: 'Clean, professional design with business card aesthetics',
-    colors: {
-      primary: '#1A237E',
-      secondary: '#424242',
-      accent: '#B71C1C',
-      text: '#212121',
-      background: '#FFFFFF'
-    },
-    typography: {
-      titleFont: 'Montserrat, sans-serif',
-      bodyFont: 'Open Sans, sans-serif',
-      nameSize: '1.4rem',
-      roleSize: '1rem',
-      bodySize: '0.9rem'
-    },
-    decoration: {
-      borderStyle: 'minimal',
-      cornerStyle: 'sharp',
-      frameStyle: 'business',
-      patternUrl: '/themes/corporate/pattern.svg'
-    }
-  },
-
-  tradingCard: {
-    id: 'tradingCard',
-    name: 'Trading Card',
-    description: 'Classic collectible card game style',
-    colors: {
-      primary: '#1B5E20',
-      secondary: '#BF360C',
-      accent: '#FFC107',
-      text: '#212121',
-      background: '#F5F5F5'
-    },
-    typography: {
-      titleFont: 'Beleren, serif',
-      bodyFont: 'Matrix II, serif',
-      nameSize: '1.5rem',
-      roleSize: '1.1rem',
-      bodySize: '0.9rem'
-    },
-    decoration: {
-      borderStyle: 'beveled',
-      cornerStyle: 'rounded',
-      frameStyle: 'classic-frame',
-      patternUrl: '/themes/trading/pattern.svg'
+      patternUrl: '/flourishes/tech.svg'
     }
   },
 
   vintage: {
     id: 'vintage',
-    name: 'Vintage Sports',
-    description: '70s style sports card aesthetic',
+    name: 'Vintage',
+    description: 'Retro aesthetics with aged effects',
     colors: {
       primary: '#F57C00',
       secondary: '#795548',
@@ -237,8 +185,8 @@ export const baseThemes: Record<string, CardTheme> = {
     decoration: {
       borderStyle: 'retro',
       cornerStyle: 'worn',
-      frameStyle: 'sports-classic',
-      patternUrl: '/themes/vintage/pattern.svg'
+      frameStyle: 'vintage',
+      patternUrl: '/flourishes/vintage.svg'
     }
   }
 };

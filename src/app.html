@@ -4,6 +4,24 @@
 		<meta charset="utf-8" />
 		<link rel="icon" href="%sveltekit.assets%/favicon.svg" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		
+		<!-- SVG Sprite Sheet -->
+		<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+			<!-- Classic flourish -->
+			<symbol id="flourish-classic" viewBox="0 0 100 100">
+				<line x1="20" y1="0" x2="20" y2="100" stroke="currentColor" stroke-width="4"/>
+				<line x1="0" y1="20" x2="100" y2="20" stroke="currentColor" stroke-width="4"/>
+			</symbol>
+			
+			<!-- Manuscript flourish (we can make this more ornate later) -->
+			<symbol id="flourish-manuscript" viewBox="0 0 100 100">
+				<line x1="20" y1="0" x2="20" y2="100" stroke="currentColor" stroke-width="4"/>
+				<line x1="0" y1="20" x2="100" y2="20" stroke="currentColor" stroke-width="4"/>
+			</symbol>
+
+			<!-- Add more flourish definitions here -->
+		</svg>
+
 		%sveltekit.head%
 	</head>
 	<body data-sveltekit-preload-data="hover">

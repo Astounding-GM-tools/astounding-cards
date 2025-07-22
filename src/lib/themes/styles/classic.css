@@ -1,52 +1,5 @@
 /* Classic Theme - Clean, minimalist design focused on readability */
+/* This theme uses all default values as defined in properties.css */
 :root[data-theme="classic"] {
-  /* Core Theme Colors */
-  --theme-primary: #000000;
-  --theme-secondary: #333333;
-  --theme-accent: #666666;
-  --theme-background: #ffffff;
-  --theme-text: #000000;
-
-  /* Typography */
-  --theme-title-font: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --theme-body-font: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --theme-title-weight: 700;
-  --theme-body-weight: 400;
-
-  /* Decorative Elements - Minimal */
-  --show-corner-flourish: 1;  /* Enable corners */
-  --show-dividers: 1;
-  --show-frame: 1;
-  --show-texture: 0;
-
-  /* Frame Style */
-  --frame-style: solid;
-  --frame-width: 1px;
-  --frame-color: var(--theme-accent);
-  --frame-opacity: 1;
-
-  /* Corner Flourish */
-  --corner-flourish-svg: url("data:image/svg+xml,%3Csvg width='32' height='32' viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M32 2C32 1.44772 31.5523 1 31 1H12C6.47715 1 2 5.47715 2 11V31C2 31.5523 1.55228 32 1 32' stroke='currentColor' stroke-width='1.5' stroke-linecap='round'/%3E%3Cpath d='M32 8C32 7.44772 31.5523 7 31 7H16C10.4772 7 6 11.4772 6 17V31C6 31.5523 5.55228 32 5 32' stroke='currentColor' stroke-width='1' stroke-linecap='round' opacity='0.6'/%3E%3C/svg%3E");
-  --corner-flourish-size: 3rem;  /* Slightly larger */
-  --corner-flourish-opacity: 0.8;  /* Slightly more transparent */
-
-  /* Divider Style */
-  --divider-style: solid;
-  --divider-width: 1px;
-  --divider-color: var(--theme-accent);
-  --divider-opacity: 0.5;
-
-  /* Content Box Style */
-  --content-box-bg: var(--theme-background);
-  --content-box-border: var(--frame-width) var(--frame-style) var(--frame-color);
-  --content-box-radius: 2mm;
-  --content-box-shadow: none;
-  
-  /* Print Optimizations */
-  @media print {
-    --frame-width: 0.5pt;
-    --divider-width: 0.5pt;
-    --corner-flourish-opacity: 0.8;
-    --content-box-shadow: none;
-  }
+  /* No overrides needed - this is our default theme */
 } 

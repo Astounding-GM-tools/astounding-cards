@@ -1,0 +1,196 @@
+/* Theme Property Declarations */
+
+/* Core Theme Colors */
+@property --theme-primary {
+  syntax: '<color>';
+  initial-value: #000000;
+  inherits: true;
+}
+
+@property --theme-secondary {
+  syntax: '<color>';
+  initial-value: #333333;
+  inherits: true;
+}
+
+@property --theme-accent {
+  syntax: '<color>';
+  initial-value: #666666;
+  inherits: true;
+}
+
+@property --theme-background {
+  syntax: '<color>';
+  initial-value: #ffffff;
+  inherits: true;
+}
+
+@property --theme-text {
+  syntax: '<color>';
+  initial-value: #000000;
+  inherits: true;
+}
+
+/* Typography */
+@property --theme-title-font {
+  syntax: '*';
+  initial-value: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  inherits: true;
+}
+
+@property --theme-body-font {
+  syntax: '*';
+  initial-value: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  inherits: true;
+}
+
+@property --theme-title-weight {
+  syntax: '<number>';
+  initial-value: 700;
+  inherits: true;
+}
+
+@property --theme-body-weight {
+  syntax: '<number>';
+  initial-value: 400;
+  inherits: true;
+}
+
+/* Decorative Elements */
+@property --show-corner-flourish {
+  syntax: '<number>';
+  initial-value: 1;
+  inherits: true;
+}
+
+@property --show-dividers {
+  syntax: '<number>';
+  initial-value: 1;
+  inherits: true;
+}
+
+@property --show-frame {
+  syntax: '<number>';
+  initial-value: 1;
+  inherits: true;
+}
+
+@property --show-texture {
+  syntax: '<number>';
+  initial-value: 0;
+  inherits: true;
+}
+
+/* Frame Style */
+@property --frame-style {
+  syntax: '*';
+  initial-value: solid;
+  inherits: true;
+}
+
+@property --frame-width {
+  syntax: '<length>';
+  initial-value: 1px;
+  inherits: true;
+}
+
+@property --frame-opacity {
+  syntax: '<number>';
+  initial-value: 1;
+  inherits: true;
+}
+
+/* Divider Style */
+@property --divider-style {
+  syntax: '*';
+  initial-value: solid;
+  inherits: true;
+}
+
+@property --divider-width {
+  syntax: '<length>';
+  initial-value: 1px;
+  inherits: true;
+}
+
+@property --divider-opacity {
+  syntax: '<number>';
+  initial-value: 0.5;
+  inherits: true;
+}
+
+/* Flourish System */
+@property --flourish-color {
+  syntax: '<color>';
+  initial-value: #000000;
+  inherits: true;
+}
+
+@property --flourish-opacity {
+  syntax: '<number>';
+  initial-value: 0.8;
+  inherits: true;
+}
+
+@property --flourish-size {
+  syntax: '<length-percentage>';
+  initial-value: 2rem;
+  inherits: true;
+}
+
+@property --flourish-aspect {
+  syntax: '<number>';
+  initial-value: 1;
+  inherits: true;
+}
+
+/* Portrait Flourishes */
+@property --portrait-flourish-size {
+  syntax: '<length-percentage>';
+  initial-value: min(35%, 5rem);
+  inherits: true;
+}
+
+@property --portrait-flourish-opacity {
+  syntax: '<number>';
+  initial-value: 0.6;
+  inherits: true;
+}
+
+@property --portrait-flourish-aspect {
+  syntax: '<number>';
+  initial-value: 1;
+  inherits: true;
+}
+
+/* Content Flourishes */
+@property --content-flourish-size {
+  syntax: '<length-percentage>';
+  initial-value: 2rem;
+  inherits: true;
+}
+
+@property --content-flourish-opacity {
+  syntax: '<number>';
+  initial-value: 0.2;
+  inherits: true;
+}
+
+@property --content-flourish-aspect {
+  syntax: '<number>';
+  initial-value: 1;
+  inherits: true;
+}
+
+/* Content Box Style */
+@property --content-box-radius {
+  syntax: '<length>';
+  initial-value: 2mm;
+  inherits: true;
+}
+
+@property --content-box-shadow {
+  syntax: '*';
+  initial-value: none;
+  inherits: true;
+} 

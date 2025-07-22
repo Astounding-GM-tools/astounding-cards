@@ -10,51 +10,25 @@
   /* Typography */
   --theme-title-font: 'Cinzel', serif;
   --theme-body-font: 'Crimson Text', serif;
-  --theme-title-weight: 700;
-  --theme-body-weight: 400;
-
-  /* Decorative Elements - Elaborate */
-  --show-corner-flourish: 1;
-  --show-dividers: 1;
-  --show-frame: 1;
-  --show-texture: 1;
 
   /* Frame Style */
   --frame-style: double;
   --frame-width: 3px;
-  --frame-color: var(--theme-primary);
-  --frame-opacity: 0.8;
 
-  /* Corner Flourish */
-  --corner-flourish-svg: url("data:image/svg+xml,...");  /* We'll add the actual SVG later */
-  --corner-flourish-size: 2rem;
-  --corner-flourish-color: var(--theme-primary);
-  --corner-flourish-opacity: 0.8;
+  /* Flourish Style */
+  --flourish-color: var(--theme-primary);
+  --flourish-opacity: 0.8;
+  --flourish-size: 3rem;  /* Larger than default */
 
-  /* Divider Style */
-  --divider-style: solid;
-  --divider-width: 2px;
-  --divider-color: var(--theme-primary);
-  --divider-opacity: 0.8;
-  --divider-pattern: url("data:image/svg+xml,...");  /* We'll add the actual SVG later */
+  /* Portrait Flourishes */
+  --portrait-flourish-size: min(40%, 6rem);  /* Larger than default */
+  --portrait-flourish-opacity: 0.8;
+
+  /* Content Flourishes */
+  --content-flourish-size: 2.5rem;  /* Larger than default */
+  --content-flourish-opacity: 0.6;
 
   /* Content Box Style */
-  --content-box-bg: var(--theme-background);
-  --content-box-border: var(--frame-width) var(--frame-style) var(--frame-color);
-  --content-box-radius: 0;  /* Sharp corners for manuscript style */
+  --content-box-radius: 0;  /* Sharp corners */
   --content-box-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-
-  /* Texture */
-  --texture-pattern: url("data:image/svg+xml,...");  /* We'll add the actual SVG later */
-  --texture-opacity: 0.05;
-  --texture-blend-mode: multiply;
-  
-  /* Print Optimizations */
-  @media print {
-    --frame-width: 1pt;
-    --divider-width: 0.75pt;
-    --corner-flourish-opacity: 0.9;
-    --texture-opacity: 0.03;
-    --content-box-shadow: none;
-  }
 } 

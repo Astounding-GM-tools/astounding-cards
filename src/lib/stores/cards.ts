@@ -468,7 +468,7 @@ export async function copyCharactersTo(
       id: crypto.randomUUID(),
       meta: {
         name: newDeckName || 'New Deck',
-        theme: 'default',
+        theme: 'classic',  // Default to classic theme
         cardSize: 'poker',  // Default to poker size for new decks
         lastEdited: Date.now(),
         createdAt: Date.now()
@@ -637,7 +637,7 @@ export async function populateWithSampleData() {
       id: crypto.randomUUID(),
       meta: {
         name: "Tales of the Uncanny",
-        theme: "default",
+        theme: "classic",  // Use classic theme
         cardSize: "poker",
         lastEdited: Date.now(),
         createdAt: Date.now()

@@ -33,7 +33,10 @@
     stat: { type: 'character', value: '30' }
   };
 
-  async function handleThemeChange() {
+  async function handleThemeChange(event: Event) {
+    const select = event.target as HTMLSelectElement;
+    const selectedTheme = select.value;
+
     const updatedDeck = {
       ...deck,
       meta: {
@@ -47,7 +50,6 @@
       currentDeck.set(updatedDeck);
     }
     dispatch('deckChange', { action: 'update', deckId: deck.id });
-    showThemeDialog = false;
   }
 
   function toggleCardPreview() {
@@ -287,7 +289,19 @@
     <div class="deck-info">
       <div class="info-line cards">{deck.characters.length} cards</div>
       <div class="info-line date">Last edited: {formatDate(deck.meta.lastEdited)}</div>
-      <div class="info-line theme">Theme: {deck.meta.theme}</div>
+      <div class="info-line theme">
+        Theme: 
+        <select 
+          value={deck.meta.theme}
+          on:change={handleThemeChange}
+        >
+          {#each themes as theme (theme.id)}
+            <option value={theme.id}>
+              {theme.name}
+            </option>
+          {/each}
+        </select>
+      </div>
     </div>
 
     <div class="actions">

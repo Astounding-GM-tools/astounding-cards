@@ -2,6 +2,7 @@
   import type { Character } from '$lib/types';
   import Card from './Card.svelte';
   import CardStatSelector from './CardStatSelector.svelte';
+  import { currentDeck } from '$lib/stores/cards';
 
   export let character: Character;
   export let showCropMarks = true;
@@ -82,9 +83,13 @@
     style:background-image={character.portrait ? `url('/portraits/${character.portrait}')` : 'none'}
   >
     <!-- Top portrait flourishes -->
-    <div class="flourish portrait-flourish top-left"></div>
+    <svg class="flourish portrait-flourish top-left" viewBox="0 0 100 100">
+      <use href="#flourish-{$currentDeck?.meta.theme || 'classic'}" />
+    </svg>
     {#if !character.stat}
-    <div class="flourish portrait-flourish top-right"></div>
+    <svg class="flourish portrait-flourish top-right" viewBox="0 0 100 100">
+      <use href="#flourish-{$currentDeck?.meta.theme || 'classic'}" />
+    </svg>
     {/if}
     
     <!-- Portrait area with controls and bottom flourishes -->
@@ -129,16 +134,24 @@
 
       <!-- Bottom portrait flourishes -->
       <div class="bottom-flourishes">
-        <div class="flourish portrait-flourish bottom-left"></div>
-        <div class="flourish portrait-flourish bottom-right"></div>
+        <svg class="flourish portrait-flourish bottom-left" viewBox="0 0 100 100">
+          <use href="#flourish-{$currentDeck?.meta.theme || 'classic'}" />
+        </svg>
+        <svg class="flourish portrait-flourish bottom-right" viewBox="0 0 100 100">
+          <use href="#flourish-{$currentDeck?.meta.theme || 'classic'}" />
+        </svg>
       </div>
     </div>
 
     <!-- Content box -->
     <div class="content">
       <!-- Content flourishes -->
-      <div class="flourish content-flourish top-left"></div>
-      <div class="flourish content-flourish top-right"></div>
+      <svg class="flourish content-flourish top-left" viewBox="0 0 100 100">
+        <use href="#flourish-{$currentDeck?.meta.theme || 'classic'}" />
+      </svg>
+      <svg class="flourish content-flourish top-right" viewBox="0 0 100 100">
+        <use href="#flourish-{$currentDeck?.meta.theme || 'classic'}" />
+      </svg>
 
       <h2 
         contenteditable="true" 
@@ -196,9 +209,7 @@
     aspect-ratio: var(--flourish-aspect);
     pointer-events: none;
     z-index: 2;
-    background-image: var(--flourish-svg);
-    background-size: 100%;
-    background-repeat: no-repeat;
+    color: var(--flourish-color, currentColor);
   }
 
   /* Portrait flourishes - large and light */
