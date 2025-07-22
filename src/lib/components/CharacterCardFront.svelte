@@ -196,6 +196,9 @@
     aspect-ratio: var(--flourish-aspect);
     pointer-events: none;
     z-index: 2;
+    background-image: var(--flourish-svg);
+    background-size: 100%;
+    background-repeat: no-repeat;
   }
 
   /* Portrait flourishes - large and light */

@@ -61,9 +61,10 @@
 
   /* Flourish System */
   --show-flourishes: 1;  /* Master toggle for all flourishes */
+  --flourish-svg: url('/flourishes/classic.svg');  /* Default flourish */
   
   /* Portrait Flourishes */
-  --portrait-flourish-size: 45%;
+  --portrait-flourish-size: min(35%, 5rem);
   --portrait-flourish-svg: var(--corner-flourish-svg);
   --portrait-flourish-opacity: 0.6;
   --portrait-flourish-aspect: 1;  /* Default square, can be overridden by themes */
