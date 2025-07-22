@@ -82,9 +82,9 @@
     style:background-image={character.portrait ? `url('/portraits/${character.portrait}')` : 'none'}
   >
     <!-- Top portrait flourishes -->
-    <div class="flourish portrait-flourish top-left" style="background-color: rgba(255,0,0,0.3);"></div>
+    <div class="flourish portrait-flourish top-left"></div>
     {#if !character.stat}
-    <div class="flourish portrait-flourish top-right" style="background-color: rgba(0,255,0,0.3);"></div>
+    <div class="flourish portrait-flourish top-right"></div>
     {/if}
     
     <!-- Portrait container -->
@@ -129,14 +129,14 @@
     <div class="content-wrapper">
       <!-- Bottom portrait flourishes -->
       <div class="bottom-flourishes">
-        <div class="flourish portrait-flourish bottom-left" style="background-color: rgba(0,0,255,0.3);"></div>
-        <div class="flourish portrait-flourish bottom-right" style="background-color: rgba(255,0,255,0.3);"></div>
+        <div class="flourish portrait-flourish bottom-left"></div>
+        <div class="flourish portrait-flourish bottom-right"></div>
       </div>
 
       <div class="content">
         <!-- Content flourishes -->
-        <div class="flourish content-flourish top-left" style="background-color: rgba(255,255,0,0.3);"></div>
-        <div class="flourish content-flourish top-right" style="background-color: rgba(0,255,255,0.3);"></div>
+        <div class="flourish content-flourish top-left"></div>
+        <div class="flourish content-flourish top-right"></div>
 
         <h2 
           contenteditable="true" 
@@ -194,8 +194,28 @@
     aspect-ratio: var(--flourish-aspect);
     pointer-events: none;
     z-index: 2;
+  }
+
+  /* Debug styles for flourishes */
+  :root[data-dev] .portrait-flourish {
     border-top: 2px solid currentColor;
     border-left: 2px solid currentColor;
+  }
+
+  :root[data-dev] .portrait-flourish.top-left {
+    background-color: rgba(255,0,0,0.3);
+  }
+
+  :root[data-dev] .portrait-flourish.top-right {
+    background-color: rgba(0,255,0,0.3);
+  }
+
+  :root[data-dev] .portrait-flourish.bottom-left {
+    background-color: rgba(0,0,255,0.3);
+  }
+
+  :root[data-dev] .portrait-flourish.bottom-right {
+    background-color: rgba(255,0,255,0.3);
   }
 
   .portrait-flourish.top-left {
@@ -238,8 +258,20 @@
     aspect-ratio: var(--flourish-aspect);
     pointer-events: none;
     z-index: 2;
+  }
+
+  /* Debug styles for content flourishes */
+  :root[data-dev] .content-flourish {
     border-top: 2px solid currentColor;
     border-left: 2px solid currentColor;
+  }
+
+  :root[data-dev] .content-flourish.top-left {
+    background-color: rgba(255,255,0,0.3);
+  }
+
+  :root[data-dev] .content-flourish.top-right {
+    background-color: rgba(0,255,255,0.3);
   }
 
   .content-flourish.top-left {
