@@ -24,7 +24,7 @@
       <li>Set orientation to Portrait</li>
       <li>Set scale to 100% (no scaling)</li>
       <li>Set margins to None or Minimum</li>
-      <li>Enable background graphics</li>
+      <li>Enable background graphics (required for card images)</li>
     </ul>
 
     <h3>Card Layout</h3>
@@ -45,17 +45,36 @@
 
     <h3>Paper Handling</h3>
     <ul>
-      <li>Print front pages first</li>
-      <li>Flip paper according to your printer's instructions</li>
-      <li>Print back pages</li>
-      <li>Cut along crop marks</li>
+      <li>Front and back of each card are aligned to match when printed correctly</li>
+      <li>For duplex (double-sided) printers:
+        <ul>
+          <li>Enable double-sided printing in your printer settings</li>
+          <li>Print will automatically align front and back of each card</li>
+        </ul>
+      </li>
+      <li>For manual double-sided printing:
+        <ul>
+          <li>Print even-numbered pages first (back sides)</li>
+          <li>Place printed sheets back in printer:
+            <ul>
+              <li>Blank side facing up</li>
+              <li>First sheet on top of stack</li>
+              <li>Top of page closest to paper feed</li>
+            </ul>
+          </li>
+          <li>Print odd-numbered pages (front sides)</li>
+          <li>Do a test print first to verify paper orientation</li>
+        </ul>
+      </li>
+      <li>Cut along crop marks after printing is complete</li>
     </ul>
 
     <h3>Tips</h3>
     <ul>
-      <li>Do a test print with regular paper first</li>
-      <li>Check alignment before printing on cardstock</li>
+      <li>Always do a test print with regular paper first</li>
+      <li>Verify front/back alignment before using cardstock</li>
       <li>Use thicker paper (160-200 gsm) for best results</li>
+      <li>Print in grayscale/black & white to save color ink</li>
       <li>
         {#if $currentDeck?.meta.cardSize === 'poker'}
           Cards will be standard poker size (2.5" × 3.5" / 63mm × 88mm)
@@ -85,6 +104,7 @@
     width: 600px;
     background: var(--dialog-bg);
     color: var(--ui-text);
+    font-family: var(--ui-font-family);
   }
 
   .print-dialog::backdrop {
@@ -111,7 +131,8 @@
   .close-button {
     background: none;
     border: none;
-    font-size: 1.5rem;
+    font-size: var(--ui-title-size);
+    font-family: var(--ui-font-family);
     color: var(--ui-muted);
     cursor: pointer;
     padding: 0.25rem 0.5rem;
@@ -127,13 +148,16 @@
     padding: var(--ui-spacing);
     overflow-y: auto;
     max-height: calc(90vh - 4rem);
+    font-family: var(--ui-font-family);
+    font-size: var(--ui-font-size);
   }
 
   h3 {
     color: var(--button-primary-bg);
     margin: 1.5rem 0 0.5rem;
-    font-size: var(--ui-font-size);
+    font-size: calc(var(--ui-font-size) * 1.1);
     font-family: var(--ui-font-family);
+    font-weight: 600;
   }
 
   h3:first-child {
@@ -143,21 +167,35 @@
   ul {
     margin: 0.5rem 0;
     padding-left: 1.5rem;
+    font-family: var(--ui-font-family);
   }
 
   li {
     margin: 0.5rem 0;
     line-height: 1.4;
     font-size: var(--ui-font-size);
+    font-family: var(--ui-font-family);
   }
 
   p {
     margin: 0.5rem 0;
     line-height: 1.4;
     font-size: var(--ui-font-size);
+    font-family: var(--ui-font-family);
   }
 
   strong {
     color: var(--button-primary-bg);
+    font-family: var(--ui-font-family);
+    font-weight: 600;
+  }
+
+  ul ul {
+    margin: 0.25rem 0 0.25rem 1rem;
+  }
+
+  ul ul ul {
+    margin: 0.25rem 0 0.25rem 1.5rem;
+    list-style-type: circle;
   }
 </style> 
