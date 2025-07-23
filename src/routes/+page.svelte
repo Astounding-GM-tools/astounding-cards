@@ -305,7 +305,9 @@
 
   .dialog-header h2 {
     margin: 0;
-    font-size: var(--title-font-size);
+    font-size: var(--ui-title-size);
+    font-family: var(--ui-font-family);
+    color: var(--ui-text);
   }
 
   .close-button {
@@ -352,6 +354,7 @@
     align-items: center;
     gap: 0.5rem;
     font-size: var(--ui-font-size);
+    font-family: var(--ui-font-family);
     color: var(--ui-text);
   }
 

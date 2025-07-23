@@ -123,6 +123,7 @@
     display: flex;
     flex-direction: column;
     gap: var(--content-gap);
+    font-family: var(--ui-font-family);
   }
 
   fieldset {
@@ -135,6 +136,7 @@
 
   legend {
     font-size: var(--ui-font-size);
+    font-family: var(--ui-font-family);
     color: var(--ui-muted);
     padding: 0 var(--content-gap);
     background: var(--ui-bg);
@@ -148,6 +150,7 @@
     background: var(--ui-bg);
     color: var(--ui-text);
     font-size: var(--ui-font-size);
+    font-family: var(--ui-font-family);
     cursor: pointer;
   }
 
@@ -166,6 +169,7 @@
     padding: calc(var(--content-gap) * 0.75);
     color: var(--ui-muted);
     font-size: var(--ui-font-size);
+    font-family: var(--ui-font-family);
   }
 
   .error {
@@ -175,6 +179,7 @@
   .size-info {
     margin: var(--content-gap) 0 0;
     font-size: var(--ui-font-size);
+    font-family: var(--ui-font-family);
     color: var(--ui-muted);
   }
 
@@ -185,6 +190,7 @@
     background: var(--button-bg);
     color: var(--button-text);
     font-size: var(--ui-font-size);
+    font-family: var(--ui-font-family);
     cursor: pointer;
     transition: all 0.2s;
   }

@@ -25,25 +25,27 @@
     gap: 0.5rem;
     padding: 0.25rem 0.5rem;
     border-radius: 4px;
-    font-size: 0.9rem;
+    font-size: var(--ui-font-size);
+    font-family: var(--ui-font-family);
   }
 
   .low {
-    background: #e8f5e9;
-    color: #2e7d32;
+    background: rgba(76, 175, 80, 0.1);
+    color: var(--toast-success);
   }
 
   .medium {
-    background: #fff3e0;
-    color: #f57c00;
+    background: rgba(255, 152, 0, 0.1);
+    color: var(--toast-warning);
   }
 
   .high {
-    background: #ffebee;
-    color: #c62828;
+    background: rgba(244, 67, 54, 0.1);
+    color: var(--toast-error);
   }
 
   .warning {
     font-style: italic;
+    font-family: var(--ui-font-family);
   }
 </style> 

@@ -4,8 +4,6 @@
   import type { Character, CharacterDeck } from '$lib/types';
   import { createEventDispatcher } from 'svelte';
   import { baseThemes } from '$lib/themes';
-  import CharacterCardFront from './CharacterCardFront.svelte';
-  import CharacterCardBack from './CharacterCardBack.svelte';
 
   export let deck: CharacterDeck;
   
@@ -18,20 +16,6 @@
     name: theme.name,
     description: theme.description
   }));
-
-  let showThemeDialog = false;
-  let selectedTheme = deck.meta.theme;
-  let showCardBack = false;
-  const exampleCharacter: Character = {
-    id: 'preview',
-    name: 'Example Character',
-    role: 'Preview Role',
-    portrait: null,
-    traits: ['Sample trait 1', 'Sample trait 2', 'Sample trait 3'],
-    secrets: ['Sample secret 1', 'Sample secret 2'],
-    desc: 'This is an example character to preview the theme styling.',
-    stat: { type: 'character', value: '30' }
-  };
 
   async function handleThemeChange(event: Event) {
     const select = event.target as HTMLSelectElement;
@@ -50,10 +34,6 @@
       currentDeck.set(updatedDeck);
     }
     dispatch('deckChange', { action: 'update', deckId: deck.id });
-  }
-
-  function toggleCardPreview() {
-    showCardBack = !showCardBack;
   }
 
   let showDeleteConfirm = false;
@@ -216,8 +196,14 @@
 
   function formatDate(timestamp: number): string {
     return new Date(timestamp).toLocaleString(navigator.language, { 
-      dateStyle: 'short', 
-      timeStyle: 'short' 
+      dateStyle: 'short'
+    });
+  }
+
+  function formatDateTime(timestamp: number): string {
+    return new Date(timestamp).toLocaleString(navigator.language, { 
+      dateStyle: 'short',
+      timeStyle: 'short'
     });
   }
 
@@ -287,11 +273,9 @@
 
   <div class="deck-content">
     <div class="deck-info">
-      <div class="info-line cards">{deck.characters.length} cards</div>
-      <div class="info-line date">Last edited: {formatDate(deck.meta.lastEdited)}</div>
-      <div class="info-line theme">
-        Theme: 
+      <div class="info-line">
         <select 
+          class="theme-select"
           value={deck.meta.theme}
           on:change={handleThemeChange}
         >
@@ -301,19 +285,53 @@
             </option>
           {/each}
         </select>
+        <span class="cards">{deck.characters.length} cards</span>
+      </div>
+      <div class="info-line date">
+        <span class="date-label">Created</span> {formatDate(deck.meta.createdAt)}
+      </div>
+      <div class="info-line date">
+        <span class="date-label">Edited</span> {formatDateTime(deck.meta.lastEdited)}
       </div>
     </div>
 
     <div class="actions">
-      <div class="action-group">
+      <fieldset class="action-group">
+        <legend>Card</legend>
+        <button 
+          class="action-button"
+          on:click={() => showCopyDialog = true}
+          title="Copy selected cards to another deck"
+        >
+          Copy
+        </button>
+        <button 
+          class="action-button danger"
+          on:click={() => showDeleteCharactersDialog = true}
+          title="Delete selected cards from this deck"
+        >
+          Delete
+        </button>
+      </fieldset>
+      <fieldset class="action-group">
+        <legend>Deck</legend>
         <button 
           class="action-button"
           on:click={handleDuplicate}
           disabled={duplicating}
+          title="Create a copy of this entire deck"
         >
-          {duplicating ? 'Duplicating...' : 'Duplicate Deck'}
+          {duplicating ? 'Duplicating...' : 'Duplicate'}
         </button>
-      </div>
+        <button 
+          class="action-button danger"
+          on:click={handleDelete}
+          disabled={deleting}
+          title="Delete this deck and all its cards"
+        >
+          {deleting ? 'Deleting...' : 'Delete'}
+        </button>
+      </fieldset>
     </div>
   </div>
 
@@ -491,77 +509,6 @@
       </div>
     </div>
   {/if}
-
-  {#if showThemeDialog}
-    <div class="theme-dialog-overlay"></div>
-    <div class="theme-dialog">
-      <div class="theme-dialog-header">
-        <h3>Select Theme</h3>
-        <button 
-          class="close-button"
-          on:click={() => showThemeDialog = false}
-        >
-          ×
-        </button>
-      </div>
-      <div class="theme-dialog-content">
-        <div class="theme-list">
-          {#each themes as theme (theme.id)}
-            <label class="theme-option">
-              <input
-                type="radio"
-                name="theme"
-                value={theme.id}
-                bind:group={selectedTheme}
-              >
-              <div class="theme-info">
-                <strong>{theme.name}</strong>
-                <span class="theme-description">{theme.description}</span>
-              </div>
-            </label>
-          {/each}
-        </div>
-        <div class="preview-section">
-          <div class="preview-card" class:flipped={showCardBack}>
-            <div class="preview-front">
-              <CharacterCardFront
-                character={exampleCharacter}
-                showCropMarks={false}
-                onChange={() => {}}
-              />
-            </div>
-            <div class="preview-back">
-              <CharacterCardBack
-                character={exampleCharacter}
-                showCropMarks={false}
-                onChange={() => {}}
-              />
-            </div>
-          </div>
-          <button 
-            class="flip-button"
-            on:click={toggleCardPreview}
-          >
-            {showCardBack ? 'Show Front' : 'Show Back'}
-          </button>
-        </div>
-      </div>
-      <div class="theme-dialog-footer">
-        <button 
-          class="primary"
-          on:click={handleThemeChange}
-        >
-          Apply Theme
-        </button>
-        <button 
-          class="secondary"
-          on:click={() => showThemeDialog = false}
-        >
-          Cancel
-        </button>
-      </div>
-    </div>
-  {/if}
 </div>
 
 <style>
@@ -574,6 +521,7 @@
     position: relative;
     display: flex;
     flex-direction: column;
+    font-family: var(--ui-font-family);
   }
 
   .deck-manager:hover {
@@ -600,8 +548,9 @@
 
   .name-edit input {
     flex: 1;
-    font-size: 1rem;
-    font-weight: bold;
+    font-size: var(--ui-font-size);
+    font-family: var(--ui-font-family);
+    font-weight: 600;
     padding: 0.25rem 0.5rem;
     border: 1px solid var(--ui-border);
     border-radius: 4px;
@@ -609,7 +558,9 @@
 
   h3 {
     margin: 0;
-    font-size: 1rem;
+    font-size: var(--ui-font-size);
+    font-family: var(--ui-font-family);
+    font-weight: 600;
     flex: 1;
   }
 
@@ -623,8 +574,8 @@
   }
 
   .deck-info {
-    width: 30%;
-    min-width: 10em;
+    width: 40%;
+    min-width: 15em;
     display: flex;
     flex-direction: column;
     gap: 0;
@@ -634,23 +585,30 @@
   .info-line {
     color: var(--ui-muted);
     line-height: 1.4;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--ui-font-family);
+    font-size: var(--ui-font-size);
+    white-space: nowrap;
   }
 
-  .info-line.cards {
-    font-size: 0.8rem;
+  .info-line .cards {
+    font-size: var(--ui-font-size);
   }
 
   .info-line.date {
-    font-size: 0.75rem;
+    font-size: calc(var(--ui-font-size) * 0.9);
+    color: var(--ui-muted);
   }
 
   .info-line.theme {
-    font-size: 0.8rem;
+    font-size: var(--ui-font-size);
     color: var(--ui-muted);
   }
 
   .actions {
-    width: 60%;
+    width: 55%;
     min-width: 280px;
     display: flex;
     flex-direction: row;
@@ -660,26 +618,49 @@
   }
 
   .action-group {
-    width: fit-content;
-    border: 1px solid var(--ui-border);
-    border-radius: 3px;
+    display: flex;
+    gap: 0.5rem;
     padding: 0.5rem;
     margin: 0;
+    border: 1px solid var(--ui-border);
+    border-radius: 4px;
+    background: var(--ui-bg);
+  }
+
+  .action-group legend {
+    font-size: calc(var(--ui-font-size) * 0.9);
+    font-family: var(--ui-font-family);
+    color: var(--ui-muted);
+    padding: 0 0.25rem;
+    background: var(--ui-bg);
   }
 
   .action-button {
-    padding: calc(var(--content-gap) * 0.75) var(--content-gap);
+    padding: 0.4rem 0.75rem;
     border: 1px solid var(--button-border);
     border-radius: 4px;
     background: var(--button-bg);
     color: var(--button-text);
     font-size: var(--ui-font-size);
+    font-family: var(--ui-font-family);
     cursor: pointer;
     transition: all 0.2s;
+    white-space: nowrap;
   }
 
   .action-button:hover {
     background: var(--button-hover-bg);
+    border-color: var(--button-primary-bg);
+  }
+
+  .action-button.danger {
+    color: var(--toast-error);
+    border-color: var(--toast-error);
+  }
+
+  .action-button.danger:hover {
+    background: var(--toast-error);
+    color: white;
   }
 
   .action-button:disabled {
@@ -692,7 +673,8 @@
     border: none;
     background: none;
     cursor: pointer;
-    font-size: 1rem;
+    font-size: var(--ui-font-size);
+    font-family: var(--ui-font-family);
     color: var(--ui-text);
     opacity: 0.7;
     transition: opacity 0.2s;
@@ -700,5 +682,138 @@
 
   .icon-button:hover {
     opacity: 1;
+  }
+
+  .theme-select {
+    font-size: var(--ui-font-size);
+    font-family: var(--ui-font-family);
+    padding: 0.25rem;
+    border: 1px solid var(--ui-border);
+    border-radius: 3px;
+    background: var(--ui-bg);
+    color: var(--ui-text);
+    max-width: 8em;
+  }
+
+  .theme-select:hover {
+    border-color: var(--button-primary-bg);
+  }
+
+  .theme-select:focus {
+    outline: none;
+    border-color: var(--button-primary-bg);
+    box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.1);
+  }
+
+  /* Dialog styles */
+  .dialog {
+    font-family: var(--ui-font-family);
+  }
+
+  .dialog input {
+    font-family: var(--ui-font-family);
+    font-size: var(--ui-font-size);
+  }
+
+  .selection-count {
+    font-family: var(--ui-font-family);
+    font-size: var(--ui-font-size);
+    color: var(--ui-muted);
+  }
+
+  .character-info {
+    font-family: var(--ui-font-family);
+    font-size: var(--ui-font-size);
+  }
+
+  .character-role {
+    font-family: var(--ui-font-family);
+    font-size: calc(var(--ui-font-size) * 0.9);
+    color: var(--ui-muted);
+  }
+
+  .date-label {
+    display: inline-block;
+    width: 4.5em;
+  }
+
+  .character-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin: 1rem 0;
+    max-height: 50vh;
+    overflow-y: auto;
+    padding: 0.5rem;
+    border: 1px solid var(--ui-border);
+    border-radius: 4px;
+    background: var(--ui-bg);
+  }
+
+  .character-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+
+  .character-item:hover {
+    background: var(--ui-hover-bg);
+  }
+
+  .character-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .character-info strong {
+    font-family: var(--ui-font-family);
+    font-size: var(--ui-font-size);
+    color: var(--ui-text);
+  }
+
+  .character-role {
+    font-family: var(--ui-font-family);
+    font-size: calc(var(--ui-font-size) * 0.9);
+    color: var(--ui-muted);
+  }
+
+  .selection-controls {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--ui-border);
+  }
+
+  .selection-count {
+    margin-left: auto;
+  }
+
+  .copy-options {
+    margin-top: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .copy-options select,
+  .copy-options input {
+    padding: 0.5rem;
+    border: 1px solid var(--ui-border);
+    border-radius: 4px;
+    font-family: var(--ui-font-family);
+    font-size: var(--ui-font-size);
+  }
+
+  .dialog-buttons {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+    margin-top: 0.5rem;
   }
 </style> 

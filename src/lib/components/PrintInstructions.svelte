@@ -83,6 +83,8 @@
     max-width: 90vw;
     max-height: 90vh;
     width: 600px;
+    background: var(--dialog-bg);
+    color: var(--ui-text);
   }
 
   .print-dialog::backdrop {
@@ -93,43 +95,45 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1rem;
-    background: #f5f5f5;
-    border-bottom: 1px solid #eee;
+    padding: var(--ui-spacing);
+    background: var(--ui-hover-bg);
+    border-bottom: 1px solid var(--ui-border);
     border-radius: 8px 8px 0 0;
   }
 
   .dialog-header h2 {
     margin: 0;
-    font-size: 1.2rem;
-    color: #333;
+    font-size: var(--ui-title-size);
+    font-family: var(--ui-font-family);
+    color: var(--ui-text);
   }
 
   .close-button {
     background: none;
     border: none;
     font-size: 1.5rem;
-    color: #666;
+    color: var(--ui-muted);
     cursor: pointer;
     padding: 0.25rem 0.5rem;
     border-radius: 4px;
   }
 
   .close-button:hover {
-    background: #e8e8e8;
-    color: #333;
+    background: var(--ui-active-bg);
+    color: var(--ui-text);
   }
 
   .dialog-content {
-    padding: 1rem;
+    padding: var(--ui-spacing);
     overflow-y: auto;
     max-height: calc(90vh - 4rem);
   }
 
   h3 {
-    color: #2196f3;
+    color: var(--button-primary-bg);
     margin: 1.5rem 0 0.5rem;
-    font-size: 1.1rem;
+    font-size: var(--ui-font-size);
+    font-family: var(--ui-font-family);
   }
 
   h3:first-child {
@@ -144,14 +148,16 @@
   li {
     margin: 0.5rem 0;
     line-height: 1.4;
+    font-size: var(--ui-font-size);
   }
 
   p {
     margin: 0.5rem 0;
     line-height: 1.4;
+    font-size: var(--ui-font-size);
   }
 
   strong {
-    color: #1976d2;
+    color: var(--button-primary-bg);
   }
 </style> 
