@@ -222,6 +222,7 @@
     position: absolute;
     left: 0;
     top: 0;
+    opacity: var(--portrait-flourish-top-left-opacity, 1);  /* Default to 1 if not set */
   }
 
   .portrait-flourish.top-right {
@@ -239,23 +240,26 @@
     transform: rotate(180deg);
   }
 
-  /* Content flourishes - small and dark */
+  /* Content flourishes - make them as large as portrait flourishes */
   .content-flourish {
-    --flourish-size: 2rem;
+    --flourish-size: min(35%, 5rem);  /* Same as portrait flourishes */
     --flourish-aspect: var(--content-flourish-aspect, 1);
+    opacity: 1;  /* Full opacity since color contrast works well */
   }
 
   .content-flourish.top-left {
     position: absolute;
-    left: var(--content-gap);
-    top: var(--content-gap);
+    left: -1px;
+    top: -1px;
+    z-index: 1;  /* Put behind text */
   }
 
   .content-flourish.top-right {
     position: absolute;
-    right: var(--content-gap);
-    top: var(--content-gap);
+    right: -1px;
+    top: -1px;
     transform: rotate(90deg);
+    z-index: 1;  /* Put behind text */
   }
 
   /* Debug styles for flourishes - only show in dev mode */
@@ -295,6 +299,7 @@
     border-radius: var(--content-box-radius);
     border: var(--content-box-border);
     box-shadow: var(--content-box-shadow);
+    overflow: hidden;  /* Keep flourishes contained */
   }
 
   h2 {
@@ -305,7 +310,7 @@
     font-family: var(--theme-title-font);
     text-align: center;
     position: relative;
-    z-index: 3;
+    z-index: 3;  /* Ensure text stays on top */
   }
 
   .role {

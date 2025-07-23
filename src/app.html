@@ -6,7 +6,7 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		
 		<!-- Theme Fonts -->
-		<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Graduate&family=Jim+Nightshade&family=Lato:wght@400;700&family=Montserrat:wght@400;700&family=Open+Sans:wght@400;700&family=Orbitron:wght@400;700&family=Pirata+One&family=Roboto+Condensed:wght@400;700&family=Share+Tech+Mono&display=swap" />
+		<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Graduate&family=Jim+Nightshade&family=Lato:wght@400;700&family=Montserrat:wght@400;700&family=Open+Sans:wght@400;700&family=Orbitron:wght@400;700&family=Pirata+One&family=Roboto+Condensed:wght@400;700&family=Share+Tech+Mono&family=Ballet&family=Eagle+Lake&display=swap" />
 
 		<!-- SVG Sprite Sheet -->
 		<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
@@ -16,10 +16,59 @@
 				<line x1="0" y1="20" x2="100" y2="20" stroke="currentColor" stroke-width="4"/>
 			</symbol>
 			
-			<!-- Manuscript flourish (we can make this more ornate later) -->
+			<!-- Manuscript flourish -->
 			<symbol id="flourish-manuscript" viewBox="0 0 100 100">
 				<line x1="20" y1="0" x2="20" y2="100" stroke="currentColor" stroke-width="4"/>
 				<line x1="0" y1="20" x2="100" y2="20" stroke="currentColor" stroke-width="4"/>
+			</symbol>
+
+			<!-- Cyberdeck flourish -->
+			<symbol id="flourish-cyberdeck" viewBox="0 0 100 100">
+				<!-- Main circuit traces -->
+				<path d="M0 20 H15 L20 15 H40" stroke="currentColor" stroke-width="1.5" fill="none"/>
+				<path d="M20 0 V15 L25 20 V40" stroke="currentColor" stroke-width="1.5" fill="none"/>
+				<path d="M40 15 H55 L60 20 H75" stroke="currentColor" stroke-width="1.5" fill="none"/>
+				<path d="M25 40 V55 L30 60 V75" stroke="currentColor" stroke-width="1.5" fill="none"/>
+				
+				<!-- Connection points -->
+				<circle cx="40" cy="15" r="2" fill="currentColor"/>
+				<circle cx="25" cy="40" r="2" fill="currentColor"/>
+				<circle cx="75" cy="20" r="2" fill="currentColor"/>
+				<circle cx="30" cy="75" r="2" fill="currentColor"/>
+				
+				<!-- Circuit pads -->
+				<rect x="18" y="13" width="4" height="4" fill="currentColor"/>
+				<rect x="38" y="13" width="4" height="4" stroke="currentColor" stroke-width="1" fill="none"/>
+				<rect x="23" y="38" width="4" height="4" stroke="currentColor" stroke-width="1" fill="none"/>
+				<rect x="58" y="18" width="4" height="4" fill="currentColor"/>
+				<rect x="28" y="58" width="4" height="4" fill="currentColor"/>
+				
+				<!-- Branch traces -->
+				<path d="M40 15 V30 L45 35" stroke="currentColor" stroke-width="1" fill="none"/>
+				<path d="M25 40 H40 L45 45" stroke="currentColor" stroke-width="1" fill="none"/>
+				<circle cx="45" cy="35" r="1.5" fill="none" stroke="currentColor" stroke-width="1"/>
+				<circle cx="45" cy="45" r="1.5" fill="currentColor"/>
+				
+				<!-- Dotted continuation traces -->
+				<path d="M75 20 H90" stroke="currentColor" stroke-width="1" stroke-dasharray="4 2"/>
+				<path d="M30 75 V90" stroke="currentColor" stroke-width="1" stroke-dasharray="4 2"/>
+				<path d="M45 35 H60" stroke="currentColor" stroke-width="1" stroke-dasharray="3 2"/>
+				<path d="M45 45 V60" stroke="currentColor" stroke-width="1" stroke-dasharray="3 2"/>
+			</symbol>
+
+			<!-- Telperion flourish -->
+			<symbol id="flourish-telperion" viewBox="0 0 100 100">
+				<!-- Main flowing curve -->
+				<path d="M0 30 C30 30, 40 10, 80 25 S95 35, 100 30" 
+					stroke="currentColor" stroke-width="1.5" fill="none"/>
+				
+				<!-- Single elegant secondary curve -->
+				<path d="M30 27 C45 27, 55 15, 75 22" 
+					stroke="currentColor" stroke-width="1" fill="none"/>
+				
+				<!-- Subtle accent curve -->
+				<path d="M40 25 C50 25, 60 18, 70 20" 
+					stroke="currentColor" stroke-width="0.75" fill="none"/>
 			</symbol>
 
 			<!-- Add more flourish definitions here -->

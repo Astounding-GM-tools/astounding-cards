@@ -6,7 +6,7 @@
 /* Import all themes */
 @import './classic.css';
 @import './manuscript.css';
-@import './nature.css';
+@import './telperion.css';
 @import './modern.css';
-@import './tech.css';
+@import './cyberdeck.css';
 @import './vintage.css'; 

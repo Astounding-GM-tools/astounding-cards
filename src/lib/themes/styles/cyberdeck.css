@@ -1,0 +1,63 @@
+/* Cyberdeck Theme - High-tech, digital aesthetic */
+:root[data-theme="cyberdeck"] {
+  /* Core Theme Colors */
+  --theme-primary: #00b4d8;     /* Neon blue, but more subdued */
+  --theme-secondary: #1a1a1a;   /* Dark gray */
+  --theme-accent: #00ff41;      /* Matrix green for small accents */
+  --theme-text: #1a1a1a;        /* Dark gray text */
+  --theme-background: #ffffff;  /* White background for print */
+
+  /* Typography */
+  --theme-title-font: 'Orbitron', 'Arial Black', sans-serif;  /* Sharp, geometric display font */
+  --theme-body-font: 'Share Tech Mono', monospace;            /* Monospace for that terminal feel */
+  --theme-title-weight: 700;    /* Bold titles */
+  --theme-body-weight: 400;     /* Regular for body */
+  
+  /* Font Sizes - slightly larger for better screen readability */
+  --title-font-size: 1.6em;     /* Prominent titles */
+  --role-font-size: 1.2em;      /* Clear role display */
+  --trait-font-size: 1.2em;     /* Larger traits for monospace */
+  --base-font-size: 1.1cqw;     /* Slightly larger base size */
+
+  /* Role specific styles */
+  --role-font-family: var(--theme-title-font);  /* Use Orbitron for roles too */
+
+  /* Frame Style */
+  --frame-style: solid;
+  --frame-width: 1px;
+  --frame-opacity: 1;
+
+  /* Divider Style */
+  --divider-style: solid;
+  --divider-width: 1px;
+  --divider-opacity: 0.8;
+
+  /* Content Box Style */
+  --content-box-bg: #ffffff;                    /* White background */
+  --content-box-radius: 0;                      /* Sharp corners */
+  --content-box-border: 1px solid var(--theme-primary);
+  --content-box-shadow: none;                   /* Remove glow effect for print */
+
+  /* Flourish Style */
+  --flourish-color: var(--theme-primary);
+  --flourish-opacity: 1;
+  --flourish-size: 2.5rem;
+
+  /* Portrait Flourishes */
+  --portrait-flourish-size: min(40%, 6rem);
+  --portrait-flourish-opacity: 0.8;
+
+  /* Hide top-left portrait flourish */
+  --portrait-flourish-top-left-opacity: 0;
+
+  /* Content Flourishes */
+  --content-flourish-size: 2rem;
+  --content-flourish-opacity: 0.6;
+
+  /* Print-specific overrides */
+  @media print {
+    --theme-primary: #000000;   /* Pure black for sharp prints */
+    --theme-text: #000000;      /* Pure black text */
+    --content-box-border: 1px solid black;
+  }
+} 

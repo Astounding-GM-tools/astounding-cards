@@ -112,55 +112,55 @@ export const baseThemes: Record<string, CardTheme> = {
     }
   },
 
-  nature: {
-    id: 'nature',
-    name: 'Nature',
-    description: 'Organic shapes and natural motifs',
+  telperion: {
+    id: 'telperion',
+    name: 'Telperion',
+    description: 'Elegant elven aesthetics inspired by the silver tree of Valinor',
     colors: {
-      primary: '#4B6B55',
-      secondary: '#A3B5C0',
-      accent: '#E5C39C',
-      text: '#2C3E50',
-      background: '#F5F9F2'
+      primary: '#7D98A1',      // Silvery blue-grey
+      secondary: '#2F4F4F',    // Deep forest grey
+      accent: '#C0D8D8',       // Pale silver-blue
+      text: '#2C3E50',         // Deep blue-grey
+      background: '#F5F9F9'    // Very pale silver
     },
     typography: {
       titleFont: 'Cinzel, serif',
       bodyFont: 'Lato, sans-serif',
       nameSize: '1.6rem',
-      roleSize: '1.1rem',
-      bodySize: '0.95rem'
+      roleSize: '1.2rem',
+      bodySize: '1rem'
     },
     decoration: {
       borderStyle: 'organic',
-      cornerStyle: 'leafy',
-      frameStyle: 'nature',
-      patternUrl: '/flourishes/nature.svg'
+      cornerStyle: 'flowing',
+      frameStyle: 'telperion',
+      patternUrl: '/flourishes/telperion.svg'
     }
   },
 
-  tech: {
-    id: 'tech',
-    name: 'Tech',
+  cyberdeck: {
+    id: 'cyberdeck',
+    name: 'Cyberdeck',
     description: 'High-tech aesthetic with digital elements',
     colors: {
-      primary: '#FF0055',
-      secondary: '#00FFF5',
-      accent: '#FFE600',
-      text: '#FFFFFF',
-      background: '#0D0221'
+      primary: '#00ff41',     // Matrix green
+      secondary: '#0a1612',   // Deep cyber black
+      accent: '#00b4d8',      // Neon blue
+      text: '#e0e0e0',        // Light gray
+      background: '#0a1612'   // Deep cyber black
     },
     typography: {
       titleFont: 'Orbitron, sans-serif',
       bodyFont: 'Share Tech Mono, monospace',
-      nameSize: '1.5rem',
-      roleSize: '1rem',
-      bodySize: '0.9rem'
+      nameSize: '1.6rem',
+      roleSize: '1.2rem',
+      bodySize: '1rem'
     },
     decoration: {
-      borderStyle: 'circuit',
+      borderStyle: 'solid',
       cornerStyle: 'tech',
       frameStyle: 'digital',
-      patternUrl: '/flourishes/tech.svg'
+      patternUrl: '/flourishes/tech.svg'  // We can keep using the tech flourish for now
     }
   },
 

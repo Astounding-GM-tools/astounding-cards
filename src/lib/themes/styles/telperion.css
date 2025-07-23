@@ -1,0 +1,53 @@
+/* Telperion Theme - Inspired by the silver tree of Valinor */
+:root[data-theme="telperion"] {
+  /* Core Theme Colors */
+  --theme-primary: #7D98A1;    /* Silvery blue-grey */
+  --theme-secondary: #2F4F4F;  /* Deep forest grey */
+  --theme-accent: #C0D8D8;     /* Pale silver-blue */
+  --theme-text: #2C3E50;       /* Deep blue-grey */
+  --theme-background: #F5F9F9; /* Very pale silver */
+
+  /* Typography */
+  --theme-title-font: 'Ballet', cursive;        /* Art Nouveau elegance */
+  --theme-body-font: 'Eagle Lake', cursive;     /* Medieval manuscript style */
+  --theme-title-weight: 400;   /* Ballet has only 400 */
+  --theme-body-weight: 400;    /* Eagle Lake has only 400 */
+  
+  /* Font Sizes */
+  --title-font-size: 2.4em;    /* Ballet needs to be a bit larger */
+  --role-font-size: 1.6em;     /* Also use Ballet for roles */
+  --trait-font-size: 1.1em;    /* Eagle Lake needs a bit more size */
+  --base-font-size: 1.1cqw;    /* Slightly larger base size */
+
+  /* Role specific styles */
+  --role-font-family: var(--theme-title-font);  /* Use Ballet for roles too */
+
+  /* Frame Style */
+  --frame-style: solid;
+  --frame-width: 1px;
+  --frame-opacity: 0.8;
+
+  /* Divider Style */
+  --divider-style: solid;
+  --divider-width: 1px;
+  --divider-opacity: 0.6;
+
+  /* Content Box Style */
+  --content-box-bg: rgba(245, 249, 249, 0.95);  /* Slightly transparent pale silver */
+  --content-box-radius: 2px;
+  --content-box-border: 1px solid var(--theme-primary);
+  --content-box-shadow: 0 0 10px rgba(125, 152, 161, 0.1);  /* Subtle silvery glow */
+
+  /* Flourish Style */
+  --flourish-color: var(--theme-primary);
+  --flourish-opacity: 0.9;
+  --flourish-size: 3rem;
+
+  /* Portrait Flourishes */
+  --portrait-flourish-size: min(40%, 6rem);
+  --portrait-flourish-opacity: 0.8;
+
+  /* Content Flourishes */
+  --content-flourish-size: 2.5rem;
+  --content-flourish-opacity: 0.7;
+} 
