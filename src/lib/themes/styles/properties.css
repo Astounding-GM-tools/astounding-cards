@@ -189,6 +189,12 @@
   inherits: true;
 }
 
+@property --content-box-border-width {
+  syntax: '<length>';
+  initial-value: 0px;
+  inherits: true;
+}
+
 @property --content-box-shadow {
   syntax: '*';
   initial-value: none;

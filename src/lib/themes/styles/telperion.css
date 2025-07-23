@@ -35,7 +35,8 @@
   /* Content Box Style */
   --content-box-bg: rgba(245, 249, 249, 0.95);  /* Slightly transparent pale silver */
   --content-box-radius: 2px;
-  --content-box-border: 1px solid var(--theme-primary);
+  --content-box-border-width: 1px;              /* Border width for flourish alignment */
+  --content-box-border: var(--content-box-border-width) solid var(--theme-primary);
   --content-box-shadow: 0 0 10px rgba(125, 152, 161, 0.1);  /* Subtle silvery glow */
 
   /* Flourish Style */

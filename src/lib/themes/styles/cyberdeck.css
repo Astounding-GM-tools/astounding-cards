@@ -35,7 +35,8 @@
   /* Content Box Style */
   --content-box-bg: #ffffff;                    /* White background */
   --content-box-radius: 0;                      /* Sharp corners */
-  --content-box-border: 1px solid var(--theme-primary);
+  --content-box-border-width: 1px;              /* Border width for flourish alignment */
+  --content-box-border: var(--content-box-border-width) solid var(--theme-primary);
   --content-box-shadow: none;                   /* Remove glow effect for print */
 
   /* Flourish Style */

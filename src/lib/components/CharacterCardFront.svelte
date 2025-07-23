@@ -249,15 +249,15 @@
 
   .content-flourish.top-left {
     position: absolute;
-    left: -1px;
-    top: -1px;
+    left: calc(-1 * var(--content-box-border-width, 0px));
+    top: calc(-1 * var(--content-box-border-width, 0px));
     z-index: 1;  /* Put behind text */
   }
 
   .content-flourish.top-right {
     position: absolute;
-    right: -1px;
-    top: -1px;
+    right: calc(-1 * var(--content-box-border-width, 0px));
+    top: calc(-1 * var(--content-box-border-width, 0px));
     transform: rotate(90deg);
     z-index: 1;  /* Put behind text */
   }
