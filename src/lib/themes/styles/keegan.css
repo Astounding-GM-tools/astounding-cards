@@ -1,0 +1,137 @@
+/* Keegan Theme - 70s Trading Card Style */
+
+/* Double attribute selector for higher specificity */
+[data-theme="keegan"][data-theme="keegan"] {
+  /* Core Theme Colors */
+  --theme-primary: #D42E12;      /* That classic 70s sports card red */
+  --theme-secondary: #1B4B8A;    /* Deep blue for borders */
+  --theme-text: #1A1A1A;         /* Rich black for text */
+  --theme-background: #F4F1E9;   /* Slightly off-white for card stock */
+  --theme-gray: #666666;         /* Gray for traits */
+
+  /* Typography */
+  --theme-title-font: 'Helvetica Compressed', 'Trade Gothic Condensed', 'Arial Narrow', sans-serif;
+  --theme-title-weight: 800;
+  --theme-body-font: 'Helvetica', 'Arial', sans-serif;
+  --title-font-size: 1.2rem;
+  --role-font-size: 1.2rem;
+  --trait-font-size: 0.9rem;
+  --trait-label-width: 5rem;
+  --trait-gap: 0.5rem;
+  
+  /* Card Structure */
+  --card-padding: 0;
+  --content-gap: 1rem;
+  --content-box-radius: 0;
+  --content-box-border: 3px solid var(--theme-secondary);
+  --content-box-shadow: 
+    0 0 0 1px white,
+    0 0 0 4px var(--theme-secondary);
+
+  /* Content Box */
+  --content-box-bg: white;
+  --content-opacity: 1;
+
+  /* Hide flourishes */
+  --portrait-flourish-aspect: 0;
+  --content-flourish-aspect: 0;
+}
+
+/* Card base with double border */
+[data-theme="keegan"][data-theme="keegan"] .card {
+  border: 3px solid var(--theme-secondary);
+  box-shadow: 
+    0 0 0 1px white,
+    0 0 0 4px var(--theme-secondary);
+  background: white;
+}
+
+/* Content area with proper padding */
+[data-theme="keegan"][data-theme="keegan"] .content {
+  background: white;
+  padding: 0;
+  margin-top: 60%;
+}
+
+/* Name styling - with raster background effect */
+[data-theme="keegan"][data-theme="keegan"] h2 {
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  margin: 0;
+  padding: 0.5rem;
+  width: 100%;
+  max-width: initial;
+  text-align: center;
+  line-height: 1;
+  font-size: var(--title-font-size);
+  color: var(--theme-text);
+  background-color: white;
+  background-image: 
+    radial-gradient(
+      circle at 1px 1px,
+      var(--theme-primary) 0.5px,
+      white 1px
+    );
+  background-size: 3px 3px;
+  background-repeat: repeat;
+}
+
+/* Role styling - red block with raster effect */
+[data-theme="keegan"][data-theme="keegan"] .role {
+  background-color: white;
+  background-image: 
+    radial-gradient(
+      circle at 1px 1px,
+      var(--theme-secondary) 0.5px,
+      white 1px
+    );
+  background-size: 3px 3px;
+  background-repeat: repeat;
+  color: var(--theme-text);
+  padding: 0.4rem;
+  margin: 0;
+  width: 100%;
+  max-width: initial;
+  text-align: center;
+  text-transform: uppercase;
+  font-weight: bold;
+  letter-spacing: 0.05em;
+  line-height: 1.2;
+  font-size: var(--role-font-size);
+}
+
+/* Traits styling - tighter spacing */
+[data-theme="keegan"][data-theme="keegan"] .traits {
+  margin-top: 1.5rem;
+  color: var(--theme-gray);
+  font-size: var(--trait-font-size);
+  line-height: 1.6;
+}
+
+[data-theme="keegan"][data-theme="keegan"] .trait-label {
+  font-weight: bold;
+  display: inline-block;
+  width: var(--trait-label-width);
+  margin-right: var(--trait-gap);
+}
+
+/* Image Treatment */
+[data-theme="keegan"][data-theme="keegan"] .card-image {
+  filter: contrast(1.1) saturate(0.95);
+  mix-blend-mode: multiply;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 60%;
+  object-fit: cover;
+}
+
+/* Age badge */
+[data-theme="keegan"][data-theme="keegan"] .stat-container {
+  background: white;
+  padding: 0.3rem 0.6rem;
+  border-radius: 0.3rem;
+  font-weight: bold;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+} 

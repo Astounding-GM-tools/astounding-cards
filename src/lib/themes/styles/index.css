@@ -5,8 +5,9 @@
 
 /* Import all themes */
 @import './classic.css';
-@import './manuscript.css';
-@import './telperion.css';
-@import './modern.css';
+@import './scriptorum.css';
+@import './cordial.css';
 @import './cyberdeck.css';
-@import './vintage.css'; 
+
+/* Themes in development */
+/* @import './keegan.css'; */ 

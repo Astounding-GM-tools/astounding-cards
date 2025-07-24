@@ -103,11 +103,16 @@ For consistent theme application:
   - [x] Proper z-index layering
 - [ ] Complete theme styles
   - [ ] Create remaining theme assets (patterns, borders)
-  - [ ] Implement remaining themes (Nature, Modern, Tech, Vintage)
+  - [ ] Finish Keegan theme development (vintage trading card style)
   - [ ] Add theme previews in selector
   - [ ] Add theme customization options
   - [ ] Ensure proper contrast ratios
   - [ ] Test with different paper types
+- [ ] Future themes to consider
+  - [ ] Western theme "Drifters" (wanted posters & playing cards aesthetic)
+  - [ ] Contemporary/Corporate theme (TBD)
+  - [ ] Nature theme
+  - [ ] Additional vintage styles
 - [ ] Theme-specific features
   - [ ] Add theme-specific corner flourish designs
   - [ ] Implement divider styles per theme

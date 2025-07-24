@@ -1,9 +1,13 @@
 <script lang="ts">
+  import { currentDeck } from '$lib/stores/cards';
   export let showCropMarks = true;
   export let children: () => any;
+
+  // Get theme from current deck
+  $: theme = $currentDeck?.meta?.theme || 'classic';
 </script>
 
-<div class="card" class:show-crop-marks={showCropMarks}>
+<div class="card theme-{theme}" class:show-crop-marks={showCropMarks}>
   {@render children()}
 </div>
 

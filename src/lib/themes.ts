@@ -60,9 +60,9 @@ export const baseThemes: Record<string, CardTheme> = {
     }
   },
 
-  manuscript: {
-    id: 'manuscript',
-    name: 'Manuscript',
+  scriptorum: {
+    id: 'scriptorum',
+    name: 'Scriptorum',
     description: 'Rich textures and illuminated manuscript style',
     colors: {
       primary: '#8B0000',
@@ -86,36 +86,10 @@ export const baseThemes: Record<string, CardTheme> = {
     }
   },
 
-  modern: {
-    id: 'modern',
-    name: 'Modern',
-    description: 'Clean geometric shapes and strong typography',
-    colors: {
-      primary: '#1A237E',
-      secondary: '#424242',
-      accent: '#B71C1C',
-      text: '#212121',
-      background: '#FFFFFF'
-    },
-    typography: {
-      titleFont: 'Montserrat, sans-serif',
-      bodyFont: 'Open Sans, sans-serif',
-      nameSize: '1.4rem',
-      roleSize: '1rem',
-      bodySize: '0.9rem'
-    },
-    decoration: {
-      borderStyle: 'solid',
-      cornerStyle: 'geometric',
-      frameStyle: 'modern',
-      patternUrl: '/flourishes/modern.svg'
-    }
-  },
-
-  telperion: {
-    id: 'telperion',
-    name: 'Telperion',
-    description: 'Elegant elven aesthetics inspired by the silver tree of Valinor',
+  cordial: {
+    id: 'cordial',
+    name: 'Cordial',
+    description: 'Elegant aesthetics with flowing organic elements',
     colors: {
       primary: '#7D98A1',      // Silvery blue-grey
       secondary: '#2F4F4F',    // Deep forest grey
@@ -133,8 +107,8 @@ export const baseThemes: Record<string, CardTheme> = {
     decoration: {
       borderStyle: 'organic',
       cornerStyle: 'flowing',
-      frameStyle: 'telperion',
-      patternUrl: '/flourishes/telperion.svg'
+      frameStyle: 'cordial',
+      patternUrl: '/flourishes/cordial.svg'
     }
   },
 
@@ -160,35 +134,38 @@ export const baseThemes: Record<string, CardTheme> = {
       borderStyle: 'solid',
       cornerStyle: 'tech',
       frameStyle: 'digital',
-      patternUrl: '/flourishes/tech.svg'  // We can keep using the tech flourish for now
+      patternUrl: '/flourishes/tech.svg'
     }
-  },
+  }
 
-  vintage: {
-    id: 'vintage',
-    name: 'Vintage',
-    description: 'Retro aesthetics with aged effects',
+  // Keegan theme temporarily disabled while in development
+  /*
+  keegan: {
+    id: 'keegan',
+    name: 'Keegan',
+    description: 'A vintage 70s trading card theme inspired by classic football cards',
     colors: {
-      primary: '#F57C00',
-      secondary: '#795548',
-      accent: '#FDD835',
-      text: '#212121',
-      background: '#FFFDE7'
+      primary: '#D42E12',
+      secondary: '#1B4B8A',
+      accent: '#F4D03F',
+      text: '#1A1A1A',
+      background: '#F4F1E9'
     },
     typography: {
-      titleFont: 'Graduate, serif',
-      bodyFont: 'Roboto Condensed, sans-serif',
-      nameSize: '1.6rem',
-      roleSize: '1.2rem',
+      titleFont: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      bodyFont: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      nameSize: '1.4rem',
+      roleSize: '1rem',
       bodySize: '0.9rem'
     },
     decoration: {
-      borderStyle: 'retro',
-      cornerStyle: 'worn',
-      frameStyle: 'vintage',
-      patternUrl: '/flourishes/vintage.svg'
+      borderStyle: 'solid',
+      cornerStyle: 'simple',
+      frameStyle: 'classic',
+      patternUrl: '/flourishes/classic.svg'
     }
   }
+  */
 };
 
 // Function to create a custom theme based on a base theme
