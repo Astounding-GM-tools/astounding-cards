@@ -108,6 +108,7 @@ For consistent theme application:
   - [ ] Add theme customization options
   - [ ] Ensure proper contrast ratios
   - [ ] Test with different paper types
+  - [ ] Optimize font loading (load only fonts used by active themes)
 - [ ] Future themes to consider
   - [ ] Western theme "Drifters" (wanted posters & playing cards aesthetic)
   - [ ] Contemporary/Corporate theme (TBD)

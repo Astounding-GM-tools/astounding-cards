@@ -5,22 +5,21 @@
   --theme-secondary: #2F4F4F;  /* Deep forest grey */
   --theme-accent: #C0D8D8;     /* Pale silver-blue */
   --theme-text: #2C3E50;       /* Deep blue-grey */
-  --theme-background: #F5F9F9; /* Very pale silver */
+  --theme-background: transparent; /* Transparent background for card area */
+  --theme-text-faded: #5C6E80; /* Faded blue-grey */
 
   /* Typography */
   --theme-title-font: 'Ballet', cursive;        /* Art Nouveau elegance */
   --theme-body-font: 'Kapakana', cursive;     /* Flowing handwritten style */
   --theme-title-weight: 400;   /* Ballet has only 400 */
   --theme-body-weight: 400;    /* Kapakana has only 400 */
+  --role-font-family: var(--theme-title-font);  /* Use Ballet for roles too */
   
   /* Font Sizes */
   --title-font-size: 2.4em;    /* Ballet needs to be a bit larger */
   --role-font-size: 1.6em;     /* Also use Ballet for roles */
   --trait-font-size: 1.1em;    /* Eagle Lake needs a bit more size */
   --base-font-size: 1.1cqw;    /* Slightly larger base size */
-
-  /* Role specific styles */
-  --role-font-family: var(--theme-title-font);  /* Use Ballet for roles too */
 
   /* Frame Style */
   --frame-style: solid;
@@ -33,26 +32,18 @@
   --divider-opacity: 0.6;
 
   /* Content Box Style */
-  --content-box-bg: rgba(245, 249, 249, 0.95);  /* Slightly transparent pale silver */
+  --content-box-bg: white;     /* Solid white background for content area */
   --content-box-radius: 2px;
-  --content-box-border-width: 1px;              /* Border width for flourish alignment */
-  --content-box-border: var(--content-box-border-width) solid var(--theme-primary);
-  --content-box-shadow: 0 0 10px rgba(125, 152, 161, 0.1);  /* Subtle silvery glow */
+  --content-box-border-width: 1px;
 
-  /* Flourish Style */
+  /* Flourish System */
   --flourish-color: var(--theme-primary);
-  --flourish-opacity: 0.9;
+  --flourish-opacity: 0;  /* Disable flourishes until they look better */
   --flourish-size: 3rem;
-  --show-corner-flourish: 1;
+  --flourish-portrait-size: min(40%, 6rem);
+  --flourish-content-size: 2.5rem;
+
+  /* Show all flourishes */
+  --show-corner-flourish: 0;
   --show-dividers: 1;
-
-  /* Portrait Flourishes */
-  --portrait-flourish-size: min(40%, 6rem);
-  --portrait-flourish-opacity: 0.8;
-  --portrait-flourish-aspect: 1;
-
-  /* Content Flourishes */
-  --content-flourish-size: 2.5rem;
-  --content-flourish-opacity: 0.7;
-  --content-flourish-aspect: 1;
 } 

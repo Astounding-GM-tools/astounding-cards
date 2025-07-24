@@ -76,6 +76,7 @@
     <section class="content">
       <div class="top">
         <h2 
+          class="title back"
           contenteditable={editable}
           onblur={updateName}
           bind:this={nameElement}
@@ -184,19 +185,19 @@
     transform: scale(-1);
   }
 
-  h2 {
+  h2.title {
     margin: 0;
     font-size: var(--title-font-size);
     font-weight: var(--theme-title-weight);
     font-family: var(--theme-title-font);
-    text-align: center;
+    text-align: var(--title-text-align);
   }
 
   .desc {
     margin: var(--content-gap) 0;
     font-size: var(--role-font-size);
     line-height: 1.4;
-    text-align: center;
+    text-align: var(--desc-text-align);
     font-family: var(--theme-body-font);
   }
 

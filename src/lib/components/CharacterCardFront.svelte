@@ -154,7 +154,7 @@
       </svg>
 
       <h2 
-        class="title"
+        class="title front"
         contenteditable="true" 
         onblur={updateName}
         bind:this={nameElement}
@@ -211,6 +211,7 @@
     pointer-events: none;
     z-index: 2;
     color: var(--flourish-color, currentColor);
+    opacity: var(--flourish-opacity);
   }
 
   /* Portrait flourishes - large and light */
@@ -223,7 +224,6 @@
     position: absolute;
     left: 0;
     top: 0;
-    opacity: var(--portrait-flourish-top-left-opacity, 1);  /* Default to 1 if not set */
   }
 
   .portrait-flourish.top-right {
@@ -245,7 +245,6 @@
   .content-flourish {
     --flourish-size: min(35%, 5rem);  /* Same as portrait flourishes */
     --flourish-aspect: var(--content-flourish-aspect, 1);
-    opacity: 1;  /* Full opacity since color contrast works well */
   }
 
   .content-flourish.top-left {
@@ -253,6 +252,7 @@
     left: calc(-1 * var(--content-box-border-width, 0px));
     top: calc(-1 * var(--content-box-border-width, 0px));
     z-index: 1;  /* Put behind text */
+    opacity: var(--flourish-content-top-left-opacity, var(--flourish-opacity));
   }
 
   .content-flourish.top-right {
@@ -261,6 +261,7 @@
     top: calc(-1 * var(--content-box-border-width, 0px));
     transform: rotate(90deg);
     z-index: 1;  /* Put behind text */
+    opacity: var(--flourish-content-top-right-opacity, var(--flourish-opacity));
   }
 
   /* Debug styles for flourishes - only show in dev mode */
@@ -303,13 +304,13 @@
     overflow: hidden;  /* Keep flourishes contained */
   }
 
-  h2 {
+  h2.title {
     margin: 0 auto;
     max-width: 80%;
     font-size: var(--title-font-size);
     font-weight: var(--theme-title-weight);
     font-family: var(--theme-title-font);
-    text-align: center;
+    text-align: var(--title-text-align);
     position: relative;
     z-index: 3;  /* Ensure text stays on top */
   }
@@ -317,7 +318,7 @@
   .role {
     margin: 0.25rem auto 0;
     max-width: 80%;
-    text-align: center;
+    text-align: var(--role-text-align);
     font-family: var(--role-font-family, var(--theme-body-font));  /* Use role font if set, otherwise body font */
     font-size: var(--role-font-size);
     position: relative;
@@ -335,6 +336,7 @@
     font-size: var(--trait-font-size);
     position: relative;
     z-index: 3;
+    text-align: var(--desc-text-align);
   }
 
   .traits :global(.trait-label) {

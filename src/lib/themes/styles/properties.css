@@ -1,3 +1,12 @@
+/* IMPORTANT: 
+ * 1. Only declare new CSS variables in this file
+ * 2. Ask before adding any new variables
+ * 3. In themes, use these variables directly - don't create intermediary variables
+ * 4. If a value is needed that doesn't have a property, either:
+ *    a) Request a new property to be added here, or
+ *    b) Use the value directly in the theme
+ */
+
 /* UI Variables (not affected by themes) */
 :root {
   /* UI Colors */
@@ -62,9 +71,15 @@
   inherits: true;
 }
 
+/* Background Behavior:
+ * - theme-background: transparent allows background images on screen,
+ *   while in print both 'white' and 'transparent' result in paper color
+ * - content-box-bg must be white/solid to ensure text readability
+ *   both on screen (over images) and in print
+ */
 @property --theme-background {
   syntax: '<color>';
-  initial-value: #ffffff;
+  initial-value: transparent;
   inherits: true;
 }
 
@@ -96,6 +111,25 @@
 @property --theme-body-weight {
   syntax: '<number>';
   initial-value: 400;
+  inherits: true;
+}
+
+/* Text Alignment */
+@property --title-text-align {
+  syntax: '*';
+  initial-value: center;
+  inherits: true;
+}
+
+@property --role-text-align {
+  syntax: '*';
+  initial-value: center;
+  inherits: true;
+}
+
+@property --desc-text-align {
+  syntax: '*';
+  initial-value: left;
   inherits: true;
 }
 
@@ -241,5 +275,173 @@
 @property --content-box-shadow {
   syntax: '*';
   initial-value: none;
+  inherits: true;
+}
+
+/* Typography Sizes */
+@property --title-font-size {
+  syntax: '<length-percentage>';
+  initial-value: 2em;
+  inherits: true;
+}
+
+@property --role-font-size {
+  syntax: '<length-percentage>';
+  initial-value: 1.4em;
+  inherits: true;
+}
+
+@property --trait-font-size {
+  syntax: '<length-percentage>';
+  initial-value: 1.1em;
+  inherits: true;
+}
+
+@property --base-font-size {
+  syntax: '<length-percentage>';
+  initial-value: 1cqw;
+  inherits: true;
+}
+
+/* Role-specific Typography */
+@property --role-font-family {
+  syntax: '*';
+  initial-value: var(--theme-body-font);
+  inherits: true;
+}
+
+/* Theme Text Colors */
+@property --theme-text-faded {
+  syntax: '<color>';
+  initial-value: #666666;
+  inherits: true;
+}
+
+/* Content Box Style */
+@property --content-box-bg {
+  syntax: '<color>';
+  initial-value: white;
+  inherits: true;
+}
+
+/* Flourish Positioning System */
+@property --flourish-content-opacity {
+  syntax: '<number>';
+  initial-value: var(--flourish-opacity);
+  inherits: true;
+}
+
+@property --flourish-content-size {
+  syntax: '<length-percentage>';
+  initial-value: var(--flourish-size);
+  inherits: true;
+}
+
+@property --flourish-content-top-left-opacity {
+  syntax: '<number>';
+  initial-value: var(--flourish-content-opacity);
+  inherits: true;
+}
+
+@property --flourish-content-top-right-opacity {
+  syntax: '<number>';
+  initial-value: var(--flourish-content-opacity);
+  inherits: true;
+}
+
+@property --flourish-content-bottom-left-opacity {
+  syntax: '<number>';
+  initial-value: var(--flourish-content-opacity);
+  inherits: true;
+}
+
+@property --flourish-content-bottom-right-opacity {
+  syntax: '<number>';
+  initial-value: var(--flourish-content-opacity);
+  inherits: true;
+}
+
+@property --flourish-content-top-left-size {
+  syntax: '<length-percentage>';
+  initial-value: var(--flourish-content-size);
+  inherits: true;
+}
+
+@property --flourish-content-top-right-size {
+  syntax: '<length-percentage>';
+  initial-value: var(--flourish-content-size);
+  inherits: true;
+}
+
+@property --flourish-content-bottom-left-size {
+  syntax: '<length-percentage>';
+  initial-value: var(--flourish-content-size);
+  inherits: true;
+}
+
+@property --flourish-content-bottom-right-size {
+  syntax: '<length-percentage>';
+  initial-value: var(--flourish-content-size);
+  inherits: true;
+}
+
+/* Portrait Flourish Positioning */
+@property --flourish-portrait-opacity {
+  syntax: '<number>';
+  initial-value: var(--flourish-opacity);
+  inherits: true;
+}
+
+@property --flourish-portrait-size {
+  syntax: '<length-percentage>';
+  initial-value: var(--flourish-size);
+  inherits: true;
+}
+
+@property --flourish-portrait-top-left-opacity {
+  syntax: '<number>';
+  initial-value: var(--flourish-portrait-opacity);
+  inherits: true;
+}
+
+@property --flourish-portrait-top-right-opacity {
+  syntax: '<number>';
+  initial-value: var(--flourish-portrait-opacity);
+  inherits: true;
+}
+
+@property --flourish-portrait-bottom-left-opacity {
+  syntax: '<number>';
+  initial-value: var(--flourish-portrait-opacity);
+  inherits: true;
+}
+
+@property --flourish-portrait-bottom-right-opacity {
+  syntax: '<number>';
+  initial-value: var(--flourish-portrait-opacity);
+  inherits: true;
+}
+
+@property --flourish-portrait-top-left-size {
+  syntax: '<length-percentage>';
+  initial-value: var(--flourish-portrait-size);
+  inherits: true;
+}
+
+@property --flourish-portrait-top-right-size {
+  syntax: '<length-percentage>';
+  initial-value: var(--flourish-portrait-size);
+  inherits: true;
+}
+
+@property --flourish-portrait-bottom-left-size {
+  syntax: '<length-percentage>';
+  initial-value: var(--flourish-portrait-size);
+  inherits: true;
+}
+
+@property --flourish-portrait-bottom-right-size {
+  syntax: '<length-percentage>';
+  initial-value: var(--flourish-portrait-size);
   inherits: true;
 } 

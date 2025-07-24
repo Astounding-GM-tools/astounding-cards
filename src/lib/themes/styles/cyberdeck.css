@@ -5,61 +5,40 @@
   --theme-secondary: #1a1a1a;   /* Dark gray */
   --theme-accent: #00ff41;      /* Matrix green for small accents */
   --theme-text: #1a1a1a;        /* Dark gray text */
-  --theme-background: #ffffff;  /* White background for print */
+  --theme-background: transparent;  /* Transparent background for card area */
+  --theme-text-faded: #4a4a4a;  /* Faded text for secondary info */
 
   /* Typography */
   --theme-title-font: 'Orbitron', 'Arial Black', sans-serif;  /* Sharp, geometric display font */
   --theme-body-font: 'Share Tech Mono', monospace;            /* Monospace for that terminal feel */
   --theme-title-weight: 700;    /* Bold titles */
   --theme-body-weight: 400;     /* Regular for body */
+  --role-font-family: var(--theme-title-font);  /* Use Orbitron for roles too */
   
-  /* Font Sizes - slightly larger for better screen readability */
+  /* Font Sizes */
   --title-font-size: 1.6em;     /* Prominent titles */
   --role-font-size: 1.2em;      /* Clear role display */
   --trait-font-size: 1.2em;     /* Larger traits for monospace */
   --base-font-size: 1.1cqw;     /* Slightly larger base size */
 
-  /* Role specific styles */
-  --role-font-family: var(--theme-title-font);  /* Use Orbitron for roles too */
-
-  /* Frame Style */
-  --frame-style: solid;
-  --frame-width: 1px;
-  --frame-opacity: 1;
-
-  /* Divider Style */
-  --divider-style: solid;
-  --divider-width: 1px;
-  --divider-opacity: 0.8;
-
   /* Content Box Style */
   --content-box-bg: #ffffff;                    /* White background */
   --content-box-radius: 0;                      /* Sharp corners */
   --content-box-border-width: 1px;              /* Border width for flourish alignment */
-  --content-box-border: var(--content-box-border-width) solid var(--theme-primary);
-  --content-box-shadow: none;                   /* Remove glow effect for print */
 
-  /* Flourish Style */
+  /* Flourish System */
   --flourish-color: var(--theme-primary);
   --flourish-opacity: 1;
   --flourish-size: 2.5rem;
-
-  /* Portrait Flourishes */
-  --portrait-flourish-size: min(40%, 6rem);
-  --portrait-flourish-opacity: 0.8;
-
-  /* Hide top-left portrait flourish */
-  --portrait-flourish-top-left-opacity: 0;
-
-  /* Content Flourishes */
-  --content-flourish-size: 2rem;
-  --content-flourish-opacity: 0.6;
+  --flourish-portrait-size: min(40%, 6rem);
+  --flourish-portrait-top-left-opacity: 0;      /* Hide top-left portrait flourish */
+  --flourish-content-size: 2rem;
 
   /* Print-specific overrides */
   @media print {
     --theme-primary: #000000;   /* Pure black for sharp prints */
     --theme-text: #000000;      /* Pure black text */
+    --theme-accent: #000000;    /* Black instead of neon green */
     --content-box-border-width: 1px;
-    --content-box-border: var(--content-box-border-width) solid black;
   }
 } 
