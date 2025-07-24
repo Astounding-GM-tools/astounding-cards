@@ -154,6 +154,7 @@
       </svg>
 
       <h2 
+        class="title"
         contenteditable="true" 
         onblur={updateName}
         bind:this={nameElement}

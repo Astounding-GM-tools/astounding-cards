@@ -1,56 +1,60 @@
-/* Manuscript Theme - Rich textures and illuminated manuscript style */
-:root[data-theme="manuscript"] {
-  /* Core Theme Colors */
-  --theme-primary: #8B0000;     /* Deep red */
-  --theme-secondary: #2F4F4F;   /* Dark slate */
-  --theme-accent: #DAA520;      /* Golden */
-  --theme-text: #2C1810;        /* Dark brown */
+/* Scriptorum Theme - Rich textures and illuminated manuscript style */
+:root[data-theme="scriptorum"] {
+  /* Colors */
+  --theme-primary: #8B4513;      /* Sepia brown for ink */
+  --theme-secondary: #2F4F4F;    /* Dark slate for aged look */
+  --theme-accent: #8B0000;       /* Dark red for emphasis */
+  --theme-background: #F5F5DC;   /* Beige for aged paper */
+  --theme-text: #000000;         /* Black text */
   --theme-text-faded: #594D47;  /* Lighter brown for aged ink effect */
 
+  /* Content area */
+  --content-box-border-width: 1px;  /* Set initial border width */
+  --content-box-bg: white;
+  --content-box-border: var(--content-box-border-width) solid var(--theme-secondary);
+  --content-box-radius: 0;
+
   /* Typography */
-  --theme-title-font: 'Pirata One', cursive;      /* Ornate display font - only regular weight */
-  --theme-body-font: 'Jim Nightshade', cursive;   /* Flowing script font - only regular weight */
+  --theme-title-font: 'UnifrakturMaguntia', cursive;      /* Gothic blackletter font */
+  --theme-body-font: 'Eagle Lake', cursive;   /* Medieval manuscript style - only regular weight */
   --theme-title-weight: 400;    /* Only regular available */
   --theme-body-weight: 400;     /* Only regular available */
-  
+   
   /* Font Sizes - using size for emphasis since we don't have weights */
   --title-font-size: 2em;       /* Large for titles */
-  --role-font-size: 5cqw;       /* Larger for flowing script */
-  --trait-font-size: 1.6em;     /* Increased for better readability */
-  --base-font-size: 1.1cqw;     /* Slightly larger base size */
+  --role-font-size: 3.5cqw;     /* Decreased from 5cqw */
+  --trait-font-size: 1.2em;     /* Decreased from 1.6em */
+  --base-font-size: 1cqw;       /* Decreased from 1.1cqw */
 
   /* Role specific styles */
   --role-font-family: var(--theme-body-font);  /* Use flowing script for role */
+}
 
-  /* Strong/Emphasis styles - can't use weight, use size instead */
-  --strong-scale: 1.15;         /* Scale up instead of bold */
-  --emphasis-skew: 0deg;        /* No skew needed - font is already script-like */
+/* Left align all text to match handwritten manuscript style */
+[data-theme="scriptorum"] h2,
+[data-theme="scriptorum"] .role,
+[data-theme="scriptorum"] .desc {
+  text-align: left !important;
+}
 
-  /* Frame Style */
-  --frame-style: double;
-  --frame-width: 3px;
+/* Illuminated capital letters */
+[data-theme="scriptorum"] .title::first-letter {
+  font-size: 175%;
+  float: left;
+  margin: 0;
+  font-family: var(--theme-title-font);
+  color: var(--theme-primary);
+  line-height: 0.8;
+  padding-top: 2mm;
+}
 
-  /* Flourish Style */
-  --flourish-color: var(--theme-primary);
-  --flourish-opacity: 0.8;
-  --flourish-size: 3rem;  /* Larger than default */
-
-  /* Portrait Flourishes */
-  --portrait-flourish-size: min(40%, 6rem);  /* Larger than default */
-  --portrait-flourish-opacity: 0.8;
-
-  /* Content Flourishes */
-  --content-flourish-size: 2.5rem;  /* Larger than default */
-  --content-flourish-opacity: 0.6;
-
-  /* Content Box Style - Front Only */
-  --content-box-bg: #F4E4BC;    /* Aged parchment, only for front content area */
-  --content-box-radius: 0;      /* Sharp corners */
-  --content-box-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-
-  /* Back Card Style */
-  --back-content-box-bg: transparent;  /* No background on back */
-  --back-content-text: var(--theme-text-faded);  /* Faded ink effect */
+[data-theme="scriptorum"] .desc::first-letter {
+  font-size: 200%;
+  float: left;
+  margin: 0;
+  font-family: var(--theme-body-font);
+  color: var(--theme-primary);
+  line-height: 1;
 }
 
 /* TODO: Future Flourish Possibilities

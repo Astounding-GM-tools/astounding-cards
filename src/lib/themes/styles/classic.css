@@ -1,5 +1,9 @@
 /* Classic Theme - Clean, minimalist design focused on readability */
 /* This theme uses all default values as defined in properties.css */
 :root[data-theme="classic"] {
-  /* No overrides needed - this is our default theme */
+  /* Content Box Style */
+  --content-box-bg: white;
+  --content-box-radius: 0;
+  --content-box-border-width: 1px;
+  --content-box-border: var(--content-box-border-width) solid var(--theme-secondary);
 } 

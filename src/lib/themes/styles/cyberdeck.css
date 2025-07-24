@@ -59,6 +59,7 @@
   @media print {
     --theme-primary: #000000;   /* Pure black for sharp prints */
     --theme-text: #000000;      /* Pure black text */
-    --content-box-border: 1px solid black;
+    --content-box-border-width: 1px;
+    --content-box-border: var(--content-box-border-width) solid black;
   }
 } 
