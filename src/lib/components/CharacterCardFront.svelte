@@ -80,6 +80,7 @@
 <Card {showCropMarks} theme={activeTheme}>
   <div 
     class="card-content"
+    class:preview={character.type === 'Preview'}
     style:background-image={character.portrait ? `url('/portraits/${character.portrait}')` : 'none'}
   >
     <!-- Top portrait flourishes -->
@@ -415,5 +416,31 @@
     .image-input {
       display: none;
     }
+  }
+
+  /* Preview card styles */
+  .card-content.preview {
+    font-size: calc(var(--base-font-size) * 0.8);
+  }
+
+  .card-content.preview .title {
+    font-size: calc(var(--title-font-size) * 0.8);
+  }
+
+  .card-content.preview .role {
+    font-size: calc(var(--role-font-size) * 0.8);
+  }
+
+  .card-content.preview .traits {
+    font-size: calc(var(--trait-font-size) * 0.8);
+  }
+
+  .card-content.preview .traits :global(.trait-label) {
+    min-width: clamp(15mm, 20cqw, 25mm);
+  }
+
+  .card-content.preview .portrait-container,
+  .card-content.preview .image-input {
+    display: none;
   }
 </style> 

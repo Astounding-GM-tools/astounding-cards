@@ -5,6 +5,7 @@
   import { createEventDispatcher } from 'svelte';
   import { baseThemes } from '$lib/themes';
   import type { CardTheme } from '$lib/themes';
+  import ThemeSelect from './ThemeSelect.svelte';
 
   let { deck } = $props<{ deck: CharacterDeck }>();
   
@@ -12,12 +13,7 @@
     deckChange: { action: 'update' | 'delete' | 'duplicate' | 'copy' | 'deleteCharacters', deckId: string }
   }>();
 
-  const themes = $derived(Object.values(baseThemes).map((theme: CardTheme) => ({
-    id: theme.id,
-    name: theme.name,
-    description: theme.description
-  })));
-
+  let showThemeSelect = $state(false);
   let showDeleteConfirm = $state(false);
   let showDuplicateDialog = $state(false);
   let showCopyDialog = $state(false);
@@ -33,15 +29,12 @@
   let targetDeckId = $state<string | 'new'>('new');
   let availableDecks = $state<CharacterDeck[]>([]);
 
-  async function handleThemeChange(event: Event) {
-    const select = event.target as HTMLSelectElement;
-    const selectedTheme = select.value;
-
+  async function handleThemeChange(themeId: string) {
     const updatedDeck = {
       ...deck,
       meta: {
         ...deck.meta,
-        theme: selectedTheme,
+        theme: themeId,
         lastEdited: Date.now()
       }
     };
@@ -50,6 +43,7 @@
       currentDeck.set(updatedDeck);
     }
     dispatch('deckChange', { action: 'update', deckId: deck.id });
+    showThemeSelect = false;
   }
 
   async function loadAvailableDecks() {
@@ -275,15 +269,12 @@
   <div class="deck-content">
     <div class="deck-info">
       <div class="info-line">
-        <select 
-          class="theme-select" 
-          value={deck.meta.theme}
-          onchange={handleThemeChange}
+        <button 
+          class="theme-button"
+          onclick={() => showThemeSelect = true}
         >
-          {#each themes as theme}
-            <option value={theme.id}>{theme.name}</option>
-          {/each}
-        </select>
+          {baseThemes[deck.meta.theme]?.name || 'Select Theme'}
+        </button>
         <span class="cards">{deck.characters.length} cards</span>
       </div>
       <div class="info-line date">
@@ -508,6 +499,25 @@
       </div>
     </div>
   {/if}
+
+  {#if showThemeSelect}
+    <div class="dialog-overlay" onclick={() => showThemeSelect = false}></div>
+    <div class="dialog theme-dialog">
+      <h2>Select Theme</h2>
+      <ThemeSelect
+        selectedTheme={deck.meta.theme}
+        onSelect={handleThemeChange}
+      />
+      <div class="dialog-buttons">
+        <button 
+          class="secondary"
+          onclick={() => showThemeSelect = false}
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  {/if}
 </div>
 
 <style>
@@ -683,6 +693,24 @@
     opacity: 1;
   }
 
+  .theme-button {
+    padding: 0.4rem 0.75rem;
+    border: 1px solid var(--button-border);
+    border-radius: 4px;
+    background: var(--button-bg);
+    color: var(--button-text);
+    font-size: var(--ui-font-size);
+    font-family: var(--ui-font-family);
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+
+  .theme-button:hover {
+    background: var(--button-hover-bg);
+    border-color: var(--button-primary-bg);
+  }
+
   .theme-select {
     font-size: var(--ui-font-size);
     font-family: var(--ui-font-family);
@@ -824,5 +852,81 @@
     margin-left: 0.5rem;
     flex: 1;
     white-space: normal;
+  }
+
+  .theme-dialog {
+    width: 90vw;
+    max-width: 1200px;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  .theme-dialog h2 {
+    margin: 0 0 1rem 0;
+    font-size: var(--ui-title-size);
+    font-family: var(--ui-font-family);
+    font-weight: 600;
+  }
+
+  .dialog-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 100;
+  }
+
+  .dialog {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--ui-bg);
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 101;
+    min-width: 300px;
+  }
+
+  .dialog-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    margin-top: 1rem;
+  }
+
+  .dialog-buttons button {
+    padding: 0.4rem 0.75rem;
+    border: 1px solid var(--button-border);
+    border-radius: 4px;
+    background: var(--button-bg);
+    color: var(--button-text);
+    font-size: var(--ui-font-size);
+    font-family: var(--ui-font-family);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .dialog-buttons button:hover {
+    background: var(--button-hover-bg);
+  }
+
+  .dialog-buttons button.primary {
+    background: var(--button-primary-bg);
+    color: var(--button-primary-text);
+    border-color: var(--button-primary-bg);
+  }
+
+  .dialog-buttons button.primary:hover {
+    background: var(--button-primary-hover);
+  }
+
+  .dialog-buttons button.secondary:hover {
+    border-color: var(--button-primary-bg);
+  }
+
+  .dialog-buttons button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 </style> 

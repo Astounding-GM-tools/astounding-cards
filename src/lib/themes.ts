@@ -30,6 +30,11 @@ export type CardTheme = {
   typography: ThemeTypography;
   decoration: ThemeDecoration;
   css?: string; // Additional custom CSS
+  preview?: {
+    title: string;
+    role: string;
+    traits: string[];
+  };
 };
 
 // Base themes
@@ -57,6 +62,15 @@ export const baseThemes: Record<string, CardTheme> = {
       cornerStyle: 'simple',
       frameStyle: 'classic',
       patternUrl: '/flourishes/classic.svg'
+    },
+    preview: {
+      title: 'Classic',
+      role: 'Nothing fancy',
+      traits: [
+        'Clean: Non-distracting',
+        'Readable: System fonts',
+        'Genre: 20th century'
+      ]
     }
   },
 
@@ -72,8 +86,8 @@ export const baseThemes: Record<string, CardTheme> = {
       background: '#F4E4BC'
     },
     typography: {
-      titleFont: 'Cinzel, serif',
-      bodyFont: 'Crimson Text, serif',
+      titleFont: 'UnifrakturMaguntia, cursive',
+      bodyFont: 'Eagle Lake, cursive',
       nameSize: '1.7rem',
       roleSize: '1.2rem',
       bodySize: '1rem'
@@ -83,6 +97,14 @@ export const baseThemes: Record<string, CardTheme> = {
       cornerStyle: 'illuminated',
       frameStyle: 'manuscript',
       patternUrl: '/flourishes/manuscript.svg'
+    },
+    preview: {
+      title: 'Scriptorum',
+      role: 'Medieval manuscript æsthetic',
+      traits: [
+          'Feel: Gothic',
+          'Genre: Fantasy'
+      ]
     }
   },
 
@@ -98,8 +120,8 @@ export const baseThemes: Record<string, CardTheme> = {
       background: '#F5F9F9'    // Very pale silver
     },
     typography: {
-      titleFont: 'Cinzel, serif',
-      bodyFont: 'Lato, sans-serif',
+      titleFont: 'Ballet, cursive',
+      bodyFont: 'Tangerine, cursive',
       nameSize: '1.6rem',
       roleSize: '1.2rem',
       bodySize: '1rem'
@@ -109,6 +131,14 @@ export const baseThemes: Record<string, CardTheme> = {
       cornerStyle: 'flowing',
       frameStyle: 'cordial',
       patternUrl: '/flourishes/cordial.svg'
+    },
+    preview: {
+      title: 'Cordial',
+      role: 'Art Nouveau',
+      traits: [
+        'Elegant: Gracefully swirly',
+        'Dress code: Black tie and tails',
+      ]
     }
   },
 
@@ -117,11 +147,11 @@ export const baseThemes: Record<string, CardTheme> = {
     name: 'Cyberdeck',
     description: 'High-tech aesthetic with digital elements',
     colors: {
-      primary: '#00ff41',     // Matrix green
-      secondary: '#0a1612',   // Deep cyber black
-      accent: '#00b4d8',      // Neon blue
-      text: '#e0e0e0',        // Light gray
-      background: '#0a1612'   // Deep cyber black
+      primary: '#00b341',     // Darker matrix green
+      secondary: '#1a1a1a',   // Dark gray
+      accent: '#0098b8',      // Darker neon blue
+      text: '#1a1a1a',        // Dark gray text
+      background: 'white'     // White background
     },
     typography: {
       titleFont: 'Orbitron, sans-serif',
@@ -135,6 +165,15 @@ export const baseThemes: Record<string, CardTheme> = {
       cornerStyle: 'tech',
       frameStyle: 'digital',
       patternUrl: '/flourishes/tech.svg'
+    },
+    preview: {
+      title: 'Cyberdeck',
+      role: 'Dark future',
+      traits: [
+        'Hi-Tech: Clean and modern',
+        'Vibe: Dark and moody',
+        'Genre: Cyberpunk, Sci-Fi'
+      ]
     }
   }
 
