@@ -101,25 +101,52 @@ For consistent theme application:
   - [x] Centered title with proper spacing
   - [x] Content box styling
   - [x] Proper z-index layering
-- [ ] Complete theme styles
-  - [ ] Create remaining theme assets (patterns, borders)
-  - [ ] Finish Keegan theme development (vintage trading card style)
-  - [ ] Add theme previews in selector
-  - [ ] Add theme customization options
-  - [ ] Ensure proper contrast ratios
-  - [ ] Test with different paper types
-  - [ ] Optimize font loading (load only fonts used by active themes)
-- [ ] Future themes to consider
-  - [ ] Western theme "Drifters" (wanted posters & playing cards aesthetic)
-  - [ ] Contemporary/Corporate theme (TBD)
+- [ ] Theme System Cleanup
+  - [x] Standardize CSS variable inheritance
+  - [x] Remove redundant variable declarations
+  - [x] Ensure print-friendly values (no opacity/effects)
+  - [x] Fix flourish opacity inheritance system
+  - [x] Document theme creation guidelines
+  - [ ] Create theme template with comments
+- [ ] Active Theme Development
+  - [ ] Improve Cordial theme (disabled flourishes until better design)
+  - [ ] Refine Classic theme (minimal, clean design)
+  - [ ] Polish Scriptorum theme (manuscript style)
+  - [ ] Enhance Cyberdeck theme (tech aesthetic)
+  - [ ] Add theme descriptions to selector
+- [ ] Postponed Themes (v2)
+  - [ ] Modern theme (removed, needs redesign)
+  - [ ] Vintage theme (removed, needs redesign)
+  - [ ] Keegan theme (vintage trading card style)
+  - [ ] Western theme "Drifters" (wanted posters & playing cards)
+  - [ ] Contemporary/Corporate theme
   - [ ] Nature theme
-  - [ ] Additional vintage styles
 - [ ] Theme-specific features
   - [ ] Add theme-specific corner flourish designs
   - [ ] Implement divider styles per theme
   - [ ] Add optional texture overlays
   - [ ] Create theme-specific frames
   - [ ] Add theme-specific typography pairings
+- [ ] Theme System Optimization
+  - [ ] Optimize font loading (load only fonts used by active themes)
+  - [ ] Create theme asset sprite system
+  - [ ] Add theme-specific print optimizations
+  - [ ] Implement theme switching without page reload
+
+### Tomorrow's Focus
+1. Active Theme Polish
+   - Improve Cordial theme design (new flourishes)
+   - Refine Classic theme minimalism
+   - Enhance Scriptorum manuscript features
+   - Polish Cyberdeck tech aesthetic
+2. Theme Documentation
+   - [x] Update theme development guide
+   - [x] Document CSS variable system
+   - [ ] Add theme template with examples
+3. Theme UI Improvements
+   - Add theme descriptions to selector
+   - Improve theme switching UX
+   - Show current theme name clearly
 
 ### 2. Import & Export System
 - [ ] URL Sharing

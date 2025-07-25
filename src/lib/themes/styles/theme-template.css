@@ -1,0 +1,97 @@
+/* Theme Template
+ * 
+ * Instructions:
+ * 1. Copy this file and rename it to your-theme.css
+ * 2. Import it in index.css
+ * 3. Only override properties that differ from Classic theme
+ * 4. Never create new variables, use ones from properties.css
+ * 5. Keep print optimization in mind
+ */
+
+:root[data-theme="your-theme-name"] {
+  /* Core Theme Colors
+   * - Use transparent background to allow card background images
+   * - Ensure good contrast for text colors
+   * - Consider print appearance (dark colors print better)
+   */
+  --theme-primary: #000000;      /* Main theme color */
+  --theme-secondary: #333333;    /* Secondary color */
+  --theme-accent: #666666;       /* Accent color */
+  --theme-background: transparent;
+  --theme-text: #000000;         /* Must be dark enough to print */
+  --theme-text-faded: #333333;   /* Secondary text color */
+
+  /* Typography
+   * - Import fonts in app.html before using here
+   * - Include fallback fonts
+   * - Match fallback style to primary font
+   * - Consider print rendering
+   */
+  --theme-title-font: system-ui, -apple-system, sans-serif;
+  --theme-body-font: system-ui, -apple-system, sans-serif;
+  --theme-title-weight: 700;    /* Available weights: 400, 700 */
+  --theme-body-weight: 400;     /* Available weights: 400, 700 */
+  --role-font-family: var(--theme-title-font);  /* Optional override */
+
+  /* Font Sizes
+   * - Use relative units (em, cqw)
+   * - Test different card sizes
+   * - Ensure readability in print
+   */
+  --title-font-size: 2em;      /* Large enough to be prominent */
+  --role-font-size: 1.4em;     /* Smaller than title */
+  --trait-font-size: 1.1em;    /* Readable but compact */
+  --base-font-size: 1cqw;      /* Scales with container */
+
+  /* Text Alignment
+   * - Default is center for titles/roles, left for descriptions
+   * - Only override if theme requires different alignment
+   */
+  --title-text-align: center;  /* center/left/right */
+  --role-text-align: center;   /* center/left/right */
+  --desc-text-align: left;     /* Usually left for readability */
+
+  /* Content Box Style
+   * - Must have white/solid background for text readability
+   * - Keep borders visible but not heavy
+   * - Avoid shadows (they don't print well)
+   */
+  --content-box-bg: white;
+  --content-box-radius: 2px;
+  --content-box-border-width: 1px;
+
+  /* Flourish System
+   * Base flourish settings affect all flourishes
+   * Individual flourishes can be controlled separately
+   * Use opacity 1 for visible or 0 for hidden (no partial opacity)
+   */
+  --flourish-color: var(--theme-primary);
+  --flourish-opacity: 1;        /* Global flourish visibility */
+  --flourish-size: 2.5rem;      /* Base size for all flourishes */
+
+  /* Content Flourishes
+   * Override specific flourish properties as needed
+   * Size and opacity inherit from base if not specified
+   */
+  --flourish-content-size: 2rem;
+  --flourish-content-top-left-opacity: 0;   /* Hide specific flourish */
+
+  /* Portrait Flourishes
+   * Similar to content flourishes
+   * Usually larger than content flourishes
+   */
+  --flourish-portrait-size: min(40%, 6rem);
+}
+
+/* Print Optimizations
+ * Override colors for better print contrast
+ * Ensure text remains readable
+ * Test with both color and B&W printers
+ */
+@media print {
+  :root[data-theme="your-theme-name"] {
+    --theme-primary: #000000;   /* Pure black for sharp prints */
+    --theme-text: #000000;      /* Black text for contrast */
+    --theme-accent: #000000;    /* Black for clean printing */
+  }
+} 

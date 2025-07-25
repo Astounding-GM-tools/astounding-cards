@@ -4,6 +4,32 @@
 
 The theming system uses a hybrid approach combining CSS custom properties with SVG sprites and JavaScript theme switching. The system is built around a default theme (Classic) with other themes inheriting and overriding specific properties as needed.
 
+## Active Themes
+
+1. **Classic Theme**:
+   - Default theme using base properties
+   - Clean, minimal design
+   - Optimized for print
+   - Hidden top-left content flourish
+
+2. **Scriptorum Theme**:
+   - Rich manuscript style
+   - Illuminated first letters
+   - Left-aligned text
+   - Hidden top-left content flourish
+
+3. **Cordial Theme**:
+   - Elegant flowing design
+   - Currently flourishes disabled (pending redesign)
+   - Transparent backgrounds
+   - Clean typography
+
+4. **Cyberdeck Theme**:
+   - High-tech aesthetic
+   - Sharp, geometric fonts
+   - Print-optimized colors
+   - Hidden top-left portrait flourish
+
 ## File Structure
 
 ```
@@ -11,29 +37,39 @@ src/lib/themes/
 ├── styles/
 │   ├── properties.css    # Base property declarations
 │   ├── index.css        # Imports and organization
-│   ├── classic.css      # Default theme (no overrides)
-│   ├── manuscript.css   # Manuscript theme overrides
-│   └── ...             # Other theme files
+│   ├── classic.css      # Default theme
+│   ├── scriptorum.css   # Manuscript theme
+│   ├── cordial.css      # Elegant theme
+│   ├── cyberdeck.css    # Tech theme
+│   └── ...             # Future themes
 └── THEMING.md          # This documentation
 ```
 
 ## Core Concepts
 
-1. **Property Declarations**: All theme variables are declared in `properties.css` using `@property`. This provides:
-   - Type safety
-   - Default values (Classic theme)
-   - Proper inheritance
-   - Transition support
+1. **Property Declarations**: 
+   - All theme variables MUST be declared in `properties.css` using `@property`
+   - Never declare new variables in theme files
+   - Always use existing variables or hardcode values
+   - Ask before adding new variables to properties.css
 
 2. **Classic Theme as Default**: 
    - The Classic theme uses the default values from `properties.css`
-   - No overrides needed in `classic.css`
+   - Minimal overrides in `classic.css`
    - Serves as the baseline for other themes
 
-3. **Minimal Overrides**:
-   - Other themes should only override properties that differ from Classic
-   - Don't repeat properties that remain at default values
-   - Keep theme files focused and maintainable
+3. **Inheritance System**:
+   - Variables inherit from their parent variables
+   - Example: `--flourish-content-opacity` inherits from `--flourish-opacity`
+   - Override only at the most specific level needed
+   - Don't create intermediary variables
+
+4. **Print-First Design**:
+   - All themes must work well in print
+   - Avoid partial opacities
+   - No shadows or effects
+   - Use solid colors
+   - White/transparent backgrounds only
 
 ## Theme Variables
 
@@ -41,35 +77,45 @@ src/lib/themes/
 - `--theme-primary`: Main theme color
 - `--theme-secondary`: Secondary theme color
 - `--theme-accent`: Accent color for highlights
-- `--theme-background`: Background color
+- `--theme-background`: Background color (use transparent)
 - `--theme-text`: Main text color
+- `--theme-text-faded`: Secondary text color
 
 ### Typography
 - `--theme-title-font`: Font family for titles
 - `--theme-body-font`: Font family for body text
 - `--theme-title-weight`: Font weight for titles
 - `--theme-body-weight`: Font weight for body text
+- `--role-font-family`: Font for role text (inherits from body)
 
-### Decorative Elements
-- `--show-corner-flourish`: Toggle corner decorations (0/1)
-- `--show-dividers`: Toggle dividers (0/1)
-- `--show-frame`: Toggle frame (0/1)
-- `--show-texture`: Toggle texture effects (0/1)
-
-### Frame Style
-- `--frame-style`: Border style (solid, double, etc.)
-- `--frame-width`: Border width
-- `--frame-opacity`: Border opacity
+### Text Alignment
+- `--title-text-align`: Title alignment
+- `--role-text-align`: Role text alignment
+- `--desc-text-align`: Description text alignment
 
 ### Flourish System
-- `--flourish-color`: Color of decorative flourishes
-- `--flourish-opacity`: Opacity of flourishes
-- `--flourish-size`: Base size of flourishes
-- `--flourish-aspect`: Aspect ratio of flourishes
+Base Variables:
+- `--flourish-color`: Color of all flourishes
+- `--flourish-opacity`: Base opacity for all flourishes
+- `--flourish-size`: Base size for all flourishes
+- `--flourish-aspect`: Base aspect ratio
+
+Content Flourishes:
+- `--flourish-content-opacity`: Inherits from --flourish-opacity
+- `--flourish-content-size`: Size override for content flourishes
+- `--flourish-content-top-left-opacity`: Individual corner control
+- `--flourish-content-top-right-opacity`: Individual corner control
+
+Portrait Flourishes:
+- `--flourish-portrait-opacity`: Inherits from --flourish-opacity
+- `--flourish-portrait-size`: Size override for portrait flourishes
+- `--flourish-portrait-top-left-opacity`: Individual corner control
+- `--flourish-portrait-top-right-opacity`: Individual corner control
 
 ### Content Box Style
+- `--content-box-bg`: Must be white/solid for text readability
 - `--content-box-radius`: Border radius
-- `--content-box-shadow`: Box shadow
+- `--content-box-border-width`: Border width
 
 ## Creating a New Theme
 
@@ -80,36 +126,46 @@ src/lib/themes/
 ```css
 /* Your Theme - Brief description */
 :root[data-theme="your-theme"] {
-  /* Only override what's different from Classic */
+  /* Colors */
   --theme-primary: #your-color;
-  --theme-background: #your-bg;
+  --theme-background: transparent;  /* Always transparent */
+  --theme-text: #000000;           /* Dark text for contrast */
+
+  /* Typography */
   --theme-title-font: 'Your Font', sans-serif;
+  --theme-body-font: 'Body Font', sans-serif;
+
+  /* Flourishes */
+  --flourish-opacity: 1;           /* Full opacity for print */
+  --flourish-content-top-left-opacity: 0;  /* Hide specific flourish */
 }
 ```
 
 ## Best Practices
 
-1. **Property Declaration**:
-   - Always declare properties in `properties.css`
-   - Use appropriate syntax types (`<color>`, `<length>`, etc.)
-   - Set meaningful default values
+1. **Variable Usage**:
+   - Never create new variables in theme files
+   - Use existing variables from properties.css
+   - Override at the most specific level needed
+   - Ask before adding new variables
 
-2. **Theme Development**:
-   - Start by identifying what's different from Classic
-   - Group related properties together
-   - Comment color values with descriptive names
-   - Test print styles
+2. **Print Optimization**:
+   - Use full opacity (1) or no opacity (0)
+   - Keep backgrounds transparent
+   - Ensure text contrast
+   - Test in black & white
 
-3. **Maintainability**:
-   - Keep theme files small and focused
-   - Document significant deviations
-   - Consider print optimization
-   - Test with different card types
+3. **Flourish Control**:
+   - Use base opacity for global control
+   - Override specific flourishes as needed
+   - Test print appearance
+   - Consider ink usage
 
-4. **SVG Integration**:
-   - SVG flourishes are defined in app.html
-   - Use `currentColor` in SVGs for theme color support
-   - Test flourish visibility in print
+4. **Typography**:
+   - Use appropriate font weights
+   - Test print readability
+   - Consider fallback fonts
+   - Match style to theme
 
 ## SVG + CSS Hybrid System
 
