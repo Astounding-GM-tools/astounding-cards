@@ -4,18 +4,34 @@
   import type { Character, CharacterDeck } from '$lib/types';
   import { createEventDispatcher } from 'svelte';
   import { baseThemes } from '$lib/themes';
+  import type { CardTheme } from '$lib/themes';
 
-  export let deck: CharacterDeck;
+  let { deck } = $props<{ deck: CharacterDeck }>();
   
   const dispatch = createEventDispatcher<{
     deckChange: { action: 'update' | 'delete' | 'duplicate' | 'copy' | 'deleteCharacters', deckId: string }
   }>();
 
-  const themes = Object.values(baseThemes).map(theme => ({
+  const themes = $derived(Object.values(baseThemes).map((theme: CardTheme) => ({
     id: theme.id,
     name: theme.name,
     description: theme.description
-  }));
+  })));
+
+  let showDeleteConfirm = $state(false);
+  let showDuplicateDialog = $state(false);
+  let showCopyDialog = $state(false);
+  let showDeleteCharactersDialog = $state(false);
+  let editingName = $state(false);
+  let deleting = $state(false);
+  let duplicating = $state(false);
+  let copying = $state(false);
+  let deletingCharacters = $state(false);
+  let newDeckName = $state('');
+  let editedDeckName = $state('');
+  let selectedCharacters = $state(new Set<string>());
+  let targetDeckId = $state<string | 'new'>('new');
+  let availableDecks = $state<CharacterDeck[]>([]);
 
   async function handleThemeChange(event: Event) {
     const select = event.target as HTMLSelectElement;
@@ -35,21 +51,6 @@
     }
     dispatch('deckChange', { action: 'update', deckId: deck.id });
   }
-
-  let showDeleteConfirm = false;
-  let showDuplicateDialog = false;
-  let showCopyDialog = false;
-  let showDeleteCharactersDialog = false;
-  let editingName = false;
-  let deleting = false;
-  let duplicating = false;
-  let copying = false;
-  let deletingCharacters = false;
-  let newDeckName = '';
-  let editedDeckName = '';
-  let selectedCharacters: Set<string> = new Set();
-  let targetDeckId: string | 'new' = 'new';
-  let availableDecks: CharacterDeck[] = [];
 
   async function loadAvailableDecks() {
     availableDecks = (await listDecks()).filter(d => d.id !== deck.id);
@@ -113,7 +114,7 @@
 
     try {
       copying = true;
-      const characters = deck.characters.filter(c => selectedCharacters.has(c.id));
+      const characters = deck.characters.filter((c: Character) => selectedCharacters.has(c.id));
       const targetDeck = await copyCharactersTo(
         characters,
         targetDeckId,
@@ -218,7 +219,7 @@
 
   // Select all/none for characters
   function selectAll() {
-    deck.characters.forEach(char => selectedCharacters.add(char.id));
+    deck.characters.forEach((char: Character) => selectedCharacters.add(char.id));
     selectedCharacters = selectedCharacters;
   }
 
@@ -235,20 +236,20 @@
         <input
           type="text"
           bind:value={editedDeckName}
-          on:blur={handleNameEdit}
-          on:keydown={handleNameKeydown}
+          onblur={handleNameEdit}
+          onkeydown={handleNameKeydown}
           placeholder="Enter deck name"
         >
         <button 
           class="icon-button"
-          on:click={handleNameEdit}
+          onclick={handleNameEdit}
           title="Save name"
         >
           ✓
         </button>
         <button 
           class="icon-button"
-          on:click={() => {
+          onclick={() => {
             editingName = false;
             editedDeckName = deck.meta.name;
           }}
@@ -262,7 +263,7 @@
         <h3>{deck.meta.name}</h3>
         <button 
           class="icon-button"
-          on:click={handleNameEdit}
+          onclick={handleNameEdit}
           title="Edit deck name"
         >
           ✎
@@ -275,14 +276,12 @@
     <div class="deck-info">
       <div class="info-line">
         <select 
-          class="theme-select"
+          class="theme-select" 
           value={deck.meta.theme}
-          on:change={handleThemeChange}
+          onchange={handleThemeChange}
         >
-          {#each themes as theme (theme.id)}
-            <option value={theme.id}>
-              {theme.name}
-            </option>
+          {#each themes as theme}
+            <option value={theme.id}>{theme.name}</option>
           {/each}
         </select>
         <span class="cards">{deck.characters.length} cards</span>
@@ -300,14 +299,14 @@
         <legend>Card</legend>
         <button 
           class="action-button"
-          on:click={() => showCopyDialog = true}
+          onclick={() => showCopyDialog = true}
           title="Copy selected cards to another deck"
         >
           Copy
         </button>
         <button 
           class="action-button danger"
-          on:click={() => showDeleteCharactersDialog = true}
+          onclick={() => showDeleteCharactersDialog = true}
           title="Delete selected cards from this deck"
         >
           Delete
@@ -317,7 +316,7 @@
         <legend>Deck</legend>
         <button 
           class="action-button"
-          on:click={handleDuplicate}
+          onclick={handleDuplicate}
           disabled={duplicating}
           title="Create a copy of this entire deck"
         >
@@ -325,7 +324,7 @@
         </button>
         <button 
           class="action-button danger"
-          on:click={handleDelete}
+          onclick={handleDelete}
           disabled={deleting}
           title="Delete this deck and all its cards"
         >
@@ -344,14 +343,14 @@
       <span>Delete this deck?</span>
       <button 
         class="danger" 
-        on:click={handleDelete}
+        onclick={handleDelete}
         disabled={deleting}
       >
         {deleting ? 'Deleting...' : 'Confirm Delete'}
       </button>
       <button 
         class="secondary"
-        on:click={() => showDeleteConfirm = false}
+        onclick={() => showDeleteConfirm = false}
         disabled={deleting}
       >
         Cancel
@@ -366,14 +365,14 @@
       >
       <button 
         class="primary"
-        on:click={handleDuplicate}
+        onclick={handleDuplicate}
         disabled={duplicating || !newDeckName.trim()}
       >
         {duplicating ? 'Duplicating...' : 'Create Copy'}
       </button>
       <button 
         class="secondary"
-        on:click={() => showDuplicateDialog = false}
+        onclick={() => showDuplicateDialog = false}
         disabled={duplicating}
       >
         Cancel
@@ -384,14 +383,14 @@
       <div class="selection-controls">
         <button 
           class="small"
-          on:click={selectAll}
+          onclick={selectAll}
           disabled={selectedCharacters.size === deck.characters.length}
         >
           Select All
         </button>
         <button 
           class="small"
-          on:click={selectNone}
+          onclick={selectNone}
           disabled={selectedCharacters.size === 0}
         >
           Clear Selection
@@ -401,16 +400,16 @@
         </span>
       </div>
       <div class="character-list">
-        {#each deck.characters as char}
+        {#each deck.characters as character (character.id)}
           <label class="character-item">
             <input
               type="checkbox"
-              checked={selectedCharacters.has(char.id)}
-              on:change={() => toggleCharacter(char.id)}
+              checked={selectedCharacters.has(character.id)}
+              onchange={() => toggleCharacter(character.id)}
             >
             <span class="character-info">
-              <strong>{char.name}</strong>
-              <span class="character-role">{char.role}</span>
+              <strong>{character.name}</strong>
+              <span class="character-role">{character.role}</span>
             </span>
           </label>
         {/each}
@@ -432,14 +431,14 @@
         <div class="dialog-buttons">
           <button 
             class="primary"
-            on:click={handleCopyCharacters}
+            onclick={handleCopyCharacters}
             disabled={copying || selectedCharacters.size === 0 || (targetDeckId === 'new' && !newDeckName.trim())}
           >
             {copying ? 'Copying...' : `Copy ${selectedCharacters.size} Character${selectedCharacters.size !== 1 ? 's' : ''}`}
           </button>
           <button 
             class="secondary"
-            on:click={() => {
+            onclick={() => {
               showCopyDialog = false;
               selectedCharacters.clear();
             }}
@@ -457,14 +456,14 @@
       <div class="selection-controls">
         <button 
           class="small"
-          on:click={selectAll}
+          onclick={selectAll}
           disabled={selectedCharacters.size === deck.characters.length}
         >
           Select All
         </button>
         <button 
           class="small"
-          on:click={selectNone}
+          onclick={selectNone}
           disabled={selectedCharacters.size === 0}
         >
           Clear Selection
@@ -474,16 +473,16 @@
         </span>
       </div>
       <div class="character-list">
-        {#each deck.characters as char}
+        {#each deck.characters as character (character.id)}
           <label class="character-item">
             <input
               type="checkbox"
-              checked={selectedCharacters.has(char.id)}
-              on:change={() => toggleCharacter(char.id)}
+              checked={selectedCharacters.has(character.id)}
+              onchange={() => toggleCharacter(character.id)}
             >
             <span class="character-info">
-              <strong>{char.name}</strong>
-              <span class="character-role">{char.role}</span>
+              <strong>{character.name}</strong>
+              <span class="character-role">{character.role}</span>
             </span>
           </label>
         {/each}
@@ -491,14 +490,14 @@
       <div class="dialog-buttons">
         <button 
           class="danger"
-          on:click={handleDeleteCharacters}
+          onclick={handleDeleteCharacters}
           disabled={deletingCharacters || selectedCharacters.size === 0}
         >
           {deletingCharacters ? 'Deleting...' : `Delete ${selectedCharacters.size} Character${selectedCharacters.size !== 1 ? 's' : ''}`}
         </button>
         <button 
           class="secondary"
-          on:click={() => {
+          onclick={() => {
             showDeleteCharactersDialog = false;
             selectedCharacters.clear();
           }}
@@ -692,7 +691,9 @@
     border-radius: 3px;
     background: var(--ui-bg);
     color: var(--ui-text);
-    max-width: 8em;
+    max-width: none;  /* Remove width limit to show full descriptions */
+    width: auto;
+    min-width: 8em;
   }
 
   .theme-select:hover {
@@ -815,5 +816,13 @@
     gap: 0.5rem;
     justify-content: flex-end;
     margin-top: 0.5rem;
+  }
+
+  .theme-description {
+    font-size: calc(var(--ui-font-size) * 0.9);
+    color: var(--ui-muted);
+    margin-left: 0.5rem;
+    flex: 1;
+    white-space: normal;
   }
 </style> 

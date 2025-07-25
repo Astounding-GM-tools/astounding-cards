@@ -4,25 +4,23 @@
   import CardStatSelector from './CardStatSelector.svelte';
   import { currentDeck } from '$lib/stores/cards';
 
-  export let character: Character;
-  export let showCropMarks = true;
-  export let onChange: (updates: Partial<Character>) => void;
+  let { character, showCropMarks = false, onChange, theme = undefined } = $props();
+  let imageUrl = $state('');
+  let showImageInput = $state(false);
 
-  let nameElement: HTMLElement;
-  let roleElement: HTMLElement;
-  let traitsElement: HTMLElement;
-  let imageUrl = '';
-  let showImageInput = false;
+  let nameElement = $state<HTMLElement>();
+  let roleElement = $state<HTMLElement>();
+  let traitsElement = $state<HTMLElement>();
 
   // Update DOM elements when character changes
-  $: {
+  $effect(() => {
     if (nameElement && nameElement.innerText !== character.name) {
       nameElement.innerText = character.name;
     }
     if (roleElement && roleElement.innerText !== character.role) {
       roleElement.innerText = character.role;
     }
-  }
+  });
 
   async function updateName(event: Event) {
     const target = event.target as HTMLElement;
@@ -74,21 +72,23 @@
     imageUrl = '';
     showImageInput = false;
   }
+
+  const activeTheme = $derived(theme ?? $currentDeck?.meta?.theme ?? 'classic');
 </script>
 
 {#if character}
-<Card {showCropMarks}>
+<Card {showCropMarks} theme={activeTheme}>
   <div 
     class="card-content"
     style:background-image={character.portrait ? `url('/portraits/${character.portrait}')` : 'none'}
   >
     <!-- Top portrait flourishes -->
     <svg class="flourish portrait-flourish top-left" viewBox="0 0 100 100">
-      <use href="#flourish-{$currentDeck?.meta.theme || 'classic'}" />
+      <use href="#flourish-{activeTheme}" />
     </svg>
     {#if !character.stat}
     <svg class="flourish portrait-flourish top-right" viewBox="0 0 100 100">
-      <use href="#flourish-{$currentDeck?.meta.theme || 'classic'}" />
+      <use href="#flourish-{activeTheme}" />
     </svg>
     {/if}
     
@@ -135,10 +135,10 @@
       <!-- Bottom portrait flourishes -->
       <div class="bottom-flourishes">
         <svg class="flourish portrait-flourish bottom-left" viewBox="0 0 100 100">
-          <use href="#flourish-{$currentDeck?.meta.theme || 'classic'}" />
+          <use href="#flourish-{activeTheme}" />
         </svg>
         <svg class="flourish portrait-flourish bottom-right" viewBox="0 0 100 100">
-          <use href="#flourish-{$currentDeck?.meta.theme || 'classic'}" />
+          <use href="#flourish-{activeTheme}" />
         </svg>
       </div>
     </div>
@@ -147,10 +147,10 @@
     <div class="content">
       <!-- Content flourishes -->
       <svg class="flourish content-flourish top-left" viewBox="0 0 100 100">
-        <use href="#flourish-{$currentDeck?.meta.theme || 'classic'}" />
+        <use href="#flourish-{activeTheme}" />
       </svg>
       <svg class="flourish content-flourish top-right" viewBox="0 0 100 100">
-        <use href="#flourish-{$currentDeck?.meta.theme || 'classic'}" />
+        <use href="#flourish-{activeTheme}" />
       </svg>
 
       <h2 

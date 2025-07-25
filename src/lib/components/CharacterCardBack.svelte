@@ -1,25 +1,23 @@
 <script lang="ts">
   import type { Character } from '$lib/types';
   import Card from './Card.svelte';
+  import { currentDeck } from '$lib/stores/cards';
 
-  export let character: Character;
-  export let showCropMarks = true;
-  export let onChange: (updates: Partial<Character>) => void;
-  export let editable = true;
+  let { character, showCropMarks = false, onChange, editable = true, theme = undefined } = $props();
 
-  let nameElement: HTMLElement;
-  let descElement: HTMLElement;
-  let secretsElement: HTMLElement;
+  let nameElement = $state<HTMLElement>();
+  let descElement = $state<HTMLElement>();
+  let secretsElement = $state<HTMLElement>();
 
   // Update DOM elements when character changes
-  $: {
+  $effect(() => {
     if (nameElement && nameElement.innerText !== character.name) {
       nameElement.innerText = character.name;
     }
     if (descElement && descElement.innerText !== character.desc) {
       descElement.innerText = character.desc;
     }
-  }
+  });
 
   async function updateName(event: Event) {
     const target = event.target as HTMLElement;
@@ -69,9 +67,11 @@
     const newSecrets = [...(character.secrets || []), 'Label: Description'];
     onChange({ secrets: newSecrets });
   }
+
+  const activeTheme = $derived(theme ?? $currentDeck?.meta?.theme ?? 'classic');
 </script>
 
-<Card {showCropMarks}>
+<Card {showCropMarks} theme={activeTheme}>
   <article class="card-content">
     <section class="content">
       <div class="top">

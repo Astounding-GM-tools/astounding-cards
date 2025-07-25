@@ -1,14 +1,14 @@
 <script lang="ts">
   import { currentDeck } from '$lib/stores/cards';
-  export let showCropMarks = true;
-  export let children: () => any;
 
-  // Get theme from current deck
-  $: theme = $currentDeck?.meta?.theme || 'classic';
+  let { showCropMarks = false, children, theme = undefined } = $props();
+  const activeTheme = $derived(theme ?? $currentDeck?.meta?.theme ?? 'classic');
 </script>
 
-<div class="card theme-{theme}" class:show-crop-marks={showCropMarks}>
-  {@render children()}
+<div data-theme={activeTheme} class="card" class:show-crop-marks={showCropMarks}>
+  <div class="theme-scope">
+    {@render children()}
+  </div>
 </div>
 
 <style>
@@ -18,7 +18,10 @@
     height: 100%;
     padding: var(--card-padding);
     box-sizing: border-box;
-    background: var(--content-bg);
+  }
+
+  .theme-scope {
+    height: 100%;
   }
 
   /* Crop marks using gradient borders */
