@@ -15,7 +15,7 @@
       name: theme.preview?.title || theme.name,
       role: theme.preview?.role || theme.description,
       traits: theme.preview?.traits || [],
-      portrait: 'gristlethwaite.jpg',
+      portrait: theme.preview?.portrait || null,
       stat: {
         type: 'item',
         value: 'Preview'

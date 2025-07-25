@@ -9,17 +9,11 @@ export type ThemeColors = {
 export type ThemeTypography = {
   titleFont: string;
   bodyFont: string;
-  nameSize: string;
-  roleSize: string;
-  bodySize: string;
 };
 
 export type ThemeDecoration = {
   borderStyle: string;
-  cornerStyle: string;
-  frameStyle: string;
   patternUrl?: string;
-  iconSet?: string;
 };
 
 export type CardTheme = {
@@ -34,6 +28,7 @@ export type CardTheme = {
     title: string;
     role: string;
     traits: string[];
+    portrait?: string;  // Portrait file name for preview
   };
 };
 
@@ -52,15 +47,10 @@ export const baseThemes: Record<string, CardTheme> = {
     },
     typography: {
       titleFont: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-      bodyFont: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-      nameSize: '1.4rem',
-      roleSize: '1rem',
-      bodySize: '0.9rem'
+      bodyFont: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
     },
     decoration: {
       borderStyle: 'solid',
-      cornerStyle: 'simple',
-      frameStyle: 'classic',
       patternUrl: '/flourishes/classic.svg'
     },
     preview: {
@@ -70,7 +60,8 @@ export const baseThemes: Record<string, CardTheme> = {
         'Clean: Non-distracting',
         'Readable: System fonts',
         'Genre: 20th century'
-      ]
+      ],
+      portrait: 'suited.jpg'
     }
   },
 
@@ -87,24 +78,20 @@ export const baseThemes: Record<string, CardTheme> = {
     },
     typography: {
       titleFont: 'UnifrakturMaguntia, cursive',
-      bodyFont: 'Eagle Lake, cursive',
-      nameSize: '1.7rem',
-      roleSize: '1.2rem',
-      bodySize: '1rem'
+      bodyFont: 'Eagle Lake, cursive'
     },
     decoration: {
       borderStyle: 'double',
-      cornerStyle: 'illuminated',
-      frameStyle: 'manuscript',
       patternUrl: '/flourishes/manuscript.svg'
     },
     preview: {
       title: 'Scriptorum',
       role: 'Medieval manuscript æsthetic',
       traits: [
-          'Feel: Gothic',
-          'Genre: Fantasy'
-      ]
+        'Feel: Gothic',
+        'Genre: Fantasy'
+      ],
+      portrait: 'gristlethwaite.jpg'
     }
   },
 
@@ -121,15 +108,10 @@ export const baseThemes: Record<string, CardTheme> = {
     },
     typography: {
       titleFont: 'Ballet, cursive',
-      bodyFont: 'Tangerine, cursive',
-      nameSize: '1.6rem',
-      roleSize: '1.2rem',
-      bodySize: '1rem'
+      bodyFont: 'Tangerine, cursive'
     },
     decoration: {
       borderStyle: 'organic',
-      cornerStyle: 'flowing',
-      frameStyle: 'cordial',
       patternUrl: '/flourishes/cordial.svg'
     },
     preview: {
@@ -137,8 +119,9 @@ export const baseThemes: Record<string, CardTheme> = {
       role: 'Art Nouveau',
       traits: [
         'Elegant: Gracefully swirly',
-        'Dress code: Black tie and tails',
-      ]
+        'Dress code: Black tie and tails'
+      ],
+      portrait: 'blackwood.jpg'
     }
   },
 
@@ -155,15 +138,10 @@ export const baseThemes: Record<string, CardTheme> = {
     },
     typography: {
       titleFont: 'Orbitron, sans-serif',
-      bodyFont: 'Share Tech Mono, monospace',
-      nameSize: '1.6rem',
-      roleSize: '1.2rem',
-      bodySize: '1rem'
+      bodyFont: 'Share Tech Mono, monospace'
     },
     decoration: {
       borderStyle: 'solid',
-      cornerStyle: 'tech',
-      frameStyle: 'digital',
       patternUrl: '/flourishes/tech.svg'
     },
     preview: {
@@ -173,38 +151,10 @@ export const baseThemes: Record<string, CardTheme> = {
         'Hi-Tech: Clean and modern',
         'Vibe: Dark and moody',
         'Genre: Cyberpunk, Sci-Fi'
-      ]
+      ],
+      portrait: 'communications.jpeg'
     }
   }
-
-  // Keegan theme temporarily disabled while in development
-  /*
-  keegan: {
-    id: 'keegan',
-    name: 'Keegan',
-    description: 'A vintage 70s trading card theme inspired by classic football cards',
-    colors: {
-      primary: '#D42E12',
-      secondary: '#1B4B8A',
-      accent: '#F4D03F',
-      text: '#1A1A1A',
-      background: '#F4F1E9'
-    },
-    typography: {
-      titleFont: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-      bodyFont: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-      nameSize: '1.4rem',
-      roleSize: '1rem',
-      bodySize: '0.9rem'
-    },
-    decoration: {
-      borderStyle: 'solid',
-      cornerStyle: 'simple',
-      frameStyle: 'classic',
-      patternUrl: '/flourishes/classic.svg'
-    }
-  }
-  */
 };
 
 // Function to create a custom theme based on a base theme

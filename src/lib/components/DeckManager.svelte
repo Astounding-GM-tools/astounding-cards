@@ -2,16 +2,16 @@
   import { currentDeck } from '$lib/stores/cards';
   import { deleteDeck, listDecks, duplicateDeck, copyCharactersTo, deleteCharacters, saveDeck } from '$lib/stores/cards';
   import type { Character, CharacterDeck } from '$lib/types';
-  import { createEventDispatcher } from 'svelte';
   import { baseThemes } from '$lib/themes';
   import type { CardTheme } from '$lib/themes';
   import ThemeSelect from './ThemeSelect.svelte';
 
   let { deck } = $props<{ deck: CharacterDeck }>();
   
-  const dispatch = createEventDispatcher<{
-    deckChange: { action: 'update' | 'delete' | 'duplicate' | 'copy' | 'deleteCharacters', deckId: string }
-  }>();
+  const dispatch = (e: { action: 'update' | 'delete' | 'duplicate' | 'copy' | 'deleteCharacters', deckId: string }) => {
+    const event = new CustomEvent('deckChange', { detail: e });
+    dispatchEvent(event);
+  };
 
   let showThemeSelect = $state(false);
   let showDeleteConfirm = $state(false);
@@ -42,7 +42,7 @@
     if ($currentDeck?.id === deck.id) {
       currentDeck.set(updatedDeck);
     }
-    dispatch('deckChange', { action: 'update', deckId: deck.id });
+    dispatch({ action: 'update', deckId: deck.id });
     showThemeSelect = false;
   }
 
@@ -59,7 +59,7 @@
     try {
       deleting = true;
       await deleteDeck(deck.id);
-      dispatch('deckChange', { action: 'delete', deckId: deck.id });
+      dispatch({ action: 'delete', deckId: deck.id });
       // If we're deleting the current deck, clear it
       if ($currentDeck?.id === deck.id) {
         const decks = await listDecks();
@@ -88,7 +88,7 @@
       duplicating = true;
       const newDeck = await duplicateDeck(deck, newDeckName);
       currentDeck.set(newDeck);
-      dispatch('deckChange', { action: 'duplicate', deckId: newDeck.id });
+      dispatch({ action: 'duplicate', deckId: newDeck.id });
       showDuplicateDialog = false;
     } catch (e) {
       console.error('Failed to duplicate deck:', e);
@@ -115,7 +115,7 @@
         targetDeckId === 'new' ? newDeckName : undefined
       );
       currentDeck.set(targetDeck);
-      dispatch('deckChange', { action: 'copy', deckId: targetDeck.id });
+      dispatch({ action: 'copy', deckId: targetDeck.id });
       showCopyDialog = false;
       selectedCharacters.clear();
     } catch (e) {
@@ -137,7 +137,7 @@
     try {
       deletingCharacters = true;
       await deleteCharacters(deck.id, Array.from(selectedCharacters));
-      dispatch('deckChange', { action: 'deleteCharacters', deckId: deck.id });
+      dispatch({ action: 'deleteCharacters', deckId: deck.id });
       showDeleteCharactersDialog = false;
       selectedCharacters.clear();
     } catch (e) {
@@ -172,7 +172,7 @@
       if ($currentDeck?.id === deck.id) {
         currentDeck.set(updatedDeck);
       }
-      dispatch('deckChange', { action: 'update', deckId: deck.id });
+      dispatch({ action: 'update', deckId: deck.id });
       editingName = false;
     } catch (e) {
       console.error('Failed to update deck name:', e);

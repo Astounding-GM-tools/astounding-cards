@@ -101,19 +101,27 @@ For consistent theme application:
   - [x] Centered title with proper spacing
   - [x] Content box styling
   - [x] Proper z-index layering
-- [ ] Theme System Cleanup
+- [x] Theme System Cleanup
   - [x] Standardize CSS variable inheritance
   - [x] Remove redundant variable declarations
   - [x] Ensure print-friendly values (no opacity/effects)
   - [x] Fix flourish opacity inheritance system
   - [x] Document theme creation guidelines
-  - [ ] Create theme template with comments
+  - [x] Create theme template with comments
+- [x] Theme Selection UI
+  - [x] Add theme preview cards
+  - [x] Show theme descriptions
+  - [x] Theme-specific preview portraits
+  - [x] Preview stat indicators
 - [ ] Active Theme Development
-  - [ ] Improve Cordial theme (disabled flourishes until better design)
-  - [ ] Refine Classic theme (minimal, clean design)
-  - [ ] Polish Scriptorum theme (manuscript style)
-  - [ ] Enhance Cyberdeck theme (tech aesthetic)
-  - [ ] Add theme descriptions to selector
+  - [x] Improve Cordial theme (elegant Art Nouveau)
+  - [x] Refine Classic theme (minimal, clean design)
+  - [x] Polish Scriptorum theme (manuscript style)
+  - [x] Enhance Cyberdeck theme (tech aesthetic)
+  - [ ] Optimize font sizes for poker-sized cards
+    - [ ] Reduce title font size
+    - [ ] Adjust role and trait sizes
+    - [ ] Test readability at print size
 - [ ] Postponed Themes (v2)
   - [ ] Modern theme (removed, needs redesign)
   - [ ] Vintage theme (removed, needs redesign)
@@ -128,11 +136,11 @@ For consistent theme application:
   - [ ] Create theme-specific frames
   - [ ] Add theme-specific typography pairings
 - [ ] Theme System Optimization
-  - [ ] Optimize font loading (load only fonts used by active themes)
-  - [ ] Create theme asset sprite system
-  - [ ] Add theme-specific print optimizations
-  - [ ] Implement theme switching without page reload
-  - [ ] Support mixed theme decks (individual themes per card)
+  - [x] Optimize font loading (load only fonts used by active themes)
+  - [x] Create theme asset sprite system
+  - [x] Add theme-specific print optimizations
+  - [x] Implement theme switching without page reload
+  - [x] Support mixed theme decks (individual themes per card)
 
 ### Tomorrow's Focus
 1. Active Theme Polish
