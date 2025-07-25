@@ -1,49 +1,82 @@
 /* Cordial Theme - Elegant aesthetics with flowing organic elements */
-:root[data-theme="cordial"] {
+[data-theme="cordial"] {
   /* Core Theme Colors */
   --theme-primary: #7D98A1;    /* Silvery blue-grey */
   --theme-secondary: #2F4F4F;  /* Deep forest grey */
   --theme-accent: #C0D8D8;     /* Pale silver-blue */
   --theme-text: #2C3E50;       /* Deep blue-grey */
-  --theme-background: transparent; /* Transparent background for card area */
+  --theme-background: white;    /* White background for print */
   --theme-text-faded: #5C6E80; /* Faded blue-grey */
 
   /* Typography */
   --theme-title-font: 'Ballet', cursive;        /* Art Nouveau elegance */
-  --theme-body-font: 'Kapakana', cursive;     /* Flowing handwritten style */
+  --theme-body-font: 'Tangerine', cursive;      /* Elegant flowing script */
   --theme-title-weight: 400;   /* Ballet has only 400 */
-  --theme-body-weight: 400;    /* Kapakana has only 400 */
+  --theme-body-weight: 700;    /* Using bold Tangerine for better readability */
   --role-font-family: var(--theme-title-font);  /* Use Ballet for roles too */
   
   /* Font Sizes */
-  --title-font-size: 2.4em;    /* Ballet needs to be a bit larger */
+  --title-font-size: 2em;      /* Reduced from 2.4em */
   --role-font-size: 1.6em;     /* Also use Ballet for roles */
-  --trait-font-size: 1.1em;    /* Eagle Lake needs a bit more size */
-  --base-font-size: 1.1cqw;    /* Slightly larger base size */
+  --trait-font-size: 1.4em;    /* Tangerine needs to be larger for readability */
+  --base-font-size: 1.3cqw;    /* Larger base size for Tangerine */
+
+  /* Text Alignment */
+  --title-text-align: center;
+  --role-text-align: center;
+  --desc-text-align: left;
 
   /* Frame Style */
   --frame-style: solid;
   --frame-width: 1px;
-  --frame-opacity: 0.8;
+  --frame-opacity: 0.6;
 
   /* Divider Style */
   --divider-style: solid;
   --divider-width: 1px;
-  --divider-opacity: 0.6;
+  --divider-opacity: 0.4;
 
   /* Content Box Style */
-  --content-box-bg: white;     /* Solid white background for content area */
+  --content-box-bg: white;  /* White background for print */
   --content-box-radius: 2px;
-  --content-box-border-width: 1px;
+  --content-box-border-width: 1px;              /* Border width for flourish alignment */
+  --content-box-shadow: none;  /* No shadow for print */
 
   /* Flourish System */
   --flourish-color: var(--theme-primary);
-  --flourish-opacity: 0;  /* Disable flourishes until they look better */
+  --flourish-opacity: 0;        /* Hide all flourishes */
   --flourish-size: 3rem;
-  --flourish-portrait-size: min(40%, 6rem);
-  --flourish-content-size: 2.5rem;
+  --flourish-aspect: 1;
+
+  /* Portrait Flourishes */
+  --portrait-flourish-size: min(40%, 6rem);
+  --portrait-flourish-opacity: var(--flourish-opacity);
+  --portrait-flourish-aspect: 1;
+
+  /* Content Flourishes */
+  --content-flourish-size: 2.5rem;
+  --content-flourish-opacity: var(--flourish-opacity);
+  --content-flourish-aspect: 1;
+
+  /* Individual Flourish Controls */
+  --flourish-content-top-left-opacity: var(--content-flourish-opacity);
+  --flourish-content-top-right-opacity: var(--content-flourish-opacity);
+  --flourish-content-bottom-left-opacity: var(--content-flourish-opacity);
+  --flourish-content-bottom-right-opacity: var(--content-flourish-opacity);
+
+  --flourish-portrait-top-left-opacity: var(--portrait-flourish-opacity);
+  --flourish-portrait-top-right-opacity: var(--portrait-flourish-opacity);
+  --flourish-portrait-bottom-left-opacity: var(--portrait-flourish-opacity);
+  --flourish-portrait-bottom-right-opacity: var(--portrait-flourish-opacity);
 
   /* Show all flourishes */
-  --show-corner-flourish: 0;
+  --show-corner-flourish: 1;
   --show-dividers: 1;
+  --show-frame: 1;
+  --show-texture: 0;
+}
+
+/* Override divider opacity for traits */
+[data-theme="cordial"] .traits {
+  opacity: unset;  /* Remove the divider-opacity from traits */
 } 

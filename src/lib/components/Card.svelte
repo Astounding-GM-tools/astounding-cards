@@ -5,8 +5,8 @@
   const activeTheme = $derived(theme ?? $currentDeck?.meta?.theme ?? 'classic');
 </script>
 
-<div data-theme={activeTheme} class="card" class:show-crop-marks={showCropMarks}>
-  <div class="theme-scope">
+<div class="card" class:show-crop-marks={showCropMarks}>
+  <div class="theme-scope" data-theme={activeTheme}>
     {@render children()}
   </div>
 </div>

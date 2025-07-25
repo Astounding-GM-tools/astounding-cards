@@ -210,20 +210,20 @@
     aspect-ratio: var(--flourish-aspect);
     pointer-events: none;
     z-index: 2;
-    color: var(--flourish-color, currentColor);
-    opacity: var(--flourish-opacity);
+    color: var(--flourish-color);
   }
 
-  /* Portrait flourishes - large and light */
+  /* Portrait flourishes */
   .portrait-flourish {
-    --flourish-size: min(35%, 5rem);
-    --flourish-aspect: var(--portrait-flourish-aspect, 1);
+    width: var(--portrait-flourish-size);
+    aspect-ratio: var(--portrait-flourish-aspect);
   }
 
   .portrait-flourish.top-left {
     position: absolute;
     left: 0;
     top: 0;
+    opacity: var(--flourish-portrait-top-left-opacity);
   }
 
   .portrait-flourish.top-right {
@@ -231,20 +231,23 @@
     right: 0;
     top: 0;
     transform: rotate(90deg);
+    opacity: var(--flourish-portrait-top-right-opacity);
   }
 
   .portrait-flourish.bottom-left {
     transform: rotate(-90deg);
+    opacity: var(--flourish-portrait-bottom-left-opacity);
   }
 
   .portrait-flourish.bottom-right {
     transform: rotate(180deg);
+    opacity: var(--flourish-portrait-bottom-right-opacity);
   }
 
-  /* Content flourishes - make them as large as portrait flourishes */
+  /* Content flourishes */
   .content-flourish {
-    --flourish-size: min(35%, 5rem);  /* Same as portrait flourishes */
-    --flourish-aspect: var(--content-flourish-aspect, 1);
+    width: var(--content-flourish-size);
+    aspect-ratio: var(--content-flourish-aspect);
   }
 
   .content-flourish.top-left {
@@ -252,7 +255,7 @@
     left: calc(-1 * var(--content-box-border-width, 0px));
     top: calc(-1 * var(--content-box-border-width, 0px));
     z-index: 1;  /* Put behind text */
-    opacity: var(--flourish-content-top-left-opacity, var(--flourish-opacity));
+    opacity: var(--flourish-content-top-left-opacity);
   }
 
   .content-flourish.top-right {
@@ -261,7 +264,7 @@
     top: calc(-1 * var(--content-box-border-width, 0px));
     transform: rotate(90deg);
     z-index: 1;  /* Put behind text */
-    opacity: var(--flourish-content-top-right-opacity, var(--flourish-opacity));
+    opacity: var(--flourish-content-top-right-opacity);
   }
 
   /* Debug styles for flourishes - only show in dev mode */
@@ -299,7 +302,7 @@
     opacity: var(--content-opacity, 1);
     padding: var(--content-gap);
     border-radius: var(--content-box-radius);
-    border: var(--content-box-border);
+    border: var(--content-box-border-width) var(--frame-style) var(--theme-primary);
     box-shadow: var(--content-box-shadow);
     overflow: hidden;  /* Keep flourishes contained */
   }
@@ -328,8 +331,7 @@
   .traits {
     margin-top: var(--content-gap);
     font-family: var(--theme-body-font);
-    border-top: calc(var(--divider-width) * var(--show-dividers)) var(--divider-style) var(--divider-color);
-    opacity: var(--divider-opacity);
+    border-top: calc(var(--divider-width) * var(--show-dividers)) var(--divider-style) var(--theme-primary);
     padding-top: var(--content-gap);
     white-space: pre-wrap;
     line-height: 1.4;
@@ -341,7 +343,7 @@
 
   .traits :global(.trait-label) {
     font-weight: bold;
-    color: var(--content-text);
+    color: var(--theme-text);
     opacity: 0.8;
     display: inline-block;
     min-width: clamp(20mm, 25cqw, 30mm);
@@ -381,7 +383,7 @@
   }
 
   .image-input input {
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--theme-primary);
     padding: 1mm;
     border-radius: 0.5mm;
     min-width: 30mm;
@@ -390,7 +392,8 @@
 
   .image-input button {
     border: none;
-    background: var(--border-color);
+    background: var(--theme-primary);
+    color: var(--content-box-bg);
     padding: 1mm 2mm;
     border-radius: 0.5mm;
     cursor: pointer;

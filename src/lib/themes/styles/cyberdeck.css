@@ -1,44 +1,86 @@
-/* Cyberdeck Theme - High-tech, digital aesthetic */
-:root[data-theme="cyberdeck"] {
-  /* Core Theme Colors */
-  --theme-primary: #00b4d8;     /* Neon blue, but more subdued */
-  --theme-secondary: #1a1a1a;   /* Dark gray */
-  --theme-accent: #00ff41;      /* Matrix green for small accents */
+/* Cyberdeck Theme - High-tech aesthetic with digital elements */
+[data-theme="cyberdeck"] {
+  /* Theme Colors */
+  --theme-primary: #00b341;     /* Darker matrix green for better print contrast */
+  --theme-secondary: #1a1a1a;   /* Dark gray instead of pure black */
+  --theme-accent: #0098b8;      /* Darker neon blue for better print contrast */
   --theme-text: #1a1a1a;        /* Dark gray text */
-  --theme-background: transparent;  /* Transparent background for card area */
-  --theme-text-faded: #4a4a4a;  /* Faded text for secondary info */
+  --theme-background: white;     /* White background for print */
+  --theme-text-faded: #4d4d4d;  /* Medium gray for secondary text */
 
   /* Typography */
-  --theme-title-font: 'Orbitron', 'Arial Black', sans-serif;  /* Sharp, geometric display font */
-  --theme-body-font: 'Share Tech Mono', monospace;            /* Monospace for that terminal feel */
-  --theme-title-weight: 700;    /* Bold titles */
-  --theme-body-weight: 400;     /* Regular for body */
+  --theme-title-font: Orbitron, sans-serif;
+  --theme-body-font: "Share Tech Mono", monospace;
+  --theme-title-weight: 700;
+  --theme-body-weight: 400;
   --role-font-family: var(--theme-title-font);  /* Use Orbitron for roles too */
-  
-  /* Font Sizes */
-  --title-font-size: 1.6em;     /* Prominent titles */
-  --role-font-size: 1.2em;      /* Clear role display */
-  --trait-font-size: 1.2em;     /* Larger traits for monospace */
-  --base-font-size: 1.1cqw;     /* Slightly larger base size */
 
-  /* Content Box Style */
-  --content-box-bg: #ffffff;                    /* White background */
-  --content-box-radius: 0;                      /* Sharp corners */
-  --content-box-border-width: 1px;              /* Border width for flourish alignment */
+  /* Text Alignment */
+  --title-text-align: right;
+  --role-text-align: right;
+  --desc-text-align: left;
+
+  /* Decorative Elements */
+  --show-corner-flourish: 1;
+  --show-dividers: 1;
+  --show-frame: 1;
+  --show-texture: 0;
+
+  /* Frame Style */
+  --frame-style: solid;
+  --frame-width: 1px;          /* Thinner border for less ink */
+  --frame-opacity: 0.8;
+
+  /* Divider Style */
+  --divider-style: solid;
+  --divider-width: 1px;
+  --divider-opacity: 0.4;
 
   /* Flourish System */
   --flourish-color: var(--theme-primary);
-  --flourish-opacity: 1;
+  --flourish-opacity: 0.6;      /* Reduced opacity for less ink */
   --flourish-size: 2.5rem;
-  --flourish-portrait-size: min(40%, 6rem);
-  --flourish-portrait-top-left-opacity: 0;      /* Hide top-left portrait flourish */
-  --flourish-content-size: 2rem;
+  --flourish-aspect: 1;
 
-  /* Print-specific overrides */
-  @media print {
-    --theme-primary: #000000;   /* Pure black for sharp prints */
-    --theme-text: #000000;      /* Pure black text */
-    --theme-accent: #000000;    /* Black instead of neon green */
-    --content-box-border-width: 1px;
-  }
+  /* Portrait Flourishes */
+  --portrait-flourish-size: min(35%, 5rem);
+  --portrait-flourish-opacity: 0.4;  /* Reduced opacity for less ink */
+  --portrait-flourish-aspect: 1;
+
+  /* Content Flourishes */
+  --content-flourish-size: 2rem;
+  --content-flourish-opacity: 0.3;   /* Reduced opacity for less ink */
+  --content-flourish-aspect: 1;
+
+  /* Individual Flourish Controls */
+  --flourish-content-top-left-opacity: var(--content-flourish-opacity);
+  --flourish-content-top-right-opacity: var(--content-flourish-opacity);
+  --flourish-content-bottom-left-opacity: var(--content-flourish-opacity);
+  --flourish-content-bottom-right-opacity: var(--content-flourish-opacity);
+
+  --flourish-portrait-top-left-opacity: var(--portrait-flourish-opacity);
+  --flourish-portrait-top-right-opacity: var(--portrait-flourish-opacity);
+  --flourish-portrait-bottom-left-opacity: var(--portrait-flourish-opacity);
+  --flourish-portrait-bottom-right-opacity: var(--portrait-flourish-opacity);
+
+  /* Content Box Style */
+  --content-box-radius: 0;
+  --content-box-border-width: 1px;    /* Thinner border for less ink */
+  --content-box-shadow: none;         /* Removed shadow for print */
+  --content-box-bg: white;           /* White background for print */
+
+  /* Typography Sizes */
+  --title-font-size: 1.8em;
+  --role-font-size: 1.2em;
+  --trait-font-size: 1em;
+  --base-font-size: 1cqw;
+}
+
+/* Title and role width overrides */
+[data-theme="cyberdeck"] .content h2.title {
+  max-width: 100%;
+}
+
+[data-theme="cyberdeck"] .content .role {
+  max-width: 100%;
 } 

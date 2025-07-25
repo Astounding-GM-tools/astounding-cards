@@ -1,76 +1,130 @@
 /* Scriptorum Theme - Rich textures and illuminated manuscript style */
-:root {
+[data-theme="scriptorum"] {
   /* Colors */
-  [style*="--current-theme: scriptorum"] & {
-    --theme-primary: #8B4513;      /* Sepia brown for ink */
-    --theme-secondary: #2F4F4F;    /* Dark slate for aged look */
-    --theme-accent: #8B0000;       /* Dark red for emphasis */
-    --theme-background: transparent;   /* Transparent background for card area */
-    --theme-text: #000000;         /* Black text */
-    --theme-text-faded: #594D47;   /* Lighter brown for aged ink effect */
+  --theme-primary: #8B4513;      /* Sepia brown for ink */
+  --theme-secondary: #2F4F4F;    /* Dark slate for aged look */
+  --theme-accent: #8B0000;       /* Dark red for emphasis */
+  --theme-text: #4A4A4A;         /* Faded ink gray */
+  --theme-background: white;      /* White background for print */
+  --theme-text-faded: #594D47;   /* Lighter brown for aged ink effect */
 
-    /* Typography */
-    --theme-title-font: 'UnifrakturMaguntia', cursive;      /* Gothic blackletter font */
-    --theme-body-font: 'Eagle Lake', cursive;   /* Medieval manuscript style - only regular weight */
-    --theme-title-weight: 400;    /* Only regular available */
-    --theme-body-weight: 400;     /* Only regular available */
-    --role-font-family: var(--theme-body-font);  /* Use flowing script for role */
-     
-    /* Font Sizes */
-    --title-font-size: 2em;       /* Large for titles */
-    --role-font-size: 3.5cqw;     /* Decreased from 5cqw */
-    --trait-font-size: 1.2em;     /* Decreased from 1.6em */
-    --base-font-size: 1cqw;       /* Decreased from 1.1cqw */
+  /* Typography */
+  --theme-title-font: 'UnifrakturMaguntia', cursive;      /* Gothic blackletter font */
+  --theme-body-font: 'Eagle Lake', cursive;   /* Medieval manuscript style - only regular weight */
+  --theme-title-weight: 400;    /* Only regular available */
+  --theme-body-weight: 400;     /* Only regular available */
+  --role-font-family: var(--theme-body-font);  /* Use flowing script for role */
+   
+  /* Font Sizes */
+  --title-font-size: 2em;       /* Large for titles */
+  --role-font-size: 3.5cqw;     /* Decreased from 5cqw */
+  --trait-font-size: 1.2em;     /* Decreased from 1.6em */
+  --base-font-size: 1cqw;       /* Decreased from 1.1cqw */
 
-    /* Text Alignment */
-    --title-text-align: left;     /* Left-aligned titles for manuscript style */
-    --role-text-align: left;      /* Left-aligned roles */
-    --desc-text-align: left;      /* Left-aligned descriptions */
+  /* Text Alignment */
+  --title-text-align: left;     /* Left-aligned titles for manuscript style */
+  --role-text-align: left;      /* Left-aligned roles */
+  --desc-text-align: left;      /* Left-aligned descriptions */
 
-    /* Flourish System */
-    --flourish-color: var(--theme-primary);
-    --flourish-opacity: 1;        /* Full opacity for print */
-    --flourish-size: 2.5rem;
-    --flourish-portrait-size: min(35%, 5rem);
-    --flourish-content-size: 2rem;
-    --flourish-content-top-left-opacity: 0;  /* Hide top-left content flourish */
-  }
+  /* Decorative Elements */
+  --show-corner-flourish: 1;
+  --show-dividers: 1;
+  --show-frame: 1;
+  --show-texture: 0;            /* No texture for print */
+
+  /* Frame Style */
+  --frame-style: double;
+  --frame-width: 1px;           /* Thinner for less ink */
+  --frame-opacity: 0.6;         /* Reduced opacity for less ink */
+
+  /* Divider Style */
+  --divider-style: solid;
+  --divider-width: 1px;
+  --divider-opacity: 0.4;       /* Reduced opacity for less ink */
+
+  /* Flourish System */
+  --flourish-color: var(--theme-primary);
+  --flourish-opacity: 0.6;      /* Reduced opacity for less ink */
+  --flourish-size: 2.5rem;
+  --flourish-aspect: 1;
+
+  /* Portrait Flourishes */
+  --portrait-flourish-size: min(35%, 5rem);
+  --portrait-flourish-opacity: 0.4;  /* Reduced opacity for less ink */
+  --portrait-flourish-aspect: 1;
+
+  /* Content Flourishes */
+  --content-flourish-size: 2rem;
+  --content-flourish-opacity: 0.3;   /* Reduced opacity for less ink */
+  --content-flourish-aspect: 1;
+
+  /* Individual Flourish Controls */
+  --flourish-content-top-left-opacity: 0;  /* Hide top-left content flourish */
+  --flourish-content-top-right-opacity: var(--content-flourish-opacity);
+  --flourish-content-bottom-left-opacity: var(--content-flourish-opacity);
+  --flourish-content-bottom-right-opacity: var(--content-flourish-opacity);
+
+  --flourish-portrait-top-left-opacity: var(--portrait-flourish-opacity);
+  --flourish-portrait-top-right-opacity: var(--portrait-flourish-opacity);
+  --flourish-portrait-bottom-left-opacity: var(--portrait-flourish-opacity);
+  --flourish-portrait-bottom-right-opacity: var(--portrait-flourish-opacity);
+
+  /* Content Box Style */
+  --content-box-radius: 0;
+  --content-box-border-width: 1px;
+  --content-box-shadow: none;         /* No shadow for print */
+  --content-box-bg: white;           /* White background for print */
 }
 
 /* Print-specific overrides */
 @media print {
-  :root {
-    [style*="--current-theme: scriptorum"] & {
-      --theme-primary: #663300;     /* Darker brown for better print contrast */
-      --theme-secondary: #333333;   /* Darker gray for better print contrast */
-      --theme-accent: #660000;      /* Darker red for better print contrast */
-    }
+  [data-theme="scriptorum"] {
+    --theme-primary: #663300;     /* Darker brown for better print contrast */
+    --theme-secondary: #333333;   /* Darker gray for better print contrast */
+    --theme-accent: #660000;      /* Darker red for better print contrast */
   }
 }
 
-/* Left align all text to match handwritten manuscript style */
-[style*="--current-theme: scriptorum"] .content-box {
+/* Content box styling */
+[data-theme="scriptorum"] .content-box {
   border: var(--content-box-border-width) solid var(--theme-secondary);
 }
 
+/* Title and role width overrides */
+[data-theme="scriptorum"] .content h2.title {
+  max-width: 100%;
+}
+
+[data-theme="scriptorum"] .content .role {
+  max-width: 100%;
+  line-height: 0.8;
+  margin: 0 auto;
+}
+
 /* Illuminated capital letters */
-[style*="--current-theme: scriptorum"] .title.front::first-letter {
-  font-size: 175%;
+[data-theme="scriptorum"] .title.front::first-letter {
+  font-size: 200%;
   float: left;
-  margin: 0;
+  margin: 0 1px 0 0;
   font-family: var(--theme-title-font);
   color: var(--theme-primary);
   line-height: 0.8;
-  padding-top: 2mm;
+  padding-top: 1mm;
 }
 
-[style*="--current-theme: scriptorum"] .desc::first-letter {
-  font-size: 200%;
+[data-theme="scriptorum"] .desc::first-letter {
+  font-size: 275%;
   float: left;
-  margin: 0;
+  margin: 0 2px 0 0;
   font-family: var(--theme-body-font);
   color: var(--theme-primary);
   line-height: 1;
+}
+
+/* Role styling */
+[data-theme="scriptorum"] .content .role {
+  line-height: 0.8;
+  margin: 0 auto;
 }
 
 /* TODO: Future Flourish Possibilities

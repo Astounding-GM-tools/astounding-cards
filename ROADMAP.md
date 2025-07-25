@@ -132,6 +132,7 @@ For consistent theme application:
   - [ ] Create theme asset sprite system
   - [ ] Add theme-specific print optimizations
   - [ ] Implement theme switching without page reload
+  - [ ] Support mixed theme decks (individual themes per card)
 
 ### Tomorrow's Focus
 1. Active Theme Polish
