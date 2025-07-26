@@ -72,6 +72,43 @@ For player handouts, print only the front sides (odd-numbered pages), leaving th
    - Quick reference during play
    - Easy secret management
 
+## Image Handling
+
+### Portrait Images
+Each card can have a portrait image that appears on the front. Images are:
+- Automatically scaled and center-cropped to fit
+- Converted to WebP format for efficiency
+- Stored locally for offline use
+- Optimized for common AI art dimensions (1024px width)
+
+### Adding Images
+You can add images in two ways:
+1. **Local Files**
+   - Select an image file from your device
+   - Image is processed and stored locally
+   - Perfect for offline use
+   - Best for AI-generated art or prepared images
+
+2. **Image URLs**
+   - Paste a URL to an online image
+   - Image is downloaded, processed, and stored locally
+   - Original URL is preserved for sharing
+   - Good for web-sourced images
+
+### Image Tips
+- **Recommended Size:** 1024×1434 pixels (5:7 ratio)
+- **Preparation:** Pre-crop images if specific positioning is needed
+- **Sources:**
+  - AI art generators (Midjourney, DALL-E, etc.)
+  - Stock photos
+  - Personal artwork
+  - Campaign artwork
+- **Sharing:**
+  - URLs are preferred for sharing decks (smaller file size)
+  - Local images are included as data when sharing (larger file size)
+  - Warning shown when shared deck size is large
+  - Consider using image URLs for large decks
+
 ## Printing Instructions
 See the print dialog in the app for detailed instructions on:
 - Paper sizes and margins

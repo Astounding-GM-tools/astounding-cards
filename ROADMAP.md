@@ -91,37 +91,26 @@ For consistent theme application:
 ### Next Steps (Priority Order)
 
 ### 1. Image Handling
-- [ ] Change from local /portraits/ to full URLs
-  - [ ] Update image storage in IndexedDB
-  - [ ] Migrate existing portrait paths
-  - [ ] Add URL validation and sanitization
-  - [ ] Handle relative vs absolute URLs
-- [ ] Image Optimization System
-  - [ ] Add image URL validation and testing
-  - [ ] Implement loading state indicators
-  - [ ] Add error handling for broken images
-  - [ ] Cache successful image loads
-- [ ] Imgur Integration
-  - [ ] Direct URL support with size optimization
-  - [ ] Image picker/upload component
-  - [ ] Automatic size selection for cards
-  - [ ] Handle Imgur API rate limits
-  - [ ] Respect content moderation rules
-- [ ] Modern Format Support
-  - [ ] Progressive image loading
-  - [ ] BlurHash for loading states
-  - [ ] WebP/AVIF format detection
-  - [ ] Fallback for older browsers
-- [ ] User Guidance
-  - [ ] Clear documentation for image requirements
-  - [ ] Recommended image sizes and formats
-  - [ ] Hosting options and considerations
-  - [ ] Troubleshooting guide for common issues
-- [ ] Future Enhancements
-  - [ ] Support for other image hosts
-  - [ ] AI image generation integration
-  - [ ] Local image optimization
-  - [ ] Batch image processing
+- [ ] URL-based Images
+  - [ ] URL validation and testing
+  - [ ] Support for common image hosts
+  - [ ] Clear user guidance
+  - [ ] Error handling and fallbacks
+- [ ] Local File Support
+  - [ ] Relative path handling
+  - [ ] Size and format validation
+  - [ ] Print quality warnings
+  - [ ] Migration path to URLs
+- [ ] Image Processing
+  - [x] Proper card dimensions
+  - [x] Format optimization
+  - [x] Print-friendly processing
+  - [x] Size validation
+- [ ] Documentation
+  - [ ] Recommended image hosts
+  - [ ] Size/format guidelines
+  - [ ] Best practices for sharing
+  - [ ] Troubleshooting guide
 
 ### 2. Import & Export System
 - [ ] URL Sharing
@@ -132,85 +121,24 @@ For consistent theme application:
   - [ ] Add sharing instructions
   - [ ] Handle URL import conflicts
   - [ ] Add version tracking for shared decks
-- [ ] Direct JSON Import/Export
+- [ ] JSON Import/Export
   - [ ] Add JSON paste field with validation
   - [ ] Export deck as formatted JSON
   - [ ] Clear error messages for invalid JSON
   - [ ] Preview before import
   - [ ] Merge options (new deck/existing deck)
-- [ ] API Integration
-  - [ ] Support for endpoint URLs
-  - [ ] Authentication options (headers, tokens)
-  - [ ] Rate limiting and error handling
-  - [ ] Progress indicators
-  - [ ] Webhook support for external updates
-- [ ] Import Mapping
-  - [ ] Define mapping templates
-  - [ ] Custom field mapping UI
-  - [ ] Save/load mapping presets
-  - [ ] Handle nested data structures
-- [ ] AI Integration Documentation
-  - [ ] Clear JSON schema documentation
-  - [ ] Example prompts for different LLMs
-  - [ ] Structured data extraction guides
-  - [ ] Best practices for card generation
-  - [ ] Image suggestion strategies
-- [ ] Collaboration Features
-  - [ ] Self-sync across devices
-    - [ ] Clear "last synced" indicator
-    - [ ] Quick device-to-device sharing
-    - [ ] Optional auto-sync via URL
-  - [ ] Author/Resource sharing
-    - [ ] Mark decks as "official" or "modified"
-    - [ ] Track source/parent deck
-    - [ ] Support for errata updates
-    - [ ] Fork/variant handling
-  - [ ] Conflict Resolution
-    - [ ] Compare versions
-    - [ ] Show visual diffs
-    - [ ] Merge options
-    - [ ] Keep history
-- [ ] Example Integrations
-  - [ ] Adventure conversion examples
-  - [ ] NPC roster imports
-  - [ ] Location gazetteer imports
-  - [ ] Item catalog imports
-  - [ ] Integration guides for common systems
+  - [ ] Optional: Include images as base64
 
-### 3. Mobile Experience
-- [ ] Create dedicated mobile routes and views
-  - [ ] Separate from print layout components
-  - [ ] Mobile-first navigation pattern
-  - [ ] Touch-friendly editing interface
-- [ ] Mobile-optimized deck management
-  - [ ] Card list view with quick actions
-  - [ ] Swipe gestures for navigation
-  - [ ] Bottom sheet for quick edits
-  - [ ] Pull-to-refresh for updates
-- [ ] Card editing experience
-  - [ ] Full-screen card editor
-  - [ ] Simplified trait management
-  - [ ] Easy image URL input
-  - [ ] Quick-access formatting tools
-- [ ] Mobile-specific features
-  - [ ] Portrait/landscape optimization
-  - [ ] Offline indicators
-  - [ ] Share sheet integration
-  - [ ] Camera integration for portraits
-
-### 4. PWA & Offline Support
-- [ ] Basic PWA setup
-  - [ ] Web manifest
-  - [ ] Service worker registration
-  - [ ] Install prompts
-  - [ ] App icons and splash screens
-- [ ] Smart caching strategy
-  - [ ] Version manifest file for quick checks
-  - [ ] Cache static assets (JS/CSS/images)
-  - [ ] Cache app shell for offline startup
-  - [ ] Conditional cache busting based on version
-- [ ] Network handling
-  - [ ] Offline-first approach
-  - [ ] Background sync for changes
-  - [ ] Network status indicators
-  - [ ] Graceful degradation 
+### Future Development (v2)
+- [ ] Commercial Features
+  - [ ] Integrated image hosting
+  - [ ] Batch upload support
+  - [ ] Image management
+  - [ ] Higher size limits
+  - [ ] CDN integration
+  - [ ] User galleries
+- [ ] Subscription System
+  - [ ] Payment processing
+  - [ ] Usage tracking
+  - [ ] Account management
+  - [ ] Team/organization support 

@@ -38,7 +38,7 @@
           <CharacterCardFront 
             {character}
             {showCropMarks}
-            onChange={(updates) => onCharacterChange(character.id, updates)}
+            onChange={(updates: Partial<Character>) => onCharacterChange(character.id, updates)}
           />
         </div>
       {/each}
@@ -53,7 +53,7 @@
           <CharacterCardBack 
             {character}
             {showCropMarks}
-            onChange={(updates) => onCharacterChange(character.id, updates)}
+            onChange={(updates: Partial<Character>) => onCharacterChange(character.id, updates)}
           />
         </div>
       {/each}
@@ -66,7 +66,7 @@
   .page {
     width: 210mm;  /* A4 preview size */
     height: 297mm;
-    margin: 0 auto var(--page-gap);
+    margin: 0 auto 20mm;  /* Increased gap between pages */
     padding: var(--page-margin);
     background: var(--page-bg);
     box-shadow: var(--page-shadow);
@@ -81,13 +81,12 @@
 
   /* Card grid container */
   .card-grid {
-    /* Match card proportions: width is 3 units × 5, height is 3 units × 7 */
-    aspect-ratio: 15 / 21;
-    /* Take up available width minus padding */
+    /* Return to working 5:7 aspect ratio */
+    aspect-ratio: 5 / 7;
     width: calc(100% - calc(var(--page-margin) * 2));
-    /* Grid setup */
     display: grid;
     gap: 0;
+    margin: var(--page-margin) 0;  /* Add vertical margin to show crop marks */
   }
 
   /* Poker size grid (3x3) */
@@ -112,6 +111,8 @@
     position: relative;
     width: 100%;
     height: 100%;
+    /* Ensure crop marks are visible */
+    margin: -1px;  /* Prevent gaps between cards */
   }
 
   /* Reset direction for card content */
@@ -124,33 +125,18 @@
     .page {
       width: auto;
       height: auto;
-      min-height: 100vh;  /* Use full page height */
+      min-height: 100vh;
       margin: 0;
       padding: var(--page-margin);
       box-shadow: none;
       page-break-after: always;
+      page-break-inside: avoid;
     }
 
     /* Ensure each page starts on a new sheet */
     @page {
       margin: 0;
-      size: auto;  /* Use printer's default paper size */
-    }
-
-    /* Adjust for US Letter (shorter height) */
-    @media (max-height: 280mm) {  /* Letter paper height */
-      .card-grid {
-        /* Slightly reduce height while maintaining readable proportions */
-        aspect-ratio: 15 / 20;  /* Slightly less tall than A4 ratio */
-      }
-    }
-
-    /* Extra space for Legal paper */
-    @media (min-height: 355mm) {  /* Legal paper height */
-      .card-grid {
-        /* Keep A4 proportions but scale to Letter width */
-        width: calc(215.9mm - calc(var(--page-margin) * 2));  /* Letter/Legal width minus padding */
-      }
+      size: auto;
     }
   }
 </style> 
