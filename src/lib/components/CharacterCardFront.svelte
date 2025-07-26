@@ -311,20 +311,34 @@
   h2.title {
     margin: 0 auto;
     max-width: 80%;
-    font-size: var(--title-font-size);
+    font-size: 1.2em;
     font-weight: var(--theme-title-weight);
     font-family: var(--theme-title-font);
     text-align: var(--title-text-align);
+    line-height: var(--title-line-height, 1.2);
     position: relative;
     z-index: 3;  /* Ensure text stays on top */
+  }
+
+  /* For larger containers (tarot size), use theme's title size */
+  @container (min-width: 63mm) {
+    h2.title {
+      font-size: var(--title-font-size);
+    }
+  }
+
+  /* Preview cards should still use smaller font */
+  .card-content.preview .title {
+    font-size: calc(var(--title-font-size) * 0.8);
   }
 
   .role {
     margin: 0.25rem auto 0;
     max-width: 80%;
     text-align: var(--role-text-align);
-    font-family: var(--role-font-family, var(--theme-body-font));  /* Use role font if set, otherwise body font */
+    font-family: var(--role-font-family, var(--theme-body-font));
     font-size: var(--role-font-size);
+    line-height: var(--role-line-height, 1.2);
     position: relative;
     z-index: 3;
   }
@@ -335,7 +349,7 @@
     border-top: calc(var(--divider-width) * var(--show-dividers)) var(--divider-style) var(--theme-primary);
     padding-top: var(--content-gap);
     white-space: pre-wrap;
-    line-height: 1.4;
+    line-height: var(--body-line-height, 1.4);
     font-size: var(--trait-font-size);
     position: relative;
     z-index: 3;
@@ -347,7 +361,7 @@
     color: var(--theme-text);
     opacity: 0.8;
     display: inline-block;
-    min-width: clamp(20mm, 25cqw, 30mm);
+    min-width: 5em;
   }
 
   .change-portrait {
@@ -421,10 +435,6 @@
   /* Preview card styles */
   .card-content.preview {
     font-size: calc(var(--base-font-size) * 0.8);
-  }
-
-  .card-content.preview .title {
-    font-size: calc(var(--title-font-size) * 0.8);
   }
 
   .card-content.preview .role {

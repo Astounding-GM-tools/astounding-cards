@@ -187,23 +187,38 @@
 
   h2.title {
     margin: 0;
-    font-size: var(--title-font-size);
+    font-size: 1.2em;
     font-weight: var(--theme-title-weight);
     font-family: var(--theme-title-font);
     text-align: var(--title-text-align);
+    line-height: var(--title-line-height, 1.2);
+  }
+
+  /* For larger containers (tarot size), use theme's title size */
+  @container (min-width: 63mm) {
+    h2.title {
+      font-size: var(--title-font-size);
+    }
   }
 
   .desc {
     margin: var(--content-gap) 0;
-    font-size: var(--role-font-size);
-    line-height: 1.4;
+    font-size: 1em;
+    line-height: var(--body-line-height, 1.4);
     text-align: var(--desc-text-align);
     font-family: var(--theme-body-font);
   }
 
+  /* For larger containers (tarot size), use theme's role size */
+  @container (min-width: 63mm) {
+    .desc {
+      font-size: var(--role-font-size);
+    }
+  }
+
   .secrets {
     position: relative;
-    border: var(--content-box-border);
+    border: var(--content-box-border-width) var(--frame-style) var(--theme-primary);
     padding: var(--content-gap);
     border-radius: var(--content-box-radius);
     min-height: 40mm;
@@ -212,18 +227,40 @@
   }
 
   .secrets legend {
-    font-size: var(--ui-font-size);
+    font-size: 1em;
     color: var(--theme-text);
     font-weight: normal;
     padding: 0 1mm;
     font-family: var(--theme-body-font);
   }
 
+  /* For larger containers (tarot size), use theme's UI size */
+  @container (min-width: 63mm) {
+    .secrets legend {
+      font-size: var(--ui-font-size);
+    }
+  }
+
   .secrets-content {
     min-height: 35mm;
     white-space: pre-wrap;
-    font-size: var(--trait-font-size);
-    line-height: 1.4;
+    font-size: 1em;
+    line-height: var(--body-line-height, 1.4);
+  }
+
+  /* For larger containers (tarot size), use theme's trait size */
+  @container (min-width: 63mm) {
+    .secrets-content {
+      font-size: var(--trait-font-size);
+    }
+  }
+
+  .secrets-content :global(.secret-label) {
+    font-weight: bold;
+    color: var(--theme-text);
+    opacity: 0.8;
+    display: inline-block;
+    min-width: 5em;
   }
 
   .add-secret {
@@ -263,13 +300,5 @@
     .add-secret {
       display: none;
     }
-  }
-
-  .secrets-content :global(.secret-label) {
-    font-weight: bold;
-    color: var(--content-text);
-    opacity: 0.8;
-    display: inline-block;
-    min-width: clamp(20mm, 25cqw, 30mm);
   }
 </style> 

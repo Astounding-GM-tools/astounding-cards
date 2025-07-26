@@ -61,7 +61,7 @@ export const baseThemes: Record<string, CardTheme> = {
         'Readable: System fonts',
         'Genre: 20th century'
       ],
-      portrait: 'suited.jpg'
+      portrait: 'classic.png'
     }
   },
 
@@ -91,7 +91,7 @@ export const baseThemes: Record<string, CardTheme> = {
         'Feel: Gothic',
         'Genre: Fantasy'
       ],
-      portrait: 'gristlethwaite.jpg'
+      portrait: 'scriptorum_cropped.png'
     }
   },
 
@@ -121,7 +121,7 @@ export const baseThemes: Record<string, CardTheme> = {
         'Elegant: Gracefully swirly',
         'Dress code: Black tie and tails'
       ],
-      portrait: 'blackwood.jpg'
+      portrait: 'cordial.png'
     }
   },
 
@@ -152,7 +152,7 @@ export const baseThemes: Record<string, CardTheme> = {
         'Vibe: Dark and moody',
         'Genre: Cyberpunk, Sci-Fi'
       ],
-      portrait: 'communications.jpeg'
+      portrait: 'cyberdeck_2.png'
     }
   }
 };

@@ -21,6 +21,11 @@
   --trait-font-size: 1.4em;    /* Tangerine needs to be larger for readability */
   --base-font-size: 1.3cqw;    /* Larger base size for Tangerine */
 
+  /* Line Heights */
+  --title-line-height: 0.9;    /* Tighter line height for Ballet */
+  --role-line-height: 0.8;     /* Even tighter for role text */
+  --body-line-height: 1.2;     /* Slightly reduced for Tangerine */
+
   /* Text Alignment */
   --title-text-align: center;
   --role-text-align: center;
