@@ -269,13 +269,10 @@
   <div class="deck-content">
     <div class="deck-info">
       <div class="info-line">
-        <button 
-          class="theme-button"
-          onclick={() => showThemeSelect = true}
-        >
-          {baseThemes[deck.meta.theme]?.name || 'Select Theme'}
-        </button>
         <span class="cards">{deck.characters.length} cards</span>
+        <span class="theme-info">
+          {baseThemes[deck.meta.theme]?.name || 'No theme'}
+        </span>
       </div>
       <div class="info-line date">
         <span class="date-label">Created</span> {formatDate(deck.meta.createdAt)}
@@ -596,7 +593,7 @@
     line-height: 1.4;
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 1rem;
     font-family: var(--ui-font-family);
     font-size: var(--ui-font-size);
     white-space: nowrap;
@@ -604,6 +601,13 @@
 
   .info-line .cards {
     font-size: var(--ui-font-size);
+    min-width: 4em;
+  }
+
+  .theme-info {
+    color: var(--ui-text);
+    font-size: var(--ui-font-size);
+    font-family: var(--ui-font-family);
   }
 
   .info-line.date {
@@ -693,23 +697,13 @@
     opacity: 1;
   }
 
-  .theme-button {
-    padding: 0.4rem 0.75rem;
-    border: 1px solid var(--button-border);
-    border-radius: 4px;
-    background: var(--button-bg);
-    color: var(--button-text);
+  .theme-info {
+    color: var(--ui-text);
     font-size: var(--ui-font-size);
     font-family: var(--ui-font-family);
-    cursor: pointer;
-    transition: all 0.2s;
-    white-space: nowrap;
   }
 
-  .theme-button:hover {
-    background: var(--button-hover-bg);
-    border-color: var(--button-primary-bg);
-  }
+  /* Remove the theme-button styles since we no longer need them */
 
   .theme-select {
     font-size: var(--ui-font-size);
