@@ -88,74 +88,40 @@ For consistent theme application:
   - [x] Consistent focus states
   - [x] Screen reader friendly content
 
-## Next Steps (Priority Order)
+### Next Steps (Priority Order)
 
-### 1. Theme Implementation
-- [x] Basic theme structure and variables
-  - [x] Core color variables
-  - [x] Typography settings
-  - [x] Spacing and layout
-  - [x] Print optimizations
-- [x] Initial decorative elements
-  - [x] Corner flourishes with light/dark variants
-  - [x] Centered title with proper spacing
-  - [x] Content box styling
-  - [x] Proper z-index layering
-- [x] Theme System Cleanup
-  - [x] Standardize CSS variable inheritance
-  - [x] Remove redundant variable declarations
-  - [x] Ensure print-friendly values (no opacity/effects)
-  - [x] Fix flourish opacity inheritance system
-  - [x] Document theme creation guidelines
-  - [x] Create theme template with comments
-- [x] Theme Selection UI
-  - [x] Add theme preview cards
-  - [x] Show theme descriptions
-  - [x] Theme-specific preview portraits
-  - [x] Preview stat indicators
-- [ ] Active Theme Development
-  - [x] Improve Cordial theme (elegant Art Nouveau)
-  - [x] Refine Classic theme (minimal, clean design)
-  - [x] Polish Scriptorum theme (manuscript style)
-  - [x] Enhance Cyberdeck theme (tech aesthetic)
-  - [ ] Optimize font sizes for poker-sized cards
-    - [ ] Reduce title font size
-    - [ ] Adjust role and trait sizes
-    - [ ] Test readability at print size
-- [ ] Postponed Themes (v2)
-  - [ ] Modern theme (removed, needs redesign)
-  - [ ] Vintage theme (removed, needs redesign)
-  - [ ] Keegan theme (vintage trading card style)
-  - [ ] Western theme "Drifters" (wanted posters & playing cards)
-  - [ ] Contemporary/Corporate theme
-  - [ ] Nature theme
-- [ ] Theme-specific features
-  - [ ] Add theme-specific corner flourish designs
-  - [ ] Implement divider styles per theme
-  - [ ] Add optional texture overlays
-  - [ ] Create theme-specific frames
-  - [ ] Add theme-specific typography pairings
-- [ ] Theme System Optimization
-  - [x] Optimize font loading (load only fonts used by active themes)
-  - [x] Create theme asset sprite system
-  - [x] Add theme-specific print optimizations
-  - [x] Implement theme switching without page reload
-  - [x] Support mixed theme decks (individual themes per card)
-
-### Tomorrow's Focus
-1. Active Theme Polish
-   - Improve Cordial theme design (new flourishes)
-   - Refine Classic theme minimalism
-   - Enhance Scriptorum manuscript features
-   - Polish Cyberdeck tech aesthetic
-2. Theme Documentation
-   - [x] Update theme development guide
-   - [x] Document CSS variable system
-   - [ ] Add theme template with examples
-3. Theme UI Improvements
-   - Add theme descriptions to selector
-   - Improve theme switching UX
-   - Show current theme name clearly
+### 1. Image Handling
+- [ ] Change from local /portraits/ to full URLs
+  - [ ] Update image storage in IndexedDB
+  - [ ] Migrate existing portrait paths
+  - [ ] Add URL validation and sanitization
+  - [ ] Handle relative vs absolute URLs
+- [ ] Image Optimization System
+  - [ ] Add image URL validation and testing
+  - [ ] Implement loading state indicators
+  - [ ] Add error handling for broken images
+  - [ ] Cache successful image loads
+- [ ] Imgur Integration
+  - [ ] Direct URL support with size optimization
+  - [ ] Image picker/upload component
+  - [ ] Automatic size selection for cards
+  - [ ] Handle Imgur API rate limits
+  - [ ] Respect content moderation rules
+- [ ] Modern Format Support
+  - [ ] Progressive image loading
+  - [ ] BlurHash for loading states
+  - [ ] WebP/AVIF format detection
+  - [ ] Fallback for older browsers
+- [ ] User Guidance
+  - [ ] Clear documentation for image requirements
+  - [ ] Recommended image sizes and formats
+  - [ ] Hosting options and considerations
+  - [ ] Troubleshooting guide for common issues
+- [ ] Future Enhancements
+  - [ ] Support for other image hosts
+  - [ ] AI image generation integration
+  - [ ] Local image optimization
+  - [ ] Batch image processing
 
 ### 2. Import & Export System
 - [ ] URL Sharing
@@ -232,27 +198,7 @@ For consistent theme application:
   - [ ] Share sheet integration
   - [ ] Camera integration for portraits
 
-### 4. Image Handling
-- [ ] Change from local /portraits/ to full URLs
-- [ ] Add image URL validation
-- [ ] Add hosting suggestions:
-  - [ ] Imgur integration with size optimization
-    - [ ] Direct URL support
-    - [ ] Image picker component
-    - [ ] Automatic size selection
-    - [ ] Content moderation benefits
-  - [ ] Support for other sources (Midjourney, etc.)
-- [ ] Progressive image loading
-  - [ ] BlurHash implementation for beautiful loading states
-  - [ ] Support for modern formats (AVIF, WebP)
-  - [ ] JPEG XL investigation when browser support improves
-- [ ] Add guidance for:
-  - [ ] Recommended image sizes
-  - [ ] Supported formats
-  - [ ] Hosting considerations
-  - [ ] CORS requirements
-
-### 5. PWA & Offline Support
+### 4. PWA & Offline Support
 - [ ] Basic PWA setup
   - [ ] Web manifest
   - [ ] Service worker registration
