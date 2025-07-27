@@ -241,7 +241,16 @@ export async function updateCharacter(id: string, updates: Partial<Character>) {
   // Create updated character
   const updatedChar = {
     ...deck.characters[charIndex],
-    ...updates
+    ...updates,
+    // Handle blob updates correctly:
+    // 1. If we're explicitly setting a new blob, use it
+    // 2. If we're not changing the portrait, keep the existing blob
+    // 3. If we're changing to a URL/local portrait, clear the blob
+    portraitBlob: 'portraitBlob' in updates 
+      ? updates.portraitBlob
+      : updates.portrait === deck.characters[charIndex].portrait
+        ? deck.characters[charIndex].portraitBlob
+        : undefined
   };
 
   // Validate the updated character
@@ -538,6 +547,7 @@ const sampleCharacters: Character[] = [
     name: "Gristlethwaite",
     role: "Eccentric Inventor",
     portrait: "gristlethwaite.jpg",
+    portraitBlob: undefined,  // Optional blob data
     traits: [
       "Appearance: Wild gray hair and oil-stained hands",
       "Workshop: Cluttered with brass contraptions",

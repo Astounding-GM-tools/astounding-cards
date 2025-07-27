@@ -31,6 +31,7 @@ export interface Character {
   name: string;
   role: string;
   portrait: string | null;
+  portraitBlob?: Blob;  // Optional blob data for the portrait
   traits: string[];
   secrets: string[];  // New array for back of card
   desc: string;

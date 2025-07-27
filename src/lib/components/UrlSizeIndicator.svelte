@@ -1,12 +1,20 @@
 <script lang="ts">
   import { deckToUrl } from '$lib/stores/cards';
   import type { CharacterDeck } from '$lib/types';
+  import { browser } from '$app/environment';
 
-  export let deck: CharacterDeck;
+  const { deck } = $props<{ deck: CharacterDeck }>();
   
-  $: urlSize = new TextEncoder().encode(deckToUrl(deck)).length;
-  $: sizeInKB = (urlSize / 1024).toFixed(1);
-  $: warningLevel = urlSize > 30000 ? 'high' : urlSize > 25000 ? 'medium' : 'low';
+  let urlSize = $state(0);
+  let sizeInKB = $derived((urlSize / 1024).toFixed(1));
+  let warningLevel = $derived(urlSize > 30000 ? 'high' : urlSize > 25000 ? 'medium' : 'low');
+
+  // Only calculate URL size in the browser
+  $effect(() => {
+    if (browser) {
+      urlSize = new TextEncoder().encode(deckToUrl(deck)).length;
+    }
+  });
 </script>
 
 <div class="size-indicator {warningLevel}">

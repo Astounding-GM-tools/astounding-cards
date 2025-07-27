@@ -3,14 +3,55 @@
   import Card from './Card.svelte';
   import CardStatSelector from './CardStatSelector.svelte';
   import { currentDeck } from '$lib/stores/cards';
+  import ImageSelector from './ImageSelector.svelte';
 
   let { character, showCropMarks = false, onChange, theme = undefined } = $props();
-  let imageUrl = $state('');
   let showImageInput = $state(false);
 
   let nameElement = $state<HTMLElement>();
   let roleElement = $state<HTMLElement>();
   let traitsElement = $state<HTMLElement>();
+
+  let currentBlobUrl = $state<string | undefined>();
+
+  // Get the correct portrait URL
+  function getPortraitUrl(portrait: string | undefined) {
+    if (!portrait) return 'none';
+
+    // If it's already a full URL, use it as is
+    if (portrait.startsWith('http')) {
+      return portrait;
+    }
+
+    // If it's a local portrait (no protocol/blob prefix)
+    if (!portrait.includes(':')) {
+      return `/portraits/${portrait}`;
+    }
+
+    // If we have a blob URL, use it
+    if (currentBlobUrl) {
+      return currentBlobUrl;
+    }
+
+    return 'none';
+  }
+
+  // Handle blob URL creation in a separate effect
+  $effect(() => {
+    if (character.portrait === 'blob:local' && character.portraitBlob && !currentBlobUrl) {
+      currentBlobUrl = URL.createObjectURL(character.portraitBlob);
+    }
+  });
+
+  // Cleanup blob URL when component is destroyed
+  $effect(() => {
+    return () => {
+      if (currentBlobUrl) {
+        URL.revokeObjectURL(currentBlobUrl);
+        currentBlobUrl = undefined;
+      }
+    };
+  });
 
   // Update DOM elements when character changes
   $effect(() => {
@@ -66,11 +107,8 @@
     }
   }
 
-  async function updatePortrait() {
-    if (!imageUrl) return;
-    await onChange({ portrait: imageUrl });
-    imageUrl = '';
-    showImageInput = false;
+  function toggleImageInput() {
+    showImageInput = !showImageInput;
   }
 
   const activeTheme = $derived(theme ?? $currentDeck?.meta?.theme ?? 'classic');
@@ -81,7 +119,9 @@
   <div 
     class="card-content"
     class:preview={character.type === 'Preview'}
-    style:background-image={character.portrait ? `url('/portraits/${character.portrait}')` : 'none'}
+    style:background-image={`url('${getPortraitUrl(character.portrait)}')`}
+    style:background-size="cover"
+    style:background-position="top center"
   >
     <!-- Top portrait flourishes -->
     <svg class="flourish portrait-flourish top-left" viewBox="0 0 100 100">
@@ -97,33 +137,26 @@
     <div class="portrait-area">
       <!-- Portrait controls -->
       <div class="portrait-container">
-        {#if character.portrait}
-          <button 
-            class="change-portrait" 
-            onclick={() => showImageInput = !showImageInput}
-            title="Change portrait"
-          >
-            Change portrait
-          </button>
-        {:else}
-          <button 
-            class="change-portrait" 
-            onclick={() => showImageInput = !showImageInput}
-            title="Add portrait"
-          >
-            Add portrait
-          </button>
-        {/if}
+        <button 
+          class="change-portrait" 
+          onclick={toggleImageInput}
+          title={character.portrait ? "Change portrait" : "Add portrait"}
+        >
+          {character.portrait ? "Change portrait" : "Add portrait"}
+        </button>
 
         {#if showImageInput}
           <div class="image-input">
-            <input 
-              type="text"
-              bind:value={imageUrl}
-              placeholder="Enter image name"
+            <ImageSelector 
+              onSave={async (blob, sourceUrl) => {
+                // Store both the source URL (if provided) and the blob
+                await onChange({ 
+                  portrait: sourceUrl || 'blob:local',
+                  portraitBlob: blob
+                });
+              }}
+              onClose={() => showImageInput = false}
             />
-            <button onclick={updatePortrait}>Set</button>
-            <button onclick={() => showImageInput = false}>Cancel</button>
           </div>
         {/if}
       </div>
@@ -184,6 +217,7 @@
     display: flex;
     flex-direction: column;
     background-color: var(--theme-background);
+    background-image: var(--portrait-url);
     background-size: cover;
     background-position: top center;
     container-type: inline-size;
@@ -388,13 +422,16 @@
     position: absolute;
     top: 100%;
     left: 0;
-    background: var(--content-box-bg);
-    padding: var(--content-gap);
-    border-radius: 1mm;
-    display: flex;
-    gap: var(--content-gap);
-    box-shadow: 0 1mm 2mm rgba(0,0,0,0.1);
+    right: 0;
+    background: var(--theme-bg, white);
+    padding: 1rem;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     z-index: 10;
+  }
+
+  .image-input :global(.image-selector) {
+    margin-bottom: 0.5rem;
   }
 
   .image-input input {
