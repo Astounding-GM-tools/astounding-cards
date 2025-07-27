@@ -2,14 +2,17 @@
   import type { CardStat, Portability, Character } from '$lib/types';
   import { currentDeck } from '$lib/stores/cards';
   
-  export let character: Character;
-  export let onChange: (updates: Partial<Character>) => void;
+  const { character, onChange } = $props<{
+    character: Character;
+    onChange: (updates: Partial<Character>) => void;
+  }>();
 
-  let dialog: HTMLDialogElement;
-  let tempStat: CardStat | undefined = character.stat;
-  let characterAge = '';
-  let itemPortability: Portability = 'light';
-  let locationArea = '';
+  let dialogElement: HTMLDialogElement;
+  let isDialogOpen = $state(false);
+  let tempStat = $state<CardStat | undefined>(character.stat);
+  let characterAge = $state('');
+  let itemPortability = $state<Portability>('light');
+  let locationArea = $state('');
 
   function openDialog() {
     tempStat = character.stat;
@@ -22,17 +25,23 @@
         };
       }
     }
-    dialog.showModal();
+    isDialogOpen = true;
+    dialogElement?.showModal();
+  }
+
+  function closeDialog() {
+    isDialogOpen = false;
+    dialogElement?.close();
   }
 
   function clearStat() {
     onChange({ stat: undefined });
-    dialog.close();
+    closeDialog();
   }
 
   function saveStat() {
     onChange({ stat: tempStat });
-    dialog.close();
+    closeDialog();
   }
 
   function setCharacter() {
@@ -50,15 +59,18 @@
     };
   }
 
-  // Get all unique area names from the deck for suggestions
-  $: areaNames = ($currentDeck?.characters || [])
-    .map(c => c.stat?.type === 'location' && c.stat.value.type === 'soft' ? c.stat.value.value : null)
-    .filter((name): name is string => name !== null);
+  // Get all unique area names and location cards as derived values
+  const areaNames = $derived(
+    ($currentDeck?.characters || [])
+      .map(c => c.stat?.type === 'location' && c.stat.value.type === 'soft' ? c.stat.value.value : null)
+      .filter((name): name is string => name !== null)
+  );
 
-  // Get all location cards from the deck
-  $: locationCards = ($currentDeck?.characters || [])
-    .filter(c => c.stat?.type === 'location' && c.id !== character.id)
-    .map(c => ({ id: c.id, name: c.name }));
+  const locationCards = $derived(
+    ($currentDeck?.characters || [])
+      .filter(c => c.stat?.type === 'location' && c.id !== character.id)
+      .map(c => ({ id: c.id, name: c.name }))
+  );
 
   // Format location display
   function formatLocationDisplay(value: { type: 'hard' | 'soft', value: string }): string {
@@ -123,7 +135,11 @@
 {/if}
 
 <!-- Type/Stat Selector Modal -->
-<dialog bind:this={dialog} class="stat-dialog">
+<dialog 
+  bind:this={dialogElement} 
+  class="stat-dialog"
+  on:close={() => isDialogOpen = false}
+>
   <div class="dialog-content">
     <h2>Card Type</h2>
 
@@ -206,7 +222,7 @@
 
     <div class="dialog-buttons">
       <button class="clear" on:click={clearStat}>Clear Type</button>
-      <button class="cancel" on:click={() => dialog.close()}>Cancel</button>
+      <button class="cancel" on:click={closeDialog}>Cancel</button>
       <button class="save" on:click={saveStat}>Save</button>
     </div>
   </div>

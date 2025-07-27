@@ -12,7 +12,42 @@
   let roleElement = $state<HTMLElement>();
   let traitsElement = $state<HTMLElement>();
 
-  let currentBlobUrl = $state<string | undefined>();
+  // Track the current blob URL and its source
+  let blobSource = $state<{ blob: Blob; id: string } | null>(null);
+  let currentBlobUrl = $state<string | null>(null);
+
+  // Update blob source when character changes
+  $effect(() => {
+    if (character.portraitBlob) {
+      const newId = character.id + Date.now();
+      if (!blobSource || blobSource.blob !== character.portraitBlob || blobSource.id !== newId) {
+        // Clean up old URL if it exists
+        if (currentBlobUrl) {
+          URL.revokeObjectURL(currentBlobUrl);
+        }
+        // Create new URL
+        currentBlobUrl = URL.createObjectURL(character.portraitBlob);
+        blobSource = { blob: character.portraitBlob, id: newId };
+      }
+    } else {
+      // Clean up if no blob
+      if (currentBlobUrl) {
+        URL.revokeObjectURL(currentBlobUrl);
+        currentBlobUrl = null;
+      }
+      blobSource = null;
+    }
+  });
+
+  // Cleanup on destroy
+  $effect(() => {
+    return () => {
+      if (currentBlobUrl) {
+        URL.revokeObjectURL(currentBlobUrl);
+        currentBlobUrl = null;
+      }
+    };
+  });
 
   // Get the correct portrait URL
   function getPortraitUrl(portrait: string | undefined) {
@@ -21,6 +56,11 @@
     // If we have a blob URL, use it
     if (currentBlobUrl) {
       return currentBlobUrl;
+    }
+
+    // If it's a special 'blob:local' marker, return none
+    if (portrait === 'blob:local') {
+      return 'none';
     }
 
     // If it's a local portrait (no protocol/blob prefix)
@@ -32,32 +72,22 @@
     return portrait;
   }
 
-  // Handle blob URL creation in a separate effect
+  // Derived values for element content
+  const nameContent = $derived(character.name);
+  const roleContent = $derived(character.role);
+  const traitsContent = $derived(formatTraits(character.traits));
+
+  // Update DOM elements when content changes
   $effect(() => {
-    // Create blob URL if we have a blob but no URL yet
-    if (character.portraitBlob && !currentBlobUrl) {
-      currentBlobUrl = URL.createObjectURL(character.portraitBlob);
-    }
+    if (nameElement) nameElement.innerText = nameContent;
   });
 
-  // Cleanup blob URL when component is destroyed
   $effect(() => {
-    return () => {
-      if (currentBlobUrl) {
-        URL.revokeObjectURL(currentBlobUrl);
-        currentBlobUrl = undefined;
-      }
-    };
+    if (roleElement) roleElement.innerText = roleContent;
   });
 
-  // Update DOM elements when character changes
   $effect(() => {
-    if (nameElement && nameElement.innerText !== character.name) {
-      nameElement.innerText = character.name;
-    }
-    if (roleElement && roleElement.innerText !== character.role) {
-      roleElement.innerText = character.role;
-    }
+    if (traitsElement) traitsElement.innerHTML = traitsContent;
   });
 
   async function updateName(event: Event) {
@@ -116,7 +146,7 @@
   <div 
     class="card-content"
     class:preview={character.type === 'Preview'}
-    style:background-image={`url('${getPortraitUrl(character.portrait)}')`}
+    style:background-image={getPortraitUrl(character.portrait) === 'none' ? 'none' : `url('${getPortraitUrl(character.portrait)}')`}
     style:background-size="cover"
     style:background-position="top center"
   >
@@ -146,13 +176,14 @@
           <div class="image-input">
             <ImageSelector 
               onSave={async (blob, sourceUrl) => {
-                // Store both the source URL (if provided) and the blob
+                // If blob is null, we're removing the image
                 await onChange({ 
-                  portrait: sourceUrl || 'blob:local',
-                  portraitBlob: blob
+                  portrait: blob ? (sourceUrl || 'blob:local') : null,
+                  portraitBlob: blob || undefined
                 });
               }}
               onClose={() => showImageInput = false}
+              hasExistingImage={!!character.portrait}
             />
           </div>
         {/if}

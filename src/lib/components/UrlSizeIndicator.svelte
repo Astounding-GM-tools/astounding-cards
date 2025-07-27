@@ -5,16 +5,9 @@
 
   const { deck } = $props<{ deck: CharacterDeck }>();
   
-  let urlSize = $state(0);
-  let sizeInKB = $derived((urlSize / 1024).toFixed(1));
-  let warningLevel = $derived(urlSize > 30000 ? 'high' : urlSize > 25000 ? 'medium' : 'low');
-
-  // Only calculate URL size in the browser
-  $effect(() => {
-    if (browser) {
-      urlSize = new TextEncoder().encode(deckToUrl(deck)).length;
-    }
-  });
+  const urlSize = $derived(browser ? new TextEncoder().encode(deckToUrl(deck)).length : 0);
+  const sizeInKB = $derived((urlSize / 1024).toFixed(1));
+  const warningLevel = $derived(urlSize > 30000 ? 'high' : urlSize > 25000 ? 'medium' : 'low');
 </script>
 
 <div class="size-indicator {warningLevel}">

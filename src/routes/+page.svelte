@@ -136,7 +136,12 @@
       {#if $currentDeck}
         <button 
           class="action-button"
-          onclick={addCharacter}
+          onclick={async () => {
+            const newDeck = addCharacter();
+            if (newDeck) {
+              await saveDeck(newDeck);
+            }
+          }}
         >
           ➕ Add Character
         </button>

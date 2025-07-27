@@ -6,21 +6,31 @@
 <script lang="ts">
   import { processImage } from '$lib/utils/image';
   import type { CardSize } from '$lib/types';
+  import { fade } from 'svelte/transition';
 
   const props = $props<{
     cardSize?: CardSize;
-    onSave?: (blob: Blob, sourceUrl?: string) => void;
+    onSave?: (blob: Blob | null, sourceUrl?: string) => void;
     onClose?: () => void;
+    hasExistingImage?: boolean;
   }>();
   const cardSize = props.cardSize ?? 'tarot';
   
   let fileInput: HTMLInputElement;
   let urlInput: HTMLInputElement;
+  let saveButton: HTMLButtonElement;
   let urlValue = $state('');
   let error = $state('');
   let loading = $state(false);
   let previewUrl = $state('');
   let lastProcessedBlob: Blob | undefined;
+
+  // Focus save button when image is loaded
+  $effect(() => {
+    if (previewUrl && !loading && !error && saveButton) {
+      saveButton.focus();
+    }
+  });
 
   async function handleFile(event: Event) {
     const file = (event.currentTarget as HTMLInputElement).files?.[0];
@@ -67,8 +77,6 @@
       // Create preview URL
       if (previewUrl) URL.revokeObjectURL(previewUrl);
       previewUrl = URL.createObjectURL(processed.blob);
-      
-      // Don't save automatically, let user confirm with Save button
     } catch (e) {
       error = e instanceof Error ? e.message : 'Failed to load image';
       previewUrl = '';
@@ -79,14 +87,28 @@
   }
 
   async function handleSave() {
-    if (previewUrl && lastProcessedBlob && props.onSave) {
+    if (props.onSave) {
       try {
         loading = true;
         // Pass URL only if we're saving a URL-loaded image
-        await props.onSave(lastProcessedBlob, urlValue || undefined);
+        await props.onSave(lastProcessedBlob || null, urlValue || undefined);
         if (props.onClose) props.onClose();
       } catch (e) {
         error = e instanceof Error ? e.message : 'Failed to save image';
+      } finally {
+        loading = false;
+      }
+    }
+  }
+
+  async function handleUnset() {
+    if (props.onSave) {
+      try {
+        loading = true;
+        await props.onSave(null, undefined);
+        if (props.onClose) props.onClose();
+      } catch (e) {
+        error = e instanceof Error ? e.message : 'Failed to unset image';
       } finally {
         loading = false;
       }
@@ -109,58 +131,87 @@
   <div class="dialog-overlay">
     <div class="dialog">
       <div class="dialog-content">
-        <h2>Select Image</h2>
+        <div class="dialog-header">
+          <h2>Select Image</h2>
+          <button 
+            class="close-button" 
+            onclick={handleClose}
+          >
+            ×
+          </button>
+        </div>
         
         <div class="input-methods">
-          <div class="file-input method">
-            <h3>Upload File</h3>
-            <input
-              bind:this={fileInput}
-              type="file"
-              id="file"
-              accept="image/*"
-              onchange={handleFile}
-            />
-          </div>
-          
-          <div class="url-input method">
-            <h3>Image URL</h3>
-            <div class="url-field">
+          <!-- Left side: Input methods -->
+          <div class="input-column">
+            <div class="file-input method">
+              <h3>Upload File</h3>
               <input
-                bind:this={urlInput}
-                bind:value={urlValue}
-                type="url"
-                id="url"
-                placeholder="https://..."
+                bind:this={fileInput}
+                type="file"
+                id="file"
+                accept="image/*"
+                onchange={handleFile}
               />
-              <button 
-                onclick={() => handleUrl()}
-                disabled={loading || !urlValue}
-                class="load-btn"
-              >
-                Load
-              </button>
+            </div>
+            
+            <div class="url-input method">
+              <h3>Image URL</h3>
+              <div class="url-field">
+                <input
+                  bind:this={urlInput}
+                  bind:value={urlValue}
+                  type="url"
+                  id="url"
+                  placeholder="https://..."
+                />
+                <button 
+                  onclick={() => handleUrl()}
+                  disabled={loading || !urlValue}
+                  class="load-btn"
+                >
+                  Load
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right side: Preview -->
+          <div class="preview-column">
+            <div class="preview-container">
+              {#if loading}
+                <div class="preview loading">
+                  <div class="loading-indicator"></div>
+                </div>
+              {:else if error}
+                <div class="preview error">
+                  <div class="status error">{error}</div>
+                </div>
+              {:else if previewUrl}
+                <div class="preview" transition:fade>
+                  <img 
+                    src={previewUrl} 
+                    alt="Preview"
+                  />
+                </div>
+              {:else}
+                <div class="preview-placeholder">
+                  Preview will appear here
+                </div>
+              {/if}
             </div>
           </div>
         </div>
 
-        {#if loading}
-          <div class="status loading">Processing image...</div>
-        {/if}
-        
-        {#if error}
-          <div class="status error">{error}</div>
-        {/if}
-
-        {#if previewUrl}
-          <div class="preview-container">
-            <div class="preview">
-              <img src={previewUrl} alt="Preview" />
-            </div>
-          </div>
-        {/if}
-
         <div class="dialog-buttons">
+          {#if props.hasExistingImage}
+            <button 
+              class="unset-btn" 
+              onclick={handleUnset}
+            >
+              Remove Image
+            </button>
+          {/if}
           <button 
             class="cancel-btn" 
             onclick={handleClose}
@@ -169,6 +220,7 @@
           </button>
           <button 
             class="save-btn" 
+            bind:this={saveButton}
             onclick={handleSave}
             disabled={!previewUrl || !lastProcessedBlob}
           >
@@ -205,37 +257,58 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     width: 90%;
     max-width: 800px;
-    max-height: 90vh;
-    overflow-y: auto;
+    height: fit-content;
   }
 
   .dialog-content {
-    padding: 2rem;
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 0.75rem;
+  }
+
+  .dialog-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--theme-border, #ccc);
   }
 
   h2 {
     margin: 0;
-    font-size: 1.5rem;
+    font-size: 1.25rem;
     color: var(--theme-text);
   }
 
   h3 {
-    margin: 0 0 0.5rem;
-    font-size: 1.1rem;
+    margin: 0 0 0.25rem;
+    font-size: 1rem;
     color: var(--theme-text);
   }
 
   .input-methods {
     display: flex;
-    flex-direction: column;
     gap: 1.5rem;
+    padding: 0.75rem 1rem;
+  }
+
+  .input-column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .preview-column {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem;
   }
 
   .method {
-    padding: 1rem;
+    padding: 0.75rem;
     background: var(--theme-secondary-bg, #f5f5f5);
     border-radius: 4px;
   }
@@ -255,29 +328,65 @@
   }
 
   .preview-container {
+    width: 100%;
+    max-width: 280px;
+    aspect-ratio: 5/7;
+  }
+
+  .preview, .preview-placeholder {
+    width: 100%;
+    height: 100%;
+    border-radius: 4px;
     display: flex;
+    align-items: center;
     justify-content: center;
   }
 
   .preview {
-    aspect-ratio: 5/7;
-    width: 100%;
-    max-width: 300px;
-    overflow: hidden;
-    border-radius: 4px;
     border: 1px solid var(--theme-border, #ccc);
+    background: var(--theme-secondary-bg, #f5f5f5);
+    position: relative;
+    overflow: hidden;
   }
 
   .preview img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    transition: opacity 0.3s ease;
+  }
+
+  .preview.loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .loading-indicator {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--theme-border, #ccc);
+    border-top-color: var(--theme-primary, #333);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .preview-placeholder {
+    color: var(--theme-text-muted, #666);
+    text-align: center;
+    border: 2px dashed var(--theme-border, #ccc);
+    padding: 0.75rem;
   }
 
   .status {
     padding: 1rem;
     border-radius: 4px;
     text-align: center;
+    width: 100%;
   }
 
   .loading {
@@ -292,15 +401,16 @@
   .dialog-buttons {
     display: flex;
     justify-content: flex-end;
-    gap: 1rem;
-    margin-top: 1rem;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-top: 1px solid var(--theme-border, #ccc);
   }
 
   button {
-    padding: 0.5rem 1rem;
+    padding: 0.5rem 0.75rem;
     border-radius: 4px;
     border: none;
-    font-size: 1rem;
+    font-size: 0.9rem;
     cursor: pointer;
   }
 
@@ -309,9 +419,23 @@
     cursor: not-allowed;
   }
 
+  .close-button {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    padding: 0.25rem 0.5rem;
+    cursor: pointer;
+  }
+
   .load-btn {
     background: var(--theme-secondary, #666);
     color: white;
+  }
+
+  .unset-btn {
+    background: var(--theme-error, #c00);
+    color: white;
+    margin-right: auto;
   }
 
   .cancel-btn {

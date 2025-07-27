@@ -5,28 +5,31 @@
   import CharacterCardBack from './CharacterCardBack.svelte';
   import { currentDeck } from '$lib/stores/cards';
 
-  export let showCropMarks: boolean;
-  export let onCharacterChange: (id: string, updates: Partial<Character>) => Promise<void>;
+  const { showCropMarks, onCharacterChange } = $props<{
+    showCropMarks: boolean;
+    onCharacterChange: (id: string, updates: Partial<Character>) => Promise<void>;
+  }>();
 
-  $: cardSize = $currentDeck?.meta.cardSize || 'poker';
-  $: cardsPerPage = cardSize === 'poker' ? 9 : 4;
-  
-  // Calculate how many full pages we need
-  $: totalPages = Math.ceil($currentDeck?.characters.length || 0 / cardsPerPage);
-  
-  // Get characters for a specific page (0-based index)
+  // Use $derived for pure computations
+  const cardSize = $derived($currentDeck?.meta.cardSize || 'poker');
+  const cardsPerPage = $derived(cardSize === 'poker' ? 9 : 4);
+  const totalPages = $derived(Math.ceil($currentDeck?.characters.length || 0 / cardsPerPage));
+
+  // Pure function to get characters for a page
   function getPageCharacters(pageIndex: number): Character[] {
     const start = pageIndex * cardsPerPage;
     return $currentDeck?.characters.slice(start, start + cardsPerPage) || [];
   }
 
-  // Create reactive references for each page's characters
-  $: pages = Array(totalPages).fill(null)
-    .map((_, i) => ({
-      index: i,
-      characters: getPageCharacters(i)
-    }))
-    .filter(page => page.characters.length > 0);
+  // Create pages array using $derived
+  const pages = $derived(
+    Array(totalPages).fill(null)
+      .map((_, i) => ({
+        index: i,
+        characters: getPageCharacters(i)
+      }))
+      .filter(page => page.characters.length > 0)
+  );
 </script>
 
 {#each pages as page (page.index)}
