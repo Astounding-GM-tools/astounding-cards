@@ -18,9 +18,9 @@
   function getPortraitUrl(portrait: string | undefined) {
     if (!portrait) return 'none';
 
-    // If it's already a full URL, use it as is
-    if (portrait.startsWith('http')) {
-      return portrait;
+    // If we have a blob URL, use it
+    if (currentBlobUrl) {
+      return currentBlobUrl;
     }
 
     // If it's a local portrait (no protocol/blob prefix)
@@ -28,17 +28,14 @@
       return `/portraits/${portrait}`;
     }
 
-    // If we have a blob URL, use it
-    if (currentBlobUrl) {
-      return currentBlobUrl;
-    }
-
-    return 'none';
+    // Fall back to URL if no blob available
+    return portrait;
   }
 
   // Handle blob URL creation in a separate effect
   $effect(() => {
-    if (character.portrait === 'blob:local' && character.portraitBlob && !currentBlobUrl) {
+    // Create blob URL if we have a blob but no URL yet
+    if (character.portraitBlob && !currentBlobUrl) {
       currentBlobUrl = URL.createObjectURL(character.portraitBlob);
     }
   });

@@ -16,7 +16,8 @@
   --role-font-family: var(--theme-body-font);  /* Use flowing script for role */
    
   /* Font Sizes */
-  --title-font-size: 2em;       /* Large for titles */
+  --title-font-size: 4.5em;       /* Large for titles */
+  --title-line-height: 1.0;
   --role-font-size: 3.5cqw;     /* Decreased from 5cqw */
   --trait-font-size: 1.2em;     /* Decreased from 1.6em */
   --base-font-size: 1cqw;       /* Decreased from 1.1cqw */
@@ -125,6 +126,12 @@
 [data-theme="scriptorum"] .content .role {
   line-height: 0.8;
   margin: 0 auto;
+}
+
+@container (width > 300px) {
+  [data-theme="scriptorum"] {
+    --title-font-size: 4.5em;
+  }
 }
 
 /* TODO: Future Flourish Possibilities
