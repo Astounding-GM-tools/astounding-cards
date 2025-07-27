@@ -175,6 +175,7 @@
     <ShareDialog 
       deck={$currentDeck}
       onClose={() => shareDialog = false}
+      onUpdate={handleCharacterUpdate}
     />
   {/if}
 

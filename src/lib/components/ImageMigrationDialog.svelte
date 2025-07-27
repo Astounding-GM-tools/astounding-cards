@@ -1,0 +1,490 @@
+<script lang="ts">
+  import type { Character } from '$lib/types';
+  import { fade } from 'svelte/transition';
+  import { processImage } from '$lib/utils/image';
+  import { toasts } from '$lib/stores/toast';
+
+  const props = $props<{
+    characters: Character[];
+    onClose: () => void;
+    onUpdate: (id: string, updates: Partial<Character>) => Promise<void>;
+  }>();
+
+  let dialogElement: HTMLDialogElement;
+  let loading = $state(false);
+  let selectedCharacter = $state<Character | null>(null);
+  let urlInput = $state('');
+  let previewUrl = $state<string | null>(null);
+  let optimizedBlob = $state<Blob | null>(null);
+
+  // Show dialog when mounted
+  $effect(() => {
+    if (dialogElement && !dialogElement.open) {
+      dialogElement.showModal();
+    }
+  });
+
+  // Get characters that need migration
+  const needsMigration = $derived(props.characters.filter((char: Character) => {
+    if (!char.portrait) return false;
+    if (char.portrait === 'blob:local') return true;
+    return !char.portrait.includes(':') || !char.portrait.startsWith('http');
+  }));
+
+  // Auto-select first character when dialog opens or when list changes
+  $effect(() => {
+    if (needsMigration.length > 0 && !selectedCharacter) {
+      selectedCharacter = needsMigration[0];
+    }
+  });
+
+  // Reset state when character changes
+  $effect(() => {
+    if (selectedCharacter) {
+      urlInput = '';
+      previewUrl = null;
+      optimizedBlob = null;
+    }
+  });
+
+  // Test URL when input changes
+  $effect(() => {
+    if (!urlInput) {
+      previewUrl = null;
+      optimizedBlob = null;
+      return;
+    }
+
+    const testUrl = async () => {
+      loading = true;
+      try {
+        const response = await fetch(urlInput);
+        if (!response.ok) throw new Error('Failed to load image');
+        
+        const blob = await response.blob();
+        if (!blob.type.startsWith('image/')) {
+          throw new Error('URL does not point to an image');
+        }
+
+        const file = new File([blob], 'image.jpg', { type: blob.type });
+        const processed = await processImage(file);
+        optimizedBlob = processed.blob;
+        
+        if (previewUrl) URL.revokeObjectURL(previewUrl);
+        previewUrl = URL.createObjectURL(optimizedBlob);
+
+        toasts.success('Image loaded successfully');
+      } catch (err) {
+        console.error('Failed to load image:', err);
+        toasts.error('Failed to load image. Please check the URL and try again.');
+        previewUrl = null;
+        optimizedBlob = null;
+      } finally {
+        loading = false;
+      }
+    };
+
+    // Debounce URL testing
+    const timeoutId = setTimeout(testUrl, 500);
+    return () => clearTimeout(timeoutId);
+  });
+
+  async function handleSave() {
+    if (!selectedCharacter || !urlInput) return;
+
+    try {
+      await props.onUpdate(selectedCharacter.id, {
+        portrait: urlInput,
+        portraitBlob: optimizedBlob || undefined
+      });
+
+      toasts.success('Image updated successfully');
+
+      // Get fresh list of remaining characters after update
+      const remainingCharacters = props.characters.filter((char: Character) => {
+        if (!char.portrait) return false;
+        if (char.portrait === 'blob:local') return true;
+        return !char.portrait.includes(':') || !char.portrait.startsWith('http');
+      });
+
+      if (remainingCharacters.length > 0) {
+        // Find the next character that still needs migration
+        const nextChar = remainingCharacters.find(c => c.id !== selectedCharacter?.id);
+        if (nextChar) {
+          selectedCharacter = nextChar;
+        }
+      } else {
+        // All done - show success and close
+        toasts.success('All images have been migrated!');
+        handleClose();
+      }
+    } catch (err) {
+      console.error('Failed to update image:', err);
+      toasts.error('Failed to save image. Please try again.');
+    }
+  }
+
+  function handleClose() {
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    dialogElement?.close();
+    props.onClose();
+  }
+</script>
+
+<dialog 
+  bind:this={dialogElement}
+  class="migration-dialog"
+  onclose={handleClose}
+>
+  <div class="dialog-content">
+    <div class="dialog-header">
+      <h2>Migrate Images to URLs</h2>
+      <button 
+        class="close-button" 
+        onclick={handleClose}
+      >
+        ×
+      </button>
+    </div>
+
+    <div class="content">
+      {#if needsMigration.length === 0}
+        <div class="message success" transition:fade>
+          <p>✓ All images are ready for sharing!</p>
+        </div>
+      {:else}
+        <div class="character-list">
+          <h3>Images to Migrate ({needsMigration.length})</h3>
+          <div class="characters">
+            {#each needsMigration as character}
+              <button
+                class="character-button"
+                class:active={selectedCharacter?.id === character.id}
+                onclick={() => selectedCharacter = character}
+              >
+                {character.name}
+                {#if character.portrait === 'blob:local'}
+                  <span class="tag">Local File</span>
+                {:else}
+                  <span class="tag">No URL</span>
+                {/if}
+              </button>
+            {/each}
+          </div>
+        </div>
+
+        {#if selectedCharacter}
+          <div class="migration-form" transition:fade>
+            <h3>Migrate: {selectedCharacter.name}</h3>
+            
+            <div class="image-comparison">
+              <div class="image-column">
+                <h4>Current Image</h4>
+                <div class="image-container">
+                  <div 
+                    class="image-preview"
+                    style:background-image={selectedCharacter.portraitBlob ? `url(${URL.createObjectURL(selectedCharacter.portraitBlob)})` : 'none'}
+                  >
+                    {#if !selectedCharacter.portraitBlob}
+                      <span class="no-image">No image set</span>
+                    {/if}
+                  </div>
+                </div>
+              </div>
+
+              <div class="image-column">
+                <h4>New Image Preview</h4>
+                <div class="image-container">
+                  <div 
+                    class="image-preview"
+                    class:loading
+                    style:background-image={previewUrl ? `url(${previewUrl})` : 'none'}
+                  >
+                    {#if loading}
+                      <span class="loading-text">Loading...</span>
+                    {:else if !previewUrl}
+                      <span class="no-image">Enter a URL to preview</span>
+                    {/if}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="url-input">
+              <label>
+                Image URL
+                <input
+                  type="url"
+                  bind:value={urlInput}
+                  placeholder="https://example.com/your-image.jpg - Enter URL to preview"
+                />
+              </label>
+            </div>
+
+            <button
+              class="primary-button"
+              disabled={!urlInput || loading || !optimizedBlob}
+              onclick={handleSave}
+            >
+              {#if loading}
+                Loading...
+              {:else}
+                Save & Continue
+              {/if}
+            </button>
+          </div>
+        {:else}
+          <div class="select-prompt" transition:fade>
+            <p>← Select a character to start migration</p>
+          </div>
+        {/if}
+      {/if}
+    </div>
+  </div>
+</dialog>
+
+<style>
+  .migration-dialog {
+    border: none;
+    border-radius: 8px;
+    padding: 0;
+    background: var(--ui-bg);
+    color: var(--ui-text);
+    box-shadow: var(--page-shadow);
+    width: 800px;
+    max-width: 90vw;
+    max-height: 90vh;
+  }
+
+  .dialog-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .dialog-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--content-gap);
+    border-bottom: 1px solid var(--ui-border);
+  }
+
+  h2, h3, h4 {
+    margin: 0;
+    font-family: var(--ui-font-family);
+  }
+
+  h2 {
+    font-size: var(--ui-title-size);
+  }
+
+  h3 {
+    font-size: var(--ui-font-size);
+    font-weight: bold;
+  }
+
+  h4 {
+    font-size: var(--ui-font-size);
+    color: var(--ui-muted);
+  }
+
+  .close-button {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    padding: 0.25rem 0.5rem;
+    cursor: pointer;
+    color: var(--ui-text);
+  }
+
+  .content {
+    padding: var(--content-gap);
+    display: flex;
+    gap: 2rem;
+    min-height: 400px;
+  }
+
+  .message {
+    text-align: center;
+    padding: 2rem;
+    font-size: var(--ui-font-size);
+  }
+
+  .message.success {
+    color: var(--toast-success);
+  }
+
+  .character-list {
+    width: 200px;
+    border-right: 1px solid var(--ui-border);
+  }
+
+  .characters {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 1rem;
+  }
+
+  .character-button {
+    text-align: left;
+    padding: 0.5rem;
+    background: none;
+    border: 1px solid var(--ui-border);
+    border-radius: 4px;
+    cursor: pointer;
+    color: var(--ui-text);
+    font-family: var(--ui-font-family);
+    font-size: var(--ui-font-size);
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    transition: all 0.2s ease;
+  }
+
+  .character-button:hover {
+    background: var(--ui-hover-bg);
+  }
+
+  .character-button.active {
+    background: var(--ui-hover-bg);
+    border-color: var(--button-bg);
+  }
+
+  .tag {
+    font-size: 0.8em;
+    color: var(--ui-muted);
+  }
+
+  .migration-form {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .select-prompt {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ui-muted);
+    font-style: italic;
+  }
+
+  .image-comparison {
+    display: flex;
+    gap: 2rem;
+    margin: 1rem 0;
+  }
+
+  .image-column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .image-container {
+    width: 200px;
+    aspect-ratio: 5/7;
+    background: var(--ui-hover-bg);
+    border: 1px solid var(--ui-border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .image-preview {
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: top center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.2s ease;
+  }
+
+  .image-preview.loading {
+    opacity: 0.5;
+  }
+
+  .no-image,
+  .loading-text {
+    color: var(--ui-muted);
+    font-style: italic;
+    text-align: center;
+    padding: 1rem;
+  }
+
+  .loading-text {
+    color: var(--ui-text);
+  }
+
+  .url-input {
+    margin-top: 1rem;
+  }
+
+  .url-input label {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    font-size: var(--ui-font-size);
+    color: var(--ui-muted);
+  }
+
+  input[type="url"] {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid var(--ui-border);
+    border-radius: 4px;
+    background: var(--ui-bg);
+    color: var(--ui-text);
+    font-family: var(--ui-font-family);
+    font-size: var(--ui-font-size);
+  }
+
+  input[type="url"]::placeholder {
+    color: var(--ui-muted);
+    font-style: italic;
+  }
+
+  .primary-button,
+  .secondary-button {
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: var(--ui-font-size);
+    font-family: var(--ui-font-family);
+    min-height: 36px;
+    transition: all 0.2s ease;
+  }
+
+  .primary-button {
+    background: var(--button-bg);
+    color: var(--button-text);
+    border: 1px solid var(--button-border);
+  }
+
+  .primary-button:hover {
+    background: var(--button-hover-bg);
+  }
+
+  .secondary-button {
+    background: transparent;
+    color: var(--ui-text);
+    border: 1px solid var(--ui-border);
+  }
+
+  .secondary-button:hover {
+    background: var(--ui-hover-bg);
+  }
+
+  .primary-button:disabled,
+  .secondary-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+</style> 

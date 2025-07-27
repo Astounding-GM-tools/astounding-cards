@@ -3,10 +3,12 @@
   import { fade } from 'svelte/transition';
   import { deckToUrl } from '$lib/stores/cards';
   import { toasts } from '$lib/stores/toast';
+  import ImageMigrationDialog from './ImageMigrationDialog.svelte';
 
   const props = $props<{
     deck: CharacterDeck;
     onClose: () => void;
+    onUpdate: (id: string, updates: Partial<Character>) => Promise<void>;
   }>();
 
   let dialogElement: HTMLDialogElement;
@@ -15,6 +17,7 @@
   let blobCount = $state(0);
   let missingImageCount = $state(0);
   let migrationNeeded = $state(false);
+  let showMigration = $state(false);
 
   // Browser URL length limits (in bytes)
   const BROWSER_LIMITS = $state({
@@ -184,7 +187,7 @@
                     <p>{blobCount} image{blobCount === 1 ? '' : 's'} need{blobCount === 1 ? 's' : ''} to be converted to URLs before sharing.</p>
                     <button 
                       class="secondary-button"
-                      onclick={() => {/* TODO: Show migration UI */}}
+                      onclick={() => showMigration = true}
                     >
                       Migrate Images
                     </button>
@@ -228,6 +231,14 @@
     </div>
   </div>
 </dialog>
+
+{#if showMigration}
+  <ImageMigrationDialog
+    characters={props.deck.characters}
+    onClose={() => showMigration = false}
+    onUpdate={props.onUpdate}
+  />
+{/if}
 
 <style>
   .share-dialog {
