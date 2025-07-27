@@ -14,22 +14,37 @@
   import PagedCards from '$lib/components/PagedCards.svelte';
   import PrintInstructions from '$lib/components/PrintInstructions.svelte';
   import { devMode } from '$lib/stores/dev';
+  import ShareDialog from '$lib/components/ShareDialog.svelte';
 
   let showCropMarks = true;
-  let loading = true;  // Start with loading true
-  let error: string | null = null;
+  let loading = $state(true);  // Start with loading true
+  let error = $state<string | null>(null);
   let deckDialog: HTMLDialogElement;
   let printDialog: HTMLDialogElement;
   let scrollContainer: HTMLElement;
+  let shareDialog = $state(false);
 
   // Store scroll position before update
   let lastScrollPosition = 0;
 
   // Restore scroll position after update
-  $: if ($currentDeck && scrollContainer && lastScrollPosition > 0) {
-    scrollContainer.scrollTop = lastScrollPosition;
-    lastScrollPosition = 0;
-  }
+  $effect(() => {
+    if ($currentDeck && scrollContainer && lastScrollPosition > 0) {
+      scrollContainer.scrollTop = lastScrollPosition;
+      lastScrollPosition = 0;
+    }
+  });
+
+  // Subscribe to deck changes to show URL reset notification
+  $effect(() => {
+    if ($currentDeck) {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.has('deck')) {
+        history.replaceState(null, '', window.location.pathname);
+        toasts.info('URL was reset. Create a new share URL to share your changes.');
+      }
+    }
+  });
 
   async function copyShareUrl() {
     if (!$currentDeck) return;
@@ -77,15 +92,6 @@
     }
   });
 
-  // Subscribe to deck changes to show URL reset notification
-  $: if ($currentDeck) {
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.has('deck')) {
-      history.replaceState(null, '', window.location.pathname);
-      toasts.info('URL was reset. Create a new share URL to share your changes.');
-    }
-  }
-
   async function handleCharacterUpdate(id: string, updates: Partial<Character>) {
     if (scrollContainer) {
       lastScrollPosition = scrollContainer.scrollTop;
@@ -126,14 +132,13 @@
       >
         📚 Manage Decks
       </button>
-      <button 
-        class="action-button"
-        onclick={copyShareUrl}
-        disabled={!$currentDeck}
-      >
-        🔗 Copy Share URL
-      </button>
       {#if $currentDeck}
+        <button 
+          class="action-button"
+          onclick={() => shareDialog = true}
+        >
+          🔗 Share Deck
+        </button>
         <button 
           class="action-button"
           onclick={async () => {
@@ -165,6 +170,13 @@
       </div>
     </div>
   </div>
+
+  {#if shareDialog && $currentDeck}
+    <ShareDialog 
+      deck={$currentDeck}
+      onClose={() => shareDialog = false}
+    />
+  {/if}
 
   <!-- Deck management dialog -->
   <dialog 

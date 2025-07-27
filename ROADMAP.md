@@ -91,43 +91,74 @@ For consistent theme application:
 ### Next Steps (Priority Order)
 
 ### 1. Image Handling
-- [ ] URL-based Images
-  - [ ] URL validation and testing
-  - [ ] Support for common image hosts
-  - [ ] Clear user guidance
-  - [ ] Error handling and fallbacks
-- [ ] Local File Support
-  - [ ] Relative path handling
-  - [ ] Size and format validation
-  - [ ] Print quality warnings
-  - [ ] Migration path to URLs
-- [ ] Image Processing
+- [x] URL-based Images
+  - [x] URL validation and testing
+  - [x] Support for common image hosts
+  - [x] Clear user guidance
+  - [x] Error handling and fallbacks
+- [x] Local File Support
+  - [x] Size and format validation
+  - [x] Print quality warnings
+  - [x] Blob storage in IndexedDB
+  - [x] Efficient blob URL management
+- [x] Image Processing
   - [x] Proper card dimensions
   - [x] Format optimization
   - [x] Print-friendly processing
   - [x] Size validation
-- [ ] Documentation
-  - [ ] Recommended image hosts
-  - [ ] Size/format guidelines
-  - [ ] Best practices for sharing
-  - [ ] Troubleshooting guide
+- [x] Documentation
+  - [x] Image hosting guidelines
+  - [x] Size/format guidelines
+  - [x] Best practices for sharing
 
-### 2. Import & Export System
+### 2. Sharing System
+- [ ] Share Dialog Component
+  - [ ] Share button in header
+  - [ ] Modal dialog with sharing options
+  - [ ] Clear section organization
+  - [ ] Progress indicators
+  - [ ] Error handling
 - [ ] URL Sharing
   - [x] Add "Copy URL" button
   - [x] Clear URL after import
-  - [ ] Add URL validation
-  - [ ] Show URL size indicator
+  - [ ] URL validation
+  - [x] Show URL size indicator
   - [ ] Add sharing instructions
   - [ ] Handle URL import conflicts
   - [ ] Add version tracking for shared decks
-- [ ] JSON Import/Export
-  - [ ] Add JSON paste field with validation
-  - [ ] Export deck as formatted JSON
-  - [ ] Clear error messages for invalid JSON
+- [ ] Image Migration Tool
+  - [ ] List blob-based images
+  - [ ] URL input with validation
+  - [ ] Image URL verification utility
+  - [ ] Download optimized images
+  - [ ] Preview functionality
+  - [ ] Batch operations
+- [ ] Export Options
+  - [ ] JSON export format
+  - [ ] Complete backup (with images)
+  - [ ] Export progress tracking
+  - [ ] Format documentation
+- [ ] Service Card
+  - [ ] Design QR code card
+  - [ ] Auto-insert in shared decks
+  - [ ] Make non-deletable
+  - [ ] Include sharing instructions
+
+### 3. Import System
+- [ ] URL Import
+  - [ ] Validate incoming URLs
+  - [ ] Handle oversized decks
+  - [ ] Merge options
+- [ ] File Import
+  - [ ] JSON validation
+  - [ ] Archive extraction
+  - [ ] Progress tracking
+  - [ ] Error recovery
+- [ ] Import UI
+  - [ ] Add to deck management
   - [ ] Preview before import
-  - [ ] Merge options (new deck/existing deck)
-  - [ ] Optional: Include images as base64
+  - [ ] Conflict resolution
+  - [ ] Success/error feedback
 
 ### Future Development (v2)
 - [ ] Commercial Features
@@ -141,4 +172,9 @@ For consistent theme application:
   - [ ] Payment processing
   - [ ] Usage tracking
   - [ ] Account management
-  - [ ] Team/organization support 
+  - [ ] Team/organization support
+- [ ] Repository System
+  - [ ] Public deck repository
+  - [ ] User galleries
+  - [ ] Deck discovery
+  - [ ] Rating/comments 
