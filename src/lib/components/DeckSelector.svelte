@@ -82,11 +82,19 @@
       ...$currentDeck,
       meta: {
         ...$currentDeck.meta,
-        cardSize: size
+        cardSize: size,
+        lastEdited: Date.now()
       }
     };
     
-    await saveDeck(updatedDeck);
+    try {
+      await saveDeck(updatedDeck);
+      currentDeck.set(updatedDeck); // Update the in-memory store
+      toasts.success('Card size updated');
+    } catch (error) {
+      console.error('Failed to update card size:', error);
+      toasts.error('Failed to update card size');
+    }
   }
 
   async function handleThemeChange(themeId: string) {
@@ -101,8 +109,15 @@
       }
     };
     
-    await saveDeck(updatedDeck);
-    showThemeSelect = false;
+    try {
+      await saveDeck(updatedDeck);
+      currentDeck.set(updatedDeck); // Update the in-memory store
+      showThemeSelect = false;
+      toasts.success('Theme updated');
+    } catch (error) {
+      console.error('Failed to update theme:', error);
+      toasts.error('Failed to update theme');
+    }
   }
 
   async function handleClearDatabase() {
