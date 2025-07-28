@@ -42,12 +42,12 @@
       urlSize = new TextEncoder().encode(deckToUrl(props.deck)).length;
       
       // Count cards with no images separately from those needing migration
-      missingImageCount = props.deck.cards.filter((card: Card) => !card.portrait).length;
+      missingImageCount = props.deck.cards.filter((card: Card) => !card.image).length;
       
       // Only count images that need URL migration (local files or blob:local)
       blobCount = props.deck.cards.filter((card: Card) => {
-        if (!card.portrait) return false; // Don't count missing images here
-        return card.portrait === 'blob:local' || (!card.portrait.includes(':') && !card.portrait.startsWith('http'));
+        if (!card.image) return false; // Don't count missing images here
+        return card.image === 'blob:local' || (!card.image.includes(':') && !card.image.startsWith('http'));
       }).length;
       migrationNeeded = blobCount > 0;
     }

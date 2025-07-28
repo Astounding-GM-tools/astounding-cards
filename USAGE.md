@@ -1,7 +1,7 @@
-# Character Cards Usage Guide
+# Card Deck Creator Usage Guide
 
 ## Overview
-Character Cards is a flexible tool for creating, managing, and printing reference cards for RPG campaigns. While it started as a character management system, it works equally well for items, locations, and other campaign elements.
+Card Deck Creator is a flexible tool for creating, managing, and printing reference cards for RPG campaigns. It works equally well for characters, items, locations, and other campaign elements.
 
 ## Card Types and Their Stats
 

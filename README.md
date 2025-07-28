@@ -87,6 +87,30 @@ This project is built with:
 - TypeScript
 - Drizzle ORM
 
+### Current Status
+
+The application has been refactored to use "Card" terminology throughout instead of "Character", making it more flexible for different types of cards (characters, items, locations). All core functionality is working, including:
+- Card creation and editing
+- Image handling
+- Theme selection
+- Deck management
+- Sharing via URL
+
+### Next Task: Create New Deck
+
+The next major task is implementing proper deck creation:
+- Adding a "Create New Deck" button to the deck management interface
+- Implementing the deck creation flow
+- Ensuring proper database operations
+- Adding user feedback
+- Handling deck list updates
+- Automatic switching to new deck
+
+Currently, new decks can only be created by:
+- Using dev tools to add sample data
+- Duplicating an existing deck
+- Copying cards to a "new deck"
+
 ### Running Tests
 
 ```bash

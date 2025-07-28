@@ -58,13 +58,21 @@
   }
 
   function clearStat() {
-    onChange({ stat: undefined });
+    onChange({ 
+      stat: undefined,
+      image: card.image,
+      imageBlob: card.imageBlob
+    });
     closeDialog();
   }
 
   function saveStat() {
-    console.log('Saving stat:', tempStat);
-    onChange({ stat: tempStat });
+    const updates = { 
+      stat: tempStat,
+      image: card.image,
+      imageBlob: card.imageBlob
+    };
+    onChange(updates);
     closeDialog();
   }
 

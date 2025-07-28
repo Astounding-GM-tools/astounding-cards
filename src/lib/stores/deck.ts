@@ -92,6 +92,7 @@ async function openDB(): Promise<IDBDatabase> {
       const db = (event.target as IDBOpenDBRequest).result;
       
       if (!db.objectStoreNames.contains('decks')) {
+        console.log('Creating decks store');
         db.createObjectStore('decks', { keyPath: 'id' });
       }
     };
@@ -104,7 +105,6 @@ function handleDbError(request: IDBRequest): Error {
 
 // Save deck to IndexedDB
 export async function saveDeck(deck: Deck) {
-  console.log('Saving deck:', deck);
   if (!browser) return;
 
   // Validate deck
@@ -120,6 +120,7 @@ export async function saveDeck(deck: Deck) {
       const transaction = db.transaction(['decks'], 'readwrite');
       const store = transaction.objectStore('decks');
 
+      console.log('Saving deck to IndexedDB:', deck);
       const request = store.put(deck);
 
       request.onerror = () => {
@@ -128,12 +129,12 @@ export async function saveDeck(deck: Deck) {
       };
 
       request.onsuccess = () => {
-        console.log('Deck saved successfully');
+        console.log('Successfully saved deck:', deck.id);
         resolve();
       };
 
       transaction.oncomplete = () => {
-        console.log('Transaction completed');
+        console.log('Transaction completed for deck:', deck.id);
       };
 
       transaction.onerror = () => {
@@ -182,13 +183,17 @@ export async function listDecks(): Promise<Deck[]> {
       const transaction = db.transaction(['decks'], 'readonly');
       const store = transaction.objectStore('decks');
 
+      console.log('Listing all decks...');
       const request = store.getAll();
 
       request.onerror = () => {
         const error = handleDbError(request);
         reject(new StorageError('Failed to list decks', error));
       };
-      request.onsuccess = () => resolve(request.result);
+      request.onsuccess = () => {
+        console.log('Found decks:', request.result.length);
+        resolve(request.result);
+      };
     });
   } catch (error) {
     throw new StorageError('Failed to list decks', error instanceof Error ? error : undefined);
@@ -218,7 +223,6 @@ export async function deleteDeck(id: string) {
 
 // Update a character in the current deck
 export async function updateCard(id: string, updates: Partial<Card>) {
-  console.log('Updating card:', id, updates);
   const deck = get(currentDeck);
   if (!deck) {
     console.error('No current deck');
@@ -238,13 +242,14 @@ export async function updateCard(id: string, updates: Partial<Card>) {
     ...updates,
     // Handle blob updates correctly:
     // 1. If we're explicitly setting a new blob, use it
-    // 2. If we're not changing the image, keep the existing blob
+    // 2. If we're not changing the image, keep the existing blob and image
     // 3. If we're changing to a URL/local image, clear the blob
     imageBlob: 'imageBlob' in updates 
       ? updates.imageBlob
       : updates.image === deck.cards[charIndex].image
         ? deck.cards[charIndex].imageBlob
-        : undefined
+        : undefined,
+    image: updates.image ?? deck.cards[charIndex].image  // Keep existing image if not updating
   };
 
   // Ensure we have a plain object for IndexedDB
@@ -319,8 +324,8 @@ export function addCard() {
     name: "New Card",
     role: "Role",
     image: null,
-    traits: ["Appearance: Add a notable trait", "Personality: Add a defining characteristic"],
-    secrets: ["Hidden: A secret or hidden trait", "Plot: A plot hook or story element"],
+    traits: ["Notable: Add a distinctive feature", "Property: Add a key characteristic"],
+    secrets: ["Hidden: Add a concealed aspect", "Plot: Add a story element"],
     desc: "Add a description",
     type: "character"
   };
@@ -590,8 +595,4 @@ export async function populateWithSampleData() {
   }
 } 
 
-// For backward compatibility during migration (TODO: Remove after migration is complete)
-export const updateCharacter = updateCard;
-export const addCharacter = addCard;
-export const deleteCharacters = deleteCards;
-export const copyCharactersTo = copyCardsTo; 
+// Remove backward compatibility exports - no longer needed 

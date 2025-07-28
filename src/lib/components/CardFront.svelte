@@ -84,14 +84,22 @@
   function handleNameBlur() {
     const newName = nameElement.innerText.trim();
     if (newName !== card.name) {
-      onChange({ name: newName });
+      onChange({ 
+        name: newName,
+        image: card.image,
+        imageBlob: card.imageBlob
+      });
     }
   }
 
   function handleRoleBlur() {
     const newRole = roleElement.innerText.trim();
     if (newRole !== card.role) {
-      onChange({ role: newRole });
+      onChange({ 
+        role: newRole,
+        image: card.image,
+        imageBlob: card.imageBlob
+      });
     }
   }
 
@@ -103,13 +111,21 @@
 
     // Only update if changed
     if (JSON.stringify(newTraits) !== JSON.stringify(card.traits)) {
-      onChange({ traits: newTraits });
+      onChange({ 
+        traits: newTraits,
+        image: card.image,
+        imageBlob: card.imageBlob
+      });
     }
   }
 
   function addTrait() {
     const newTraits = [...(card.traits || []), 'New trait'];
-    onChange({ traits: newTraits });
+    onChange({ 
+      traits: newTraits,
+      image: card.image,
+      imageBlob: card.imageBlob
+    });
   }
 </script>
 

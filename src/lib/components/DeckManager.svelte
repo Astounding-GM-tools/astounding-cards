@@ -1,6 +1,6 @@
 <script lang="ts">
   import { currentDeck } from '$lib/stores/deck';
-  import { deleteDeck, listDecks, duplicateDeck, copyCharactersTo, deleteCharacters, saveDeck } from '$lib/stores/deck';
+  import { deleteDeck, listDecks, duplicateDeck, copyCardsTo, deleteCards, saveDeck } from '$lib/stores/deck';
   import type { Card, Deck } from '$lib/types';
   import { baseThemes } from '$lib/themes';
   import type { CardTheme } from '$lib/themes';
@@ -21,15 +21,15 @@
   let showDeleteConfirm = $state(false);
   let showDuplicateDialog = $state(false);
   let showCopyDialog = $state(false);
-  let showDeleteCharactersDialog = $state(false);
+  let showDeleteCardsDialog = $state(false);
   let editingName = $state(false);
   let deleting = $state(false);
   let duplicating = $state(false);
   let copying = $state(false);
-  let deletingCharacters = $state(false);
+  let deletingCards = $state(false);
   let newDeckName = $state('');
   let editedDeckName = $state('');
-  let selectedCharacters = $state(new Set<string>());
+  let selectedCards = $state(new Set<string>());
   let targetDeckId = $state<string | 'new'>('new');
   let availableDecks = $state<Deck[]>([]);
 
@@ -101,53 +101,53 @@
     }
   }
 
-  async function handleCopyCharacters() {
+  async function handleCopyCards() {
     if (!showCopyDialog) {
       showCopyDialog = true;
       await loadAvailableDecks();
       return;
     }
 
-    if (selectedCharacters.size === 0) return;
+    if (selectedCards.size === 0) return;
 
     try {
       copying = true;
-      const characters = deck.cards.filter((c: Card) => selectedCharacters.has(c.id));
-      const targetDeck = await copyCharactersTo(
-        characters,
+      const cards = deck.cards.filter((c: Card) => selectedCards.has(c.id));
+      const targetDeck = await copyCardsTo(
+        cards,
         targetDeckId,
         targetDeckId === 'new' ? newDeckName : undefined
       );
       currentDeck.set(targetDeck);
       emitDeckChange({ action: 'copy', deckId: targetDeck.id });
       showCopyDialog = false;
-      selectedCharacters.clear();
+      selectedCards.clear();
     } catch (e) {
-      console.error('Failed to copy characters:', e);
+      console.error('Failed to copy cards:', e);
     } finally {
       copying = false;
     }
   }
 
-  async function handleDeleteCharacters() {
-    if (!showDeleteCharactersDialog) {
-      showDeleteCharactersDialog = true;
+  async function handleDeleteCards() {
+    if (!showDeleteCardsDialog) {
+      showDeleteCardsDialog = true;
       await loadAvailableDecks();
       return;
     }
 
-    if (selectedCharacters.size === 0) return;
+    if (selectedCards.size === 0) return;
 
     try {
-      deletingCharacters = true;
-      await deleteCharacters(deck.id, Array.from(selectedCharacters));
+      deletingCards = true;
+      await deleteCards(deck.id, Array.from(selectedCards));
       emitDeckChange({ action: 'deleteCards', deckId: deck.id });
-      showDeleteCharactersDialog = false;
-      selectedCharacters.clear();
+      showDeleteCardsDialog = false;
+      selectedCards.clear();
     } catch (e) {
-      console.error('Failed to delete characters:', e);
+      console.error('Failed to delete cards:', e);
     } finally {
-      deletingCharacters = false;
+      deletingCards = false;
     }
   }
 
@@ -206,24 +206,24 @@
     });
   }
 
-  function toggleCharacter(id: string) {
-    if (selectedCharacters.has(id)) {
-      selectedCharacters.delete(id);
+  function toggleCard(id: string) {
+    if (selectedCards.has(id)) {
+      selectedCards.delete(id);
     } else {
-      selectedCharacters.add(id);
+      selectedCards.add(id);
     }
-    selectedCharacters = selectedCharacters; // trigger reactivity
+    selectedCards = selectedCards; // trigger reactivity
   }
 
-  // Select all/none for characters
+  // Select all/none for cards
   function selectAll() {
-    deck.cards.forEach((card: Card) => selectedCharacters.add(card.id));
-    selectedCharacters = selectedCharacters;
+    deck.cards.forEach((card: Card) => selectedCards.add(card.id));
+    selectedCards = selectedCards;
   }
 
   function selectNone() {
-    selectedCharacters.clear();
-    selectedCharacters = selectedCharacters;
+    selectedCards.clear();
+    selectedCards = selectedCards;
   }
 </script>
 
@@ -298,7 +298,7 @@
         </button>
         <button 
           class="action-button danger"
-          onclick={() => showDeleteCharactersDialog = true}
+          onclick={() => showDeleteCardsDialog = true}
           title="Delete selected cards from this deck"
         >
           Delete
@@ -326,7 +326,7 @@
     </div>
   </div>
 
-  {#if showDeleteConfirm || showDuplicateDialog || showCopyDialog || showDeleteCharactersDialog}
+  {#if showDeleteConfirm || showDuplicateDialog || showCopyDialog || showDeleteCardsDialog}
     <div class="dialog-overlay"></div>
   {/if}
 
@@ -376,32 +376,32 @@
         <button 
           class="small"
           onclick={selectAll}
-          disabled={selectedCharacters.size === deck.cards.length}
+          disabled={selectedCards.size === deck.cards.length}
         >
           Select All
         </button>
         <button 
           class="small"
           onclick={selectNone}
-          disabled={selectedCharacters.size === 0}
+          disabled={selectedCards.size === 0}
         >
           Clear Selection
         </button>
         <span class="selection-count">
-          {selectedCharacters.size} of {deck.cards.length} selected
+          {selectedCards.size} of {deck.cards.length} selected
         </span>
       </div>
-      <div class="character-list">
+      <div class="card-list">
         {#each deck.cards as card (card.id)}
-          <label class="character-item">
+          <label class="card-item">
             <input
               type="checkbox"
-              checked={selectedCharacters.has(card.id)}
-              onchange={() => toggleCharacter(card.id)}
+              checked={selectedCards.has(card.id)}
+              onchange={() => toggleCard(card.id)}
             >
-            <span class="character-info">
+            <span class="card-info">
               <strong>{card.name}</strong>
-              <span class="character-role">{card.role}</span>
+              <span class="card-role">{card.role}</span>
             </span>
           </label>
         {/each}
@@ -423,16 +423,16 @@
         <div class="dialog-buttons">
           <button 
             class="primary"
-            onclick={handleCopyCharacters}
-            disabled={copying || selectedCharacters.size === 0 || (targetDeckId === 'new' && !newDeckName.trim())}
+            onclick={handleCopyCards}
+            disabled={copying || selectedCards.size === 0 || (targetDeckId === 'new' && !newDeckName.trim())}
           >
-            {copying ? 'Copying...' : `Copy ${selectedCharacters.size} Character${selectedCharacters.size !== 1 ? 's' : ''}`}
+            {copying ? 'Copying...' : `Copy ${selectedCards.size} Card${selectedCards.size !== 1 ? 's' : ''}`}
           </button>
           <button 
             class="secondary"
             onclick={() => {
               showCopyDialog = false;
-              selectedCharacters.clear();
+              selectedCards.clear();
             }}
             disabled={copying}
           >
@@ -443,38 +443,38 @@
     </div>
   {/if}
 
-  {#if showDeleteCharactersDialog}
+  {#if showDeleteCardsDialog}
     <div class="dialog copy-dialog">
       <div class="selection-controls">
         <button 
           class="small"
           onclick={selectAll}
-          disabled={selectedCharacters.size === deck.cards.length}
+          disabled={selectedCards.size === deck.cards.length}
         >
           Select All
         </button>
         <button 
           class="small"
           onclick={selectNone}
-          disabled={selectedCharacters.size === 0}
+          disabled={selectedCards.size === 0}
         >
           Clear Selection
         </button>
         <span class="selection-count">
-          {selectedCharacters.size} of {deck.cards.length} selected
+          {selectedCards.size} of {deck.cards.length} selected
         </span>
       </div>
-      <div class="character-list">
+      <div class="card-list">
         {#each deck.cards as card (card.id)}
-          <label class="character-item">
+          <label class="card-item">
             <input
               type="checkbox"
-              checked={selectedCharacters.has(card.id)}
-              onchange={() => toggleCharacter(card.id)}
+              checked={selectedCards.has(card.id)}
+              onchange={() => toggleCard(card.id)}
             >
-            <span class="character-info">
+            <span class="card-info">
               <strong>{card.name}</strong>
-              <span class="character-role">{card.role}</span>
+              <span class="card-role">{card.role}</span>
             </span>
           </label>
         {/each}
@@ -482,18 +482,18 @@
       <div class="dialog-buttons">
         <button 
           class="danger"
-          onclick={handleDeleteCharacters}
-          disabled={deletingCharacters || selectedCharacters.size === 0}
+          onclick={handleDeleteCards}
+          disabled={deletingCards || selectedCards.size === 0}
         >
-          {deletingCharacters ? 'Deleting...' : `Delete ${selectedCharacters.size} Character${selectedCharacters.size !== 1 ? 's' : ''}`}
+          {deletingCards ? 'Deleting...' : `Delete ${selectedCards.size} Card${selectedCards.size !== 1 ? 's' : ''}`}
         </button>
         <button 
           class="secondary"
           onclick={() => {
-            showDeleteCharactersDialog = false;
-            selectedCharacters.clear();
+            showDeleteCardsDialog = false;
+            selectedCards.clear();
           }}
-          disabled={deletingCharacters}
+          disabled={deletingCards}
         >
           Cancel
         </button>
@@ -764,7 +764,7 @@
     width: 4.5em;
   }
 
-  .character-list {
+  .card-list {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
@@ -777,7 +777,7 @@
     background: var(--ui-bg);
   }
 
-  .character-item {
+  .card-item {
     display: flex;
     align-items: center;
     gap: 0.75rem;
@@ -787,23 +787,23 @@
     transition: background-color 0.2s;
   }
 
-  .character-item:hover {
+  .card-item:hover {
     background: var(--ui-hover-bg);
   }
 
-  .character-info {
+  .card-info {
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
   }
 
-  .character-info strong {
+  .card-info strong {
     font-family: var(--ui-font-family);
     font-size: var(--ui-font-size);
     color: var(--ui-text);
   }
 
-  .character-role {
+  .card-role {
     font-family: var(--ui-font-family);
     font-size: calc(var(--ui-font-size) * 0.9);
     color: var(--ui-muted);

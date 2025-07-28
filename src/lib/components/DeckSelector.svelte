@@ -1,18 +1,29 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
-  import { currentDeck, clearDatabase, populateWithSampleData } from '$lib/stores/deck';
-  import { listDecks, switchDeck, saveDeck } from '$lib/stores/deck';
+  import { currentDeck } from '$lib/stores/deck';
+  import { listDecks, switchDeck, saveDeck, setCurrentDeck } from '$lib/stores/deck';
+  import { clearDatabase, populateWithSampleData } from '$lib/stores/deck';
   import type { Deck, CardSize } from '$lib/types';
   import { devMode } from '$lib/stores/dev';
   import { baseThemes } from '$lib/themes';
   import ThemeSelect from './ThemeSelect.svelte';
+  import { toasts } from '$lib/stores/toast';
 
   let decks = $state<Deck[]>([]);
   let loading = $state(true);
   let error = $state<string | null>(null);
   let showThemeSelect = $state(false);
+  let showNewDeckDialog = $state(false);
+  let newDeckName = $state('');
+  let loadTrigger = $state(0);
 
-  onMount(async () => {
+  // Load decks when triggered
+  $effect(() => {
+    if (loadTrigger >= 0) {
+      loadDecks();
+    }
+  });
+
+  async function loadDecks() {
     try {
       decks = await listDecks();
       loading = false;
@@ -20,11 +31,45 @@
       error = e instanceof Error ? e.message : 'Failed to load decks';
       loading = false;
     }
-  });
+  }
 
   async function handleDeckChange(event: Event) {
     const select = event.target as HTMLSelectElement;
     await switchDeck(select.value);
+  }
+
+  async function handleCreateDeck() {
+    if (!showNewDeckDialog) {
+      showNewDeckDialog = true;
+      return;
+    }
+
+    if (!newDeckName.trim()) return;
+
+    try {
+      const newDeck: Deck = {
+        id: crypto.randomUUID(),
+        meta: {
+          name: newDeckName.trim(),
+          theme: 'classic',
+          cardSize: 'poker',
+          lastEdited: Date.now(),
+          createdAt: Date.now()
+        },
+        cards: []
+      };
+
+      await saveDeck(newDeck);
+      await setCurrentDeck(newDeck);
+      showNewDeckDialog = false;
+      newDeckName = '';
+      loadTrigger++; // Refresh deck list
+      toasts.success('Created new deck');
+    } catch (e) {
+      console.error('Failed to create deck:', e);
+      error = e instanceof Error ? e.message : 'Failed to create deck';
+      toasts.error('Failed to create deck');
+    }
   }
 
   async function handleSizeChange(event: Event) {
@@ -85,16 +130,24 @@
     {:else if error}
       <span class="status error">{error}</span>
     {:else}
-      <select 
-        onchange={handleDeckChange}
-        value={$currentDeck?.id}
-      >
-        {#each sortedDecks as deck (deck.id)}
-          <option value={deck.id}>
-            {deck.meta.name}
-          </option>
-        {/each}
-      </select>
+      <div class="deck-controls">
+        <select 
+          onchange={handleDeckChange}
+          value={$currentDeck?.id}
+        >
+          {#each sortedDecks as deck (deck.id)}
+            <option value={deck.id}>
+              {deck.meta.name}
+            </option>
+          {/each}
+        </select>
+        <button 
+          class="create-deck"
+          onclick={handleCreateDeck}
+        >
+          ➕ Create New Deck
+        </button>
+      </div>
     {/if}
   </fieldset>
 
@@ -163,6 +216,34 @@
       <button 
         class="secondary"
         onclick={() => showThemeSelect = false}
+      >
+        Cancel
+      </button>
+    </div>
+  </div>
+{/if}
+
+{#if showNewDeckDialog}
+  <div class="dialog-overlay" onclick={() => showNewDeckDialog = false}></div>
+  <div class="dialog">
+    <h2>Create New Deck</h2>
+    <input
+      type="text"
+      bind:value={newDeckName}
+      placeholder="Enter deck name"
+      onkeydown={(e) => e.key === 'Enter' && handleCreateDeck()}
+    >
+    <div class="dialog-buttons">
+      <button 
+        class="primary"
+        onclick={handleCreateDeck}
+        disabled={!newDeckName.trim()}
+      >
+        Create
+      </button>
+      <button 
+        class="secondary"
+        onclick={() => showNewDeckDialog = false}
       >
         Cancel
       </button>
@@ -392,5 +473,49 @@
   .dialog-buttons button:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+  }
+
+  .deck-controls {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+  }
+
+  .deck-controls select {
+    flex: 1;
+  }
+
+  .create-deck {
+    white-space: nowrap;
+    background: var(--button-primary-bg);
+    color: var(--button-primary-text);
+    border-color: var(--button-primary-bg);
+  }
+
+  .create-deck:hover {
+    background: var(--button-primary-hover);
+  }
+
+  input[type="text"] {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid var(--ui-border);
+    border-radius: 4px;
+    font-size: var(--ui-font-size);
+    font-family: var(--ui-font-family);
+    margin: 1rem 0;
+  }
+
+  input[type="text"]:focus {
+    outline: none;
+    border-color: var(--button-primary-bg);
+    box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.1);
+  }
+
+  .dialog h2 {
+    margin: 0;
+    font-size: var(--ui-title-size);
+    font-family: var(--ui-font-family);
+    font-weight: 600;
   }
 </style> 

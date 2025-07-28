@@ -87,16 +87,34 @@ For consistent theme application:
   - [x] Semantic HTML structure
   - [x] Consistent focus states
   - [x] Screen reader friendly content
+- [x] Terminology Refactoring
+  - [x] Rename "Character" to "Card" throughout codebase
+  - [x] Update component names and files
+  - [x] Update store functionality
+  - [x] Update database schema
+  - [x] Update UI text and labels
+  - [x] Update sample data
+  - [x] Update image handling terminology
+  - [x] Remove backward compatibility exports
+  - [x] Update documentation
 
 ### Next Steps (Priority Order)
 
-1. **Export Implementation**
+1. **Deck Creation**
+   - Add "Create New Deck" button to deck management
+   - Implement proper deck creation flow
+   - Handle database operations correctly
+   - Add success/error feedback
+   - Update deck list after creation
+   - Switch to new deck automatically
+
+2. **Export Implementation**
    - Implement JSON export with proper image URL handling
    - Add .zip backup export with blob data
    - Add progress tracking for large exports
    - Create restore/import functionality
 
-2. **Deck Merge System**
+3. **Deck Merge System**
    - Create merge detection (same deck ID)
    - Build diff viewer UI
      - Show added/removed/modified characters
@@ -115,13 +133,13 @@ For consistent theme application:
      - Change preview
      - Batch operations
 
-3. **Service Card**
+4. **Service Card**
    - Design the card layout
    - Add QR code generation
    - Implement auto-insertion
    - Make it non-deletable
 
-4. **Documentation**
+5. **Documentation**
    - Write IMAGE_HOSTING.md
    - Update USAGE.md with new features
    - Add examples and screenshots
@@ -130,7 +148,7 @@ For consistent theme application:
      - Show conflict resolution
      - Provide best practices
 
-5. **Polish & Testing**
+6. **Polish & Testing**
    - Test sharing with large decks
    - Test image migration edge cases
    - Test merge scenarios
