@@ -90,59 +90,64 @@ For consistent theme application:
 
 ### Next Steps (Priority Order)
 
-### 1. Image Handling
-- [x] URL-based Images
-  - [x] URL validation and testing
-  - [x] Support for common image hosts
-  - [x] Clear user guidance
-  - [x] Error handling and fallbacks
-- [x] Local File Support
-  - [x] Size and format validation
-  - [x] Print quality warnings
-  - [x] Blob storage in IndexedDB
-  - [x] Efficient blob URL management
-- [x] Image Processing
-  - [x] Proper card dimensions
-  - [x] Format optimization
-  - [x] Print-friendly processing
-  - [x] Size validation
-- [x] Documentation
-  - [x] Image hosting guidelines
-  - [x] Size/format guidelines
-  - [x] Best practices for sharing
+1. **Export Implementation**
+   - Implement JSON export with proper image URL handling
+   - Add .zip backup export with blob data
+   - Add progress tracking for large exports
+   - Create restore/import functionality
 
-### 2. Sharing System
-- [ ] Share Dialog Component
-  - [ ] Share button in header
-  - [ ] Modal dialog with sharing options
-  - [ ] Clear section organization
-  - [ ] Progress indicators
-  - [ ] Error handling
-- [ ] URL Sharing
-  - [x] Add "Copy URL" button
-  - [x] Clear URL after import
-  - [ ] URL validation
-  - [x] Show URL size indicator
-  - [ ] Add sharing instructions
-  - [ ] Handle URL import conflicts
-  - [ ] Add version tracking for shared decks
-- [ ] Image Migration Tool
-  - [ ] List blob-based images
-  - [ ] URL input with validation
-  - [ ] Image URL verification utility
-  - [ ] Download optimized images
-  - [ ] Preview functionality
-  - [ ] Batch operations
-- [ ] Export Options
-  - [ ] JSON export format
-  - [ ] Complete backup (with images)
-  - [ ] Export progress tracking
-  - [ ] Format documentation
-- [ ] Service Card
-  - [ ] Design QR code card
-  - [ ] Auto-insert in shared decks
-  - [ ] Make non-deletable
-  - [ ] Include sharing instructions
+2. **Deck Merge System**
+   - Create merge detection (same deck ID)
+   - Build diff viewer UI
+     - Show added/removed/modified characters
+     - Show changes in deck metadata
+     - Highlight specific field changes
+   - Implement merge strategies
+     - Accept all changes (overwrite)
+     - Create new deck (new UUID)
+     - Selective merge (pick changes)
+   - Handle special cases
+     - Image conflicts (URL vs blob)
+     - Character order changes
+     - Theme/style changes
+   - Add conflict resolution UI
+     - Side-by-side comparison
+     - Change preview
+     - Batch operations
+
+3. **Service Card**
+   - Design the card layout
+   - Add QR code generation
+   - Implement auto-insertion
+   - Make it non-deletable
+
+4. **Documentation**
+   - Write IMAGE_HOSTING.md
+   - Update USAGE.md with new features
+   - Add examples and screenshots
+   - Document merge functionality
+     - Explain merge strategies
+     - Show conflict resolution
+     - Provide best practices
+
+5. **Polish & Testing**
+   - Test sharing with large decks
+   - Test image migration edge cases
+   - Test merge scenarios
+     - Complex character changes
+     - Image format conflicts
+     - Partial updates
+   - Add more user feedback
+   - Improve error handling
+
+### Future Considerations
+- Consider adding image optimization options
+- Add batch URL validation
+- Support more image hosting services
+- Add deck versioning for shared URLs
+- Add merge history tracking
+- Support branch/variant management
+- Add collaborative editing features
 
 ### 3. Import System
 - [ ] URL Import
