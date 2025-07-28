@@ -16,7 +16,7 @@
   --role-font-family: var(--theme-body-font);  /* Use flowing script for role */
    
   /* Font Sizes */
-  --title-font-size: 4.5em;       /* Large for titles */
+  --title-font-size: 3.5em;       /* Large for titles */
   --title-line-height: 1.0;
   --role-font-size: 3.5cqw;     /* Decreased from 5cqw */
   --trait-font-size: 1.2em;     /* Decreased from 1.6em */
@@ -92,8 +92,9 @@
 }
 
 /* Title and role width overrides */
-[data-theme="scriptorum"] .content h2.title {
+[data-theme="scriptorum"] .content .title {
   max-width: 100%;
+  font-size: 2em;
 }
 
 [data-theme="scriptorum"] .content .role {
@@ -106,7 +107,7 @@
 [data-theme="scriptorum"] .title.front::first-letter {
   font-size: 200%;
   float: left;
-  margin: 0 1px 0 0;
+  margin: -3px 1px 0 0;
   font-family: var(--theme-title-font);
   color: var(--theme-primary);
   line-height: 0.8;
@@ -116,7 +117,7 @@
 [data-theme="scriptorum"] .desc::first-letter {
   font-size: 275%;
   float: left;
-  margin: 0 2px 0 0;
+  margin: -3px 2px 0 0;
   font-family: var(--theme-body-font);
   color: var(--theme-primary);
   line-height: 1;
@@ -129,8 +130,8 @@
 }
 
 @container (width > 300px) {
-  [data-theme="scriptorum"] {
-    --title-font-size: 4.5em;
+  [data-theme="scriptorum"] .content .title {
+    font-size: var(--title-font-size);
   }
 }
 
