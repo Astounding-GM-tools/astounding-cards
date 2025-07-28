@@ -145,12 +145,11 @@ export async function saveDeck(deck: Deck, allowEmpty = false) {
   const storableDeck = {
     ...deck,
     cards: deck.cards.map(card => {
-      // Remove non-cloneable data and ensure arrays are plain arrays
-      const { imageBlob, ...cardWithoutBlob } = card;
+      // Keep the imageBlob for storage
       return {
-        ...cardWithoutBlob,
-        traits: [...cardWithoutBlob.traits],
-        secrets: [...cardWithoutBlob.secrets]
+        ...card,
+        traits: [...card.traits],
+        secrets: [...card.secrets]
       };
     })
   };
@@ -197,7 +196,6 @@ export async function listDecks(): Promise<Deck[]> {
       const transaction = db.transaction(['decks'], 'readonly');
       const store = transaction.objectStore('decks');
 
-      console.log('Listing all decks...');
       const request = store.getAll();
 
       request.onerror = () => {
@@ -205,8 +203,8 @@ export async function listDecks(): Promise<Deck[]> {
         reject(new StorageError('Failed to list decks', error));
       };
       request.onsuccess = () => {
-        console.log('Found decks:', request.result.length);
-        resolve(request.result);
+        const decks = request.result;
+        resolve(decks);
       };
     });
   } catch (error) {
@@ -254,16 +252,17 @@ export async function updateCard(id: string, updates: Partial<Card>) {
   const updatedCard = {
     ...deck.cards[charIndex],
     ...updates,
-    // Handle blob updates correctly:
+    // Handle image updates:
     // 1. If we're explicitly setting a new blob, use it
-    // 2. If we're not changing the image, keep the existing blob and image
-    // 3. If we're changing to a URL/local image, clear the blob
+    // 2. If we're not changing the image, keep the existing blob
+    // 3. If we're changing to a URL/local image or removing the image, clear the blob
     imageBlob: 'imageBlob' in updates 
       ? updates.imageBlob
       : updates.image === deck.cards[charIndex].image
         ? deck.cards[charIndex].imageBlob
         : undefined,
-    image: updates.image ?? deck.cards[charIndex].image  // Keep existing image if not updating
+    // Always use the provided image value, even if it's null
+    image: 'image' in updates ? (updates.image || null) : deck.cards[charIndex].image
   };
 
   // Ensure we have a plain object for IndexedDB
@@ -273,29 +272,7 @@ export async function updateCard(id: string, updates: Partial<Card>) {
       ...deck.meta,
       lastEdited: Date.now()
     },
-    cards: deck.cards.map((c, i) => {
-      if (i !== charIndex) return c;
-
-      // Convert stat to plain object based on type
-      let stat: CardStat | undefined = undefined;
-      if (updatedCard.stat) {
-        if (updatedCard.stat.type === 'character') {
-          stat = { type: 'character', value: String(updatedCard.stat.value) };
-        } else if (updatedCard.stat.type === 'item') {
-          stat = { type: 'item', value: updatedCard.stat.value };
-        } else if (updatedCard.stat.type === 'location') {
-          stat = { 
-            type: 'location', 
-            value: { 
-              type: updatedCard.stat.value.type, 
-              value: updatedCard.stat.value.value 
-            } 
-          };
-        }
-      }
-
-      return { ...updatedCard, stat };
-    })
+    cards: deck.cards.map((c, i) => i === charIndex ? updatedCard : c)
   };
 
   // Validate the updated card
@@ -306,8 +283,10 @@ export async function updateCard(id: string, updates: Partial<Card>) {
   }
 
   try {
-    await saveDeck(newDeck);
+    // Update in-memory store first for immediate UI update
     currentDeck.set(newDeck);
+    // Then save to IndexedDB
+    await saveDeck(newDeck);
     toasts.success('Updated card');
   } catch (err) {
     console.error('Failed to save card update:', err);
@@ -356,6 +335,7 @@ export function addCard() {
   };
 
   saveDeck(newDeck);
+  currentDeck.set(newDeck); // Update in-memory store directly
   return newDeck;
 }
 
@@ -545,7 +525,11 @@ export async function copyCardsTo(
 
 // Set current deck
 export function setCurrentDeck(deck: Deck | null) {
-  currentDeckId.set(deck?.id || null);
+  if (deck) {
+    currentDeckId.set(deck.id);
+  } else {
+    currentDeckId.set(null);
+  }
 } 
 
 // Development helper to clear database

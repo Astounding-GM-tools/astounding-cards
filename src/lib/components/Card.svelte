@@ -5,7 +5,7 @@
   const activeTheme = $derived(theme ?? $currentDeck?.meta?.theme ?? 'classic');
 </script>
 
-<div class="card" class:show-crop-marks={showCropMarks}>
+<div class="card" class:crop-marks={showCropMarks}>
   <div class="theme-scope" data-theme={activeTheme}>
     {@render children()}
   </div>
@@ -25,12 +25,12 @@
   }
 
   /* Crop marks using gradient borders */
-  .show-crop-marks {
+  .crop-marks {
     position: relative;
   }
 
-  .show-crop-marks::before,
-  .show-crop-marks::after {
+  .crop-marks::before,
+  .crop-marks::after {
     content: '';
     position: absolute;
     inset: 0;
@@ -38,7 +38,7 @@
   }
 
   /* Horizontal marks */
-  .show-crop-marks::before {
+  .crop-marks::before {
     border-top: 0.2mm solid;
     border-bottom: 0.2mm solid;
     border-image: linear-gradient(
@@ -53,7 +53,7 @@
   }
 
   /* Vertical marks */
-  .show-crop-marks::after {
+  .crop-marks::after {
     border-left: 0.2mm solid;
     border-right: 0.2mm solid;
     border-image: linear-gradient(
@@ -68,30 +68,30 @@
   }
 
   /* Thinner borders for adjacent cards */
-  :global(.card-grid[data-size="poker"] > div:not(:nth-child(3n))) .show-crop-marks::after {
+  :global(.card-grid[data-size="poker"] > div:not(:nth-child(3n))) .crop-marks::after {
     border-right-width: 0.1mm;
   }
-  :global(.card-grid[data-size="poker"] > div:not(:nth-child(3n + 1))) .show-crop-marks::after {
+  :global(.card-grid[data-size="poker"] > div:not(:nth-child(3n + 1))) .crop-marks::after {
     border-left-width: 0.1mm;
   }
-  :global(.card-grid[data-size="poker"] > div:nth-child(n+4)) .show-crop-marks::before {
+  :global(.card-grid[data-size="poker"] > div:nth-child(n+4)) .crop-marks::before {
     border-top-width: 0.1mm;
   }
-  :global(.card-grid[data-size="poker"] > div:nth-child(-n+6)) .show-crop-marks::before {
+  :global(.card-grid[data-size="poker"] > div:nth-child(-n+6)) .crop-marks::before {
     border-bottom-width: 0.1mm;
   }
 
   /* Tarot size crop marks */
-  :global(.card-grid[data-size="tarot"] > div:not(:nth-child(2n))) .show-crop-marks::after {
+  :global(.card-grid[data-size="tarot"] > div:not(:nth-child(2n))) .crop-marks::after {
     border-right-width: 0.1mm;
   }
-  :global(.card-grid[data-size="tarot"] > div:not(:nth-child(2n + 1))) .show-crop-marks::after {
+  :global(.card-grid[data-size="tarot"] > div:not(:nth-child(2n + 1))) .crop-marks::after {
     border-left-width: 0.1mm;
   }
-  :global(.card-grid[data-size="tarot"] > div:nth-child(n+3)) .show-crop-marks::before {
+  :global(.card-grid[data-size="tarot"] > div:nth-child(n+3)) .crop-marks::before {
     border-top-width: 0.1mm;
   }
-  :global(.card-grid[data-size="tarot"] > div:nth-child(-n+2)) .show-crop-marks::before {
+  :global(.card-grid[data-size="tarot"] > div:nth-child(-n+2)) .crop-marks::before {
     border-bottom-width: 0.1mm;
   }
 </style> 

@@ -15,7 +15,12 @@
   import { devMode } from '$lib/stores/dev';
   import ShareDialog from '$lib/components/ShareDialog.svelte';
 
+  // State
   let showCropMarks = $state(true);
+  let showPrintInstructions = $state(false);
+  let showShareDialog = $state(false);
+  let showImageMigrationDialog = $state(false);
+
   let loading = $state(true);  // Start with loading true
   let error = $state<string | null>(null);
   let deckDialog = $state<HTMLDialogElement | null>(null) as unknown as HTMLDialogElement;
@@ -58,35 +63,22 @@
     }
   }
 
-  // Load initial deck
-  onMount(async () => {
+  // Load decks when component mounts
+  $effect.root(async () => {
     try {
-      // Check URL parameters first
-      const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.has('deck')) {
-        const deckParam = urlParams.get('deck')!;
-        const url = new URL(window.location.href);
-        url.searchParams.set('deck', deckParam);
-        const deck = await deckFromUrl(url);
-        if (deck) {
-          await setCurrentDeck(deck);
-          loading = false;
-          return;
-        }
-      }
-      
-      // No URL deck, load most recent
-      const decks = await listDecks();
-      if (decks.length > 0) {
-        // Sort by last edited and load most recent
-        const mostRecent = decks.sort((a, b) => b.meta.lastEdited - a.meta.lastEdited)[0];
-        await loadDeck(mostRecent.id);
+      loading = true;
+      const allDecks = await listDecks();
+      if (allDecks.length > 0) {
+        // Sort by lastEdited and get most recent
+        const sortedDecks = allDecks.sort((a, b) => b.meta.lastEdited - a.meta.lastEdited);
+        const mostRecent = sortedDecks[0];
         await setCurrentDeck(mostRecent);
+      } else {
+        await setCurrentDeck(null);
       }
-      loading = false;
-    } catch (e) {
-      console.error('Failed to load deck:', e);
-      error = e instanceof Error ? e.message : 'Failed to load deck';
+    } catch (err) {
+      error = err instanceof Error ? err.message : String(err);
+    } finally {
       loading = false;
     }
   });
@@ -207,7 +199,7 @@
       <div class="message">No cards in deck</div>
     {:else}
       <PagedCards 
-        {showCropMarks}
+        showCropMarks={showCropMarks}
         onCardChange={handleCardUpdate}
       />
     {/if}

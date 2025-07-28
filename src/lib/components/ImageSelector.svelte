@@ -90,9 +90,7 @@
     if (props.onSave) {
       try {
         loading = true;
-        // Pass URL only if we're saving a URL-loaded image
-        await props.onSave(lastProcessedBlob || null, urlValue || undefined);
-        if (props.onClose) props.onClose();
+        await props.onSave(lastProcessedBlob || null, previewUrl || undefined);
       } catch (e) {
         error = e instanceof Error ? e.message : 'Failed to save image';
       } finally {
@@ -122,7 +120,10 @@
   // Cleanup preview URL when component is destroyed
   $effect(() => {
     return () => {
-      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      // Only revoke if we didn't pass this URL to the parent
+      if (previewUrl && !props.onSave) {
+        URL.revokeObjectURL(previewUrl);
+      }
     };
   });
 </script>
@@ -223,6 +224,7 @@
             bind:this={saveButton}
             onclick={handleSave}
             disabled={!previewUrl || !lastProcessedBlob}
+            title={previewUrl ? '' : 'No image chosen'}
           >
             Save
           </button>

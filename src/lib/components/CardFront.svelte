@@ -1,72 +1,70 @@
 <script lang="ts">
   import type { Card } from '$lib/types';
+  import type { Writable } from 'svelte/store';
   import CardBase from './Card.svelte';
   import CardStatSelector from './CardStatSelector.svelte';
   import { currentDeck } from '$lib/stores/deck';
   import ImageSelector from './ImageSelector.svelte';
 
-  let { card, showCropMarks = false, onChange, theme = undefined } = $props<{
+  // Props
+  const props = $props<{
     card: Card;
-    showCropMarks: boolean;
-    onChange: (updates: Partial<Card>) => void;
     theme?: string;
+    onchange?: (updates: Partial<Card>) => Promise<void>;
+    preview?: boolean;
+    showCropMarks?: boolean;
   }>();
 
-  let nameElement: HTMLElement;
-  let roleElement: HTMLElement;
-  let traitsElement: HTMLElement;
-  let showImageSelector = $state(false);
+  // Reactive references
+  const card = props.card;  // Direct reference to props
+  const theme = props.theme;
+  const preview = props.preview ?? false;
+  const showCropMarks = props.showCropMarks ?? false;
+  const activeTheme = $derived(theme ?? $currentDeck?.meta?.theme ?? 'classic');
+  
+  // Track image URL locally
+  let currentUrl = $state<string | null>(null);
+  const backgroundStyle = $derived(currentUrl ? `url('${currentUrl}')` : 'none');
 
-  // Update blob source when card changes
-  let blobSource = $state<{ blob: Blob, id: string } | null>(null);
-  let currentBlobUrl = $state<string | null>(null);
-
+  // Create blob URL from imageBlob when component loads
   $effect(() => {
-    if (card.imageBlob) {
-      const newId = card.id + Date.now();
-      if (!blobSource || blobSource.blob !== card.imageBlob || blobSource.id !== newId) {
-        // Clean up old URL
-        if (currentBlobUrl) {
-          URL.revokeObjectURL(currentBlobUrl);
-        }
-        // Create new URL
-        currentBlobUrl = URL.createObjectURL(card.imageBlob);
-        blobSource = { blob: card.imageBlob, id: newId };
-      }
-    } else {
-      // Clean up URL if no blob
-      if (currentBlobUrl) {
-        URL.revokeObjectURL(currentBlobUrl);
-        currentBlobUrl = null;
-      }
-      blobSource = null;
+    if (card.imageBlob && !currentUrl) {
+      currentUrl = URL.createObjectURL(card.imageBlob);
     }
   });
 
-  // Clean up blob URL when component is destroyed
+  // Elements
+  let nameElement: HTMLHeadingElement;
+  let roleElement: HTMLDivElement;
+  let traitsElement: HTMLDivElement;
+  let showImageSelector = $state(false);
+
+  // Image selector
+  async function handleImageSave(blob: Blob | null, previewUrl: string | undefined) {
+    // Update local URL immediately
+    currentUrl = previewUrl || null;
+    
+    if (props.onchange) {
+      await props.onchange({ 
+        image: previewUrl || null,
+        imageBlob: blob || undefined
+      });
+    }
+    showImageSelector = false;
+  }
+
+  function getBackgroundImage(): string {
+    return currentUrl ? `url('${currentUrl}')` : 'none';
+  }
+
+  // Cleanup on destroy
   $effect.root(() => {
     return () => {
-      if (currentBlobUrl) {
-        URL.revokeObjectURL(currentBlobUrl);
+      if (currentUrl) {
+        URL.revokeObjectURL(currentUrl);
       }
     };
   });
-
-  function getImageUrl(image: string | null): string {
-    if (!image) {
-      return '';
-    }
-    if (image === 'blob:local') {
-      return currentBlobUrl || '';
-    }
-    if (image.startsWith('blob:')) {
-      return image;
-    }
-    if (image.includes(':')) {
-      return image;
-    }
-    return `/portraits/${image}`;
-  }
 
   function formatTraits(traits: string[]) {
     return traits?.map(trait => {
@@ -87,63 +85,42 @@
       .filter(s => s.length > 0);
   }
 
-  // Derived values for contenteditable
-  const nameContent = $derived(card.name);
-  const roleContent = $derived(card.role);
-  const traitsContent = $derived(formatTraits(card.traits));
-  const activeTheme = $derived(theme ?? $currentDeck?.meta?.theme ?? 'classic');
-
-  // Update handlers
+  // Handle name/role/traits updates
   function handleNameBlur() {
     const newName = nameElement.innerText.trim();
-    if (newName !== card.name) {
-      onChange({ 
-        name: newName,
-        image: card.image,
-        imageBlob: card.imageBlob
-      });
+    if (newName !== card.name && props.onchange) {
+      props.onchange({ name: newName });
     }
   }
 
   function handleRoleBlur() {
     const newRole = roleElement.innerText.trim();
-    if (newRole !== card.role) {
-      onChange({ 
-        role: newRole,
-        image: card.image,
-        imageBlob: card.imageBlob
-      });
+    if (newRole !== card.role && props.onchange) {
+      props.onchange({ role: newRole });
     }
   }
 
-  function handleTraitsBlur(event: Event) {
-    const target = event.target as HTMLElement;
-    const newTraits = parseTraits(target.innerText);
-    if (JSON.stringify(newTraits) !== JSON.stringify(card.traits)) {
-      onChange({ 
-        traits: newTraits,
-        image: card.image,
-        imageBlob: card.imageBlob
-      });
+  function handleTraitsBlur() {
+    const newTraits = parseTraits(traitsElement.innerHTML);
+    if (JSON.stringify(newTraits) !== JSON.stringify(card.traits) && props.onchange) {
+      props.onchange({ traits: newTraits });
     }
   }
 
   function addTrait() {
     const newTraits = [...(card.traits || []), 'Label: Description'];
-    onChange({ 
-      traits: newTraits,
-      image: card.image,
-      imageBlob: card.imageBlob
-    });
+    if (props.onchange) {
+      props.onchange({ traits: newTraits });
+    }
   }
 </script>
 
 {#if card}
-<CardBase {showCropMarks} theme={activeTheme}>
+<CardBase theme={activeTheme} showCropMarks={showCropMarks}>
   <div 
     class="card-content"
-    class:preview={card.type === 'Preview'}
-    style:background-image={`url('${getImageUrl(card.image)}')`}
+    class:preview={preview}
+    style:background-image={backgroundStyle}
   >
     <!-- Top portrait flourishes -->
     <svg class="flourish portrait-flourish top-left" viewBox="0 0 100 100">
@@ -170,13 +147,7 @@
         {#if showImageSelector}
           <div class="image-input">
             <ImageSelector 
-              onSave={async (blob, sourceUrl) => {
-                await onChange({ 
-                  image: blob ? (sourceUrl || 'blob:local') : null,
-                  imageBlob: blob || undefined
-                });
-                showImageSelector = false;
-              }}
+              onSave={handleImageSave}
               onClose={() => showImageSelector = false}
               hasExistingImage={!!card.image}
             />
@@ -186,7 +157,10 @@
 
       <!-- Stat container -->
       <div class="stat-container">
-        <CardStatSelector card={card} {onChange} />
+        <CardStatSelector 
+          card={card} 
+          onchange={props.onchange} 
+        />
       </div>
 
       <!-- Bottom portrait flourishes -->

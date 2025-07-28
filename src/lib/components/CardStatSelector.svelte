@@ -2,9 +2,9 @@
   import type { CardStat, Portability, Card } from '$lib/types';
   import { currentDeck } from '$lib/stores/deck';
   
-  const { card, onChange } = $props<{
+  const { card, onchange } = $props<{
     card: Card;
-    onChange: (updates: Partial<Card>) => void;
+    onchange: (updates: Partial<Card>) => void;
   }>();
 
   let dialogElement = $state<HTMLDialogElement | null>(null);
@@ -50,6 +50,7 @@
     initializeState();
     isDialogOpen = true;
     dialogElement?.showModal();
+    updateTempStat();
   }
 
   function closeDialog() {
@@ -58,7 +59,7 @@
   }
 
   function clearStat() {
-    onChange({ 
+    onchange({ 
       stat: undefined,
       image: card.image,
       imageBlob: card.imageBlob
@@ -72,7 +73,7 @@
       image: card.image,
       imageBlob: card.imageBlob
     };
-    onChange(updates);
+    onchange(updates);
     closeDialog();
   }
 
@@ -92,11 +93,30 @@
     };
   }
 
+  // Keep selectedType in sync with card.stat
+  selectedType = card.stat?.type;
+
+  // Update tempStat when type changes
+  function updateTempStat() {
+    if (selectedType === 'character') {
+      tempStat = { type: 'character', value: characterAge || '' };
+    } else if (selectedType === 'item') {
+      tempStat = { type: 'item', value: itemPortability };
+    } else if (selectedType === 'location') {
+      tempStat = { 
+        type: 'location', 
+        value: { type: 'soft', value: locationArea || '' }
+      };
+    }
+  }
+
   // Get all unique area names and location cards as derived values
   const areaNames = $derived(
-    ($currentDeck?.cards || [])
-      .map(c => c.stat?.type === 'location' && c.stat.value.type === 'soft' ? c.stat.value.value : null)
-      .filter((name): name is string => name !== null)
+    [...new Set(
+      ($currentDeck?.cards || [])
+        .map(c => c.stat?.type === 'location' && c.stat.value.type === 'soft' ? c.stat.value.value : null)
+        .filter((name): name is string => name !== null)
+    )]
   );
 
   const locationCards = $derived(
@@ -142,36 +162,6 @@
       };
     }
   }
-
-  // Initialize state when card changes
-  $effect(() => {
-    if (card.stat?.type === 'character') {
-      characterAge = card.stat.value;
-    } else if (card.stat?.type === 'item') {
-      itemPortability = card.stat.value as Portability;
-    } else if (card.stat?.type === 'location') {
-      locationArea = card.stat.value.value;
-    }
-  });
-
-  // Keep selectedType in sync with card.stat
-  $effect(() => {
-    selectedType = card.stat?.type;
-  });
-
-  // Update tempStat when selectedType changes
-  $effect(() => {
-    if (selectedType === 'character') {
-      tempStat = { type: 'character', value: characterAge || '' };
-    } else if (selectedType === 'item') {
-      tempStat = { type: 'item', value: itemPortability };
-    } else if (selectedType === 'location') {
-      tempStat = { 
-        type: 'location', 
-        value: { type: 'soft', value: locationArea || '' }
-      };
-    }
-  });
 </script>
 
 <!-- Stat Display/Trigger -->
@@ -217,6 +207,10 @@
           name="stat-type"
           value="character"
           checked={card.stat?.type === 'character'}
+          onchange={() => {
+            selectedType = 'character';
+            updateTempStat();
+          }}
         >
         <div class="stat-details">
           <span class="type-label">Character</span>
@@ -228,7 +222,7 @@
             bind:value={characterAge}
             onfocus={() => {
               selectedType = 'character';
-              tempStat = { type: 'character', value: characterAge };
+              updateTempStat();
             }}
             oninput={() => {
               tempStat = { type: 'character', value: characterAge };
@@ -245,6 +239,10 @@
           name="stat-type"
           value="item"
           checked={card.stat?.type === 'item'}
+          onchange={() => {
+            selectedType = 'item';
+            updateTempStat();
+          }}
         >
         <div class="stat-details">
           <span class="type-label">Item</span>
@@ -254,7 +252,7 @@
             bind:value={itemPortability}
             onfocus={() => {
               selectedType = 'item';
-              tempStat = { type: 'item', value: itemPortability };
+              updateTempStat();
             }}
             onchange={() => {
               tempStat = { type: 'item', value: itemPortability };
@@ -277,6 +275,10 @@
           name="stat-type"
           value="location"
           checked={card.stat?.type === 'location'}
+          onchange={() => {
+            selectedType = 'location';
+            updateTempStat();
+          }}
         >
         <div class="stat-details">
           <span class="type-label">Location</span>
@@ -289,7 +291,7 @@
               bind:value={locationArea}
               onfocus={() => {
                 selectedType = 'location';
-                tempStat = { type: 'location', value: { type: 'soft', value: locationArea } };
+                updateTempStat();
               }}
               oninput={() => {
                 tempStat = { 

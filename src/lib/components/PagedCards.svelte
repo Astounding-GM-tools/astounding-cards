@@ -5,8 +5,8 @@
   import CardBack from './CardBack.svelte';
   import { currentDeck } from '$lib/stores/deck';
 
-  const { showCropMarks, onCardChange } = $props<{
-    showCropMarks: boolean;
+  const { showCropMarks = false, onCardChange } = $props<{
+    showCropMarks?: boolean;
     onCardChange: (id: string, updates: Partial<Card>) => Promise<void>;
   }>();
 
@@ -34,8 +34,8 @@
         <div class="card-wrapper">
           <CardFront 
             card={card}
-            {showCropMarks}
-            onChange={(updates: Partial<Card>) => onCardChange(card.id, updates)}
+            showCropMarks={showCropMarks}
+            onchange={(updates: Partial<Card>) => onCardChange(card.id, updates)}
             theme={$currentDeck?.meta.theme}
           />
         </div>
@@ -52,8 +52,8 @@
         <div class="card-wrapper">
           <CardBack 
             card={card}
-            {showCropMarks}
-            onChange={(updates: Partial<Card>) => onCardChange(card.id, updates)}
+            showCropMarks={showCropMarks}
+            onchange={(updates: Partial<Card>) => onCardChange(card.id, updates)}
             theme={$currentDeck?.meta.theme}
             editable={true}
           />

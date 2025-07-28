@@ -3,17 +3,28 @@
   import CardBase from './Card.svelte';
   import { currentDeck } from '$lib/stores/deck';
 
-  let { card, showCropMarks = false, onChange, editable = true, theme = undefined } = $props<{
+  // Props
+  const props = $props<{
     card: Card;
-    showCropMarks: boolean;
-    onChange: (updates: Partial<Card>) => void;
-    editable?: boolean;
     theme?: string;
+    onchange?: (updates: Partial<Card>) => Promise<void>;
+    preview?: boolean;
+    showCropMarks?: boolean;
+    editable?: boolean;
   }>();
 
-  let nameElement = $state<HTMLElement>();
-  let descElement = $state<HTMLElement>();
-  let secretsElement = $state<HTMLElement>();
+  // Reactive references
+  const card = $state.raw(props.card);
+  const theme = props.theme;
+  const preview = props.preview ?? false;
+  const showCropMarks = props.showCropMarks ?? false;
+  const editable = props.editable ?? true;
+  const activeTheme = $derived(theme ?? $currentDeck?.meta?.theme ?? 'classic');
+
+  // Elements
+  let nameElement: HTMLHeadingElement;
+  let descElement: HTMLParagraphElement;
+  let secretsElement: HTMLDivElement;
 
   // Update DOM elements when card changes
   $effect(() => {
@@ -25,23 +36,34 @@
     }
   });
 
-  async function updateName(event: Event) {
-    const target = event.target as HTMLElement;
-    const newName = target.innerText;
-    if (newName !== card.name) {
-      await onChange({ name: newName });
+  function handleNameBlur() {
+    const newName = nameElement?.innerText.trim();
+    if (newName && newName !== card.name && props.onchange) {
+      props.onchange({ name: newName });
     }
   }
 
-  async function updateDesc(event: Event) {
-    const target = event.target as HTMLElement;
-    const newDesc = target.innerText;
-    if (newDesc !== card.desc) {
-      await onChange({ desc: newDesc });
+  function handleDescBlur() {
+    const newDesc = descElement?.innerText.trim();
+    if (newDesc && newDesc !== card.desc && props.onchange) {
+      props.onchange({ desc: newDesc });
     }
   }
 
-  // Format secrets with strong labels
+  function handleSecretsBlur() {
+    const newSecrets = secretsElement ? parseSecrets(secretsElement.innerHTML) : [];
+    if (JSON.stringify(newSecrets) !== JSON.stringify(card.secrets) && props.onchange) {
+      props.onchange({ secrets: newSecrets });
+    }
+  }
+
+  function addSecret() {
+    const newSecrets = [...(card.secrets || []), 'Label: Description'];
+    if (props.onchange) {
+      props.onchange({ secrets: newSecrets });
+    }
+  }
+
   function formatSecrets(secrets: string[]) {
     return secrets?.map(secret => {
       const [label, ...rest] = secret.split(':');
@@ -60,46 +82,41 @@
       .map(s => s.trim())
       .filter(s => s.length > 0);
   }
-
-  async function updateSecrets(event: Event) {
-    const target = event.target as HTMLElement;
-    const newSecrets = parseSecrets(target.innerText);
-    if (JSON.stringify(newSecrets) !== JSON.stringify(card.secrets)) {
-      await onChange({ secrets: newSecrets });
-    }
-  }
-
-  function addSecret() {
-    const newSecrets = [...(card.secrets || []), 'Label: Description'];
-    onChange({ secrets: newSecrets });
-  }
-
-  const activeTheme = $derived(theme ?? $currentDeck?.meta?.theme ?? 'classic');
 </script>
 
-<CardBase {showCropMarks} theme={activeTheme}>
-  <article class="card-content">
-    <section class="content">
-      <div class="top">
-        <h2 
-          class="title back"
-          contenteditable={editable}
-          onblur={updateName}
-          bind:this={nameElement}
-        >{card.name}</h2>
-        <p 
-          contenteditable={editable}
-          class="desc"
-          onblur={updateDesc}
-          bind:this={descElement}
-        >{card.desc}</p>
-      </div>
-      <fieldset class="secrets">
-        <legend>Secrets</legend>
+{#if card}
+<CardBase theme={activeTheme} showCropMarks={showCropMarks}>
+  <div 
+    class="card-content"
+    class:preview={preview}
+  >
+    <!-- Content box -->
+    <div class="content">
+      <!-- Content flourishes -->
+      <svg class="flourish content-flourish top-left" viewBox="0 0 100 100">
+        <use href="#flourish-{activeTheme}" />
+      </svg>
+      <svg class="flourish content-flourish top-right" viewBox="0 0 100 100">
+        <use href="#flourish-{activeTheme}" />
+      </svg>
+
+      <h2 
+        class="title back"
+        contenteditable={editable}
+        onblur={handleNameBlur}
+        bind:this={nameElement}
+      >{card.name}</h2>
+      <p 
+        contenteditable={editable}
+        class="desc"
+        onblur={handleDescBlur}
+        bind:this={descElement}
+      >{card.desc}</p>
+      <div class="secrets">
         <div 
           class="secrets-content"
           contenteditable={editable}
-          onblur={updateSecrets}
+          onblur={handleSecretsBlur}
           bind:this={secretsElement}
         >{@html formatSecrets(card.secrets)}</div>
         {#if editable}
@@ -110,10 +127,11 @@
             Add Secret
           </button>
         {/if}
-      </fieldset>
-    </section>
-  </article>
+      </div>
+    </div>
+  </div>
 </CardBase>
+{/if}
 
 <style>
   .card-content {
