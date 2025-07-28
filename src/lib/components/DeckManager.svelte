@@ -6,15 +6,16 @@
   import type { CardTheme } from '$lib/themes';
   import ThemeSelect from './ThemeSelect.svelte';
   import { createEventDispatcher } from 'svelte';
+  import { toasts } from '$lib/stores/toast';
 
   let { deck } = $props<{ deck: Deck }>();
   
   const dispatch = createEventDispatcher<{
-    deckChange: { action: 'update' | 'delete' | 'duplicate' | 'copy' | 'deleteCards', deckId: string };
+    deckchange: { action: 'update' | 'delete' | 'duplicate' | 'copy' | 'deleteCards', deckId: string };
   }>();
 
   function emitDeckChange(e: { action: 'update' | 'delete' | 'duplicate' | 'copy' | 'deleteCards', deckId: string }) {
-    dispatch('deckChange', e);
+    dispatch('deckchange', e);
   }
 
   let showThemeSelect = $state(false);
@@ -29,9 +30,26 @@
   let deletingCards = $state(false);
   let newDeckName = $state('');
   let editedDeckName = $state('');
-  let selectedCards = $state(new Set<string>());
+  let selectedCardIds = $state<string[]>([]);  // Array of selected card IDs
   let targetDeckId = $state<string | 'new'>('new');
   let availableDecks = $state<Deck[]>([]);
+
+  function toggleCard(id: string) {
+    if (selectedCardIds.includes(id)) {
+      selectedCardIds = selectedCardIds.filter(cardId => cardId !== id);
+    } else {
+      selectedCardIds = [...selectedCardIds, id];
+    }
+  }
+
+  // Select all/none for cards
+  function selectAll() {
+    selectedCardIds = deck.cards.map((card: Card) => card.id);
+  }
+
+  function selectNone() {
+    selectedCardIds = [];
+  }
 
   async function handleThemeChange(themeId: string) {
     const updatedDeck = {
@@ -108,22 +126,30 @@
       return;
     }
 
-    if (selectedCards.size === 0) return;
+    if (selectedCardIds.length === 0) return;
+    if (targetDeckId === 'new' && !newDeckName?.trim()) return;
 
     try {
       copying = true;
-      const cards = deck.cards.filter((c: Card) => selectedCards.has(c.id));
+      const cards = deck.cards.filter((c: Card) => selectedCardIds.includes(c.id));
       const targetDeck = await copyCardsTo(
         cards,
         targetDeckId,
-        targetDeckId === 'new' ? newDeckName : undefined
+        targetDeckId === 'new' ? newDeckName.trim() : undefined
       );
-      currentDeck.set(targetDeck);
+      if (targetDeckId === 'new' || targetDeckId === $currentDeck?.id) {
+        currentDeck.set(targetDeck); // Update in-memory store if it's the current deck
+      }
       emitDeckChange({ action: 'copy', deckId: targetDeck.id });
       showCopyDialog = false;
-      selectedCards.clear();
-    } catch (e) {
-      console.error('Failed to copy cards:', e);
+      const numCopied = cards.length;
+      selectedCardIds = [];
+      targetDeckId = 'new';  // Reset target
+      newDeckName = '';      // Reset name
+      toasts.success(`Copied ${numCopied} card${numCopied !== 1 ? 's' : ''} to ${targetDeck.meta.name}`);
+    } catch (error) {
+      console.error('Failed to copy cards:', error);
+      toasts.error('Failed to copy cards');
     } finally {
       copying = false;
     }
@@ -136,16 +162,23 @@
       return;
     }
 
-    if (selectedCards.size === 0) return;
+    if (selectedCardIds.length === 0) return;
 
     try {
       deletingCards = true;
-      await deleteCards(deck.id, Array.from(selectedCards));
+      const updatedDeck = await deleteCards(deck.id, selectedCardIds);
+      if ($currentDeck?.id === deck.id) {
+        currentDeck.set(updatedDeck); // Update in-memory store
+      }
+      deck = updatedDeck; // Update local prop
       emitDeckChange({ action: 'deleteCards', deckId: deck.id });
       showDeleteCardsDialog = false;
-      selectedCards.clear();
-    } catch (e) {
-      console.error('Failed to delete cards:', e);
+      const numDeleted = selectedCardIds.length;
+      selectedCardIds = [];
+      toasts.success(`Deleted ${numDeleted} card${numDeleted !== 1 ? 's' : ''}`);
+    } catch (error) {
+      console.error('Failed to delete cards:', error);
+      toasts.error('Failed to delete cards');
     } finally {
       deletingCards = false;
     }
@@ -174,12 +207,16 @@
       };
       await saveDeck(updatedDeck);
       if ($currentDeck?.id === deck.id) {
-        currentDeck.set(updatedDeck);
+        currentDeck.set(updatedDeck); // Update in-memory store
       }
+      deck = updatedDeck; // Update local prop
       emitDeckChange({ action: 'update', deckId: deck.id });
       editingName = false;
-    } catch (e) {
-      console.error('Failed to update deck name:', e);
+      toasts.success('Deck name updated');
+    } catch (error) {
+      console.error('Failed to update deck name:', error);
+      toasts.error('Failed to update deck name');
+      editingName = false;
     }
   }
 
@@ -204,26 +241,6 @@
       dateStyle: 'short',
       timeStyle: 'short'
     });
-  }
-
-  function toggleCard(id: string) {
-    if (selectedCards.has(id)) {
-      selectedCards.delete(id);
-    } else {
-      selectedCards.add(id);
-    }
-    selectedCards = selectedCards; // trigger reactivity
-  }
-
-  // Select all/none for cards
-  function selectAll() {
-    deck.cards.forEach((card: Card) => selectedCards.add(card.id));
-    selectedCards = selectedCards;
-  }
-
-  function selectNone() {
-    selectedCards.clear();
-    selectedCards = selectedCards;
   }
 </script>
 
@@ -376,19 +393,19 @@
         <button 
           class="small"
           onclick={selectAll}
-          disabled={selectedCards.size === deck.cards.length}
+          disabled={selectedCardIds.length === deck.cards.length}
         >
           Select All
         </button>
         <button 
           class="small"
           onclick={selectNone}
-          disabled={selectedCards.size === 0}
+          disabled={selectedCardIds.length === 0}
         >
           Clear Selection
         </button>
         <span class="selection-count">
-          {selectedCards.size} of {deck.cards.length} selected
+          {selectedCardIds.length} of {deck.cards.length} selected
         </span>
       </div>
       <div class="card-list">
@@ -396,7 +413,7 @@
           <label class="card-item">
             <input
               type="checkbox"
-              checked={selectedCards.has(card.id)}
+              checked={selectedCardIds.includes(card.id)}
               onchange={() => toggleCard(card.id)}
             >
             <span class="card-info">
@@ -424,15 +441,17 @@
           <button 
             class="primary"
             onclick={handleCopyCards}
-            disabled={copying || selectedCards.size === 0 || (targetDeckId === 'new' && !newDeckName.trim())}
+            disabled={selectedCardIds.length === 0 || (targetDeckId === 'new' && !newDeckName?.trim())}
           >
-            {copying ? 'Copying...' : `Copy ${selectedCards.size} Card${selectedCards.size !== 1 ? 's' : ''}`}
+            {copying ? 'Copying...' : `Copy ${selectedCardIds.length} Card${selectedCardIds.length !== 1 ? 's' : ''}`}
           </button>
           <button 
             class="secondary"
             onclick={() => {
               showCopyDialog = false;
-              selectedCards.clear();
+              selectedCardIds = [];
+              targetDeckId = 'new';  // Reset target
+              newDeckName = '';      // Reset name
             }}
             disabled={copying}
           >
@@ -449,19 +468,19 @@
         <button 
           class="small"
           onclick={selectAll}
-          disabled={selectedCards.size === deck.cards.length}
+          disabled={selectedCardIds.length === deck.cards.length}
         >
           Select All
         </button>
         <button 
           class="small"
           onclick={selectNone}
-          disabled={selectedCards.size === 0}
+          disabled={selectedCardIds.length === 0}
         >
           Clear Selection
         </button>
         <span class="selection-count">
-          {selectedCards.size} of {deck.cards.length} selected
+          {selectedCardIds.length} of {deck.cards.length} selected
         </span>
       </div>
       <div class="card-list">
@@ -469,7 +488,7 @@
           <label class="card-item">
             <input
               type="checkbox"
-              checked={selectedCards.has(card.id)}
+              checked={selectedCardIds.includes(card.id)}
               onchange={() => toggleCard(card.id)}
             >
             <span class="card-info">
@@ -483,15 +502,15 @@
         <button 
           class="danger"
           onclick={handleDeleteCards}
-          disabled={deletingCards || selectedCards.size === 0}
+          disabled={deletingCards || selectedCardIds.length === 0}
         >
-          {deletingCards ? 'Deleting...' : `Delete ${selectedCards.size} Card${selectedCards.size !== 1 ? 's' : ''}`}
+          {deletingCards ? 'Deleting...' : `Delete ${selectedCardIds.length} Card${selectedCardIds.length !== 1 ? 's' : ''}`}
         </button>
         <button 
           class="secondary"
           onclick={() => {
             showDeleteCardsDialog = false;
-            selectedCards.clear();
+            selectedCardIds = [];
           }}
           disabled={deletingCards}
         >

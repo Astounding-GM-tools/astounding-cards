@@ -359,7 +359,7 @@ export async function deleteCards(deckId: string, cardIds: string[]) {
 
   await saveDeck(updatedDeck);
   if (get(currentDeck)?.id === deckId) {
-    currentDeckId.set(null); // Force reload
+    currentDeck.set(updatedDeck); // Update in-memory store directly
   }
   return updatedDeck;
 }

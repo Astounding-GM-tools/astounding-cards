@@ -21,9 +21,15 @@ Card Deck Creator is a **client-side only** application built with SvelteKit. It
 
 ### 3. State Management
 - Svelte stores for reactive state
-- Optimized store update pattern to prevent scroll jumps
-- Direct store updates with proper validation
+- Store Update Pattern:
+  1. Use writable store for currentDeck (not derived)
+  2. Update store directly with set() when saving changes
+  3. Never force reloads by toggling currentDeckId
+  4. Let keyed each-blocks handle partial updates
+  5. Always update both IndexedDB and in-memory store
+  6. Provide user feedback for all operations
 - Toast notifications for user feedback
+- Optimized to prevent scroll jumps and unnecessary re-renders
 
 ### 4. Component Structure
 - Card components (Front/Back) for display

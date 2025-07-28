@@ -45,7 +45,7 @@
   {:else}
     <div class="decks">
       {#each sortedDecks as deck (deck.id)}
-        <DeckManager {deck} on:deckChange={handleDeckChange} />
+        <DeckManager {deck} ondeckchange={handleDeckChange} />
       {/each}
     </div>
   {/if}
