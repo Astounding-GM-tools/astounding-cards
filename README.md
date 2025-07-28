@@ -1,6 +1,6 @@
 ## Character Cards
 
-A simple tool for creating and managing character cards for tabletop RPGs.
+A simple, browser-based tool for creating and managing character cards for tabletop RPGs. This is a client-side only application that runs entirely in your browser - no server required!
 
 Each card has:
 - Front: Name, portrait, and traits
@@ -9,12 +9,13 @@ Each card has:
 ## Features
 
 - [x] Create and edit character cards
-- [x] Add portraits
+- [x] Add portraits (stored locally)
 - [x] Add traits
 - [x] Add description
 - [x] Print-friendly layout
 - [x] Multiple themes
 - [x] Share decks via URL
+- [x] Offline support (all data stored in browser)
 
 ## Getting Started
 
@@ -29,6 +30,16 @@ npm run dev
 ```
 
 3. Open your browser at `http://localhost:5173`
+
+That's it! No database setup or environment variables needed.
+
+## How It Works
+
+- All data is stored in your browser using IndexedDB
+- Images are stored as blobs in the same database
+- Decks can be shared via URL (data is serialized into the URL)
+- Everything works offline once loaded
+- See ARCHITECTURE.md for detailed technical documentation
 
 ## Printing Instructions
 
@@ -83,25 +94,25 @@ This second method gives you sturdy, card-stock quality character cards that fee
 ## Development
 
 This project is built with:
-- SvelteKit
+- SvelteKit (static adapter)
 - TypeScript
-- Drizzle ORM
+- IndexedDB for local storage
+- URL-based state sharing
 
 ### Current Status
 
 The application has been refactored to use "Card" terminology throughout instead of "Character", making it more flexible for different types of cards (characters, items, locations). All core functionality is working, including:
 - Card creation and editing
-- Image handling
+- Image handling (local storage)
 - Theme selection
 - Deck management
-- Sharing via URL
+- URL-based sharing
 
 ### Next Task: Create New Deck
 
 The next major task is implementing proper deck creation:
 - Adding a "Create New Deck" button to the deck management interface
 - Implementing the deck creation flow
-- Ensuring proper database operations
 - Adding user feedback
 - Handling deck list updates
 - Automatic switching to new deck
