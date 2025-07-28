@@ -103,6 +103,33 @@ function handleDbError(request: IDBRequest): Error {
   return request.error || new Error('Unknown database error');
 }
 
+// Load deck from IndexedDB
+export async function loadDeck(id: string): Promise<Deck | null> {
+  try {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction(['decks'], 'readonly');
+      const store = transaction.objectStore('decks');
+
+      const request = store.get(id);
+
+      request.onerror = () => {
+        const error = handleDbError(request);
+        reject(new StorageError('Failed to load deck', error));
+      };
+      request.onsuccess = () => {
+        const deck = request.result as Deck;
+        if (deck) {
+          validationErrors.set([]);
+        }
+        resolve(deck);
+      };
+    });
+  } catch (error) {
+    throw new StorageError('Failed to load deck', error instanceof Error ? error : undefined);
+  }
+}
+
 // Save deck to IndexedDB
 export async function saveDeck(deck: Deck, allowEmpty = false) {
   if (!browser) return;
@@ -117,28 +144,15 @@ export async function saveDeck(deck: Deck, allowEmpty = false) {
   // Prepare deck for storage by ensuring all data is cloneable
   const storableDeck = {
     ...deck,
-    cards: await Promise.all(deck.cards.map(async card => {
-      // Handle image data
+    cards: deck.cards.map(card => {
+      // Remove non-cloneable data and ensure arrays are plain arrays
       const { imageBlob, ...cardWithoutBlob } = card;
-      
-      // If we have a blob, convert it to base64 for storage
-      let image = cardWithoutBlob.image;
-      if (imageBlob) {
-        const reader = new FileReader();
-        const base64 = await new Promise<string>((resolve) => {
-          reader.onload = () => resolve(reader.result as string);
-          reader.readAsDataURL(imageBlob);
-        });
-        image = base64;
-      }
-
       return {
         ...cardWithoutBlob,
-        image,
         traits: [...cardWithoutBlob.traits],
         secrets: [...cardWithoutBlob.secrets]
       };
-    }))
+    })
   };
 
   try {
@@ -172,44 +186,6 @@ export async function saveDeck(deck: Deck, allowEmpty = false) {
   } catch (err) {
     console.error('Failed to save deck:', err);
     throw err;
-  }
-}
-
-// Load deck from IndexedDB
-export async function loadDeck(id: string): Promise<Deck | null> {
-  try {
-    const db = await openDB();
-    return new Promise((resolve, reject) => {
-      const transaction = db.transaction(['decks'], 'readonly');
-      const store = transaction.objectStore('decks');
-
-      const request = store.get(id);
-
-      request.onerror = () => {
-        const error = handleDbError(request);
-        reject(new StorageError('Failed to load deck', error));
-      };
-      request.onsuccess = () => {
-        const deck = request.result as Deck;
-        if (deck) {
-          // Convert base64 images back to blobs
-          deck.cards = deck.cards.map(card => {
-            if (card.image?.startsWith('data:')) {
-              // Convert base64 to blob
-              const base64Response = fetch(card.image);
-              base64Response.then(res => res.blob()).then(blob => {
-                card.imageBlob = blob;
-              });
-            }
-            return card;
-          });
-          validationErrors.set([]);
-        }
-        resolve(deck);
-      };
-    });
-  } catch (error) {
-    throw new StorageError('Failed to load deck', error instanceof Error ? error : undefined);
   }
 }
 

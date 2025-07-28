@@ -5,7 +5,6 @@
   import type { Card } from '$lib/types';
   import CardFront from '$lib/components/CardFront.svelte';
   import CardBack from '$lib/components/CardBack.svelte';
-  import UrlSizeIndicator from '$lib/components/UrlSizeIndicator.svelte';
   import DeckSelector from '$lib/components/DeckSelector.svelte';
   import DeckList from '$lib/components/DeckList.svelte';
   import Toasts from '$lib/components/Toasts.svelte';
@@ -162,11 +161,6 @@
         >
           🖨️ Print Instructions
         </button>
-        {#if $currentDeck}
-          <div class="url-size">
-            <UrlSizeIndicator deck={$currentDeck} />
-          </div>
-        {/if}
       </div>
     </div>
   </div>
