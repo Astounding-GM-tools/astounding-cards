@@ -19,36 +19,31 @@ export type CardStat = {
   value: AreaReference;
 };
 
-// Trait type
-export interface Trait {
-  label: string;
-  description: string;
-}
-
-// Character and deck types
-export interface Character {
+// Base card type
+export interface Card {
   id: string;
   name: string;
   role: string;
   portrait: string | null;
-  portraitBlob?: Blob;  // Optional blob data for the portrait
+  portraitBlob?: Blob;
   traits: string[];
-  secrets: string[];  // New array for back of card
+  secrets: string[];
   desc: string;
-  type?: string;
+  type: 'character' | 'location' | 'item' | string;
   stat?: CardStat;
 }
 
-export interface CharacterDeck {
+// Deck type
+export interface Deck {
   id: string;
   meta: {
     name: string;
     theme: string;
     cardSize: CardSize;
-    lastEdited: number;  // Unix timestamp
-    createdAt: number;   // Unix timestamp
+    lastEdited: number;
+    createdAt: number;
   };
-  characters: Character[];
+  cards: Card[];
 }
 
 // Validation types
@@ -58,33 +53,50 @@ export type ValidationError = {
 };
 
 // Validation functions
-export function validateCharacter(char: Partial<Character>): ValidationError[] {
+export function validateCard(card: Partial<Card>): ValidationError[] {
   const errors: ValidationError[] = [];
 
-  if (!char.name?.trim()) {
+  if (!card.name?.trim()) {
     errors.push({ field: 'name', message: 'Name is required' });
   }
 
-  if (!char.role?.trim()) {
+  if (!card.role?.trim()) {
     errors.push({ field: 'role', message: 'Role is required' });
   }
 
-  if (!char.desc?.trim()) {
+  if (!card.desc?.trim()) {
     errors.push({ field: 'desc', message: 'Description is required' });
   }
 
-  if (!Array.isArray(char.traits)) {
+  if (!Array.isArray(card.traits)) {
     errors.push({ field: 'traits', message: 'Traits must be an array' });
   }
 
-  if (!Array.isArray(char.secrets)) {
+  if (!Array.isArray(card.secrets)) {
     errors.push({ field: 'secrets', message: 'Secrets must be an array' });
+  }
+
+  if (!card.type) {
+    errors.push({ field: 'type', message: 'Card type is required' });
+  }
+
+  // Validate stat based on type
+  if (card.stat) {
+    if (card.type === 'character' && card.stat.type !== 'character') {
+      errors.push({ field: 'stat', message: 'Invalid stat type for character card' });
+    }
+    if (card.type === 'item' && card.stat.type !== 'item') {
+      errors.push({ field: 'stat', message: 'Invalid stat type for item card' });
+    }
+    if (card.type === 'location' && card.stat.type !== 'location') {
+      errors.push({ field: 'stat', message: 'Invalid stat type for location card' });
+    }
   }
 
   return errors;
 }
 
-export function validateDeck(deck: Partial<CharacterDeck>, allowEmpty = false): ValidationError[] {
+export function validateDeck(deck: Partial<Deck>, allowEmpty = false): ValidationError[] {
   const errors: ValidationError[] = [];
 
   if (!deck.meta?.name?.trim()) {
@@ -99,11 +111,62 @@ export function validateDeck(deck: Partial<CharacterDeck>, allowEmpty = false): 
     errors.push({ field: 'meta.cardSize', message: 'Invalid card size' });
   }
 
-  if (!Array.isArray(deck.characters)) {
-    errors.push({ field: 'characters', message: 'Characters must be an array' });
-  } else if (!allowEmpty && deck.characters.length === 0) {
-    errors.push({ field: 'characters', message: 'At least one character is required' });
+  if (!Array.isArray(deck.cards)) {
+    errors.push({ field: 'cards', message: 'Cards must be an array' });
+  } else if (!allowEmpty && deck.cards.length === 0) {
+    errors.push({ field: 'cards', message: 'At least one card is required' });
+  }
+
+  // Validate each card
+  if (deck.cards?.length) {
+    deck.cards.forEach((card, index) => {
+      const cardErrors = validateCard(card);
+      if (cardErrors.length > 0) {
+        errors.push({ 
+          field: `cards[${index}]`, 
+          message: `Invalid card: ${cardErrors.map(e => e.message).join(', ')}` 
+        });
+      }
+    });
   }
 
   return errors;
-} 
+}
+
+// Type guards
+export function isCard(card: unknown): card is Card {
+  return (
+    typeof card === 'object' &&
+    card !== null &&
+    typeof (card as Card).id === 'string' &&
+    typeof (card as Card).name === 'string' &&
+    typeof (card as Card).role === 'string' &&
+    typeof (card as Card).desc === 'string' &&
+    typeof (card as Card).type === 'string' &&
+    Array.isArray((card as Card).traits) &&
+    Array.isArray((card as Card).secrets) &&
+    (card as Card).traits.every(trait => typeof trait === 'string') &&
+    (card as Card).secrets.every(secret => typeof secret === 'string')
+  );
+}
+
+export function isDeck(deck: unknown): deck is Deck {
+  return (
+    typeof deck === 'object' &&
+    deck !== null &&
+    typeof (deck as Deck).id === 'string' &&
+    typeof (deck as Deck).meta === 'object' &&
+    typeof (deck as Deck).meta.name === 'string' &&
+    typeof (deck as Deck).meta.theme === 'string' &&
+    Array.isArray((deck as Deck).cards) &&
+    (deck as Deck).cards.every(isCard)
+  );
+}
+
+// For backward compatibility during migration
+// TODO: Remove after migration is complete
+export type Character = Card;
+export type CharacterDeck = Deck;
+export const validateCharacter = validateCard;
+export const isCharacter = isCard;
+export const isCharacterDeck = isDeck; 
