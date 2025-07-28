@@ -1,8 +1,10 @@
 /* IMPORTANT: 
- * 1. Only declare new CSS variables in this file
- * 2. Ask before adding any new variables
- * 3. In themes, use these variables directly - don't create intermediary variables
- * 4. If a value is needed that doesn't have a property, either:
+ * 1. This file defines theme-specific CSS custom properties using @property
+ * 2. These properties are used by themes to style cards and their elements
+ * 3. For UI-related variables (non-theme), see variables.css instead
+ * 4. Ask before adding any new properties
+ * 5. In themes, use these properties directly - don't create intermediary variables
+ * 6. If a value is needed that doesn't have a property, either:
  *    a) Request a new property to be added here, or
  *    b) Use the value directly in the theme
  */
@@ -313,7 +315,7 @@
 /* Role-specific Typography */
 @property --role-font-family {
   syntax: '*';
-  initial-value: var(--theme-body-font);
+  initial-value: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   inherits: true;
 }
 
@@ -334,121 +336,121 @@
 /* Flourish Positioning System */
 @property --flourish-content-opacity {
   syntax: '<number>';
-  initial-value: var(--flourish-opacity);
+  initial-value: 0.8;
   inherits: true;
 }
 
 @property --flourish-content-size {
   syntax: '<length-percentage>';
-  initial-value: var(--flourish-size);
+  initial-value: 2rem;
   inherits: true;
 }
 
 @property --flourish-content-top-left-opacity {
   syntax: '<number>';
-  initial-value: var(--flourish-content-opacity);
+  initial-value: 0.8;
   inherits: true;
 }
 
 @property --flourish-content-top-right-opacity {
   syntax: '<number>';
-  initial-value: var(--flourish-content-opacity);
+  initial-value: 0.8;
   inherits: true;
 }
 
 @property --flourish-content-bottom-left-opacity {
   syntax: '<number>';
-  initial-value: var(--flourish-content-opacity);
+  initial-value: 0.8;
   inherits: true;
 }
 
 @property --flourish-content-bottom-right-opacity {
   syntax: '<number>';
-  initial-value: var(--flourish-content-opacity);
+  initial-value: 0.8;
   inherits: true;
 }
 
 @property --flourish-content-top-left-size {
   syntax: '<length-percentage>';
-  initial-value: var(--flourish-content-size);
+  initial-value: 2rem;
   inherits: true;
 }
 
 @property --flourish-content-top-right-size {
   syntax: '<length-percentage>';
-  initial-value: var(--flourish-content-size);
+  initial-value: 2rem;
   inherits: true;
 }
 
 @property --flourish-content-bottom-left-size {
   syntax: '<length-percentage>';
-  initial-value: var(--flourish-content-size);
+  initial-value: 2rem;
   inherits: true;
 }
 
 @property --flourish-content-bottom-right-size {
   syntax: '<length-percentage>';
-  initial-value: var(--flourish-content-size);
+  initial-value: 2rem;
   inherits: true;
 }
 
 /* Portrait Flourish Positioning */
 @property --flourish-portrait-opacity {
   syntax: '<number>';
-  initial-value: var(--flourish-opacity);
+  initial-value: 0.8;
   inherits: true;
 }
 
 @property --flourish-portrait-size {
   syntax: '<length-percentage>';
-  initial-value: var(--flourish-size);
+  initial-value: 2rem;
   inherits: true;
 }
 
 @property --flourish-portrait-top-left-opacity {
   syntax: '<number>';
-  initial-value: var(--flourish-portrait-opacity);
+  initial-value: 0.8;
   inherits: true;
 }
 
 @property --flourish-portrait-top-right-opacity {
   syntax: '<number>';
-  initial-value: var(--flourish-portrait-opacity);
+  initial-value: 0.8;
   inherits: true;
 }
 
 @property --flourish-portrait-bottom-left-opacity {
   syntax: '<number>';
-  initial-value: var(--flourish-portrait-opacity);
+  initial-value: 0.8;
   inherits: true;
 }
 
 @property --flourish-portrait-bottom-right-opacity {
   syntax: '<number>';
-  initial-value: var(--flourish-portrait-opacity);
+  initial-value: 0.8;
   inherits: true;
 }
 
 @property --flourish-portrait-top-left-size {
   syntax: '<length-percentage>';
-  initial-value: var(--flourish-portrait-size);
+  initial-value: 2rem;
   inherits: true;
 }
 
 @property --flourish-portrait-top-right-size {
   syntax: '<length-percentage>';
-  initial-value: var(--flourish-portrait-size);
+  initial-value: 2rem;
   inherits: true;
 }
 
 @property --flourish-portrait-bottom-left-size {
   syntax: '<length-percentage>';
-  initial-value: var(--flourish-portrait-size);
+  initial-value: 2rem;
   inherits: true;
 }
 
 @property --flourish-portrait-bottom-right-size {
   syntax: '<length-percentage>';
-  initial-value: var(--flourish-portrait-size);
+  initial-value: 2rem;
   inherits: true;
 } 

@@ -201,3 +201,29 @@ For consistent theme application:
   - [ ] User galleries
   - [ ] Deck discovery
   - [ ] Rating/comments 
+
+## Technical Debt and Cleanup
+
+### CSS Variable Consolidation
+Currently, theme-related CSS variables are scattered across multiple locations:
+1. `src/lib/themes/styles/properties.css`: Theme-specific `@property` declarations
+2. `src/lib/styles/variables.css`: Some theme-related variables mixed with UI variables
+3. `src/lib/themes.ts`: Theme color definitions and other theme properties
+
+This creates several issues:
+- Potential inconsistencies between TypeScript theme definitions and CSS variables
+- Duplicate or conflicting values across files
+- Unclear separation between UI variables and theme variables
+- Some variables have been renamed or removed but might still exist in other files
+
+Plan for consolidation:
+1. Audit all theme-related variables across files
+2. Create clear separation:
+   - Theme-specific `@property` declarations in `properties.css`
+   - UI and layout variables in `variables.css`
+   - Theme definitions only in `themes.ts`
+3. Remove deprecated variables
+4. Ensure consistent naming between TS types and CSS properties
+5. Document the relationship between theme TypeScript types and CSS properties
+
+Impact: Medium - requires careful testing of all themes and UI components to ensure no styling regressions. 

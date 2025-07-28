@@ -1,3 +1,13 @@
+/* UI Variables and Base Layout
+ * This file contains:
+ * 1. General UI variables (buttons, dialogs, toasts, etc.)
+ * 2. Base layout measurements and spacing
+ * 3. Default card dimensions and basic styling
+ * 4. Basic theme overrides for non-@property values
+ *
+ * For theme-specific @property declarations, see themes/styles/properties.css
+ */
+
 /* Card dimensions and spacing */
 @property --card-padding {
   syntax: '<length>';

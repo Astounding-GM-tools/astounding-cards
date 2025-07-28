@@ -132,10 +132,12 @@
         </button>
         <button 
           class="action-button"
-          onclick={async () => {
+          onclick={() => {
             const newDeck = addCard();
             if (newDeck) {
-              await saveDeck(newDeck);
+              saveDeck(newDeck).catch(err => {
+                toasts.error('Failed to save new card');
+              });
             }
           }}
         >
@@ -144,7 +146,12 @@
       {/if}
       <div class="right-controls">
         <label class="crop-marks">
-          <input type="checkbox" bind:checked={showCropMarks}>
+          <input 
+            type="checkbox" 
+            id="show-crop-marks"
+            name="show-crop-marks"
+            bind:checked={showCropMarks}
+          >
           Show crop marks
         </label>
         <button 

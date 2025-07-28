@@ -155,8 +155,11 @@
     {:else}
       <div class="deck-controls">
         <select 
+          id="current-deck"
+          name="current-deck"
           onchange={handleDeckChange}
           value={$currentDeck?.id}
+          aria-label="Current deck"
         >
           {#each sortedDecks as deck (deck.id)}
             <option value={deck.id}>
@@ -167,6 +170,7 @@
         <button 
           class="create-deck"
           onclick={handleCreateDeck}
+          aria-label="Create new deck"
         >
           ➕ Create New Deck
         </button>
@@ -178,8 +182,11 @@
     <fieldset class="size-selector">
       <legend>Card size</legend>
       <select 
+        id="card-size"
+        name="card-size"
         onchange={handleSizeChange}
         value={$currentDeck.meta.cardSize || 'poker'}
+        aria-label="Card size"
       >
         <option value="poker">Poker (9 per page)</option>
         <option value="tarot">Tarot (4 per page)</option>
@@ -196,6 +203,7 @@
       <button 
         class="theme-button"
         onclick={() => showThemeSelect = true}
+        aria-label="Change theme"
       >
         <div class="theme-info">
           <strong>{baseThemes[$currentDeck.meta.theme]?.name}</strong>
