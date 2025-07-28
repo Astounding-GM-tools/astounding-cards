@@ -1,28 +1,34 @@
 <script lang="ts">
-  import type { Character } from '$lib/types';
-  import Card from './Card.svelte';
-  import { currentDeck } from '$lib/stores/cards';
+  import type { Card } from '$lib/types';
+  import CardBase from './Card.svelte';
+  import { currentDeck } from '$lib/stores/deck';
 
-  let { character, showCropMarks = false, onChange, editable = true, theme = undefined } = $props();
+  let { card, showCropMarks = false, onChange, editable = true, theme = undefined } = $props<{
+    card: Card;
+    showCropMarks: boolean;
+    onChange: (updates: Partial<Card>) => void;
+    editable?: boolean;
+    theme?: string;
+  }>();
 
   let nameElement = $state<HTMLElement>();
   let descElement = $state<HTMLElement>();
   let secretsElement = $state<HTMLElement>();
 
-  // Update DOM elements when character changes
+  // Update DOM elements when card changes
   $effect(() => {
-    if (nameElement && nameElement.innerText !== character.name) {
-      nameElement.innerText = character.name;
+    if (nameElement && nameElement.innerText !== card.name) {
+      nameElement.innerText = card.name;
     }
-    if (descElement && descElement.innerText !== character.desc) {
-      descElement.innerText = character.desc;
+    if (descElement && descElement.innerText !== card.desc) {
+      descElement.innerText = card.desc;
     }
   });
 
   async function updateName(event: Event) {
     const target = event.target as HTMLElement;
     const newName = target.innerText;
-    if (newName !== character.name) {
+    if (newName !== card.name) {
       await onChange({ name: newName });
     }
   }
@@ -30,7 +36,7 @@
   async function updateDesc(event: Event) {
     const target = event.target as HTMLElement;
     const newDesc = target.innerText;
-    if (newDesc !== character.desc) {
+    if (newDesc !== card.desc) {
       await onChange({ desc: newDesc });
     }
   }
@@ -58,20 +64,20 @@
   async function updateSecrets(event: Event) {
     const target = event.target as HTMLElement;
     const newSecrets = parseSecrets(target.innerText);
-    if (JSON.stringify(newSecrets) !== JSON.stringify(character.secrets)) {
+    if (JSON.stringify(newSecrets) !== JSON.stringify(card.secrets)) {
       await onChange({ secrets: newSecrets });
     }
   }
 
   function addSecret() {
-    const newSecrets = [...(character.secrets || []), 'Label: Description'];
+    const newSecrets = [...(card.secrets || []), 'Label: Description'];
     onChange({ secrets: newSecrets });
   }
 
   const activeTheme = $derived(theme ?? $currentDeck?.meta?.theme ?? 'classic');
 </script>
 
-<Card {showCropMarks} theme={activeTheme}>
+<CardBase {showCropMarks} theme={activeTheme}>
   <article class="card-content">
     <section class="content">
       <div class="top">
@@ -80,13 +86,13 @@
           contenteditable={editable}
           onblur={updateName}
           bind:this={nameElement}
-        >{character.name}</h2>
+        >{card.name}</h2>
         <p 
           contenteditable={editable}
           class="desc"
           onblur={updateDesc}
           bind:this={descElement}
-        >{character.desc}</p>
+        >{card.desc}</p>
       </div>
       <fieldset class="secrets">
         <legend>Secrets</legend>
@@ -95,18 +101,19 @@
           contenteditable={editable}
           onblur={updateSecrets}
           bind:this={secretsElement}
-        >{@html formatSecrets(character.secrets)}</div>
+        >{@html formatSecrets(card.secrets)}</div>
         {#if editable}
           <button 
-            class="add-secret" 
+            class="add-secret"
             onclick={addSecret}
-            title="Add secret"
-          >+</button>
+          >
+            Add Secret
+          </button>
         {/if}
       </fieldset>
     </section>
   </article>
-</Card>
+</CardBase>
 
 <style>
   .card-content {

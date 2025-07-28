@@ -1,12 +1,12 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { listDecks } from '$lib/stores/cards';
-  import type { CharacterDeck } from '$lib/types';
+  import { listDecks } from '$lib/stores/deck';
+  import type { Deck } from '$lib/types';
   import DeckManager from './DeckManager.svelte';
 
-  let decks: CharacterDeck[] = [];
-  let loading = true;
-  let error: string | null = null;
+  let decks = $state<Deck[]>([]);
+  let loading = $state(true);
+  let error = $state<string | null>(null);
 
   async function loadDecks() {
     try {
@@ -18,7 +18,9 @@
     }
   }
 
-  onMount(loadDecks);
+  $effect(() => {
+    loadDecks();
+  });
 
   async function handleDeckChange(event: CustomEvent<{ action: string, deckId: string }>) {
     if (event.detail.action === 'delete') {
@@ -30,7 +32,7 @@
     }
   }
 
-  $: sortedDecks = decks.sort((a, b) => b.meta.lastEdited - a.meta.lastEdited);
+  const sortedDecks = $derived(decks.sort((a, b) => b.meta.lastEdited - a.meta.lastEdited));
 </script>
 
 <div class="deck-list">

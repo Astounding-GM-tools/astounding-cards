@@ -1,6 +1,6 @@
 <!-- PrintInstructions.svelte -->
 <script lang="ts">
-  import { currentDeck } from '$lib/stores/cards';
+  import { currentDeck } from '$lib/stores/deck';
   export let dialog: HTMLDialogElement;
 </script>
 

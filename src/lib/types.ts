@@ -24,8 +24,8 @@ export interface Card {
   id: string;
   name: string;
   role: string;
-  portrait: string | null;
-  portraitBlob?: Blob;
+  image: string | null;
+  imageBlob?: Blob;
   traits: string[];
   secrets: string[];
   desc: string;

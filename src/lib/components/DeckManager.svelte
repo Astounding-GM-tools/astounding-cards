@@ -1,17 +1,21 @@
 <script lang="ts">
-  import { currentDeck } from '$lib/stores/cards';
-  import { deleteDeck, listDecks, duplicateDeck, copyCharactersTo, deleteCharacters, saveDeck } from '$lib/stores/cards';
-  import type { Character, CharacterDeck } from '$lib/types';
+  import { currentDeck } from '$lib/stores/deck';
+  import { deleteDeck, listDecks, duplicateDeck, copyCharactersTo, deleteCharacters, saveDeck } from '$lib/stores/deck';
+  import type { Card, Deck } from '$lib/types';
   import { baseThemes } from '$lib/themes';
   import type { CardTheme } from '$lib/themes';
   import ThemeSelect from './ThemeSelect.svelte';
+  import { createEventDispatcher } from 'svelte';
 
-  let { deck } = $props<{ deck: CharacterDeck }>();
+  let { deck } = $props<{ deck: Deck }>();
   
-  const dispatch = (e: { action: 'update' | 'delete' | 'duplicate' | 'copy' | 'deleteCharacters', deckId: string }) => {
-    const event = new CustomEvent('deckChange', { detail: e });
-    dispatchEvent(event);
-  };
+  const dispatch = createEventDispatcher<{
+    deckChange: { action: 'update' | 'delete' | 'duplicate' | 'copy' | 'deleteCards', deckId: string };
+  }>();
+
+  function emitDeckChange(e: { action: 'update' | 'delete' | 'duplicate' | 'copy' | 'deleteCards', deckId: string }) {
+    dispatch('deckChange', e);
+  }
 
   let showThemeSelect = $state(false);
   let showDeleteConfirm = $state(false);
@@ -27,7 +31,7 @@
   let editedDeckName = $state('');
   let selectedCharacters = $state(new Set<string>());
   let targetDeckId = $state<string | 'new'>('new');
-  let availableDecks = $state<CharacterDeck[]>([]);
+  let availableDecks = $state<Deck[]>([]);
 
   async function handleThemeChange(themeId: string) {
     const updatedDeck = {
@@ -42,7 +46,7 @@
     if ($currentDeck?.id === deck.id) {
       currentDeck.set(updatedDeck);
     }
-    dispatch({ action: 'update', deckId: deck.id });
+    emitDeckChange({ action: 'update', deckId: deck.id });
     showThemeSelect = false;
   }
 
@@ -59,7 +63,7 @@
     try {
       deleting = true;
       await deleteDeck(deck.id);
-      dispatch({ action: 'delete', deckId: deck.id });
+      emitDeckChange({ action: 'delete', deckId: deck.id });
       // If we're deleting the current deck, clear it
       if ($currentDeck?.id === deck.id) {
         const decks = await listDecks();
@@ -88,7 +92,7 @@
       duplicating = true;
       const newDeck = await duplicateDeck(deck, newDeckName);
       currentDeck.set(newDeck);
-      dispatch({ action: 'duplicate', deckId: newDeck.id });
+      emitDeckChange({ action: 'duplicate', deckId: newDeck.id });
       showDuplicateDialog = false;
     } catch (e) {
       console.error('Failed to duplicate deck:', e);
@@ -108,14 +112,14 @@
 
     try {
       copying = true;
-      const characters = deck.characters.filter((c: Character) => selectedCharacters.has(c.id));
+      const characters = deck.cards.filter((c: Card) => selectedCharacters.has(c.id));
       const targetDeck = await copyCharactersTo(
         characters,
         targetDeckId,
         targetDeckId === 'new' ? newDeckName : undefined
       );
       currentDeck.set(targetDeck);
-      dispatch({ action: 'copy', deckId: targetDeck.id });
+      emitDeckChange({ action: 'copy', deckId: targetDeck.id });
       showCopyDialog = false;
       selectedCharacters.clear();
     } catch (e) {
@@ -137,7 +141,7 @@
     try {
       deletingCharacters = true;
       await deleteCharacters(deck.id, Array.from(selectedCharacters));
-      dispatch({ action: 'deleteCharacters', deckId: deck.id });
+      emitDeckChange({ action: 'deleteCards', deckId: deck.id });
       showDeleteCharactersDialog = false;
       selectedCharacters.clear();
     } catch (e) {
@@ -172,7 +176,7 @@
       if ($currentDeck?.id === deck.id) {
         currentDeck.set(updatedDeck);
       }
-      dispatch({ action: 'update', deckId: deck.id });
+      emitDeckChange({ action: 'update', deckId: deck.id });
       editingName = false;
     } catch (e) {
       console.error('Failed to update deck name:', e);
@@ -213,7 +217,7 @@
 
   // Select all/none for characters
   function selectAll() {
-    deck.characters.forEach((char: Character) => selectedCharacters.add(char.id));
+    deck.cards.forEach((card: Card) => selectedCharacters.add(card.id));
     selectedCharacters = selectedCharacters;
   }
 
@@ -269,7 +273,7 @@
   <div class="deck-content">
     <div class="deck-info">
       <div class="info-line">
-        <span class="cards">{deck.characters.length} cards</span>
+        <span class="cards">{deck.cards.length} cards</span>
         <span class="theme-info">
           {baseThemes[deck.meta.theme]?.name || 'No theme'}
         </span>
@@ -372,7 +376,7 @@
         <button 
           class="small"
           onclick={selectAll}
-          disabled={selectedCharacters.size === deck.characters.length}
+          disabled={selectedCharacters.size === deck.cards.length}
         >
           Select All
         </button>
@@ -384,20 +388,20 @@
           Clear Selection
         </button>
         <span class="selection-count">
-          {selectedCharacters.size} of {deck.characters.length} selected
+          {selectedCharacters.size} of {deck.cards.length} selected
         </span>
       </div>
       <div class="character-list">
-        {#each deck.characters as character (character.id)}
+        {#each deck.cards as card (card.id)}
           <label class="character-item">
             <input
               type="checkbox"
-              checked={selectedCharacters.has(character.id)}
-              onchange={() => toggleCharacter(character.id)}
+              checked={selectedCharacters.has(card.id)}
+              onchange={() => toggleCharacter(card.id)}
             >
             <span class="character-info">
-              <strong>{character.name}</strong>
-              <span class="character-role">{character.role}</span>
+              <strong>{card.name}</strong>
+              <span class="character-role">{card.role}</span>
             </span>
           </label>
         {/each}
@@ -445,7 +449,7 @@
         <button 
           class="small"
           onclick={selectAll}
-          disabled={selectedCharacters.size === deck.characters.length}
+          disabled={selectedCharacters.size === deck.cards.length}
         >
           Select All
         </button>
@@ -457,20 +461,20 @@
           Clear Selection
         </button>
         <span class="selection-count">
-          {selectedCharacters.size} of {deck.characters.length} selected
+          {selectedCharacters.size} of {deck.cards.length} selected
         </span>
       </div>
       <div class="character-list">
-        {#each deck.characters as character (character.id)}
+        {#each deck.cards as card (card.id)}
           <label class="character-item">
             <input
               type="checkbox"
-              checked={selectedCharacters.has(character.id)}
-              onchange={() => toggleCharacter(character.id)}
+              checked={selectedCharacters.has(card.id)}
+              onchange={() => toggleCharacter(card.id)}
             >
             <span class="character-info">
-              <strong>{character.name}</strong>
-              <span class="character-role">{character.role}</span>
+              <strong>{card.name}</strong>
+              <span class="character-role">{card.role}</span>
             </span>
           </label>
         {/each}

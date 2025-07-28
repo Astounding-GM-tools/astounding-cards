@@ -1,30 +1,53 @@
 <script lang="ts">
-  import type { CardStat, Portability, Character } from '$lib/types';
-  import { currentDeck } from '$lib/stores/cards';
+  import type { CardStat, Portability, Card } from '$lib/types';
+  import { currentDeck } from '$lib/stores/deck';
   
-  const { character, onChange } = $props<{
-    character: Character;
-    onChange: (updates: Partial<Character>) => void;
+  const { card, onChange } = $props<{
+    card: Card;
+    onChange: (updates: Partial<Card>) => void;
   }>();
 
-  let dialogElement: HTMLDialogElement;
+  let dialogElement = $state<HTMLDialogElement | null>(null);
   let isDialogOpen = $state(false);
-  let tempStat = $state<CardStat | undefined>(character.stat);
-  let characterAge = $state('');
-  let itemPortability = $state<Portability>('light');
-  let locationArea = $state('');
+  let tempStat = $state<CardStat | undefined>(card.stat);
+  let characterAge = $state(card.stat?.type === 'character' ? card.stat.value : '');
+  let itemPortability = $state<Portability>(card.stat?.type === 'item' ? card.stat.value as Portability : 'light');
+  let locationArea = $state(card.stat?.type === 'location' ? card.stat.value.value : '');
+  let selectedType = $state<'character' | 'item' | 'location' | undefined>(card.stat?.type);
+  
+  // Generate unique IDs for this instance
+  const instanceId = crypto.randomUUID();
+  const characterTypeId = `character-type-${instanceId}`;
+  const characterAgeId = `character-age-${instanceId}`;
+  const itemTypeId = `item-type-${instanceId}`;
+  const itemPortabilityId = `item-portability-${instanceId}`;
+  const locationTypeId = `location-type-${instanceId}`;
+  const locationAreaId = `location-area-${instanceId}`;
+
+  function initializeState() {
+    if (card.stat?.type === 'character') {
+      characterAge = card.stat.value;
+      tempStat = { type: 'character', value: characterAge };
+    } else if (card.stat?.type === 'item') {
+      itemPortability = card.stat.value as Portability;
+      tempStat = { type: 'item', value: itemPortability };
+    } else if (card.stat?.type === 'location') {
+      locationArea = card.stat.value.value;
+      tempStat = { 
+        type: 'location', 
+        value: card.stat.value
+      };
+    } else {
+      // Reset state if no stat
+      characterAge = '';
+      itemPortability = 'light';
+      locationArea = '';
+      tempStat = undefined;
+    }
+  }
 
   function openDialog() {
-    tempStat = character.stat;
-    if (tempStat?.type === 'location' && tempStat.value.type === 'hard') {
-      if (!locationExists(tempStat.value.value)) {
-        // Convert broken hard link to soft link
-        tempStat = {
-          type: 'location',
-          value: { type: 'soft', value: tempStat.value.value }
-        };
-      }
-    }
+    initializeState();
     isDialogOpen = true;
     dialogElement?.showModal();
   }
@@ -40,11 +63,13 @@
   }
 
   function saveStat() {
+    console.log('Saving stat:', tempStat);
     onChange({ stat: tempStat });
     closeDialog();
   }
 
   function setCharacter() {
+    if (!characterAge) return;
     tempStat = { type: 'character', value: characterAge };
   }
 
@@ -61,14 +86,14 @@
 
   // Get all unique area names and location cards as derived values
   const areaNames = $derived(
-    ($currentDeck?.characters || [])
+    ($currentDeck?.cards || [])
       .map(c => c.stat?.type === 'location' && c.stat.value.type === 'soft' ? c.stat.value.value : null)
       .filter((name): name is string => name !== null)
   );
 
   const locationCards = $derived(
-    ($currentDeck?.characters || [])
-      .filter(c => c.stat?.type === 'location' && c.id !== character.id)
+    ($currentDeck?.cards || [])
+      .filter(c => c.stat?.type === 'location' && c.id !== card.id)
       .map(c => ({ id: c.id, name: c.name }))
   );
 
@@ -109,26 +134,56 @@
       };
     }
   }
+
+  // Initialize state when card changes
+  $effect(() => {
+    if (card.stat?.type === 'character') {
+      characterAge = card.stat.value;
+    } else if (card.stat?.type === 'item') {
+      itemPortability = card.stat.value as Portability;
+    } else if (card.stat?.type === 'location') {
+      locationArea = card.stat.value.value;
+    }
+  });
+
+  // Keep selectedType in sync with card.stat
+  $effect(() => {
+    selectedType = card.stat?.type;
+  });
+
+  // Update tempStat when selectedType changes
+  $effect(() => {
+    if (selectedType === 'character') {
+      tempStat = { type: 'character', value: characterAge || '' };
+    } else if (selectedType === 'item') {
+      tempStat = { type: 'item', value: itemPortability };
+    } else if (selectedType === 'location') {
+      tempStat = { 
+        type: 'location', 
+        value: { type: 'soft', value: locationArea || '' }
+      };
+    }
+  });
 </script>
 
 <!-- Stat Display/Trigger -->
-{#if character.stat}
+{#if card.stat}
   <button 
-    class="stat-display {character.stat.type}"
-    on:click={openDialog}
+    class="stat-display {card.stat.type}"
+    onclick={openDialog}
   >
-    {#if character.stat.type === 'character'}
-      Age: {character.stat.value}
-    {:else if character.stat.type === 'item'}
-      {character.stat.value}
-    {:else if character.stat.type === 'location'}
-      {formatLocationDisplay(character.stat.value)}
+    {#if card.stat.type === 'character'}
+      Age: {card.stat.value}
+    {:else if card.stat.type === 'item'}
+      {card.stat.value}
+    {:else if card.stat.type === 'location'}
+      {formatLocationDisplay(card.stat.value)}
     {/if}
   </button>
 {:else}
   <button 
     class="stat-add"
-    on:click={openDialog}
+    onclick={openDialog}
   >
     Type
   </button>
@@ -138,46 +193,64 @@
 <dialog 
   bind:this={dialogElement} 
   class="stat-dialog"
-  on:close={() => isDialogOpen = false}
+  onclose={() => isDialogOpen = false}
 >
   <div class="dialog-content">
-    <h2>Card Type</h2>
+    <h2>Card Type <span style="color: #666; font-size: 0.8em;">
+      (current: {card.stat?.type ?? 'none'}, selected: {selectedType ?? 'none'})
+    </span></h2>
 
     <div class="options-container">
       <!-- Character Option -->
-      <label class="stat-option">
+      <label class="stat-option" for={characterTypeId}>
         <input
           type="radio"
+          id={characterTypeId}
           name="stat-type"
-          checked={tempStat?.type === 'character'}
-          on:change={setCharacter}
+          value="character"
+          checked={card.stat?.type === 'character'}
         >
         <div class="stat-details">
           <span class="type-label">Character</span>
           <input
             type="text"
+            id={characterAgeId}
             placeholder="Age"
-            disabled={tempStat?.type !== 'character'}
-            value={tempStat?.type === 'character' ? tempStat.value : ''}
-            on:input={handleLocationInput}
+            disabled={selectedType !== 'character'}
+            bind:value={characterAge}
+            onfocus={() => {
+              selectedType = 'character';
+              tempStat = { type: 'character', value: characterAge };
+            }}
+            oninput={() => {
+              tempStat = { type: 'character', value: characterAge };
+            }}
           >
         </div>
       </label>
 
       <!-- Item Option -->
-      <label class="stat-option">
+      <label class="stat-option" for={itemTypeId}>
         <input
           type="radio"
+          id={itemTypeId}
           name="stat-type"
-          checked={tempStat?.type === 'item'}
-          on:change={setItem}
+          value="item"
+          checked={card.stat?.type === 'item'}
         >
         <div class="stat-details">
           <span class="type-label">Item</span>
           <select
-            disabled={tempStat?.type !== 'item'}
+            id={itemPortabilityId}
+            disabled={selectedType !== 'item'}
             bind:value={itemPortability}
-            on:change={setItem}
+            onfocus={() => {
+              selectedType = 'item';
+              tempStat = { type: 'item', value: itemPortability };
+            }}
+            onchange={() => {
+              tempStat = { type: 'item', value: itemPortability };
+            }}
           >
             <option value="negligible">Negligible</option>
             <option value="light">Light</option>
@@ -189,23 +262,33 @@
       </label>
 
       <!-- Location Option -->
-      <label class="stat-option">
+      <label class="stat-option" for={locationTypeId}>
         <input
           type="radio"
+          id={locationTypeId}
           name="stat-type"
-          checked={tempStat?.type === 'location'}
-          on:change={setLocation}
+          value="location"
+          checked={card.stat?.type === 'location'}
         >
         <div class="stat-details">
           <span class="type-label">Location</span>
           <div class="area-input">
             <input
               type="text"
+              id={locationAreaId}
               placeholder="Area"
-              disabled={tempStat?.type !== 'location'}
-              list="area-suggestions"
-              value={tempStat?.type === 'location' ? tempStat.value.value : ''}
-              on:input={handleLocationInput}
+              disabled={selectedType !== 'location'}
+              bind:value={locationArea}
+              onfocus={() => {
+                selectedType = 'location';
+                tempStat = { type: 'location', value: { type: 'soft', value: locationArea } };
+              }}
+              oninput={() => {
+                tempStat = { 
+                  type: 'location', 
+                  value: { type: 'soft', value: locationArea }
+                };
+              }}
             >
             <datalist id="area-suggestions">
               {#each locationCards as loc}
@@ -221,9 +304,9 @@
     </div>
 
     <div class="dialog-buttons">
-      <button class="clear" on:click={clearStat}>Clear Type</button>
-      <button class="cancel" on:click={closeDialog}>Cancel</button>
-      <button class="save" on:click={saveStat}>Save</button>
+      <button class="clear" onclick={clearStat}>Clear Type</button>
+      <button class="cancel" onclick={closeDialog}>Cancel</button>
+      <button class="save" onclick={saveStat}>Save</button>
     </div>
   </div>
 </dialog>
@@ -234,7 +317,7 @@
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 0.9rem;
+    font-size: 1.6em;
     transition: background-color 0.2s;
     background: rgba(255, 255, 255, 0.95);
     font-family: var(--theme-title-font);  /* Use theme's display font */
@@ -255,7 +338,7 @@
     background: rgba(255, 255, 255, 0.95);
     cursor: pointer;
     color: #666;
-    font-size: 0.9rem;
+    font-size: 1.6em;
   }
 
   .stat-add:hover {
@@ -267,6 +350,7 @@
     border-radius: 8px;
     padding: 0;
     min-width: 320px;
+    font-size: 0.9rem;  /* Reset font size for dialog */
   }
 
   .stat-dialog::backdrop {
@@ -324,6 +408,7 @@
     font-weight: 500;
     color: #333;
     min-width: 80px;
+    font-size: 0.9rem;  /* UI font size */
   }
 
   input[type="text"],
@@ -331,7 +416,7 @@
     padding: 0.5rem;
     border: 1px solid #ddd;
     border-radius: 4px;
-    font-size: 0.9rem;
+    font-size: 0.9rem;  /* UI font size */
     min-width: 120px;
     transition: all 0.2s ease;
   }
@@ -370,7 +455,7 @@
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 0.9rem;
+    font-size: 0.9rem;  /* UI font size */
     transition: all 0.2s ease;
   }
 

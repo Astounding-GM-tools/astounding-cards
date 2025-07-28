@@ -1,36 +1,40 @@
 <script lang="ts">
-  import type { Character } from '$lib/types';
-  import Card from './Card.svelte';
+  import type { Card } from '$lib/types';
+  import CardBase from './Card.svelte';
   import CardStatSelector from './CardStatSelector.svelte';
-  import { currentDeck } from '$lib/stores/cards';
+  import { currentDeck } from '$lib/stores/deck';
   import ImageSelector from './ImageSelector.svelte';
 
-  let { character, showCropMarks = false, onChange, theme = undefined } = $props();
-  let showImageInput = $state(false);
+  let { card, showCropMarks = false, onChange, theme = undefined } = $props<{
+    card: Card;
+    showCropMarks: boolean;
+    onChange: (updates: Partial<Card>) => void;
+    theme?: string;
+  }>();
 
-  let nameElement = $state<HTMLElement>();
-  let roleElement = $state<HTMLElement>();
-  let traitsElement = $state<HTMLElement>();
+  let nameElement: HTMLElement;
+  let roleElement: HTMLElement;
+  let traitsElement: HTMLElement;
+  let showImageSelector = $state(false);
 
-  // Track the current blob URL and its source
-  let blobSource = $state<{ blob: Blob; id: string } | null>(null);
+  // Update blob source when card changes
+  let blobSource = $state<{ blob: Blob, id: string } | null>(null);
   let currentBlobUrl = $state<string | null>(null);
 
-  // Update blob source when character changes
   $effect(() => {
-    if (character.portraitBlob) {
-      const newId = character.id + Date.now();
-      if (!blobSource || blobSource.blob !== character.portraitBlob || blobSource.id !== newId) {
-        // Clean up old URL if it exists
+    if (card.imageBlob) {
+      const newId = card.id + Date.now();
+      if (!blobSource || blobSource.blob !== card.imageBlob || blobSource.id !== newId) {
+        // Clean up old URL
         if (currentBlobUrl) {
           URL.revokeObjectURL(currentBlobUrl);
         }
         // Create new URL
-        currentBlobUrl = URL.createObjectURL(character.portraitBlob);
-        blobSource = { blob: character.portraitBlob, id: newId };
+        currentBlobUrl = URL.createObjectURL(card.imageBlob);
+        blobSource = { blob: card.imageBlob, id: newId };
       }
     } else {
-      // Clean up if no blob
+      // Clean up URL if no blob
       if (currentBlobUrl) {
         URL.revokeObjectURL(currentBlobUrl);
         currentBlobUrl = null;
@@ -39,122 +43,88 @@
     }
   });
 
-  // Cleanup on destroy
-  $effect(() => {
+  // Clean up blob URL when component is destroyed
+  $effect.root(() => {
     return () => {
       if (currentBlobUrl) {
         URL.revokeObjectURL(currentBlobUrl);
-        currentBlobUrl = null;
       }
     };
   });
 
-  // Get the correct portrait URL
-  function getPortraitUrl(portrait: string | undefined) {
-    if (!portrait) return 'none';
-
-    // If we have a blob URL, use it
-    if (currentBlobUrl) {
-      return currentBlobUrl;
+  function getImageUrl(image: string | null): string {
+    if (!image) {
+      return '';
     }
-
-    // If it's a special 'blob:local' marker, return none
-    if (portrait === 'blob:local') {
-      return 'none';
+    if (image === 'blob:local') {
+      return currentBlobUrl || '';
     }
-
-    // If it's a local portrait (no protocol/blob prefix)
-    if (!portrait.includes(':')) {
-      return `/portraits/${portrait}`;
+    if (image.startsWith('blob:')) {
+      return image;
     }
-
-    // Fall back to URL if no blob available
-    return portrait;
-  }
-
-  // Derived values for element content
-  const nameContent = $derived(character.name);
-  const roleContent = $derived(character.role);
-  const traitsContent = $derived(formatTraits(character.traits));
-
-  // Update DOM elements when content changes
-  $effect(() => {
-    if (nameElement) nameElement.innerText = nameContent;
-  });
-
-  $effect(() => {
-    if (roleElement) roleElement.innerText = roleContent;
-  });
-
-  $effect(() => {
-    if (traitsElement) traitsElement.innerHTML = traitsContent;
-  });
-
-  async function updateName(event: Event) {
-    const target = event.target as HTMLElement;
-    const newName = target.innerText;
-    if (newName !== character.name) {
-      await onChange({ name: newName });
+    if (image.includes(':')) {
+      return image;
     }
+    return `/portraits/${image}`;
   }
 
-  async function updateRole(event: Event) {
-    const target = event.target as HTMLElement;
-    const newRole = target.innerText;
-    if (newRole !== character.role) {
-      await onChange({ role: newRole });
-    }
+  function formatTraits(traits: string[]): string {
+    return traits
+      .map(trait => `<div class="trait">${trait}</div>`)
+      .join('');
   }
 
-  // Format traits with strong labels
-  function formatTraits(traits: string[]) {
-    return traits?.map(trait => {
-      const [label, ...rest] = trait.split(':');
-      if (rest.length > 0) {
-        return `<strong class="trait-label">${label.trim()}:</strong> ${rest.join(':').trim()}`;
-      }
-      return trait; // If no colon, keep as is
-    }).join('\n') || '';
-  }
-
-  // Parse HTML back to plain text for traits
-  function parseTraits(html: string) {
-    return html
-      .replace(/<strong[^>]*>|<\/strong>/g, '')  // Remove strong tags
-      .split('\n')
-      .map(s => s.trim())
-      .filter(s => s.length > 0);
-  }
-
-  async function updateTraits(event: Event) {
-    const target = event.target as HTMLElement;
-    const newTraits = parseTraits(target.innerText);
-    if (JSON.stringify(newTraits) !== JSON.stringify(character.traits)) {
-      await onChange({ traits: newTraits });
-    }
-  }
-
-  function toggleImageInput() {
-    showImageInput = !showImageInput;
-  }
-
+  // Derived values for contenteditable
+  const nameContent = $derived(card.name);
+  const roleContent = $derived(card.role);
+  const traitsContent = $derived(formatTraits(card.traits));
   const activeTheme = $derived(theme ?? $currentDeck?.meta?.theme ?? 'classic');
+
+  // Update handlers
+  function handleNameBlur() {
+    const newName = nameElement.innerText.trim();
+    if (newName !== card.name) {
+      onChange({ name: newName });
+    }
+  }
+
+  function handleRoleBlur() {
+    const newRole = roleElement.innerText.trim();
+    if (newRole !== card.role) {
+      onChange({ role: newRole });
+    }
+  }
+
+  function handleTraitsBlur() {
+    // Get traits from DOM
+    const newTraits = Array.from(traitsElement.children)
+      .map(el => el.textContent?.trim() || '')
+      .filter(Boolean);
+
+    // Only update if changed
+    if (JSON.stringify(newTraits) !== JSON.stringify(card.traits)) {
+      onChange({ traits: newTraits });
+    }
+  }
+
+  function addTrait() {
+    const newTraits = [...(card.traits || []), 'New trait'];
+    onChange({ traits: newTraits });
+  }
 </script>
 
-{#if character}
-<Card {showCropMarks} theme={activeTheme}>
+{#if card}
+<CardBase {showCropMarks} theme={activeTheme}>
   <div 
     class="card-content"
-    class:preview={character.type === 'Preview'}
-    style:background-image={getPortraitUrl(character.portrait) === 'none' ? 'none' : `url('${getPortraitUrl(character.portrait)}')`}
-    style:background-size="cover"
-    style:background-position="top center"
+    class:preview={card.type === 'Preview'}
+    style:background-image={`url('${getImageUrl(card.image)}')`}
   >
     <!-- Top portrait flourishes -->
     <svg class="flourish portrait-flourish top-left" viewBox="0 0 100 100">
       <use href="#flourish-{activeTheme}" />
     </svg>
-    {#if !character.stat}
+    {#if !card.stat}
     <svg class="flourish portrait-flourish top-right" viewBox="0 0 100 100">
       <use href="#flourish-{activeTheme}" />
     </svg>
@@ -166,24 +136,24 @@
       <div class="portrait-container">
         <button 
           class="change-portrait" 
-          onclick={toggleImageInput}
-          title={character.portrait ? "Change portrait" : "Add portrait"}
+          onclick={() => showImageSelector = true}
+          title={card.image ? "Change image" : "Add image"}
         >
-          {character.portrait ? "Change portrait" : "Add portrait"}
+          {card.image ? "Change image" : "Add image"}
         </button>
 
-        {#if showImageInput}
+        {#if showImageSelector}
           <div class="image-input">
             <ImageSelector 
               onSave={async (blob, sourceUrl) => {
-                // If blob is null, we're removing the image
                 await onChange({ 
-                  portrait: blob ? (sourceUrl || 'blob:local') : null,
-                  portraitBlob: blob || undefined
+                  image: blob ? (sourceUrl || 'blob:local') : null,
+                  imageBlob: blob || undefined
                 });
+                showImageSelector = false;
               }}
-              onClose={() => showImageInput = false}
-              hasExistingImage={!!character.portrait}
+              onClose={() => showImageSelector = false}
+              hasExistingImage={!!card.image}
             />
           </div>
         {/if}
@@ -191,7 +161,7 @@
 
       <!-- Stat container -->
       <div class="stat-container">
-        <CardStatSelector {character} {onChange} />
+        <CardStatSelector card={card} {onChange} />
       </div>
 
       <!-- Bottom portrait flourishes -->
@@ -218,24 +188,24 @@
       <h2 
         class="title front"
         contenteditable="true" 
-        onblur={updateName}
+        onblur={handleNameBlur}
         bind:this={nameElement}
-      >{character.name}</h2>
+      >{card.name}</h2>
       <div 
         class="role" 
         contenteditable="true"
-        onblur={updateRole}
+        onblur={handleRoleBlur}
         bind:this={roleElement}
-      >{character.role}</div>
+      >{card.role}</div>
       <div 
         class="traits" 
         contenteditable="true"
-        onblur={updateTraits}
+        onblur={handleTraitsBlur}
         bind:this={traitsElement}
-      >{@html formatTraits(character.traits)}</div>
+      >{@html formatTraits(card.traits)}</div>
     </div>
   </div>
-</Card>
+</CardBase>
 {/if}
 
 <style>
@@ -245,7 +215,6 @@
     display: flex;
     flex-direction: column;
     background-color: var(--theme-background);
-    background-image: var(--portrait-url);
     background-size: cover;
     background-position: top center;
     container-type: inline-size;

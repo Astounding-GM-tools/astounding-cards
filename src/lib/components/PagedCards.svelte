@@ -1,62 +1,61 @@
 <!-- PagedCards.svelte -->
 <script lang="ts">
-  import type { Character, CardSize } from '$lib/types';
-  import CharacterCardFront from './CharacterCardFront.svelte';
-  import CharacterCardBack from './CharacterCardBack.svelte';
-  import { currentDeck } from '$lib/stores/cards';
+  import type { Card } from '$lib/types';
+  import CardFront from './CardFront.svelte';
+  import CardBack from './CardBack.svelte';
+  import { currentDeck } from '$lib/stores/deck';
 
-  const { showCropMarks, onCharacterChange } = $props<{
+  const { showCropMarks, onCardChange } = $props<{
     showCropMarks: boolean;
-    onCharacterChange: (id: string, updates: Partial<Character>) => Promise<void>;
+    onCardChange: (id: string, updates: Partial<Card>) => Promise<void>;
   }>();
 
   // Use $derived for pure computations
   const cardSize = $derived($currentDeck?.meta.cardSize || 'poker');
   const cardsPerPage = $derived(cardSize === 'poker' ? 9 : 4);
-  const totalPages = $derived(Math.ceil($currentDeck?.characters.length || 0 / cardsPerPage));
-
-  // Pure function to get characters for a page
-  function getPageCharacters(pageIndex: number): Character[] {
-    const start = pageIndex * cardsPerPage;
-    return $currentDeck?.characters.slice(start, start + cardsPerPage) || [];
-  }
 
   // Create pages array using $derived
   const pages = $derived(
-    Array(totalPages).fill(null)
-      .map((_, i) => ({
-        index: i,
-        characters: getPageCharacters(i)
-      }))
-      .filter(page => page.characters.length > 0)
+    Array(Math.ceil(($currentDeck?.cards.length || 0) / cardsPerPage))
+      .fill(null)
+      .map((_, i) => {
+        const start = i * cardsPerPage;
+        return $currentDeck?.cards.slice(start, start + cardsPerPage) || [];
+      })
+      .filter(page => page.length > 0)
   );
 </script>
 
-{#each pages as page (page.index)}
-  <!-- Front page -->
+<!-- Front pages -->
+{#each pages as page}
   <div class="page" data-size={cardSize}>
     <div class="card-grid">
-      {#each page.characters as character (character.id)}
+      {#each page as card (card.id)}
         <div class="card-wrapper">
-          <CharacterCardFront 
-            {character}
+          <CardFront 
+            card={card}
             {showCropMarks}
-            onChange={(updates: Partial<Character>) => onCharacterChange(character.id, updates)}
+            onChange={(updates: Partial<Card>) => onCardChange(card.id, updates)}
+            theme={$currentDeck?.meta.theme}
           />
         </div>
       {/each}
     </div>
   </div>
+{/each}
 
-  <!-- Back page -->
+<!-- Back pages -->
+{#each pages as page}
   <div class="page" data-size={cardSize}>
     <div class="card-grid back-grid">
-      {#each page.characters as character (character.id)}
+      {#each page as card (card.id)}
         <div class="card-wrapper">
-          <CharacterCardBack 
-            {character}
+          <CardBack 
+            card={card}
             {showCropMarks}
-            onChange={(updates: Partial<Character>) => onCharacterChange(character.id, updates)}
+            onChange={(updates: Partial<Card>) => onCardChange(card.id, updates)}
+            theme={$currentDeck?.meta.theme}
+            editable={true}
           />
         </div>
       {/each}

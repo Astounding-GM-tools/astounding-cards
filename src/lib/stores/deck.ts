@@ -1,7 +1,7 @@
 import { writable, get, derived } from 'svelte/store';
 import { browser } from '$app/environment';
-import type { Character, CharacterDeck, ValidationError } from '$lib/types';
-import { validateCharacter, validateDeck } from '$lib/types';
+import type { Card, Deck, CardStat, ValidationError } from '$lib/types';
+import { validateCard, validateDeck } from '$lib/types';
 import { toasts } from './toast';
 
 /**
@@ -31,7 +31,7 @@ const currentDeckId = writable<string | null>(null);
 export const validationErrors = writable<ValidationError[]>([]);
 
 // Store for the current deck
-export const currentDeck = writable<CharacterDeck | null>(null);
+export const currentDeck = writable<Deck | null>(null);
 
 // Subscribe to currentDeckId changes to load deck from DB
 if (browser) {
@@ -62,7 +62,7 @@ const scrollPosition = writable(0);
 const isDirty = writable(false);
 
 // IndexedDB setup
-const DB_NAME = 'character-cards';
+const DB_NAME = 'card-decks';
 const DB_VERSION = 1;
 const SAVE_DEBOUNCE = 1000;  // 1 second
 
@@ -103,12 +103,15 @@ function handleDbError(request: IDBRequest): Error {
 }
 
 // Save deck to IndexedDB
-export async function saveDeck(deck: CharacterDeck, allowEmpty = false) {
-  // Validate before saving
-  const errors = validateDeck(deck, allowEmpty);
+export async function saveDeck(deck: Deck) {
+  console.log('Saving deck:', deck);
+  if (!browser) return;
+
+  // Validate deck
+  const errors = validateDeck(deck);
   if (errors.length > 0) {
     validationErrors.set(errors);
-    throw new StorageError('Validation failed');
+    return;
   }
 
   try {
@@ -117,41 +120,35 @@ export async function saveDeck(deck: CharacterDeck, allowEmpty = false) {
       const transaction = db.transaction(['decks'], 'readwrite');
       const store = transaction.objectStore('decks');
 
-      // Update deck metadata
-      const deckToSave = {
-        ...deck,
-        id: deck.id || crypto.randomUUID(),
-        meta: {
-          ...deck.meta,
-          lastEdited: Date.now(),
-          createdAt: deck.meta.createdAt || Date.now()
-        }
-      };
-
-      const request = store.put(deckToSave);
+      const request = store.put(deck);
 
       request.onerror = () => {
-        const error = handleDbError(request);
-        reject(new StorageError('Failed to save deck', error));
+        console.error('Failed to save deck:', request.error);
+        reject(request.error);
       };
+
       request.onsuccess = () => {
-        isDirty.set(false);
-        validationErrors.set([]);
-        // Update currentDeck directly
-        const currentId = get(currentDeckId);
-        if (currentId === deck.id) {
-          currentDeck.set(deckToSave);
-        }
+        console.log('Deck saved successfully');
         resolve();
       };
+
+      transaction.oncomplete = () => {
+        console.log('Transaction completed');
+      };
+
+      transaction.onerror = () => {
+        console.error('Transaction failed:', transaction.error);
+        reject(transaction.error);
+      };
     });
-  } catch (error) {
-    throw new StorageError('Failed to save deck', error instanceof Error ? error : undefined);
+  } catch (err) {
+    console.error('Failed to save deck:', err);
+    throw err;
   }
 }
 
 // Load deck from IndexedDB
-export async function loadDeck(id: string): Promise<CharacterDeck | null> {
+export async function loadDeck(id: string): Promise<Deck | null> {
   try {
     const db = await openDB();
     return new Promise((resolve, reject) => {
@@ -165,7 +162,7 @@ export async function loadDeck(id: string): Promise<CharacterDeck | null> {
         reject(new StorageError('Failed to load deck', error));
       };
       request.onsuccess = () => {
-        const deck = request.result as CharacterDeck;
+        const deck = request.result as Deck;
         if (deck) {
           validationErrors.set([]);
         }
@@ -178,7 +175,7 @@ export async function loadDeck(id: string): Promise<CharacterDeck | null> {
 }
 
 // List all decks
-export async function listDecks(): Promise<CharacterDeck[]> {
+export async function listDecks(): Promise<Deck[]> {
   try {
     const db = await openDB();
     return new Promise((resolve, reject) => {
@@ -219,85 +216,88 @@ export async function deleteDeck(id: string) {
   }
 }
 
-// Update character in current deck
-export async function updateCharacter(id: string, updates: Partial<Character>) {
-  // Store current scroll position
-  if (browser) {
-    const container = document.querySelector('.cards-scroll-container');
-    if (container) {
-      scrollPosition.set(container.scrollTop);
-    }
-  }
-
-  const currentId = get(currentDeckId);
-  if (!currentId) return;
-
+// Update a character in the current deck
+export async function updateCard(id: string, updates: Partial<Card>) {
+  console.log('Updating card:', id, updates);
   const deck = get(currentDeck);
-  if (!deck) return;
-
-  const charIndex = deck.characters.findIndex(c => c.id === id);
-  if (charIndex === -1) return;
-
-  // Create updated character
-  const updatedChar = {
-    ...deck.characters[charIndex],
-    ...updates,
-    // Handle blob updates correctly:
-    // 1. If we're explicitly setting a new blob, use it
-    // 2. If we're not changing the portrait, keep the existing blob
-    // 3. If we're changing to a URL/local portrait, clear the blob
-    portraitBlob: 'portraitBlob' in updates 
-      ? updates.portraitBlob
-      : updates.portrait === deck.characters[charIndex].portrait
-        ? deck.characters[charIndex].portraitBlob
-        : undefined
-  };
-
-  // Validate the updated character
-  const errors = validateCharacter(updatedChar);
-  if (errors.length > 0) {
-    validationErrors.set(errors);
-    toasts.error('Failed to update character: ' + errors.map(e => e.message).join(', '));
+  if (!deck) {
+    console.error('No current deck');
     return;
   }
 
-  // Create new deck with the update
+  // Find character index
+  const charIndex = deck.cards.findIndex(c => c.id === id);
+  if (charIndex === -1) {
+    console.error('Card not found:', id);
+    return;
+  }
+
+  // Create updated card
+  const updatedCard = {
+    ...deck.cards[charIndex],
+    ...updates,
+    // Handle blob updates correctly:
+    // 1. If we're explicitly setting a new blob, use it
+    // 2. If we're not changing the image, keep the existing blob
+    // 3. If we're changing to a URL/local image, clear the blob
+    imageBlob: 'imageBlob' in updates 
+      ? updates.imageBlob
+      : updates.image === deck.cards[charIndex].image
+        ? deck.cards[charIndex].imageBlob
+        : undefined
+  };
+
+  // Ensure we have a plain object for IndexedDB
   const newDeck = {
     ...deck,
     meta: {
       ...deck.meta,
       lastEdited: Date.now()
     },
-    characters: [...deck.characters]
+    cards: deck.cards.map((c, i) => {
+      if (i !== charIndex) return c;
+
+      // Convert stat to plain object based on type
+      let stat: CardStat | undefined = undefined;
+      if (updatedCard.stat) {
+        if (updatedCard.stat.type === 'character') {
+          stat = { type: 'character', value: String(updatedCard.stat.value) };
+        } else if (updatedCard.stat.type === 'item') {
+          stat = { type: 'item', value: updatedCard.stat.value };
+        } else if (updatedCard.stat.type === 'location') {
+          stat = { 
+            type: 'location', 
+            value: { 
+              type: updatedCard.stat.value.type, 
+              value: updatedCard.stat.value.value 
+            } 
+          };
+        }
+      }
+
+      return { ...updatedCard, stat };
+    })
   };
-  newDeck.characters[charIndex] = updatedChar;
+
+  // Validate the updated card
+  const errors = validateCard(updatedCard);
+  if (errors.length > 0) {
+    validationErrors.set(errors);
+    return;
+  }
 
   try {
-    // Save to DB and update store
     await saveDeck(newDeck);
-    
-    // Show success toast
-    const fieldName = Object.keys(updates)[0];
-    toasts.success(`Updated ${fieldName} for ${updatedChar.name}`);
-
-    // Restore scroll position after a short delay
-    if (browser) {
-      setTimeout(() => {
-        const container = document.querySelector('.cards-scroll-container');
-        const savedPosition = get(scrollPosition);
-        if (container && savedPosition) {
-          container.scrollTop = savedPosition;
-        }
-      }, 0);
-    }
-  } catch (error) {
-    console.error('Failed to save character update:', error);
-    toasts.error('Failed to save changes. Please try again.');
+    currentDeck.set(newDeck);
+    toasts.success('Updated card');
+  } catch (err) {
+    console.error('Failed to save card update:', err);
+    toasts.error('Failed to save card update: ' + (err instanceof Error ? err.message : String(err)));
   }
 }
 
-// Add new character to current deck
-export function addCharacter() {
+// Add new card to current deck
+export function addCard() {
   const currentId = get(currentDeckId);
   if (!currentId) return;
 
@@ -314,22 +314,16 @@ export function addCharacter() {
     return;
   }
 
-  const newChar: Character = {
+  const newCard: Card = {
     id: crypto.randomUUID(),
-    name: "New Character",
+    name: "New Card",
     role: "Role",
-    portrait: null,
-    traits: ["Appearance: Add a notable physical trait", "Personality: Add a defining characteristic"],
+    image: null,
+    traits: ["Appearance: Add a notable trait", "Personality: Add a defining characteristic"],
     secrets: ["Hidden: A secret or hidden trait", "Plot: A plot hook or story element"],
-    desc: "Character description..."
+    desc: "Add a description",
+    type: "character"
   };
-
-  // Validate the new character
-  const errors = validateCharacter(newChar);
-  if (errors.length > 0) {
-    validationErrors.set(errors);
-    return;
-  }
 
   const newDeck = {
     ...deck,
@@ -337,16 +331,15 @@ export function addCharacter() {
       ...deck.meta,
       lastEdited: Date.now()
     },
-    characters: [...deck.characters, newChar]
+    cards: [...deck.cards, newCard]
   };
 
-  isDirty.set(true);
-  validationErrors.set([]);
+  saveDeck(newDeck);
   return newDeck;
 }
 
-// Remove character from current deck
-export async function deleteCharacters(deckId: string, characterIds: string[]) {
+// Remove cards from current deck
+export async function deleteCards(deckId: string, cardIds: string[]) {
   const deck = await loadDeck(deckId);
   if (!deck) throw new StorageError('Deck not found');
 
@@ -356,7 +349,7 @@ export async function deleteCharacters(deckId: string, characterIds: string[]) {
       ...deck.meta,
       lastEdited: Date.now()
     },
-    characters: deck.characters.filter(c => !characterIds.includes(c.id))
+    cards: deck.cards.filter(c => !cardIds.includes(c.id))
   };
 
   await saveDeck(updatedDeck);
@@ -367,12 +360,12 @@ export async function deleteCharacters(deckId: string, characterIds: string[]) {
 }
 
 // URL serialization
-export function deckToUrl(deck: CharacterDeck): string {
+export function deckToUrl(deck: Deck): string {
   const data = JSON.stringify(deck);
   return `${window.location.origin}?deck=${encodeURIComponent(data)}`;
 }
 
-export function deckFromUrl(url: URL): CharacterDeck | null {
+export function deckFromUrl(url: URL): Deck | null {
   try {
     const data = url.searchParams.get('deck');
     if (!data) return null;
@@ -445,8 +438,8 @@ if (browser) {
 } 
 
 // Duplicate an existing deck
-export async function duplicateDeck(deck: CharacterDeck, newName?: string): Promise<CharacterDeck> {
-  const newDeck: CharacterDeck = {
+export async function duplicateDeck(deck: Deck, newName?: string): Promise<Deck> {
+  const newDeck: Deck = {
     id: crypto.randomUUID(),
     meta: {
       name: newName || `${deck.meta.name} (Copy)`,
@@ -455,25 +448,25 @@ export async function duplicateDeck(deck: CharacterDeck, newName?: string): Prom
       lastEdited: Date.now(),
       createdAt: Date.now()
     },
-    characters: deck.characters.map(char => ({
+    cards: deck.cards.map(char => ({
       ...char,
       id: crypto.randomUUID()
     }))
   };
 
-  await saveDeck(newDeck, true);
+  await saveDeck(newDeck);
   return newDeck;
 }
 
-// Copy characters to a deck
-export async function copyCharactersTo(
-  characters: Character[],
+// Copy cards to a deck
+export async function copyCardsTo(
+  cards: Card[],
   targetDeckId: string | 'new',
   newDeckName?: string
-): Promise<CharacterDeck> {
+): Promise<Deck> {
   // Create new deck if needed
   if (targetDeckId === 'new') {
-    const newDeck: CharacterDeck = {
+    const newDeck: Deck = {
       id: crypto.randomUUID(),
       meta: {
         name: newDeckName || 'New Deck',
@@ -482,10 +475,10 @@ export async function copyCharactersTo(
         lastEdited: Date.now(),
         createdAt: Date.now()
       },
-      characters: []
+      cards: []
     };
     targetDeckId = newDeck.id;
-    await saveDeck(newDeck, true);
+    await saveDeck(newDeck);
   }
 
   // Load target deck
@@ -493,7 +486,7 @@ export async function copyCharactersTo(
   if (!targetDeck) throw new StorageError('Target deck not found');
 
   // Copy characters with new IDs
-  const copiedChars = characters.map(char => ({
+  const copiedChars = cards.map(char => ({
     ...char,
     id: crypto.randomUUID()
   }));
@@ -505,7 +498,7 @@ export async function copyCharactersTo(
       ...targetDeck.meta,
       lastEdited: Date.now()
     },
-    characters: [...targetDeck.characters, ...copiedChars]
+    cards: [...targetDeck.cards, ...copiedChars]
   };
 
   await saveDeck(updatedDeck);
@@ -513,7 +506,7 @@ export async function copyCharactersTo(
 } 
 
 // Set current deck
-export function setCurrentDeck(deck: CharacterDeck | null) {
+export function setCurrentDeck(deck: Deck | null) {
   currentDeckId.set(deck?.id || null);
 } 
 
@@ -541,124 +534,64 @@ export async function clearDatabase() {
 } 
 
 // Sample data for development
-const sampleCharacters: Character[] = [
+const sampleCards: Card[] = [
   {
     id: crypto.randomUUID(),
-    name: "Gristlethwaite",
-    role: "Eccentric Inventor",
-    portrait: "gristlethwaite.jpg",
-    portraitBlob: undefined,  // Optional blob data
-    traits: [
-      "Appearance: Wild gray hair and oil-stained hands",
-      "Workshop: Cluttered with brass contraptions",
-      "Personality: Talks to machines more than people"
-    ],
-    secrets: [
-      "Hidden: Actually a time traveler from 1876",
-      "Project: Building a device to contact parallel worlds",
-      "Fear: Terrified his inventions will be used for war"
-    ],
-    desc: "A brilliant but peculiar inventor who lives in a converted windmill filled with strange devices.",
-    type: "character",
-    stat: { type: "character", value: "63" }
+    name: "Dr. Blackwood",
+    role: "Enigmatic Professor",
+    image: "blackwood.jpg",
+    traits: ["Appearance: Wears a well-worn tweed jacket", "Personality: Obsessed with ancient mysteries"],
+    secrets: ["Hidden: Knows too much about forbidden magic", "Plot: Recently acquired a cursed artifact"],
+    desc: "A brilliant but eccentric academic whose research into occult artifacts has led him down dangerous paths.",
+    type: "character"
   },
   {
     id: crypto.randomUUID(),
-    name: "Lady Ravencroft",
-    role: "Mysterious Aristocrat",
-    portrait: null,
-    traits: [
-      "Appearance: Always wears dark Victorian dresses",
-      "Manor: Ancient family estate on the hill",
-      "Influence: Has connections in high society"
-    ],
-    secrets: [
-      "Identity: Last of an ancient vampire lineage",
-      "Mission: Protecting the town from supernatural threats",
-      "Weakness: Cannot enter a home uninvited"
-    ],
-    desc: "A noble woman who holds frequent evening gatherings at her estate. Few guests notice they never see her during daylight hours.",
-    type: "character",
-    stat: { type: "character", value: "247" }
+    name: "The Ethereal Compass",
+    role: "Mystical Device",
+    image: "classic.png",
+    traits: ["Appearance: Brass and silver construction", "Property: Points to magical disturbances"],
+    secrets: ["Hidden: Has a mind of its own", "Plot: Previous owner vanished mysteriously"],
+    desc: "An ornate compass that responds to supernatural phenomena rather than magnetic north.",
+    type: "item"
   },
   {
     id: crypto.randomUUID(),
-    name: "The Brass Compass",
-    role: "Mystical Artifact",
-    portrait: null,
-    traits: [
-      "Appearance: Intricate brass device with shifting parts",
-      "Function: Points to what the holder truly seeks",
-      "History: Found in an Egyptian tomb"
-    ],
-    secrets: [
-      "Power: Can reveal hidden doorways",
-      "Curse: Slowly drives its owner to obsession",
-      "Truth: Actually a trapped spirit seeking freedom"
-    ],
-    desc: "An ornate brass compass that seems to have a mind of its own. Its needle moves erratically when near sources of magic.",
-    type: "item",
-    stat: { type: "item", value: "negligible" }
-  },
-  {
-    id: crypto.randomUUID(),
-    name: "The Whispering Library",
-    role: "Haunted Location",
-    portrait: null,
-    traits: [
-      "Atmosphere: Dust motes dance in shifting shadows",
-      "Books: Ancient tomes line endless shelves",
-      "Sound: Pages rustle when no one is near"
-    ],
-    secrets: [
-      "Portal: Contains a gateway to the realm of stories",
-      "Guardian: Protected by an immortal librarian",
-      "Collection: Some books write themselves at night"
-    ],
-    desc: "A vast library where the books seem to rearrange themselves. Visitors report hearing whispered conversations from empty aisles.",
-    type: "location",
-    stat: { type: "location", value: { type: "soft", value: "University District" } }
-  },
-  {
-    id: crypto.randomUUID(),
-    name: "Dr. Ambrose Chen",
-    role: "Occult Scholar",
-    portrait: null,
-    traits: [
-      "Appearance: Wears a tweed jacket with strange symbols embroidered",
-      "Office: Walls covered in star charts and diagrams",
-      "Knowledge: Expert in forbidden mathematics"
-    ],
-    secrets: [
-      "Research: Close to proving magic is advanced geometry",
-      "Students: Running a secret study group in applied sorcery",
-      "Past: Lost three years in a time loop accident"
-    ],
-    desc: "A brilliant mathematician who discovered patterns in reality that shouldn't exist. His lectures often venture into strange territories.",
-    type: "character",
-    stat: { type: "character", value: "42" }
+    name: "The Misty Vale",
+    role: "Mysterious Location",
+    image: "scriptorum_cropped.png",
+    traits: ["Appearance: Perpetually shrouded in fog", "Property: Time flows strangely here"],
+    secrets: ["Hidden: Contains a gateway to elsewhere", "Plot: Local children have been disappearing"],
+    desc: "A secluded valley where reality seems to bend and shift, defying the laws of nature.",
+    type: "location"
   }
 ];
 
 // Development helper to populate database with sample data
 export async function populateWithSampleData() {
   try {
-    const sampleDeck: CharacterDeck = {
+    const sampleDeck: Deck = {
       id: crypto.randomUUID(),
       meta: {
         name: "Tales of the Uncanny",
-        theme: "classic",  // Use classic theme
+        theme: "classic",
         cardSize: "poker",
         lastEdited: Date.now(),
         createdAt: Date.now()
       },
-      characters: sampleCharacters
+      cards: sampleCards
     };
 
-    await saveDeck(sampleDeck, true);
+    await saveDeck(sampleDeck);
     console.log('Database populated with sample data');
     return sampleDeck;
   } catch (error) {
     throw new StorageError('Failed to populate database', error instanceof Error ? error : undefined);
   }
 } 
+
+// For backward compatibility during migration (TODO: Remove after migration is complete)
+export const updateCharacter = updateCard;
+export const addCharacter = addCard;
+export const deleteCharacters = deleteCards;
+export const copyCharactersTo = copyCardsTo; 

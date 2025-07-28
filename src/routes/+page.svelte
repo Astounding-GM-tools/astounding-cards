@@ -1,27 +1,27 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { currentDeck } from '$lib/stores/cards';
-  import { updateCharacter, loadDeck, deckFromUrl, addCharacter, saveDeck, listDecks, setCurrentDeck } from '$lib/stores/cards';
-  import type { Character } from '$lib/types';
-  import CharacterCardFront from '$lib/components/CharacterCardFront.svelte';
-  import CharacterCardBack from '$lib/components/CharacterCardBack.svelte';
+  import { currentDeck } from '$lib/stores/deck';
+  import { updateCard, loadDeck, deckFromUrl, addCard, saveDeck, listDecks, setCurrentDeck } from '$lib/stores/deck';
+  import type { Card } from '$lib/types';
+  import CardFront from '$lib/components/CardFront.svelte';
+  import CardBack from '$lib/components/CardBack.svelte';
   import UrlSizeIndicator from '$lib/components/UrlSizeIndicator.svelte';
   import DeckSelector from '$lib/components/DeckSelector.svelte';
   import DeckList from '$lib/components/DeckList.svelte';
   import Toasts from '$lib/components/Toasts.svelte';
   import { toasts } from '$lib/stores/toast';
-  import { deckToUrl } from '$lib/stores/cards';
+  import { deckToUrl } from '$lib/stores/deck';
   import PagedCards from '$lib/components/PagedCards.svelte';
   import PrintInstructions from '$lib/components/PrintInstructions.svelte';
   import { devMode } from '$lib/stores/dev';
   import ShareDialog from '$lib/components/ShareDialog.svelte';
 
-  let showCropMarks = true;
+  let showCropMarks = $state(true);
   let loading = $state(true);  // Start with loading true
   let error = $state<string | null>(null);
-  let deckDialog: HTMLDialogElement;
-  let printDialog: HTMLDialogElement;
-  let scrollContainer: HTMLElement;
+  let deckDialog = $state<HTMLDialogElement | null>(null) as unknown as HTMLDialogElement;
+  let printDialog = $state<HTMLDialogElement | null>(null) as unknown as HTMLDialogElement;
+  let scrollContainer = $state<HTMLElement | null>(null);
   let shareDialog = $state(false);
 
   // Store scroll position before update
@@ -92,11 +92,11 @@
     }
   });
 
-  async function handleCharacterUpdate(id: string, updates: Partial<Character>) {
+  async function handleCardUpdate(id: string, updates: Partial<Card>) {
     if (scrollContainer) {
       lastScrollPosition = scrollContainer.scrollTop;
     }
-    await updateCharacter(id, updates);
+    await updateCard(id, updates);
   }
 
   // Function to get the corresponding back position for a card
@@ -128,7 +128,7 @@
     <div class="settings-row">
       <button 
         class="action-button"
-        onclick={() => deckDialog.showModal()}
+        onclick={() => deckDialog?.showModal()}
       >
         📚 Manage Decks
       </button>
@@ -142,13 +142,13 @@
         <button 
           class="action-button"
           onclick={async () => {
-            const newDeck = addCharacter();
+            const newDeck = addCard();
             if (newDeck) {
               await saveDeck(newDeck);
             }
           }}
         >
-          ➕ Add Character
+          ➕ Add Card
         </button>
       {/if}
       <div class="right-controls">
@@ -158,7 +158,7 @@
         </label>
         <button 
           class="action-button info"
-          onclick={() => printDialog.showModal()}
+          onclick={() => printDialog?.showModal()}
         >
           🖨️ Print Instructions
         </button>
@@ -175,20 +175,20 @@
     <ShareDialog 
       deck={$currentDeck}
       onClose={() => shareDialog = false}
-      onUpdate={handleCharacterUpdate}
+      onUpdate={handleCardUpdate}
     />
   {/if}
 
   <!-- Deck management dialog -->
   <dialog 
-    bind:this={deckDialog}
+    bind:this={deckDialog as HTMLDialogElement}
     class="deck-dialog"
   >
     <div class="dialog-header">
       <h2>📚 Deck Management</h2>
       <button 
         class="close-button"
-        onclick={() => deckDialog.close()}
+        onclick={() => deckDialog?.close()}
       >
         ×
       </button>
@@ -209,12 +209,12 @@
       <div class="message error">{error}</div>
     {:else if !$currentDeck}
       <div class="message">No decks found. Click "Manage Decks" to create your first deck.</div>
-    {:else if $currentDeck.characters.length === 0}
-      <div class="message">No characters in deck</div>
+    {:else if $currentDeck.cards.length === 0}
+      <div class="message">No cards in deck</div>
     {:else}
       <PagedCards 
         {showCropMarks}
-        onCharacterChange={handleCharacterUpdate}
+        onCardChange={handleCardUpdate}
       />
     {/if}
   </div>

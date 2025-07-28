@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { CardTheme } from '$lib/themes';
   import { baseThemes } from '$lib/themes';
-  import CharacterCardFront from './CharacterCardFront.svelte';
+  import CardFront from './CardFront.svelte';
 
   let { selectedTheme = 'classic', onSelect } = $props<{
     selectedTheme?: string;
@@ -10,18 +10,20 @@
 
   const themes = Object.values(baseThemes);
 
-  function createPreviewCharacter(theme: CardTheme) {
+  function createPreviewCard(theme: CardTheme) {
     return {
+      id: 'preview',  // Required by Card type
       name: theme.preview?.title || theme.name,
       role: theme.preview?.role || theme.description,
       traits: theme.preview?.traits || [],
       portrait: theme.preview?.portrait || null,
       stat: {
-        type: 'item',
+        type: 'character' as const,
         value: 'Preview'
       },
       desc: '',  // Required by type but not used in preview
-      secrets: []  // Required by type but not used in preview
+      secrets: [],  // Required by type but not used in preview
+      type: 'Preview'  // Required by Card type
     };
   }
 </script>
@@ -35,8 +37,8 @@
         onclick={() => onSelect(theme.id)}
       >
         <div class="preview-wrapper">
-          <CharacterCardFront
-            character={createPreviewCharacter(theme)}
+          <CardFront
+            card={createPreviewCard(theme)}
             theme={theme.id}
             showCropMarks={false}
             onChange={() => {}}

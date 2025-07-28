@@ -1,53 +1,50 @@
 <script lang="ts">
-  import type { Character } from '$lib/types';
+  import type { Card } from '$lib/types';
   import { fade } from 'svelte/transition';
   import { processImage } from '$lib/utils/image';
   import { toasts } from '$lib/stores/toast';
 
   const props = $props<{
-    characters: Character[];
+    cards: Card[];
     onClose: () => void;
-    onUpdate: (id: string, updates: Partial<Character>) => Promise<void>;
+    onUpdate: (id: string, updates: Partial<Card>) => Promise<void>;
   }>();
 
   let dialogElement: HTMLDialogElement;
   let loading = $state(false);
-  let selectedCharacter = $state<Character | null>(null);
+  let selectedCard = $state<Card | null>(null);
   let urlInput = $state('');
   let previewUrl = $state<string | null>(null);
   let optimizedBlob = $state<Blob | null>(null);
 
   // Show dialog when mounted
   $effect(() => {
-    if (dialogElement && !dialogElement.open) {
-      dialogElement.showModal();
-    }
+    dialogElement?.showModal();
   });
 
-  // Get characters that need migration
-  const needsMigration = $derived(props.characters.filter((char: Character) => {
-    if (!char.portrait) return false;
-    if (char.portrait === 'blob:local') return true;
-    return !char.portrait.includes(':') || !char.portrait.startsWith('http');
+  // Get cards that need migration
+  const needsMigration = $derived(props.cards.filter((card: Card) => {
+    if (!card.portrait) return false;
+    return card.portrait === 'blob:local' || (!card.portrait.includes(':') && !card.portrait.startsWith('http'));
   }));
 
-  // Auto-select first character when dialog opens or when list changes
+  // Auto-select first card when dialog opens or when list changes
   $effect(() => {
-    if (needsMigration.length > 0 && !selectedCharacter) {
-      selectedCharacter = needsMigration[0];
+    if (needsMigration.length > 0 && !selectedCard) {
+      selectedCard = needsMigration[0];
     }
   });
 
-  // Reset state when character changes
+  // Reset state when card changes
   $effect(() => {
-    if (selectedCharacter) {
+    if (selectedCard) {
       urlInput = '';
       previewUrl = null;
       optimizedBlob = null;
     }
   });
 
-  // Test URL when input changes
+  // Test URL when input changes (debounced)
   $effect(() => {
     if (!urlInput) {
       previewUrl = null;
@@ -55,77 +52,64 @@
       return;
     }
 
-    const testUrl = async () => {
-      loading = true;
+    const timeoutId = setTimeout(async () => {
       try {
+        loading = true;
         const response = await fetch(urlInput);
-        if (!response.ok) throw new Error('Failed to load image');
+        if (!response.ok) throw new Error('Failed to fetch image');
         
         const blob = await response.blob();
-        if (!blob.type.startsWith('image/')) {
-          throw new Error('URL does not point to an image');
-        }
-
-        const file = new File([blob], 'image.jpg', { type: blob.type });
+        const file = new File([blob], 'image', { type: blob.type });
+        
         const processed = await processImage(file);
         optimizedBlob = processed.blob;
         
         if (previewUrl) URL.revokeObjectURL(previewUrl);
-        previewUrl = URL.createObjectURL(optimizedBlob);
-
-        toasts.success('Image loaded successfully');
-      } catch (err) {
-        console.error('Failed to load image:', err);
-        toasts.error('Failed to load image. Please check the URL and try again.');
+        previewUrl = URL.createObjectURL(processed.blob);
+      } catch (e) {
         previewUrl = null;
         optimizedBlob = null;
       } finally {
         loading = false;
       }
-    };
+    }, 500);
 
-    // Debounce URL testing
-    const timeoutId = setTimeout(testUrl, 500);
     return () => clearTimeout(timeoutId);
   });
 
   async function handleSave() {
-    if (!selectedCharacter || !urlInput) return;
+    if (!selectedCard || !urlInput) return;
 
     try {
-      await props.onUpdate(selectedCharacter.id, {
+      await props.onUpdate(selectedCard.id, {
         portrait: urlInput,
         portraitBlob: optimizedBlob || undefined
       });
 
       toasts.success('Image updated successfully');
 
-      // Get fresh list of remaining characters after update
-      const remainingCharacters = props.characters.filter((char: Character) => {
-        if (!char.portrait) return false;
-        if (char.portrait === 'blob:local') return true;
-        return !char.portrait.includes(':') || !char.portrait.startsWith('http');
+      // Get fresh list of remaining cards after update
+      const remainingCards = props.cards.filter((card: Card) => {
+        if (!card.portrait) return false;
+        return card.portrait === 'blob:local' || (!card.portrait.includes(':') && !card.portrait.startsWith('http'));
       });
 
-      if (remainingCharacters.length > 0) {
-        // Find the next character that still needs migration
-        const nextChar = remainingCharacters.find(c => c.id !== selectedCharacter?.id);
-        if (nextChar) {
-          selectedCharacter = nextChar;
+      if (remainingCards.length > 0) {
+        // Find the next card that still needs migration
+        const nextCard = remainingCards.find((card: Card) => card.id !== selectedCard?.id);
+        if (nextCard) {
+          selectedCard = nextCard;
         }
       } else {
-        // All done - show success and close
         toasts.success('All images have been migrated!');
         handleClose();
       }
     } catch (err) {
-      console.error('Failed to update image:', err);
-      toasts.error('Failed to save image. Please try again.');
+      toasts.error('Failed to update image');
     }
   }
 
   function handleClose() {
-    if (previewUrl) URL.revokeObjectURL(previewUrl);
     dialogElement?.close();
     props.onClose();
   }
@@ -138,7 +122,7 @@
 >
   <div class="dialog-content">
     <div class="dialog-header">
-      <h2>Migrate Images to URLs</h2>
+      <h2>Migrate Images</h2>
       <button 
         class="close-button" 
         onclick={handleClose}
@@ -153,17 +137,17 @@
           <p>✓ All images are ready for sharing!</p>
         </div>
       {:else}
-        <div class="character-list">
+        <div class="card-list">
           <h3>Images to Migrate ({needsMigration.length})</h3>
-          <div class="characters">
-            {#each needsMigration as character}
+          <div class="cards">
+            {#each needsMigration as card}
               <button
-                class="character-button"
-                class:active={selectedCharacter?.id === character.id}
-                onclick={() => selectedCharacter = character}
+                class="card-button"
+                class:active={selectedCard?.id === card.id}
+                onclick={() => selectedCard = card}
               >
-                {character.name}
-                {#if character.portrait === 'blob:local'}
+                {card.name}
+                {#if card.portrait === 'blob:local'}
                   <span class="tag">Local File</span>
                 {:else}
                   <span class="tag">No URL</span>
@@ -173,9 +157,9 @@
           </div>
         </div>
 
-        {#if selectedCharacter}
+        {#if selectedCard}
           <div class="migration-form" transition:fade>
-            <h3>Migrate: {selectedCharacter.name}</h3>
+            <h3>Migrate: {selectedCard.name}</h3>
             
             <div class="image-comparison">
               <div class="image-column">
@@ -183,9 +167,9 @@
                 <div class="image-container">
                   <div 
                     class="image-preview"
-                    style:background-image={selectedCharacter.portraitBlob ? `url(${URL.createObjectURL(selectedCharacter.portraitBlob)})` : 'none'}
+                    style:background-image={selectedCard.portraitBlob ? `url(${URL.createObjectURL(selectedCard.portraitBlob)})` : 'none'}
                   >
-                    {#if !selectedCharacter.portraitBlob}
+                    {#if !selectedCard.portraitBlob}
                       <span class="no-image">No image set</span>
                     {/if}
                   </div>
@@ -235,7 +219,7 @@
           </div>
         {:else}
           <div class="select-prompt" transition:fade>
-            <p>← Select a character to start migration</p>
+            <p>← Select a card to start migration</p>
           </div>
         {/if}
       {/if}
@@ -315,19 +299,19 @@
     color: var(--toast-success);
   }
 
-  .character-list {
+  .card-list {
     width: 200px;
     border-right: 1px solid var(--ui-border);
   }
 
-  .characters {
+  .cards {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
     margin-top: 1rem;
   }
 
-  .character-button {
+  .card-button {
     text-align: left;
     padding: 0.5rem;
     background: none;
@@ -343,11 +327,11 @@
     transition: all 0.2s ease;
   }
 
-  .character-button:hover {
+  .card-button:hover {
     background: var(--ui-hover-bg);
   }
 
-  .character-button.active {
+  .card-button.active {
     background: var(--ui-hover-bg);
     border-color: var(--button-bg);
   }

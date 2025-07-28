@@ -1,6 +1,6 @@
 import type { InferSelectModel } from 'drizzle-orm';
 import { pgTable, text, timestamp, integer, json } from 'drizzle-orm/pg-core';
-import type { Character, CharacterDeck, Trait } from '$lib/types';
+import type { Card, Deck, CardStat } from '$lib/types';
 
 export const decks = pgTable('decks', {
   id: text('id').primaryKey(),
@@ -12,49 +12,45 @@ export const decks = pgTable('decks', {
   version: integer('version').notNull().default(1),
 });
 
-export const characters = pgTable('characters', {
+export const cards = pgTable('cards', {
   id: text('id').primaryKey(),
   deckId: text('deck_id').notNull().references(() => decks.id),
   name: text('name').notNull(),
   role: text('role').notNull(),
-  portrait: text('portrait'),
-  publicTraits: json('public_traits').$type<Trait[]>().default([]),  // Array of {label, description}
-  secretTraits: json('secret_traits').$type<Trait[]>().default([]),  // Array of {label, description}
+  image: text('image'),
+  type: text('type').notNull().default('character'),
+  traits: json('traits').$type<string[]>().default([]),
+  secrets: json('secrets').$type<string[]>().default([]),
   desc: text('desc').notNull(),
-  type: text('type'),
-  stat: json('stat').$type<Character['stat']>(),  // Store stat as JSON
+  stat: json('stat').$type<CardStat>(),
 });
 
-// Type guard for Character
-export function isCharacter(char: unknown): char is Character {
+// Type guards
+export function isCard(card: unknown): card is Card {
   return (
-    typeof char === 'object' &&
-    char !== null &&
-    typeof (char as Character).id === 'string' &&
-    typeof (char as Character).name === 'string' &&
-    typeof (char as Character).role === 'string' &&
-    typeof (char as Character).desc === 'string' &&
-    Array.isArray((char as Character).publicTraits) &&
-    Array.isArray((char as Character).secretTraits) &&
-    (char as Character).publicTraits.every(trait => 
-      typeof trait?.label === 'string' && 
-      typeof trait?.description === 'string'
-    ) &&
-    (char as Character).secretTraits.every(trait => 
-      typeof trait?.label === 'string' && 
-      typeof trait?.description === 'string'
-    )
+    typeof card === 'object' &&
+    card !== null &&
+    typeof (card as Card).id === 'string' &&
+    typeof (card as Card).name === 'string' &&
+    typeof (card as Card).role === 'string' &&
+    typeof (card as Card).desc === 'string' &&
+    typeof (card as Card).type === 'string' &&
+    Array.isArray((card as Card).traits) &&
+    Array.isArray((card as Card).secrets) &&
+    (card as Card).traits.every(trait => typeof trait === 'string') &&
+    (card as Card).secrets.every(secret => typeof secret === 'string')
   );
 }
 
-// Type guard for CharacterDeck
-export function isCharacterDeck(deck: unknown): deck is CharacterDeck {
+export function isDeck(deck: unknown): deck is Deck {
   return (
     typeof deck === 'object' &&
     deck !== null &&
-    typeof (deck as CharacterDeck).id === 'string' &&
-    typeof (deck as CharacterDeck).name === 'string' &&
-    typeof (deck as CharacterDeck).theme === 'string' &&
-    Array.isArray((deck as CharacterDeck).characters)
+    typeof (deck as Deck).id === 'string' &&
+    typeof (deck as Deck).meta === 'object' &&
+    typeof (deck as Deck).meta.name === 'string' &&
+    typeof (deck as Deck).meta.theme === 'string' &&
+    Array.isArray((deck as Deck).cards) &&
+    (deck as Deck).cards.every(isCard)
   );
 }

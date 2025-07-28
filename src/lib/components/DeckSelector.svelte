@@ -1,13 +1,13 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { currentDeck, clearDatabase, populateWithSampleData } from '$lib/stores/cards';
-  import { listDecks, switchDeck, saveDeck } from '$lib/stores/cards';
-  import type { CharacterDeck, CardSize } from '$lib/types';
+  import { currentDeck, clearDatabase, populateWithSampleData } from '$lib/stores/deck';
+  import { listDecks, switchDeck, saveDeck } from '$lib/stores/deck';
+  import type { Deck, CardSize } from '$lib/types';
   import { devMode } from '$lib/stores/dev';
   import { baseThemes } from '$lib/themes';
   import ThemeSelect from './ThemeSelect.svelte';
 
-  let decks = $state<CharacterDeck[]>([]);
+  let decks = $state<Deck[]>([]);
   let loading = $state(true);
   let error = $state<string | null>(null);
   let showThemeSelect = $state(false);

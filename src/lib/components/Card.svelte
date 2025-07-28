@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { currentDeck } from '$lib/stores/cards';
+  import { currentDeck } from '$lib/stores/deck';
 
   let { showCropMarks = false, children, theme = undefined } = $props();
   const activeTheme = $derived(theme ?? $currentDeck?.meta?.theme ?? 'classic');

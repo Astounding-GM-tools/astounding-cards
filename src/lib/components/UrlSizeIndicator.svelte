@@ -1,9 +1,9 @@
 <script lang="ts">
-  import { deckToUrl } from '$lib/stores/cards';
-  import type { CharacterDeck } from '$lib/types';
+  import { deckToUrl } from '$lib/stores/deck';
+  import type { Deck } from '$lib/types';
   import { browser } from '$app/environment';
 
-  const { deck } = $props<{ deck: CharacterDeck }>();
+  const { deck } = $props<{ deck: Deck }>();
   
   const urlSize = $derived(browser ? new TextEncoder().encode(deckToUrl(deck)).length : 0);
   const sizeInKB = $derived((urlSize / 1024).toFixed(1));

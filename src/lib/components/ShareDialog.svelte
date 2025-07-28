@@ -1,14 +1,14 @@
 <script lang="ts">
-  import type { CharacterDeck, Character } from '$lib/types';
+  import type { Card, Deck } from '$lib/types';
   import { fade } from 'svelte/transition';
-  import { deckToUrl } from '$lib/stores/cards';
+  import { deckToUrl } from '$lib/stores/deck';
   import { toasts } from '$lib/stores/toast';
   import ImageMigrationDialog from './ImageMigrationDialog.svelte';
 
   const props = $props<{
-    deck: CharacterDeck;
+    deck: Deck;
     onClose: () => void;
-    onUpdate: (id: string, updates: Partial<Character>) => Promise<void>;
+    onUpdate: (id: string, updates: Partial<Card>) => Promise<void>;
   }>();
 
   let dialogElement: HTMLDialogElement;
@@ -42,14 +42,13 @@
       urlSize = new TextEncoder().encode(deckToUrl(props.deck)).length;
       
       // Count cards with no images separately from those needing migration
-      missingImageCount = props.deck.characters.filter((char: Character) => !char.portrait).length;
+      missingImageCount = props.deck.cards.filter((card: Card) => !card.portrait).length;
       
       // Only count images that need URL migration (local files or blob:local)
-      blobCount = props.deck.characters.filter((char: Character) => {
-        if (!char.portrait) return false; // Don't count missing images here
-        return char.portrait === 'blob:local' || (!char.portrait.includes(':') && !char.portrait.startsWith('http'));
+      blobCount = props.deck.cards.filter((card: Card) => {
+        if (!card.portrait) return false; // Don't count missing images here
+        return card.portrait === 'blob:local' || (!card.portrait.includes(':') && !card.portrait.startsWith('http'));
       }).length;
-
       migrationNeeded = blobCount > 0;
     }
   });
@@ -234,7 +233,7 @@
 
 {#if showMigration}
   <ImageMigrationDialog
-    characters={props.deck.characters}
+    cards={props.deck.cards}
     onClose={() => showMigration = false}
     onUpdate={props.onUpdate}
   />
