@@ -38,10 +38,10 @@
    * - Test different card sizes
    * - Ensure readability in print
    */
-  --title-font-size: 2em;      /* Large enough to be prominent */
-  --role-font-size: 1.4em;     /* Smaller than title */
-  --trait-font-size: 1.1em;    /* Readable but compact */
-  --base-font-size: 1cqw;      /* Scales with container */
+  --title-font-size: 32px;      /* 2em - Large enough to be prominent */
+  --role-font-size: 22px;     /* 1.4em - Smaller than title */
+  --trait-font-size: 18px;    /* 1.1em - Readable but compact */
+  --base-font-size: 16px;      /* 1cqw - Scales with container */
 
   /* Text Alignment
    * - Default is center for titles/roles, left for descriptions

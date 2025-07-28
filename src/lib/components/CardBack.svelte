@@ -162,6 +162,35 @@
     position: relative;
   }
 
+  /* Content flourishes */
+  .flourish {
+    width: var(--flourish-size);
+    aspect-ratio: var(--flourish-aspect);
+    pointer-events: none;
+    z-index: 2;
+    color: var(--flourish-color);
+    opacity: var(--flourish-opacity);
+  }
+
+  .content-flourish {
+    width: var(--content-flourish-size);
+    aspect-ratio: var(--content-flourish-aspect);
+    position: absolute;
+  }
+
+  .content-flourish.top-left {
+    left: calc(-1 * var(--content-box-border-width, 0px));
+    top: calc(-1 * var(--content-box-border-width, 0px));
+    opacity: var(--flourish-content-top-left-opacity);
+  }
+
+  .content-flourish.top-right {
+    right: calc(-1 * var(--content-box-border-width, 0px));
+    top: calc(-1 * var(--content-box-border-width, 0px));
+    transform: rotate(90deg);
+    opacity: var(--flourish-content-top-right-opacity);
+  }
+
   /* Add corner flourishes if enabled */
   .content::before,
   .content::after {
@@ -234,10 +263,10 @@
     font-family: var(--theme-body-font);
   }
 
-  /* For larger containers (tarot size), use theme's role size */
+  /* For larger containers (tarot size), use theme's desc size */
   @container (min-width: 63mm) {
     .desc {
-      font-size: var(--role-font-size);
+      font-size: var(--desc-font-size);
     }
   }
 

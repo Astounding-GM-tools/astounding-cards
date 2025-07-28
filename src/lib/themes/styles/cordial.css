@@ -16,10 +16,10 @@
   --role-font-family: var(--theme-title-font);  /* Use Ballet for roles too */
   
   /* Font Sizes */
-  --title-font-size: 2em;      /* Reduced from 2.4em */
-  --role-font-size: 1.6em;     /* Also use Ballet for roles */
-  --trait-font-size: 1.4em;    /* Tangerine needs to be larger for readability */
-  --base-font-size: 1.3cqw;    /* Larger base size for Tangerine */
+  --title-font-size: 32px;      /* 2em - Reduced from 2.4em */
+  --role-font-size: 26px;     /* 1.6em - Also use Ballet for roles */
+  --trait-font-size: 22px;    /* 1.4em - Tangerine needs to be larger for readability */
+  --base-font-size: 21px;     /* 1.3cqw - Larger base size for Tangerine */
 
   /* Line Heights */
   --title-line-height: 0.9;    /* Tighter line height for Ballet */

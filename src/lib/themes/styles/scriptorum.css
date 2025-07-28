@@ -16,11 +16,13 @@
   --role-font-family: var(--theme-body-font);  /* Use flowing script for role */
    
   /* Font Sizes */
-  --title-font-size: 3.5em;       /* Large for titles */
+  --title-font-size: 3cqw;       /* Large but not overwhelming */
   --title-line-height: 1.0;
-  --role-font-size: 3.5cqw;     /* Decreased from 5cqw */
-  --trait-font-size: 1.2em;     /* Decreased from 1.6em */
-  --base-font-size: 1cqw;       /* Decreased from 1.1cqw */
+  --role-font-size: 2cqw;        /* Prominent but smaller than title */
+  --desc-font-size: 1.8cqw;      /* Slightly larger than traits for readability with Eagle Lake font */
+  --trait-font-size: 1.5cqw;     /* Good size for trait lists */
+  --base-font-size: 16px;        /* Standard base size */
+  --body-line-height: 1.1;       /* Tighter line height for medieval style */
 
   /* Text Alignment */
   --title-text-align: left;     /* Left-aligned titles for manuscript style */
@@ -91,10 +93,17 @@
   border: var(--content-box-border-width) solid var(--theme-secondary);
 }
 
+/* Back card flourishes */
+[data-theme="scriptorum"] .content.back {
+  --corner-flourish-size: 3rem;
+  --corner-flourish-opacity: 0.6;
+  --corner-flourish-svg: url('/flourishes/manuscript-corner.svg');
+}
+
 /* Title and role width overrides */
 [data-theme="scriptorum"] .content .title {
   max-width: 100%;
-  font-size: 2em;
+  /* Removed font-size override to use property value */
 }
 
 [data-theme="scriptorum"] .content .role {
@@ -115,12 +124,12 @@
 }
 
 [data-theme="scriptorum"] .desc::first-letter {
-  font-size: 275%;
+  font-size: 200%;
   float: left;
-  margin: -3px 2px 0 0;
+  margin: 6px 4px 0 0;
   font-family: var(--theme-body-font);
   color: var(--theme-primary);
-  line-height: 1;
+  line-height: 0.8;
 }
 
 /* Role styling */

@@ -29,7 +29,7 @@
 
 @property --page-gap {
   syntax: '<length>';
-  initial-value: 2rem;
+  initial-value: 32px;  /* 2rem = 32px */
   inherits: true;
 }
 
@@ -61,31 +61,43 @@
 /* Typography */
 @property --base-font-size {
   syntax: '<length>';
-  initial-value: 0.9cqw;
+  initial-value: 14px;
   inherits: true;
 }
 
 @property --title-font-size {
   syntax: '<length-percentage>';
-  initial-value: 1.4em;
+  initial-value: 22px;
   inherits: true;
 }
 
 @property --role-font-size {
   syntax: '<length-percentage>';
-  initial-value: 1em;
+  initial-value: 16px;
+  inherits: true;
+}
+
+@property --desc-font-size {
+  syntax: '<length-percentage>';
+  initial-value: 14px;
   inherits: true;
 }
 
 @property --trait-font-size {
   syntax: '<length-percentage>';
-  initial-value: 0.9em;
+  initial-value: 14px;
   inherits: true;
 }
 
 @property --ui-font-size {
   syntax: '<length-percentage>';
-  initial-value: 0.9em;
+  initial-value: 14px;
+  inherits: true;
+}
+
+@property --body-line-height {
+  syntax: '<number>';
+  initial-value: 1.2;
   inherits: true;
 }
 
@@ -95,7 +107,7 @@
   --card-padding: 3mm;
   --page-margin: 4mm;
   --content-gap: 2mm;
-  --page-gap: 2rem;
+  --page-gap: 32px;  /* 2rem = 32px */
   
   /* Theme colors (for cards) */
   --content-bg: white;
@@ -104,11 +116,13 @@
   --border-color: #ddd;
   
   /* Typography */
-  --base-font-size: 0.9cqw;
-  --title-font-size: 1.4em;
-  --role-font-size: 1em;
-  --trait-font-size: 0.9em;
-  --ui-font-size: 0.9em;
+  --base-font-size: 14px;
+  --title-font-size: 22px;
+  --role-font-size: 16px;
+  --desc-font-size: 14px;
+  --trait-font-size: 14px;
+  --ui-font-size: 14px;
+  --body-line-height: 1.2;
 
   /* Layout constants */
   --card-width: 63.5mm;  /* Poker card width */

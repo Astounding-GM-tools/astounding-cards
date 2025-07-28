@@ -70,10 +70,10 @@
   --content-box-bg: white;           /* White background for print */
 
   /* Typography Sizes */
-  --title-font-size: 1.8em;
-  --role-font-size: 1.2em;
-  --trait-font-size: 1em;
-  --base-font-size: 1cqw;
+  --title-font-size: 29px;  /* 1.8em */
+  --role-font-size: 19px;  /* 1.2em */
+  --trait-font-size: 16px; /* 1em */
+  --base-font-size: 16px;  /* 1cqw */
 }
 
 /* Title and role width overrides */
