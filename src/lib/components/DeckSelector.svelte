@@ -56,19 +56,27 @@
           lastEdited: Date.now(),
           createdAt: Date.now()
         },
-        cards: []
+        cards: []  // Initialize with empty array of cards
       };
 
-      await saveDeck(newDeck);
+      await saveDeck(newDeck, true);  // Allow empty deck
       await setCurrentDeck(newDeck);
       showNewDeckDialog = false;
       newDeckName = '';
       loadTrigger++; // Refresh deck list
       toasts.success('Created new deck');
-    } catch (e) {
-      console.error('Failed to create deck:', e);
-      error = e instanceof Error ? e.message : 'Failed to create deck';
+    } catch (error) {
+      console.error('Failed to create deck:', error);
       toasts.error('Failed to create deck');
+    }
+  }
+
+  function handleKeydown(event: KeyboardEvent) {
+    if (event.key === 'Enter' && newDeckName.trim()) {
+      handleCreateDeck();
+    } else if (event.key === 'Escape') {
+      showNewDeckDialog = false;
+      newDeckName = '';
     }
   }
 
@@ -134,7 +142,7 @@
     }
   }
 
-  const sortedDecks = $derived(decks.sort((a, b) => b.meta.lastEdited - a.meta.lastEdited));
+  const sortedDecks = $derived([...decks].sort((a, b) => b.meta.lastEdited - a.meta.lastEdited));
 </script>
 
 <div class="deck-settings">
@@ -246,7 +254,8 @@
       type="text"
       bind:value={newDeckName}
       placeholder="Enter deck name"
-      onkeydown={(e) => e.key === 'Enter' && handleCreateDeck()}
+      onkeydown={handleKeydown}
+      autofocus
     >
     <div class="dialog-buttons">
       <button 
@@ -258,7 +267,10 @@
       </button>
       <button 
         class="secondary"
-        onclick={() => showNewDeckDialog = false}
+        onclick={() => {
+          showNewDeckDialog = false;
+          newDeckName = '';
+        }}
       >
         Cancel
       </button>
@@ -532,5 +544,63 @@
     font-size: var(--ui-title-size);
     font-family: var(--ui-font-family);
     font-weight: 600;
+  }
+
+  .dialog input {
+    width: 100%;
+    padding: 0.5rem;
+    margin: 1rem 0;
+    border: 1px solid var(--ui-border);
+    border-radius: 4px;
+    font-size: var(--ui-font-size);
+    font-family: var(--ui-font-family);
+  }
+
+  .dialog input:focus {
+    outline: none;
+    border-color: var(--button-primary-bg);
+    box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.1);
+  }
+
+  .dialog-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    margin-top: 1rem;
+  }
+
+  .dialog-buttons button {
+    padding: 0.4rem 0.75rem;
+    border: 1px solid var(--button-border);
+    border-radius: 4px;
+    background: var(--button-bg);
+    color: var(--button-text);
+    font-size: var(--ui-font-size);
+    font-family: var(--ui-font-family);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .dialog-buttons button:hover {
+    background: var(--button-hover-bg);
+  }
+
+  .dialog-buttons button.primary {
+    background: var(--button-primary-bg);
+    color: var(--button-primary-text);
+    border-color: var(--button-primary-bg);
+  }
+
+  .dialog-buttons button.primary:hover {
+    background: var(--button-primary-hover);
+  }
+
+  .dialog-buttons button.secondary:hover {
+    border-color: var(--button-primary-bg);
+  }
+
+  .dialog-buttons button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 </style> 

@@ -68,10 +68,23 @@
     return `/portraits/${image}`;
   }
 
-  function formatTraits(traits: string[]): string {
-    return traits
-      .map(trait => `<div class="trait">${trait}</div>`)
-      .join('');
+  function formatTraits(traits: string[]) {
+    return traits?.map(trait => {
+      const [label, ...rest] = trait.split(':');
+      if (rest.length > 0) {
+        return `<strong class="trait-label">${label.trim()}:</strong> ${rest.join(':').trim()}`;
+      }
+      return trait; // If no colon, keep as is
+    }).join('\n') || '';
+  }
+
+  // Parse HTML back to plain text for traits
+  function parseTraits(html: string) {
+    return html
+      .replace(/<strong[^>]*>|<\/strong>/g, '')  // Remove strong tags
+      .split('\n')
+      .map(s => s.trim())
+      .filter(s => s.length > 0);
   }
 
   // Derived values for contenteditable
@@ -103,13 +116,9 @@
     }
   }
 
-  function handleTraitsBlur() {
-    // Get traits from DOM
-    const newTraits = Array.from(traitsElement.children)
-      .map(el => el.textContent?.trim() || '')
-      .filter(Boolean);
-
-    // Only update if changed
+  function handleTraitsBlur(event: Event) {
+    const target = event.target as HTMLElement;
+    const newTraits = parseTraits(target.innerText);
     if (JSON.stringify(newTraits) !== JSON.stringify(card.traits)) {
       onChange({ 
         traits: newTraits,
@@ -120,7 +129,7 @@
   }
 
   function addTrait() {
-    const newTraits = [...(card.traits || []), 'New trait'];
+    const newTraits = [...(card.traits || []), 'Label: Description'];
     onChange({ 
       traits: newTraits,
       image: card.image,
@@ -213,12 +222,20 @@
         onblur={handleRoleBlur}
         bind:this={roleElement}
       >{card.role}</div>
-      <div 
-        class="traits" 
-        contenteditable="true"
-        onblur={handleTraitsBlur}
-        bind:this={traitsElement}
-      >{@html formatTraits(card.traits)}</div>
+      <div class="traits">
+        <div 
+          class="traits-content" 
+          contenteditable="true"
+          onblur={handleTraitsBlur}
+          bind:this={traitsElement}
+        >{@html formatTraits(card.traits)}</div>
+        <button 
+          class="add-trait"
+          onclick={addTrait}
+        >
+          Add Trait
+        </button>
+      </div>
     </div>
   </div>
 </CardBase>
@@ -391,24 +408,70 @@
   }
 
   .traits {
-    margin-top: var(--content-gap);
-    font-family: var(--theme-body-font);
-    border-top: calc(var(--divider-width) * var(--show-dividers)) var(--divider-style) var(--theme-primary);
+    position: relative;
+    margin: var(--content-gap) 0 0;
     padding-top: var(--content-gap);
+    border-top: calc(var(--divider-width) * var(--show-dividers)) var(--divider-style) var(--theme-primary);
+  }
+
+  .traits legend {
+    font-size: 1em;
+    color: var(--theme-text);
+    font-weight: normal;
+    padding: 0 1mm;
+    font-family: var(--theme-body-font);
+  }
+
+  /* For larger containers (tarot size), use theme's UI size */
+  @container (min-width: 63mm) {
+    .traits legend {
+      font-size: var(--ui-font-size);
+    }
+  }
+
+  .traits-content {
     white-space: pre-wrap;
     line-height: var(--body-line-height, 1.4);
     font-size: var(--trait-font-size);
     position: relative;
     z-index: 3;
     text-align: var(--desc-text-align);
+    font-family: var(--theme-body-font);
   }
 
-  .traits :global(.trait-label) {
+  .traits-content :global(.trait-label) {
     font-weight: bold;
     color: var(--theme-text);
     opacity: 0.8;
     display: inline-block;
     min-width: 5em;
+  }
+
+  .add-trait {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 5mm;
+    height: 5mm;
+    border: none;
+    border-radius: 50%;
+    background: var(--border-color);
+    color: var(--content-text);
+    font-size: var(--ui-font-size);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .traits:hover .add-trait {
+    opacity: 0.8;
+  }
+
+  .add-trait:hover {
+    opacity: 1 !important;
   }
 
   .change-portrait {
@@ -473,11 +536,17 @@
     .portrait-container {
       display: none;
     }
+    .traits {
+      display: none;
+    }
   }
 
   @media print {
     .change-portrait,
     .image-input {
+      display: none;
+    }
+    .add-trait {
       display: none;
     }
   }

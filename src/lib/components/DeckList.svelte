@@ -32,7 +32,7 @@
     }
   }
 
-  const sortedDecks = $derived(decks.sort((a, b) => b.meta.lastEdited - a.meta.lastEdited));
+  const sortedDecks = $derived([...decks].sort((a, b) => b.meta.lastEdited - a.meta.lastEdited));
 </script>
 
 <div class="deck-list">

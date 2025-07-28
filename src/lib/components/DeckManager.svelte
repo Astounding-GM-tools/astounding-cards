@@ -21,16 +21,14 @@
   let showThemeSelect = $state(false);
   let showDeleteConfirm = $state(false);
   let showDuplicateDialog = $state(false);
-  let showCopyDialog = $state(false);
   let showDeleteCardsDialog = $state(false);
   let editingName = $state(false);
   let deleting = $state(false);
   let duplicating = $state(false);
-  let copying = $state(false);
   let deletingCards = $state(false);
   let newDeckName = $state('');
   let editedDeckName = $state('');
-  let selectedCardIds = $state<string[]>([]);  // Array of selected card IDs
+  let selectedCardIds = $state<string[]>([]);
   let targetDeckId = $state<string | 'new'>('new');
   let availableDecks = $state<Deck[]>([]);
 
@@ -119,46 +117,9 @@
     }
   }
 
-  async function handleCopyCards() {
-    if (!showCopyDialog) {
-      showCopyDialog = true;
-      await loadAvailableDecks();
-      return;
-    }
-
-    if (selectedCardIds.length === 0) return;
-    if (targetDeckId === 'new' && !newDeckName?.trim()) return;
-
-    try {
-      copying = true;
-      const cards = deck.cards.filter((c: Card) => selectedCardIds.includes(c.id));
-      const targetDeck = await copyCardsTo(
-        cards,
-        targetDeckId,
-        targetDeckId === 'new' ? newDeckName.trim() : undefined
-      );
-      if (targetDeckId === 'new' || targetDeckId === $currentDeck?.id) {
-        currentDeck.set(targetDeck); // Update in-memory store if it's the current deck
-      }
-      emitDeckChange({ action: 'copy', deckId: targetDeck.id });
-      showCopyDialog = false;
-      const numCopied = cards.length;
-      selectedCardIds = [];
-      targetDeckId = 'new';  // Reset target
-      newDeckName = '';      // Reset name
-      toasts.success(`Copied ${numCopied} card${numCopied !== 1 ? 's' : ''} to ${targetDeck.meta.name}`);
-    } catch (error) {
-      console.error('Failed to copy cards:', error);
-      toasts.error('Failed to copy cards');
-    } finally {
-      copying = false;
-    }
-  }
-
   async function handleDeleteCards() {
     if (!showDeleteCardsDialog) {
       showDeleteCardsDialog = true;
-      await loadAvailableDecks();
       return;
     }
 
@@ -307,13 +268,6 @@
       <fieldset class="action-group">
         <legend>Card</legend>
         <button 
-          class="action-button"
-          onclick={() => showCopyDialog = true}
-          title="Copy selected cards to another deck"
-        >
-          Copy
-        </button>
-        <button 
           class="action-button danger"
           onclick={() => showDeleteCardsDialog = true}
           title="Delete selected cards from this deck"
@@ -323,14 +277,6 @@
       </fieldset>
       <fieldset class="action-group">
         <legend>Deck</legend>
-        <button 
-          class="action-button"
-          onclick={handleDuplicate}
-          disabled={duplicating}
-          title="Create a copy of this entire deck"
-        >
-          {duplicating ? 'Duplicating...' : 'Duplicate'}
-        </button>
         <button 
           class="action-button danger"
           onclick={handleDelete}
@@ -343,7 +289,7 @@
     </div>
   </div>
 
-  {#if showDeleteConfirm || showDuplicateDialog || showCopyDialog || showDeleteCardsDialog}
+  {#if showDeleteConfirm || showDuplicateDialog || showDeleteCardsDialog}
     <div class="dialog-overlay"></div>
   {/if}
 
@@ -387,82 +333,7 @@
         Cancel
       </button>
     </div>
-  {:else if showCopyDialog}
-    <div class="dialog copy-dialog">
-      <div class="selection-controls">
-        <button 
-          class="small"
-          onclick={selectAll}
-          disabled={selectedCardIds.length === deck.cards.length}
-        >
-          Select All
-        </button>
-        <button 
-          class="small"
-          onclick={selectNone}
-          disabled={selectedCardIds.length === 0}
-        >
-          Clear Selection
-        </button>
-        <span class="selection-count">
-          {selectedCardIds.length} of {deck.cards.length} selected
-        </span>
-      </div>
-      <div class="card-list">
-        {#each deck.cards as card (card.id)}
-          <label class="card-item">
-            <input
-              type="checkbox"
-              checked={selectedCardIds.includes(card.id)}
-              onchange={() => toggleCard(card.id)}
-            >
-            <span class="card-info">
-              <strong>{card.name}</strong>
-              <span class="card-role">{card.role}</span>
-            </span>
-          </label>
-        {/each}
-      </div>
-      <div class="copy-options">
-        <select bind:value={targetDeckId}>
-          <option value="new">Create New Deck</option>
-          {#each availableDecks as targetDeck}
-            <option value={targetDeck.id}>{targetDeck.meta.name}</option>
-          {/each}
-        </select>
-        {#if targetDeckId === 'new'}
-          <input
-            type="text"
-            bind:value={newDeckName}
-            placeholder="Enter new deck name"
-          >
-        {/if}
-        <div class="dialog-buttons">
-          <button 
-            class="primary"
-            onclick={handleCopyCards}
-            disabled={selectedCardIds.length === 0 || (targetDeckId === 'new' && !newDeckName?.trim())}
-          >
-            {copying ? 'Copying...' : `Copy ${selectedCardIds.length} Card${selectedCardIds.length !== 1 ? 's' : ''}`}
-          </button>
-          <button 
-            class="secondary"
-            onclick={() => {
-              showCopyDialog = false;
-              selectedCardIds = [];
-              targetDeckId = 'new';  // Reset target
-              newDeckName = '';      // Reset name
-            }}
-            disabled={copying}
-          >
-            Cancel
-          </button>
-        </div>
-      </div>
-    </div>
-  {/if}
-
-  {#if showDeleteCardsDialog}
+  {:else if showDeleteCardsDialog}
     <div class="dialog copy-dialog">
       <div class="selection-controls">
         <button 
@@ -946,4 +817,22 @@
     opacity: 0.5;
     cursor: not-allowed;
   }
+
+.new-deck-input {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin: 0.75rem 0;
+}
+
+.hint {
+  font-size: calc(var(--ui-font-size) * 0.9);
+  color: var(--ui-muted);
+  margin-left: 0.5rem;
+}
+
+optgroup {
+  font-weight: 600;
+  color: var(--ui-muted);
+}
 </style> 

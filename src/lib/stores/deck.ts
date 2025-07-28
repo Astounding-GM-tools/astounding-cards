@@ -104,15 +104,42 @@ function handleDbError(request: IDBRequest): Error {
 }
 
 // Save deck to IndexedDB
-export async function saveDeck(deck: Deck) {
+export async function saveDeck(deck: Deck, allowEmpty = false) {
   if (!browser) return;
 
   // Validate deck
-  const errors = validateDeck(deck);
+  const errors = validateDeck(deck, allowEmpty);
   if (errors.length > 0) {
     validationErrors.set(errors);
     return;
   }
+
+  // Prepare deck for storage by ensuring all data is cloneable
+  const storableDeck = {
+    ...deck,
+    cards: await Promise.all(deck.cards.map(async card => {
+      // Handle image data
+      const { imageBlob, ...cardWithoutBlob } = card;
+      
+      // If we have a blob, convert it to base64 for storage
+      let image = cardWithoutBlob.image;
+      if (imageBlob) {
+        const reader = new FileReader();
+        const base64 = await new Promise<string>((resolve) => {
+          reader.onload = () => resolve(reader.result as string);
+          reader.readAsDataURL(imageBlob);
+        });
+        image = base64;
+      }
+
+      return {
+        ...cardWithoutBlob,
+        image,
+        traits: [...cardWithoutBlob.traits],
+        secrets: [...cardWithoutBlob.secrets]
+      };
+    }))
+  };
 
   try {
     const db = await openDB();
@@ -120,8 +147,8 @@ export async function saveDeck(deck: Deck) {
       const transaction = db.transaction(['decks'], 'readwrite');
       const store = transaction.objectStore('decks');
 
-      console.log('Saving deck to IndexedDB:', deck);
-      const request = store.put(deck);
+      console.log('Saving deck to IndexedDB:', storableDeck);
+      const request = store.put(storableDeck);
 
       request.onerror = () => {
         console.error('Failed to save deck:', request.error);
@@ -165,6 +192,17 @@ export async function loadDeck(id: string): Promise<Deck | null> {
       request.onsuccess = () => {
         const deck = request.result as Deck;
         if (deck) {
+          // Convert base64 images back to blobs
+          deck.cards = deck.cards.map(card => {
+            if (card.image?.startsWith('data:')) {
+              // Convert base64 to blob
+              const base64Response = fetch(card.image);
+              base64Response.then(res => res.blob()).then(blob => {
+                card.imageBlob = blob;
+              });
+            }
+            return card;
+          });
           validationErrors.set([]);
         }
         resolve(deck);
@@ -324,10 +362,12 @@ export function addCard() {
     name: "New Card",
     role: "Role",
     image: null,
+    imageBlob: undefined,
     traits: ["Notable: Add a distinctive feature", "Property: Add a key characteristic"],
     secrets: ["Hidden: Add a concealed aspect", "Plot: Add a story element"],
     desc: "Add a description",
-    type: "character"
+    type: "character",
+    stat: { type: "character", value: "" }
   };
 
   const newDeck = {
@@ -401,8 +441,19 @@ export async function switchDeck(id: string) {
     if (current) await saveDeck(current);
   }
   
-  // Load new deck
-  await loadDeck(id);
+  // Load new deck and update lastEdited
+  const deck = await loadDeck(id);
+  if (deck) {
+    const updatedDeck = {
+      ...deck,
+      meta: {
+        ...deck.meta,
+        lastEdited: Date.now()
+      }
+    };
+    await saveDeck(updatedDeck);
+    currentDeck.set(updatedDeck);
+  }
 }
 
 // Auto-save when dirty
@@ -490,11 +541,17 @@ export async function copyCardsTo(
   const targetDeck = await loadDeck(targetDeckId);
   if (!targetDeck) throw new StorageError('Target deck not found');
 
-  // Copy characters with new IDs
-  const copiedChars = cards.map(char => ({
-    ...char,
-    id: crypto.randomUUID()
-  }));
+  // Copy cards with new IDs, ensuring clean data
+  const copiedCards = cards.map(card => {
+    // Remove non-cloneable data and ensure arrays are plain arrays
+    const { imageBlob, ...cardWithoutBlob } = card;
+    return {
+      ...cardWithoutBlob,
+      id: crypto.randomUUID(),
+      traits: [...cardWithoutBlob.traits],
+      secrets: [...cardWithoutBlob.secrets]
+    };
+  });
 
   // Add to target deck
   const updatedDeck = {
@@ -503,7 +560,7 @@ export async function copyCardsTo(
       ...targetDeck.meta,
       lastEdited: Date.now()
     },
-    cards: [...targetDeck.cards, ...copiedChars]
+    cards: [...targetDeck.cards, ...copiedCards]
   };
 
   await saveDeck(updatedDeck);
