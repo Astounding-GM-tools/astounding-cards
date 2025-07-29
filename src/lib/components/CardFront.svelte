@@ -34,9 +34,9 @@
   });
 
   // Elements
-  let nameElement: HTMLHeadingElement;
-  let roleElement: HTMLDivElement;
-  let traitsElement: HTMLDivElement;
+  let nameElement = $state<HTMLHeadingElement | null>(null);
+  let roleElement = $state<HTMLDivElement | null>(null);
+  let traitsElement = $state<HTMLDivElement | null>(null);
   let showImageSelector = $state(false);
 
   // Image selector
@@ -87,21 +87,21 @@
 
   // Handle name/role/traits updates
   function handleNameBlur() {
-    const newName = nameElement.innerText.trim();
+    const newName = nameElement?.innerText.trim();
     if (newName !== card.name && props.onchange) {
       props.onchange({ name: newName });
     }
   }
 
   function handleRoleBlur() {
-    const newRole = roleElement.innerText.trim();
+    const newRole = roleElement?.innerText.trim();
     if (newRole !== card.role && props.onchange) {
       props.onchange({ role: newRole });
     }
   }
 
   function handleTraitsBlur() {
-    const newTraits = parseTraits(traitsElement.innerHTML);
+    const newTraits = parseTraits(traitsElement?.innerHTML || '');
     if (JSON.stringify(newTraits) !== JSON.stringify(card.traits) && props.onchange) {
       props.onchange({ traits: newTraits });
     }
@@ -388,21 +388,6 @@
     border-top: calc(var(--divider-width) * var(--show-dividers)) var(--divider-style) var(--theme-primary);
   }
 
-  .traits legend {
-    font-size: 1em;
-    color: var(--theme-text);
-    font-weight: normal;
-    padding: 0 1mm;
-    font-family: var(--theme-body-font);
-  }
-
-  /* For larger containers (tarot size), use theme's UI size */
-  @container (min-width: 63mm) {
-    .traits legend {
-      font-size: var(--ui-font-size);
-    }
-  }
-
   .traits-content {
     white-space: pre-wrap;
     line-height: var(--body-line-height, 1.4);
@@ -482,28 +467,6 @@
 
   .image-input :global(.image-selector) {
     margin-bottom: 0.5rem;
-  }
-
-  .image-input input {
-    border: 1px solid var(--theme-primary);
-    padding: 1mm;
-    border-radius: 0.5mm;
-    min-width: 30mm;
-    font-size: var(--ui-font-size);
-  }
-
-  .image-input button {
-    border: none;
-    background: var(--theme-primary);
-    color: var(--content-box-bg);
-    padding: 1mm 2mm;
-    border-radius: 0.5mm;
-    cursor: pointer;
-    font-size: var(--ui-font-size);
-  }
-
-  .image-input button:hover {
-    opacity: 0.8;
   }
 
   @container (height < 20mm) {

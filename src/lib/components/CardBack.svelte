@@ -22,9 +22,9 @@
   const activeTheme = $derived(theme ?? $currentDeck?.meta?.theme ?? 'classic');
 
   // Elements
-  let nameElement: HTMLHeadingElement;
-  let descElement: HTMLParagraphElement;
-  let secretsElement: HTMLDivElement;
+  let nameElement = $state<HTMLHeadingElement | null>(null);
+  let descElement = $state<HTMLParagraphElement | null>(null);
+  let secretsElement = $state<HTMLDivElement | null>(null);
 
   // Update DOM elements when card changes
   $effect(() => {
@@ -278,21 +278,6 @@
     min-height: 40mm;
     margin: 0;
     font-family: var(--theme-body-font);
-  }
-
-  .secrets legend {
-    font-size: 1em;
-    color: var(--theme-text);
-    font-weight: normal;
-    padding: 0 1mm;
-    font-family: var(--theme-body-font);
-  }
-
-  /* For larger containers (tarot size), use theme's UI size */
-  @container (min-width: 63mm) {
-    .secrets legend {
-      font-size: var(--ui-font-size);
-    }
   }
 
   .secrets-content {

@@ -294,22 +294,33 @@
   {/if}
 
   {#if showDeleteConfirm}
-    <div class="dialog">
-      <span>Delete this deck?</span>
+    <div class="dialog-overlay">
       <button 
-        class="danger" 
-        onclick={handleDelete}
-        disabled={deleting}
-      >
-        {deleting ? 'Deleting...' : 'Confirm Delete'}
-      </button>
-      <button 
-        class="secondary"
+        class="overlay-button"
         onclick={() => showDeleteConfirm = false}
-        disabled={deleting}
-      >
-        Cancel
-      </button>
+        onkeydown={(e) => e.key === 'Escape' && (showDeleteConfirm = false)}
+        aria-label="Close delete confirmation"
+      ></button>
+    </div>
+    <div class="dialog" role="alertdialog" aria-labelledby="delete-dialog-title" aria-describedby="delete-dialog-desc">
+      <h2 id="delete-dialog-title">Delete Confirmation</h2>
+      <p id="delete-dialog-desc">Delete this deck?</p>
+      <div class="dialog-buttons">
+        <button 
+          class="danger" 
+          onclick={handleDelete}
+          disabled={deleting}
+        >
+          {deleting ? 'Deleting...' : 'Confirm Delete'}
+        </button>
+        <button 
+          class="secondary"
+          onclick={() => showDeleteConfirm = false}
+          disabled={deleting}
+        >
+          Cancel
+        </button>
+      </div>
     </div>
   {:else if showDuplicateDialog}
     <div class="dialog">
@@ -334,12 +345,30 @@
       </button>
     </div>
   {:else if showDeleteCardsDialog}
-    <div class="dialog copy-dialog">
+    <div class="dialog-overlay">
+      <button 
+        class="overlay-button"
+        onclick={() => {
+          showDeleteCardsDialog = false;
+          selectedCardIds = [];
+        }}
+        onkeydown={(e) => {
+          if (e.key === 'Escape') {
+            showDeleteCardsDialog = false;
+            selectedCardIds = [];
+          }
+        }}
+        aria-label="Close card deletion dialog"
+      ></button>
+    </div>
+    <div class="dialog copy-dialog" role="dialog" aria-labelledby="delete-cards-title">
+      <h2 id="delete-cards-title">Delete Cards</h2>
       <div class="selection-controls">
         <button 
           class="small"
           onclick={selectAll}
           disabled={selectedCardIds.length === deck.cards.length}
+          aria-label="Select all cards"
         >
           Select All
         </button>
@@ -347,26 +376,33 @@
           class="small"
           onclick={selectNone}
           disabled={selectedCardIds.length === 0}
+          aria-label="Clear selection"
         >
           Clear Selection
         </button>
-        <span class="selection-count">
+        <span class="selection-count" role="status" aria-live="polite">
           {selectedCardIds.length} of {deck.cards.length} selected
         </span>
       </div>
-      <div class="card-list">
+      <div class="card-list" role="listbox" aria-multiselectable="true">
         {#each deck.cards as card (card.id)}
-          <label class="card-item">
+          <button 
+            class="card-item" 
+            role="option" 
+            aria-selected={selectedCardIds.includes(card.id)}
+            onclick={() => toggleCard(card.id)}
+          >
             <input
               type="checkbox"
               checked={selectedCardIds.includes(card.id)}
               onchange={() => toggleCard(card.id)}
-            >
+              aria-label="Select {card.name}"
+            />
             <span class="card-info">
               <strong>{card.name}</strong>
               <span class="card-role">{card.role}</span>
             </span>
-          </label>
+          </button>
         {/each}
       </div>
       <div class="dialog-buttons">
@@ -392,9 +428,16 @@
   {/if}
 
   {#if showThemeSelect}
-    <div class="dialog-overlay" onclick={() => showThemeSelect = false}></div>
-    <div class="dialog theme-dialog">
-      <h2>Select Theme</h2>
+    <div class="dialog-overlay">
+      <button 
+        class="overlay-button"
+        onclick={() => showThemeSelect = false}
+        onkeydown={(e) => e.key === 'Escape' && (showThemeSelect = false)}
+        aria-label="Close theme selector"
+      ></button>
+    </div>
+    <div class="dialog theme-dialog" role="dialog" aria-labelledby="theme-dialog-title">
+      <h2 id="theme-dialog-title">Select Theme</h2>
       <ThemeSelect
         selectedTheme={deck.meta.theme}
         onSelect={handleThemeChange}
@@ -509,11 +552,6 @@
     color: var(--ui-muted);
   }
 
-  .info-line.theme {
-    font-size: var(--ui-font-size);
-    color: var(--ui-muted);
-  }
-
   .actions {
     width: 55%;
     min-width: 280px;
@@ -597,61 +635,9 @@
     font-family: var(--ui-font-family);
   }
 
-  /* Remove the theme-button styles since we no longer need them */
-
-  .theme-select {
-    font-size: var(--ui-font-size);
-    font-family: var(--ui-font-family);
-    padding: 0.25rem;
-    border: 1px solid var(--ui-border);
-    border-radius: 3px;
-    background: var(--ui-bg);
-    color: var(--ui-text);
-    max-width: none;  /* Remove width limit to show full descriptions */
-    width: auto;
-    min-width: 8em;
-  }
-
-  .theme-select:hover {
-    border-color: var(--button-primary-bg);
-  }
-
-  .theme-select:focus {
-    outline: none;
-    border-color: var(--button-primary-bg);
-    box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.1);
-  }
-
-  /* Dialog styles */
-  .dialog {
-    font-family: var(--ui-font-family);
-  }
-
-  .dialog input {
-    font-family: var(--ui-font-family);
-    font-size: var(--ui-font-size);
-  }
-
-  .selection-count {
-    font-family: var(--ui-font-family);
-    font-size: var(--ui-font-size);
-    color: var(--ui-muted);
-  }
-
-  .character-info {
-    font-family: var(--ui-font-family);
-    font-size: var(--ui-font-size);
-  }
-
-  .character-role {
-    font-family: var(--ui-font-family);
+  .info-line.date {
     font-size: calc(var(--ui-font-size) * 0.9);
     color: var(--ui-muted);
-  }
-
-  .date-label {
-    display: inline-block;
-    width: 4.5em;
   }
 
   .card-list {
@@ -711,35 +697,11 @@
     margin-left: auto;
   }
 
-  .copy-options {
-    margin-top: 1rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-
-  .copy-options select,
-  .copy-options input {
-    padding: 0.5rem;
-    border: 1px solid var(--ui-border);
-    border-radius: 4px;
-    font-family: var(--ui-font-family);
-    font-size: var(--ui-font-size);
-  }
-
   .dialog-buttons {
     display: flex;
     gap: 0.5rem;
     justify-content: flex-end;
     margin-top: 0.5rem;
-  }
-
-  .theme-description {
-    font-size: calc(var(--ui-font-size) * 0.9);
-    color: var(--ui-muted);
-    margin-left: 0.5rem;
-    flex: 1;
-    white-space: normal;
   }
 
   .theme-dialog {
@@ -799,40 +761,19 @@
     background: var(--button-hover-bg);
   }
 
-  .dialog-buttons button.primary {
-    background: var(--button-primary-bg);
-    color: var(--button-primary-text);
-    border-color: var(--button-primary-bg);
-  }
-
-  .dialog-buttons button.primary:hover {
-    background: var(--button-primary-hover);
-  }
-
-  .dialog-buttons button.secondary:hover {
-    border-color: var(--button-primary-bg);
-  }
-
   .dialog-buttons button:disabled {
     opacity: 0.5;
     cursor: not-allowed;
   }
 
-.new-deck-input {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  margin: 0.75rem 0;
-}
-
-.hint {
-  font-size: calc(var(--ui-font-size) * 0.9);
-  color: var(--ui-muted);
-  margin-left: 0.5rem;
-}
-
-optgroup {
-  font-weight: 600;
-  color: var(--ui-muted);
+.overlay-button {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
 }
 </style> 

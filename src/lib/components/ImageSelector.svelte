@@ -23,7 +23,7 @@
   let error = $state('');
   let loading = $state(false);
   let previewUrl = $state('');
-  let lastProcessedBlob: Blob | undefined;
+  let lastProcessedBlob = $state<Blob | undefined>(undefined);
 
   // Focus save button when image is loaded
   $effect(() => {

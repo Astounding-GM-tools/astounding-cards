@@ -24,8 +24,8 @@
 
   // Get cards that need migration
   const needsMigration = $derived(props.cards.filter((card: Card) => {
-    if (!card.portrait) return false;
-    return card.portrait === 'blob:local' || (!card.portrait.includes(':') && !card.portrait.startsWith('http'));
+    if (!card.image) return false;
+    return card.image === 'blob:local' || (!card.image.includes(':') && !card.image.startsWith('http'));
   }));
 
   // Auto-select first card when dialog opens or when list changes
@@ -82,16 +82,16 @@
 
     try {
       await props.onUpdate(selectedCard.id, {
-        portrait: urlInput,
-        portraitBlob: optimizedBlob || undefined
+        image: urlInput,
+        imageBlob: optimizedBlob || undefined
       });
 
       toasts.success('Image updated successfully');
 
       // Get fresh list of remaining cards after update
       const remainingCards = props.cards.filter((card: Card) => {
-        if (!card.portrait) return false;
-        return card.portrait === 'blob:local' || (!card.portrait.includes(':') && !card.portrait.startsWith('http'));
+        if (!card.image) return false;
+        return card.image === 'blob:local' || (!card.image.includes(':') && !card.image.startsWith('http'));
       });
 
       if (remainingCards.length > 0) {
@@ -147,7 +147,7 @@
                 onclick={() => selectedCard = card}
               >
                 {card.name}
-                {#if card.portrait === 'blob:local'}
+                {#if card.image === 'blob:local'}
                   <span class="tag">Local File</span>
                 {:else}
                   <span class="tag">No URL</span>
@@ -167,9 +167,9 @@
                 <div class="image-container">
                   <div 
                     class="image-preview"
-                    style:background-image={selectedCard.portraitBlob ? `url(${URL.createObjectURL(selectedCard.portraitBlob)})` : 'none'}
+                    style:background-image={selectedCard.imageBlob ? `url(${URL.createObjectURL(selectedCard.imageBlob)})` : 'none'}
                   >
-                    {#if !selectedCard.portraitBlob}
+                    {#if !selectedCard.imageBlob}
                       <span class="no-image">No image set</span>
                     {/if}
                   </div>
@@ -435,8 +435,7 @@
     font-style: italic;
   }
 
-  .primary-button,
-  .secondary-button {
+  .primary-button {
     padding: 0.5rem 1rem;
     border-radius: 4px;
     cursor: pointer;
@@ -444,9 +443,6 @@
     font-family: var(--ui-font-family);
     min-height: 36px;
     transition: all 0.2s ease;
-  }
-
-  .primary-button {
     background: var(--button-bg);
     color: var(--button-text);
     border: 1px solid var(--button-border);
@@ -456,18 +452,7 @@
     background: var(--button-hover-bg);
   }
 
-  .secondary-button {
-    background: transparent;
-    color: var(--ui-text);
-    border: 1px solid var(--ui-border);
-  }
-
-  .secondary-button:hover {
-    background: var(--ui-hover-bg);
-  }
-
-  .primary-button:disabled,
-  .secondary-button:disabled {
+  .primary-button:disabled {
     opacity: 0.5;
     cursor: not-allowed;
   }

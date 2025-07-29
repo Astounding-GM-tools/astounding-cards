@@ -236,9 +236,16 @@
 </div>
 
 {#if showThemeSelect}
-  <div class="dialog-overlay" onclick={() => showThemeSelect = false}></div>
-  <div class="dialog theme-dialog">
-    <h2>Select Theme</h2>
+  <div class="dialog-overlay">
+    <button 
+      class="overlay-button"
+      onclick={() => showThemeSelect = false}
+      onkeydown={(e) => e.key === 'Escape' && (showThemeSelect = false)}
+      aria-label="Close theme selector"
+    ></button>
+  </div>
+  <div class="dialog theme-dialog" role="dialog" aria-labelledby="theme-dialog-title">
+    <h2 id="theme-dialog-title">Select Theme</h2>
     <ThemeSelect
       selectedTheme={$currentDeck?.meta.theme}
       onSelect={handleThemeChange}
@@ -255,15 +262,21 @@
 {/if}
 
 {#if showNewDeckDialog}
-  <div class="dialog-overlay" onclick={() => showNewDeckDialog = false}></div>
-  <div class="dialog">
-    <h2>Create New Deck</h2>
+  <div class="dialog-overlay">
+    <button 
+      class="overlay-button"
+      onclick={() => showNewDeckDialog = false}
+      onkeydown={(e) => e.key === 'Escape' && (showNewDeckDialog = false)}
+      aria-label="Close new deck dialog"
+    ></button>
+  </div>
+  <div class="dialog" role="dialog" aria-labelledby="new-deck-dialog-title">
+    <h2 id="new-deck-dialog-title">Create New Deck</h2>
     <input
       type="text"
       bind:value={newDeckName}
       placeholder="Enter deck name"
       onkeydown={handleKeydown}
-      autofocus
     >
     <div class="dialog-buttons">
       <button 
@@ -439,6 +452,17 @@
     inset: 0;
     background: rgba(0, 0, 0, 0.5);
     z-index: 100;
+  }
+
+  .overlay-button {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
   }
 
   .dialog {
