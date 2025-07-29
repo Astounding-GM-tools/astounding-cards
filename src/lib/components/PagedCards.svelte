@@ -4,7 +4,7 @@
   import CardFront from './CardFront.svelte';
   import CardBack from './CardBack.svelte';
   import { currentDeck } from '$lib/stores/deck';
-
+  
   const { showCropMarks = false, onCardChange } = $props<{
     showCropMarks?: boolean;
     onCardChange: (id: string, updates: Partial<Card>) => Promise<void>;
@@ -26,8 +26,8 @@
   );
 </script>
 
-<!-- Front pages -->
-{#each pages as page}
+{#each pages as page, pageIndex}
+  <!-- Front page -->
   <div class="page" data-size={cardSize}>
     <div class="card-grid">
       {#each page as card (card.id)}
@@ -42,10 +42,8 @@
       {/each}
     </div>
   </div>
-{/each}
 
-<!-- Back pages -->
-{#each pages as page}
+  <!-- Back page - immediately after its corresponding front page -->
   <div class="page" data-size={cardSize}>
     <div class="card-grid back-grid">
       {#each page as card (card.id)}
