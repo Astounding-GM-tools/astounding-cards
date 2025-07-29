@@ -23,7 +23,6 @@
 
   // Elements
   let nameElement: HTMLHeadingElement;
-  let roleElement: HTMLDivElement;
   let descElement: HTMLParagraphElement;
   let secretsElement: HTMLDivElement;
 
@@ -31,9 +30,6 @@
   $effect(() => {
     if (nameElement && nameElement.innerText !== card.name) {
       nameElement.innerText = card.name;
-    }
-    if (roleElement && roleElement.innerText !== card.role) {
-      roleElement.innerText = card.role;
     }
     if (descElement && descElement.innerText !== card.desc) {
       descElement.innerText = card.desc;
@@ -44,13 +40,6 @@
     const newName = nameElement?.innerText.trim();
     if (newName && newName !== card.name && props.onchange) {
       props.onchange({ name: newName });
-    }
-  }
-
-  function handleRoleBlur() {
-    const newRole = roleElement.innerText.trim();
-    if (newRole !== card.role && props.onchange) {
-      props.onchange({ role: newRole });
     }
   }
 
@@ -117,12 +106,6 @@
         onblur={handleNameBlur}
         bind:this={nameElement}
       >{card.name}</h2>
-      <div 
-        class="role" 
-        contenteditable={editable}
-        onblur={handleRoleBlur}
-        bind:this={roleElement}
-      >{card.role}</div>
       <p 
         contenteditable={editable}
         class="desc"
@@ -272,24 +255,8 @@
     }
   }
 
-  .role {
-    margin: var(--content-gap) 0 0;
-    font-size: 0.6em;  /* Half of the original 1.2em */
-    font-weight: var(--theme-title-weight);
-    font-family: var(--theme-title-font);
-    text-align: var(--title-text-align);
-    line-height: var(--title-line-height, 1.2);
-  }
-
-  /* For larger containers (tarot size), use theme's role size */
-  @container (min-width: 63mm) {
-    .role {
-      font-size: calc(var(--role-font-size) * 0.5);  /* Half of the theme role size */
-    }
-  }
-
   .desc {
-    margin: var(--content-gap) 0;
+    margin: var(--content-gap) 0 auto;
     font-size: 1em;
     line-height: var(--body-line-height, 1.4);
     text-align: var(--desc-text-align);
