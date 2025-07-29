@@ -16,7 +16,6 @@
   import ShareDialog from '$lib/components/ShareDialog.svelte';
 
   // State
-  let showCropMarks = $state(true);
   let showPrintInstructions = $state(false);
   let showShareDialog = $state(false);
   let showImageMigrationDialog = $state(false);
@@ -64,23 +63,30 @@
   }
 
   // Load decks when component mounts
-  $effect.root(async () => {
-    try {
+  $effect.root(() => {
+    // Use a regular function inside the effect
+    function loadDecks() {
       loading = true;
-      const allDecks = await listDecks();
-      if (allDecks.length > 0) {
-        // Sort by lastEdited and get most recent
-        const sortedDecks = allDecks.sort((a, b) => b.meta.lastEdited - a.meta.lastEdited);
-        const mostRecent = sortedDecks[0];
-        await setCurrentDeck(mostRecent);
-      } else {
-        await setCurrentDeck(null);
-      }
-    } catch (err) {
-      error = err instanceof Error ? err.message : String(err);
-    } finally {
-      loading = false;
+      listDecks()
+        .then(allDecks => {
+          if (allDecks.length > 0) {
+            // Sort by lastEdited and get most recent
+            const sortedDecks = allDecks.sort((a, b) => b.meta.lastEdited - a.meta.lastEdited);
+            const mostRecent = sortedDecks[0];
+            return setCurrentDeck(mostRecent);
+          } else {
+            return setCurrentDeck(null);
+          }
+        })
+        .catch(err => {
+          error = err instanceof Error ? err.message : String(err);
+        })
+        .finally(() => {
+          loading = false;
+        });
     }
+    
+    loadDecks();
   });
 
   async function handleCardUpdate(id: string, updates: Partial<Card>) {
@@ -143,24 +149,15 @@
         >
           ➕ Add Card
         </button>
-      {/if}
-      <div class="right-controls">
-        <label class="crop-marks">
-          <input 
-            type="checkbox" 
-            id="show-crop-marks"
-            name="show-crop-marks"
-            bind:checked={showCropMarks}
+        <div class="right-controls">
+          <button 
+            class="action-button info"
+            onclick={() => printDialog?.showModal()}
           >
-          Show crop marks
-        </label>
-        <button 
-          class="action-button info"
-          onclick={() => printDialog?.showModal()}
-        >
-          🖨️ Print Instructions
-        </button>
-      </div>
+            🖨️ Print Instructions
+          </button>
+        </div>
+      {/if}
     </div>
   </div>
 
@@ -206,7 +203,6 @@
       <div class="message">No cards in deck</div>
     {:else}
       <PagedCards 
-        showCropMarks={showCropMarks}
         onCardChange={handleCardUpdate}
       />
     {/if}
@@ -244,13 +240,6 @@
     gap: 0.75rem;
     align-items: center;
     flex-wrap: wrap;
-  }
-
-  .right-controls {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-left: auto;
   }
 
   /* Action buttons */
@@ -357,22 +346,6 @@
   /* Error message */
   .message.error {
     color: var(--toast-error);
-  }
-
-  /* Checkbox styling */
-  .crop-marks {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: var(--ui-font-size);
-    font-family: var(--ui-font-family);
-    color: var(--ui-text);
-  }
-
-  .crop-marks input[type="checkbox"] {
-    width: 1rem;
-    height: 1rem;
-    margin: 0;
   }
 
   /* Print styles */

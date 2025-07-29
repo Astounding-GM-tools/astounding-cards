@@ -1,11 +1,11 @@
 <script lang="ts">
   import { currentDeck } from '$lib/stores/deck';
 
-  let { showCropMarks = false, children, theme = undefined } = $props();
+  let { children, theme = undefined } = $props();
   const activeTheme = $derived(theme ?? $currentDeck?.meta?.theme ?? 'classic');
 </script>
 
-<div class="card" class:crop-marks={showCropMarks}>
+<div class="card crop-marks">
   <div class="theme-scope" data-theme={activeTheme}>
     {@render children()}
   </div>

@@ -12,14 +12,12 @@
     theme?: string;
     onchange?: (updates: Partial<Card>) => Promise<void>;
     preview?: boolean;
-    showCropMarks?: boolean;
   }>();
 
   // Reactive references
   const card = props.card;  // Direct reference to props
   const theme = props.theme;
   const preview = props.preview ?? false;
-  const showCropMarks = props.showCropMarks ?? false;
   const activeTheme = $derived(theme ?? $currentDeck?.meta?.theme ?? 'classic');
   
   // Track image URL locally
@@ -116,7 +114,7 @@
 </script>
 
 {#if card}
-<CardBase theme={activeTheme} showCropMarks={showCropMarks}>
+<CardBase theme={activeTheme}>
   <div 
     class="card-content"
     class:preview={preview}
