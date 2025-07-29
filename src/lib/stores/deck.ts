@@ -248,21 +248,26 @@ export async function updateCard(id: string, updates: Partial<Card>) {
     return;
   }
 
-  // Create updated card
+  const currentCard = deck.cards[charIndex];
+
+  // Create updated card, carefully merging updates
   const updatedCard = {
-    ...deck.cards[charIndex],
+    ...currentCard,
     ...updates,
-    // Handle image updates:
-    // 1. If we're explicitly setting a new blob, use it
-    // 2. If we're not changing the image, keep the existing blob
-    // 3. If we're changing to a URL/local image or removing the image, clear the blob
+    // Special handling for image updates
     imageBlob: 'imageBlob' in updates 
-      ? updates.imageBlob
-      : updates.image === deck.cards[charIndex].image
-        ? deck.cards[charIndex].imageBlob
-        : undefined,
-    // Always use the provided image value, even if it's null
-    image: 'image' in updates ? (updates.image || null) : deck.cards[charIndex].image
+      ? updates.imageBlob 
+      : currentCard.imageBlob,
+    image: 'image' in updates 
+      ? updates.image 
+      : currentCard.image,
+    // Special handling for stat updates
+    stat: updates.stat !== undefined 
+      ? updates.stat 
+      : currentCard.stat,
+    // Ensure arrays are properly handled
+    traits: updates.traits || currentCard.traits,
+    secrets: updates.secrets || currentCard.secrets
   };
 
   // Ensure we have a plain object for IndexedDB
@@ -287,7 +292,6 @@ export async function updateCard(id: string, updates: Partial<Card>) {
     currentDeck.set(newDeck);
     // Then save to IndexedDB
     await saveDeck(newDeck);
-    toasts.success('Updated card');
   } catch (err) {
     console.error('Failed to save card update:', err);
     toasts.error('Failed to save card update: ' + (err instanceof Error ? err.message : String(err)));

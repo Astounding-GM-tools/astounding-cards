@@ -9,48 +9,37 @@
 
   let dialogElement = $state<HTMLDialogElement | null>(null);
   let isDialogOpen = $state(false);
-  let tempStat = $state<CardStat | undefined>(card.stat);
-  let characterAge = $state(card.stat?.type === 'character' ? card.stat.value : '');
-  let itemPortability = $state<Portability>(card.stat?.type === 'item' ? card.stat.value as Portability : 'light');
-  let locationArea = $state(card.stat?.type === 'location' ? card.stat.value.value : '');
-  let selectedType = $state<'character' | 'item' | 'location' | undefined>(card.stat?.type);
   
-  // Generate unique IDs for this instance
-  const instanceId = crypto.randomUUID();
-  const characterTypeId = `character-type-${instanceId}`;
-  const characterAgeId = `character-age-${instanceId}`;
-  const itemTypeId = `item-type-${instanceId}`;
-  const itemPortabilityId = `item-portability-${instanceId}`;
-  const locationTypeId = `location-type-${instanceId}`;
-  const locationAreaId = `location-area-${instanceId}`;
+  // Form state - separate from the card state
+  let formType = $state<'character' | 'item' | 'location' | undefined>(undefined);
+  let formAge = $state('');
+  let formPortability = $state<Portability>('light');
+  let formArea = $state('');
 
-  function initializeState() {
-    if (card.stat?.type === 'character') {
-      characterAge = card.stat.value;
-      tempStat = { type: 'character', value: characterAge };
-    } else if (card.stat?.type === 'item') {
-      itemPortability = card.stat.value as Portability;
-      tempStat = { type: 'item', value: itemPortability };
-    } else if (card.stat?.type === 'location') {
-      locationArea = card.stat.value.value;
-      tempStat = { 
-        type: 'location', 
-        value: card.stat.value
-      };
-    } else {
-      // Reset state if no stat
-      characterAge = '';
-      itemPortability = 'light';
-      locationArea = '';
-      tempStat = undefined;
-    }
-  }
+  // Local display state for optimistic updates
+  let displayStat = $state<CardStat | undefined>(undefined);
 
+  // Initialize state from props
+  $effect.pre(() => {
+    displayStat = card.stat;
+  });
+
+  // Reset form state when dialog opens
   function openDialog() {
-    initializeState();
+    // Set form type based on card type
+    formType = card.type as 'character' | 'item' | 'location';
+    
+    // Initialize form values from current stat
+    if (card.stat?.type === 'character') {
+      formAge = card.stat.value;
+    } else if (card.stat?.type === 'item') {
+      formPortability = card.stat.value;
+    } else if (card.stat?.type === 'location' && card.stat.value.type === 'soft') {
+      formArea = card.stat.value.value;
+    }
+    
     isDialogOpen = true;
     dialogElement?.showModal();
-    updateTempStat();
   }
 
   function closeDialog() {
@@ -58,59 +47,50 @@
     dialogElement?.close();
   }
 
+  function saveStat() {
+    let statUpdate: CardStat | undefined;
+    
+    if (!formType) {
+      statUpdate = undefined;
+      onchange({ 
+        type: 'character',  // Default to character if no type
+        stat: undefined 
+      });
+    } else {
+      if (formType === 'location') {
+        statUpdate = {
+          type: 'location',
+          value: { type: 'soft', value: formArea }
+        };
+      } else if (formType === 'character') {
+        statUpdate = { type: 'character', value: formAge };
+      } else {
+        statUpdate = { type: 'item', value: formPortability };
+      }
+
+      // Update both type and stat
+      onchange({ 
+        type: formType,
+        stat: statUpdate 
+      });
+    }
+
+    // Update local display immediately
+    displayStat = statUpdate;
+    closeDialog();
+  }
+
   function clearStat() {
+    formType = undefined;
+    displayStat = undefined;
     onchange({ 
-      stat: undefined,
-      image: card.image,
-      imageBlob: card.imageBlob
+      type: 'character',  // Default to character when clearing
+      stat: undefined 
     });
     closeDialog();
   }
 
-  function saveStat() {
-    const updates = { 
-      stat: tempStat,
-      image: card.image,
-      imageBlob: card.imageBlob
-    };
-    onchange(updates);
-    closeDialog();
-  }
-
-  function setCharacter() {
-    if (!characterAge) return;
-    tempStat = { type: 'character', value: characterAge };
-  }
-
-  function setItem() {
-    tempStat = { type: 'item', value: itemPortability };
-  }
-
-  function setLocation() {
-    tempStat = { 
-      type: 'location', 
-      value: { type: 'soft', value: locationArea }
-    };
-  }
-
-  // Keep selectedType in sync with card.stat
-  selectedType = card.stat?.type;
-
-  // Update tempStat when type changes
-  function updateTempStat() {
-    if (selectedType === 'character') {
-      tempStat = { type: 'character', value: characterAge || '' };
-    } else if (selectedType === 'item') {
-      tempStat = { type: 'item', value: itemPortability };
-    } else if (selectedType === 'location') {
-      tempStat = { 
-        type: 'location', 
-        value: { type: 'soft', value: locationArea || '' }
-      };
-    }
-  }
-
-  // Get all unique area names and location cards as derived values
+  // Get all unique area names and location cards
   const areaNames = $derived(
     [...new Set(
       ($currentDeck?.cards || [])
@@ -134,48 +114,38 @@
     return value.value;
   }
 
-  // Check if a location ID exists
-  function locationExists(id: string): boolean {
-    return locationCards.some(c => c.id === id);
-  }
-
   // Handle location input change
   function handleLocationInput(event: Event) {
     const input = event.target as HTMLInputElement;
     const value = input.value;
     
-    // Check if value starts with our location icon
     if (value.startsWith('📍 ')) {
-      // Find location card by name
       const locationCard = locationCards.find(c => `📍 ${c.name}` === value);
       if (locationCard) {
-        tempStat = {
-          type: 'location',
-          value: { type: 'hard', value: locationCard.id }
+        const statUpdate = {
+          type: 'location' as const,
+          value: { type: 'hard' as const, value: locationCard.id }
         };
+        displayStat = statUpdate;
+        onchange({ stat: statUpdate });
       }
-    } else {
-      // Treat as soft link
-      tempStat = {
-        type: 'location',
-        value: { type: 'soft', value }
-      };
     }
+    formArea = value;
   }
 </script>
 
 <!-- Stat Display/Trigger -->
-{#if card.stat}
+{#if displayStat}
   <button 
-    class="stat-display {card.stat.type}"
+    class="stat-display {displayStat.type}"
     onclick={openDialog}
   >
-    {#if card.stat.type === 'character'}
-      Age: {card.stat.value}
-    {:else if card.stat.type === 'item'}
-      {card.stat.value}
-    {:else if card.stat.type === 'location'}
-      {formatLocationDisplay(card.stat.value)}
+    {#if displayStat.type === 'character'}
+      Age: {displayStat.value}
+    {:else if displayStat.type === 'item'}
+      {displayStat.value}
+    {:else if displayStat.type === 'location'}
+      {formatLocationDisplay(displayStat.value)}
     {/if}
   </button>
 {:else}
@@ -194,69 +164,43 @@
   onclose={() => isDialogOpen = false}
 >
   <div class="dialog-content">
-    <h2>Card Type <span style="color: #666; font-size: 0.8em;">
-      (current: {card.stat?.type ?? 'none'}, selected: {selectedType ?? 'none'})
-    </span></h2>
+    <h2>Card Type</h2>
 
     <div class="options-container">
       <!-- Character Option -->
-      <label class="stat-option" for={characterTypeId}>
+      <label class="stat-option">
         <input
           type="radio"
-          id={characterTypeId}
           name="stat-type"
           value="character"
-          checked={card.stat?.type === 'character'}
-          onchange={() => {
-            selectedType = 'character';
-            updateTempStat();
-          }}
-        >
+          checked={card.type === 'character'}
+          bind:group={formType}
+        />
         <div class="stat-details">
           <span class="type-label">Character</span>
           <input
             type="text"
-            id={characterAgeId}
             placeholder="Age"
-            disabled={selectedType !== 'character'}
-            bind:value={characterAge}
-            onfocus={() => {
-              selectedType = 'character';
-              updateTempStat();
-            }}
-            oninput={() => {
-              tempStat = { type: 'character', value: characterAge };
-            }}
-          >
+            disabled={formType !== 'character'}
+            bind:value={formAge}
+          />
         </div>
       </label>
 
       <!-- Item Option -->
-      <label class="stat-option" for={itemTypeId}>
+      <label class="stat-option">
         <input
           type="radio"
-          id={itemTypeId}
           name="stat-type"
           value="item"
-          checked={card.stat?.type === 'item'}
-          onchange={() => {
-            selectedType = 'item';
-            updateTempStat();
-          }}
-        >
+          checked={card.type === 'item'}
+          bind:group={formType}
+        />
         <div class="stat-details">
           <span class="type-label">Item</span>
           <select
-            id={itemPortabilityId}
-            disabled={selectedType !== 'item'}
-            bind:value={itemPortability}
-            onfocus={() => {
-              selectedType = 'item';
-              updateTempStat();
-            }}
-            onchange={() => {
-              tempStat = { type: 'item', value: itemPortability };
-            }}
+            disabled={formType !== 'item'}
+            bind:value={formPortability}
           >
             <option value="negligible">Negligible</option>
             <option value="light">Light</option>
@@ -268,38 +212,24 @@
       </label>
 
       <!-- Location Option -->
-      <label class="stat-option" for={locationTypeId}>
+      <label class="stat-option">
         <input
           type="radio"
-          id={locationTypeId}
           name="stat-type"
           value="location"
-          checked={card.stat?.type === 'location'}
-          onchange={() => {
-            selectedType = 'location';
-            updateTempStat();
-          }}
-        >
+          checked={card.type === 'location'}
+          bind:group={formType}
+        />
         <div class="stat-details">
           <span class="type-label">Location</span>
           <div class="area-input">
             <input
               type="text"
-              id={locationAreaId}
               placeholder="Area"
-              disabled={selectedType !== 'location'}
-              bind:value={locationArea}
-              onfocus={() => {
-                selectedType = 'location';
-                updateTempStat();
-              }}
-              oninput={() => {
-                tempStat = { 
-                  type: 'location', 
-                  value: { type: 'soft', value: locationArea }
-                };
-              }}
-            >
+              disabled={formType !== 'location'}
+              bind:value={formArea}
+              list="area-suggestions"
+            />
             <datalist id="area-suggestions">
               {#each locationCards as loc}
                 <option value={`📍 ${loc.name}`}></option>
@@ -348,7 +278,7 @@
     background: rgba(255, 255, 255, 0.95);
     cursor: pointer;
     color: #666;
-    font-size: 1.6em;
+    font-size: 0.8em;  /* Halved from 1.6em */
   }
 
   .stat-add:hover {
