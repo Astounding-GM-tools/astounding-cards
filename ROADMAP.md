@@ -97,10 +97,28 @@ For consistent theme application:
   - [x] Update image handling terminology
   - [x] Remove backward compatibility exports
   - [x] Update documentation
+- [x] CSS and Theme System Improvements
+  - [x] Standardize font size units (px based on 1rem = 16px)
+  - [x] Fix @property declarations and initial values
+  - [x] Add --desc-font-size variable
+  - [x] Add --body-line-height variable
+  - [x] Fix theme-specific font sizes
+  - [x] Restore base flourish styling
+  - [x] Fix Scriptorum theme font sizes
+  - [x] Fix Type button font size
+  - [x] Fix corner flourish styling
 
 ### Next Steps (Priority Order)
 
-1. **Deck Creation**
+1. **Fix CardStatSelector Component**
+   - Debug why type selection only works for first card
+   - Investigate component mounting/unmounting
+   - Check effect dependency tracking
+   - Verify state initialization timing
+   - Test state reset between cards
+   - Review parent component integration
+
+2. **Deck Creation**
    - Add "Create New Deck" button to deck management
    - Implement proper deck creation flow
    - Handle database operations correctly
@@ -108,13 +126,13 @@ For consistent theme application:
    - Update deck list after creation
    - Switch to new deck automatically
 
-2. **Export Implementation**
+3. **Export Implementation**
    - Implement JSON export with proper image URL handling
    - Add .zip backup export with blob data
    - Add progress tracking for large exports
    - Create restore/import functionality
 
-3. **Deck Merge System**
+4. **Deck Merge System**
    - Create merge detection (same deck ID)
    - Build diff viewer UI
      - Show added/removed/modified characters
@@ -133,13 +151,13 @@ For consistent theme application:
      - Change preview
      - Batch operations
 
-4. **Service Card**
+5. **Service Card**
    - Design the card layout
    - Add QR code generation
    - Implement auto-insertion
    - Make it non-deletable
 
-5. **Documentation**
+6. **Documentation**
    - Write IMAGE_HOSTING.md
    - Update USAGE.md with new features
    - Add examples and screenshots
@@ -148,7 +166,7 @@ For consistent theme application:
      - Show conflict resolution
      - Provide best practices
 
-6. **Polish & Testing**
+7. **Polish & Testing**
    - Test sharing with large decks
    - Test image migration edge cases
    - Test merge scenarios
