@@ -110,13 +110,13 @@ For consistent theme application:
 
 ### Next Steps (Priority Order)
 
-1. **Fix CardStatSelector Component**
-   - Debug why type selection only works for first card
-   - Investigate component mounting/unmounting
-   - Check effect dependency tracking
-   - Verify state initialization timing
-   - Test state reset between cards
-   - Review parent component integration
+1. ✅ **Fix CardStatSelector Component**
+   - [x] Debug why type selection only works for first card
+   - [x] Fix state initialization and persistence
+   - [x] Implement optimistic updates
+   - [x] Fix accessibility issues
+   - [x] Remove conditional crop marks (always show)
+   - [x] Clean up unused CSS selectors
 
 2. **Deck Creation**
    - Add "Create New Deck" button to deck management
@@ -125,6 +125,8 @@ For consistent theme application:
    - Add success/error feedback
    - Update deck list after creation
    - Switch to new deck automatically
+   - Consider adding deck description/notes field
+   - Consider adding deck category/tags
 
 3. **Export Implementation**
    - Implement JSON export with proper image URL handling
@@ -184,6 +186,28 @@ For consistent theme application:
 - Add merge history tracking
 - Support branch/variant management
 - Add collaborative editing features
+
+### Game System Integration
+The type system has been prepared for future game system integration:
+- Deck metadata includes optional `rulesetRef` for linking to game system documentation
+- Cards can include `gameStats` for system-specific attributes (STR, DEX, HP, etc.)
+- Individual cards can override deck theme using `theme` property
+- Decks can be tagged and described for better organization
+
+This groundwork enables future features such as:
+- Game system templates with predefined stats and ranges
+- Automatic calculation of derived stats (e.g., modifiers, saving throws)
+- System-specific card layouts and themes
+- Community-contributed rulesets in JSON format
+- Validation and suggestions based on game system rules
+- Integration with character builder tools
+- Support for multiple game systems in the same deck
+
+The implementation is backward compatible:
+- All new fields are optional
+- Existing decks and shared URLs continue to work
+- Game system features can be added incrementally
+- Users can mix system-specific and generic cards in the same deck
 
 ### 3. Import System
 - [ ] URL Import

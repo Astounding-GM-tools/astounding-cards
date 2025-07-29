@@ -19,6 +19,12 @@ export type CardStat = {
   value: AreaReference;
 };
 
+// Optional ruleset reference for game systems
+export type RulesetRef = {
+  name: string;  // e.g. "D&D 5E", "Pathfinder 2E", etc.
+  url?: string;  // Optional link to ruleset documentation/reference
+};
+
 // Base card type
 export interface Card {
   id: string;
@@ -31,6 +37,8 @@ export interface Card {
   desc: string;
   type: 'character' | 'location' | 'item' | string;
   stat?: CardStat;
+  theme?: string;  // Override deck theme
+  gameStats?: { [key: string]: string | number };  // Flexible game system stats
 }
 
 // Deck type
@@ -42,6 +50,9 @@ export interface Deck {
     cardSize: CardSize;
     lastEdited: number;
     createdAt: number;
+    description?: string;
+    tags?: string[];
+    rulesetRef?: RulesetRef;
   };
   cards: Card[];
 }
@@ -93,6 +104,15 @@ export function validateCard(card: Partial<Card>): ValidationError[] {
     }
   }
 
+  // Optional fields don't need validation unless present
+  if (card.theme !== undefined && typeof card.theme !== 'string') {
+    errors.push({ field: 'theme', message: 'Theme must be a string' });
+  }
+
+  if (card.gameStats !== undefined && typeof card.gameStats !== 'object') {
+    errors.push({ field: 'gameStats', message: 'Game stats must be an object' });
+  }
+
   return errors;
 }
 
@@ -115,6 +135,23 @@ export function validateDeck(deck: Partial<Deck>, allowEmpty = false): Validatio
     errors.push({ field: 'cards', message: 'Cards must be an array' });
   } else if (!allowEmpty && deck.cards.length === 0) {
     errors.push({ field: 'cards', message: 'At least one card is required' });
+  }
+
+  // Optional fields don't need validation unless present
+  if (deck.meta?.description !== undefined && typeof deck.meta.description !== 'string') {
+    errors.push({ field: 'meta.description', message: 'Description must be a string' });
+  }
+
+  if (deck.meta?.tags !== undefined && !Array.isArray(deck.meta.tags)) {
+    errors.push({ field: 'meta.tags', message: 'Tags must be an array' });
+  }
+
+  if (deck.meta?.rulesetRef !== undefined) {
+    if (typeof deck.meta.rulesetRef !== 'object') {
+      errors.push({ field: 'meta.rulesetRef', message: 'Ruleset reference must be an object' });
+    } else if (!deck.meta.rulesetRef.name) {
+      errors.push({ field: 'meta.rulesetRef.name', message: 'Ruleset name is required' });
+    }
   }
 
   // Validate each card
