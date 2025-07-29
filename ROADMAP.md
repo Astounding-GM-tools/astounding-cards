@@ -117,24 +117,46 @@ For consistent theme application:
    - [x] Fix accessibility issues
    - [x] Remove conditional crop marks (always show)
    - [x] Clean up unused CSS selectors
+   - [x] Migrate to new context-based data flow
+   - [x] Fix styling and functionality regressions
 
-2. **Deck Creation**
-   - Add "Create New Deck" button to deck management
-   - Implement proper deck creation flow
-   - Handle database operations correctly
-   - Add success/error feedback
-   - Update deck list after creation
-   - Switch to new deck automatically
-   - Consider adding deck description/notes field
-   - Consider adding deck category/tags
+2. **Testing and Cleanup**
+   - [ ] Fix TypeScript/linting warnings
+   - [ ] Test card title synchronization
+   - [ ] Test card type selection and updates
+   - [ ] Test location linking functionality
+   - [ ] Test deck switching and state persistence
+   - [ ] Test edge cases (empty values, long content)
+   - [ ] Document recent architectural changes
+   - [ ] Update component documentation
 
-3. **Export Implementation**
+3. **Data Sharing Implementation**
+   - [ ] Design sharing protocol
+   - [ ] Implement URL-based sharing
+   - [ ] Handle large deck serialization
+   - [ ] Add progress indicators
+   - [ ] Implement share button/UI
+   - [ ] Add success/error feedback
+   - [ ] Test with various deck sizes
+   - [ ] Document sharing limitations
+
+4. **Deck Creation**
+   - [ ] Add "Create New Deck" button to deck management
+   - [ ] Implement proper deck creation flow
+   - [ ] Handle database operations correctly
+   - [ ] Add success/error feedback
+   - [ ] Update deck list after creation
+   - [ ] Switch to new deck automatically
+   - [ ] Consider adding deck description/notes field
+   - [ ] Consider adding deck category/tags
+
+5. **Export Implementation**
    - Implement JSON export with proper image URL handling
    - Add .zip backup export with blob data
    - Add progress tracking for large exports
    - Create restore/import functionality
 
-4. **Deck Merge System**
+6. **Deck Merge System**
    - Create merge detection (same deck ID)
    - Build diff viewer UI
      - Show added/removed/modified characters
@@ -153,13 +175,13 @@ For consistent theme application:
      - Change preview
      - Batch operations
 
-5. **Service Card**
+7. **Service Card**
    - Design the card layout
    - Add QR code generation
    - Implement auto-insertion
    - Make it non-deletable
 
-6. **Documentation**
+8. **Documentation**
    - Write IMAGE_HOSTING.md
    - Update USAGE.md with new features
    - Add examples and screenshots
@@ -168,7 +190,7 @@ For consistent theme application:
      - Show conflict resolution
      - Provide best practices
 
-7. **Polish & Testing**
+9. **Polish & Testing**
    - Test sharing with large decks
    - Test image migration edge cases
    - Test merge scenarios
