@@ -1,11 +1,8 @@
 <script lang="ts">
   import { currentDeck } from '$lib/stores/deck';
 
-  const props = $props<{
-    theme?: string;
-  }>();
-
-  const theme = props.theme;
+  const props = $props();
+  const theme = props.theme as string | undefined;
   const activeTheme = $derived(theme ?? $currentDeck?.meta?.theme ?? 'classic');
 </script>
 

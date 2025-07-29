@@ -4,12 +4,14 @@
   import { deckToUrl } from '$lib/stores/deck';
   import { toasts } from '$lib/stores/toast';
   import ImageMigrationDialog from './ImageMigrationDialog.svelte';
+  import { getDeckContext } from '$lib/stores/deckContext';
 
-  const props = $props<{
-    deck: Deck;
-    onClose: () => void;
-    onUpdate: (id: string, updates: Partial<Card>) => Promise<void>;
-  }>();
+  const props = $props();
+  const deck = props.deck as Deck;
+  const onClose = props.onClose as () => void;
+
+  // Get deck context
+  const deckContext = getDeckContext();
 
   let dialogElement: HTMLDialogElement;
   let activeTab = $state<'share' | 'backup'>('share');
@@ -38,14 +40,14 @@
 
   // Calculate URL size and check for blobs when deck changes
   $effect(() => {
-    if (props.deck) {
-      urlSize = new TextEncoder().encode(deckToUrl(props.deck)).length;
+    if (deck) {
+      urlSize = new TextEncoder().encode(deckToUrl(deck)).length;
       
       // Count cards with no images separately from those needing migration
-      missingImageCount = props.deck.cards.filter((card: Card) => !card.image).length;
+      missingImageCount = deck.cards.filter((card: Card) => !card.image).length;
       
       // Only count images that need URL migration (local files or blob:local)
-      blobCount = props.deck.cards.filter((card: Card) => {
+      blobCount = deck.cards.filter((card: Card) => {
         if (!card.image) return false; // Don't count missing images here
         return card.image === 'blob:local' || (!card.image.includes(':') && !card.image.startsWith('http'));
       }).length;
@@ -72,7 +74,7 @@
 
   function handleClose() {
     dialogElement?.close();
-    props.onClose();
+    onClose();
   }
 
   async function handleShare(format: 'url' | 'json') {
@@ -83,7 +85,7 @@
 
     if (format === 'url') {
       try {
-        const shareUrl = deckToUrl(props.deck);
+        const shareUrl = deckToUrl(deck);
         await navigator.clipboard.writeText(shareUrl);
         toasts.success('Share URL copied! Send this URL to share your deck.');
       } catch (err) {
@@ -92,12 +94,12 @@
       }
     } else {
       try {
-        const json = JSON.stringify(props.deck, null, 2);
+        const json = JSON.stringify(deck, null, 2);
         const blob = new Blob([json], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `${props.deck.meta.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.json`;
+        a.download = `${deck.meta.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.json`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -118,7 +120,7 @@
 >
   <div class="dialog-content">
     <div class="dialog-header">
-      <h2>Share Deck: {props.deck.meta.name}</h2>
+      <h2>Share Deck: {deck.meta.name}</h2>
       <button 
         class="close-button" 
         onclick={handleClose}
@@ -233,9 +235,13 @@
 
 {#if showMigration}
   <ImageMigrationDialog
-    cards={props.deck.cards}
+    cards={deck.cards}
     onClose={() => showMigration = false}
-    onUpdate={props.onUpdate}
+    onUpdate={async (id: string, updates: Partial<Card>) => {
+      for (const [key, value] of Object.entries(updates)) {
+        await deckContext.updateCard(id, key as keyof Card, value);
+      }
+    }}
   />
 {/if}
 

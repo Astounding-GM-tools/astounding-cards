@@ -1,65 +1,70 @@
+<!-- CardBack.svelte -->
 <script lang="ts">
   import type { Card } from '$lib/types';
   import CardBase from './Card.svelte';
   import { currentDeck } from '$lib/stores/deck';
+  import { getDeckContext } from '$lib/stores/deckContext';
 
-  // Props
+  // Props - only for theme, preview, and editable
   const props = $props<{
     card: Card;
     theme?: string;
-    onchange?: (updates: Partial<Card>) => Promise<void>;
     preview?: boolean;
     editable?: boolean;
   }>();
-
-  // Reactive references
-  const card = props.card;  // Direct reference to props, not state.raw
   const theme = props.theme;
   const preview = props.preview ?? false;
   const editable = props.editable ?? true;
   const activeTheme = $derived(theme ?? $currentDeck?.meta?.theme ?? 'classic');
 
-  // Elements
-  let nameElement = $state<HTMLHeadingElement | null>(null);
-  let descElement = $state<HTMLParagraphElement | null>(null);
-  let secretsElement = $state<HTMLDivElement | null>(null);
+  // Get deck context
+  const deckContext = getDeckContext();
 
-  // Update DOM elements when card changes
-  $effect(() => {
-    if (nameElement && nameElement.innerText !== card.name) {
-      nameElement.innerText = card.name;
-    }
-    if (descElement && descElement.innerText !== card.desc) {
-      descElement.innerText = card.desc;
-    }
-  });
+  // Get card from context
+  const cardId = props.card.id;
+  function getCard(id: string): Card {
+    const found = $currentDeck?.cards.find(c => c.id === id);
+    if (!found) throw new Error('Card not found in deck');
+    return found;
+  }
+  const card = $derived(getCard(cardId));
 
-  function handleNameBlur() {
-    const newName = nameElement?.innerText.trim();
-    if (newName && newName !== card.name && props.onchange) {
-      props.onchange({ name: newName });
+  function handleNameBlur(e: FocusEvent) {
+    if (!editable) return;
+    const newName = (e.target as HTMLElement).textContent?.trim() || '';
+    if (newName !== card.name) {
+      deckContext.updateCard(card.id, 'name', newName);
     }
   }
 
+  // Elements
+  let descElement = $state<HTMLParagraphElement | null>(null);
+  let secretsElement = $state<HTMLDivElement | null>(null);
+
+  // Subscribe to card updates
+  $effect(() => {
+  });
+
   function handleDescBlur() {
+    if (!editable) return;
     const newDesc = descElement?.innerText.trim();
-    if (newDesc && newDesc !== card.desc && props.onchange) {
-      props.onchange({ desc: newDesc });
+    if (newDesc && newDesc !== card.desc) {
+      deckContext.updateCard(card.id, 'desc', newDesc);
     }
   }
 
   function handleSecretsBlur() {
+    if (!editable) return;
     const newSecrets = secretsElement ? parseSecrets(secretsElement.innerHTML) : [];
-    if (JSON.stringify(newSecrets) !== JSON.stringify(card.secrets) && props.onchange) {
-      props.onchange({ secrets: newSecrets });
+    if (JSON.stringify(newSecrets) !== JSON.stringify(card.secrets)) {
+      deckContext.updateCard(card.id, 'secrets', newSecrets);
     }
   }
 
   function addSecret() {
+    if (!editable) return;
     const newSecrets = [...(card.secrets || []), 'Label: Description'];
-    if (props.onchange) {
-      props.onchange({ secrets: newSecrets });
-    }
+    deckContext.updateCard(card.id, 'secrets', newSecrets);
   }
 
   function formatSecrets(secrets: string[]) {
@@ -68,14 +73,13 @@
       if (rest.length > 0) {
         return `<strong class="secret-label">${label.trim()}:</strong> ${rest.join(':').trim()}`;
       }
-      return secret; // If no colon, keep as is
+      return secret;
     }).join('\n') || '';
   }
 
-  // Parse HTML back to plain text for secrets
   function parseSecrets(html: string) {
     return html
-      .replace(/<strong[^>]*>|<\/strong>/g, '')  // Remove strong tags
+      .replace(/<strong[^>]*>|<\/strong>/g, '')
       .split('\n')
       .map(s => s.trim())
       .filter(s => s.length > 0);
@@ -100,9 +104,9 @@
 
       <h2 
         class="title back"
-        contenteditable={editable}
+        contenteditable="true"
+        class:disabled={!editable}
         onblur={handleNameBlur}
-        bind:this={nameElement}
       >{card.name}</h2>
       <p 
         contenteditable={editable}
@@ -337,5 +341,10 @@
     .add-secret {
       display: none;
     }
+  }
+
+  .disabled {
+    pointer-events: none;
+    opacity: 0.7;
   }
 </style> 

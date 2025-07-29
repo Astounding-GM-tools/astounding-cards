@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { currentDeck } from '$lib/stores/deck';
-  import { updateCard, loadDeck, deckFromUrl, addCard, saveDeck, listDecks, setCurrentDeck } from '$lib/stores/deck';
+  import { loadDeck, deckFromUrl, addCard, saveDeck, listDecks, setCurrentDeck } from '$lib/stores/deck';
   import type { Card } from '$lib/types';
   import CardFront from '$lib/components/CardFront.svelte';
   import CardBack from '$lib/components/CardBack.svelte';
@@ -14,6 +14,10 @@
   import PrintInstructions from '$lib/components/PrintInstructions.svelte';
   import { devMode } from '$lib/stores/dev';
   import ShareDialog from '$lib/components/ShareDialog.svelte';
+  import { createDeckContext } from '$lib/stores/deckContext';
+  
+  // Create deck context
+  createDeckContext();
 
   // State
   let showPrintInstructions = $state(false);
@@ -73,7 +77,7 @@
             // Sort by lastEdited and get most recent
             const sortedDecks = allDecks.sort((a, b) => b.meta.lastEdited - a.meta.lastEdited);
             const mostRecent = sortedDecks[0];
-            return setCurrentDeck(mostRecent);
+            return setCurrentDeck(mostRecent.id);
           } else {
             return setCurrentDeck(null);
           }
@@ -88,13 +92,6 @@
     
     loadDecks();
   });
-
-  async function handleCardUpdate(id: string, updates: Partial<Card>) {
-    if (scrollContainer) {
-      lastScrollPosition = scrollContainer.scrollTop;
-    }
-    await updateCard(id, updates);
-  }
 
   // Function to get the corresponding back position for a card
   function getBackPosition(frontPosition: number, totalCards: number): number {
@@ -165,7 +162,7 @@
     <ShareDialog 
       deck={$currentDeck}
       onClose={() => shareDialog = false}
-      onUpdate={handleCardUpdate}
+      onUpdate={() => {}}
     />
   {/if}
 
@@ -202,9 +199,7 @@
     {:else if $currentDeck.cards.length === 0}
       <div class="message">No cards in deck</div>
     {:else}
-      <PagedCards 
-        onCardChange={handleCardUpdate}
-      />
+      <PagedCards />
     {/if}
   </div>
 </div>

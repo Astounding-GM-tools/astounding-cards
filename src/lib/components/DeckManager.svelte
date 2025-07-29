@@ -8,7 +8,8 @@
   import { createEventDispatcher } from 'svelte';
   import { toasts } from '$lib/stores/toast';
 
-  let { deck } = $props<{ deck: Deck }>();
+  const props = $props();
+  let deck = $state(props.deck as Deck);
   
   const dispatch = createEventDispatcher<{
     deckchange: { action: 'update' | 'delete' | 'duplicate' | 'copy' | 'deleteCards', deckId: string };

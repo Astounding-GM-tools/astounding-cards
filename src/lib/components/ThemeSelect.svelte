@@ -3,10 +3,9 @@
   import { baseThemes } from '$lib/themes';
   import CardFront from './CardFront.svelte';
 
-  let { selectedTheme = 'classic', onSelect } = $props<{
-    selectedTheme?: string;
-    onSelect: (themeId: string) => void;
-  }>();
+  const props = $props();
+  const selectedTheme = props.selectedTheme ?? 'classic';
+  const onSelect = props.onSelect as (themeId: string) => void;
 
   const themes = Object.values(baseThemes);
 
@@ -40,8 +39,7 @@
           <CardFront
             card={createPreviewCard(theme)}
             theme={theme.id}
-            showCropMarks={false}
-            onChange={() => {}}
+            preview={true}
           />
         </div>
       </button>

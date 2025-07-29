@@ -1,25 +1,41 @@
 <script lang="ts">
   import type { Card } from '$lib/types';
-  import type { Writable } from 'svelte/store';
   import CardBase from './Card.svelte';
   import CardStatSelector from './CardStatSelector.svelte';
   import { currentDeck } from '$lib/stores/deck';
+  import { getDeckContext } from '$lib/stores/deckContext';
   import ImageSelector from './ImageSelector.svelte';
+  import { debounce } from '$lib/utils/debounce';
 
-  // Props
+  // Props - only for theme and preview
   const props = $props<{
     card: Card;
     theme?: string;
-    onchange?: (updates: Partial<Card>) => Promise<void>;
     preview?: boolean;
   }>();
-
-  // Reactive references
-  const card = props.card;  // Direct reference to props
   const theme = props.theme;
   const preview = props.preview ?? false;
   const activeTheme = $derived(theme ?? $currentDeck?.meta?.theme ?? 'classic');
-  
+
+  // Get deck context
+  const deckContext = getDeckContext();
+
+  // Get card from context
+  const cardId = props.card.id;
+  function getCard(id: string): Card {
+    const found = $currentDeck?.cards.find(c => c.id === id);
+    if (!found) throw new Error('Card not found in deck');
+    return found;
+  }
+  const card = $derived(getCard(cardId));
+
+  function handleNameBlur(e: FocusEvent) {
+    const newName = (e.target as HTMLElement).textContent?.trim() || '';
+    if (newName !== card.name) {
+      deckContext.updateCard(card.id, 'name', newName);
+    }
+  }
+
   // Track image URL locally
   let currentUrl = $state<string | null>(null);
   const backgroundStyle = $derived(currentUrl ? `url('${currentUrl}')` : 'none');
@@ -32,27 +48,55 @@
   });
 
   // Elements
-  let nameElement = $state<HTMLHeadingElement | null>(null);
   let roleElement = $state<HTMLDivElement | null>(null);
   let traitsElement = $state<HTMLDivElement | null>(null);
   let showImageSelector = $state(false);
 
   // Image selector
   async function handleImageSave(blob: Blob | null, previewUrl: string | undefined) {
-    // Update local URL immediately
     currentUrl = previewUrl || null;
-    
-    if (props.onchange) {
-      await props.onchange({ 
-        image: previewUrl || null,
-        imageBlob: blob || undefined
-      });
+    await deckContext.updateCard(card.id, 'image', previewUrl || null);
+    if (blob !== undefined) {
+      await deckContext.updateCard(card.id, 'imageBlob', blob || undefined);
     }
     showImageSelector = false;
   }
 
-  function getBackgroundImage(): string {
-    return currentUrl ? `url('${currentUrl}')` : 'none';
+  function formatTraits(traits: string[]) {
+    return traits?.map(trait => {
+      const [label, ...rest] = trait.split(':');
+      if (rest.length > 0) {
+        return `<strong class="trait-label">${label.trim()}:</strong> ${rest.join(':').trim()}`;
+      }
+      return trait;
+    }).join('\n') || '';
+  }
+
+  function parseTraits(html: string) {
+    return html
+      .replace(/<strong[^>]*>|<\/strong>/g, '')
+      .split('\n')
+      .map(s => s.trim())
+      .filter(s => s.length > 0);
+  }
+
+  function handleRoleBlur() {
+    const newRole = roleElement?.innerText.trim();
+    if (newRole !== card.role) {
+      deckContext.updateCard(card.id, 'role', newRole);
+    }
+  }
+
+  function handleTraitsBlur() {
+    const newTraits = parseTraits(traitsElement?.innerHTML || '');
+    if (JSON.stringify(newTraits) !== JSON.stringify(card.traits)) {
+      deckContext.updateCard(card.id, 'traits', newTraits);
+    }
+  }
+
+  function addTrait() {
+    const newTraits = [...(card.traits || []), 'Label: Description'];
+    deckContext.updateCard(card.id, 'traits', newTraits);
   }
 
   // Cleanup on destroy
@@ -63,54 +107,6 @@
       }
     };
   });
-
-  function formatTraits(traits: string[]) {
-    return traits?.map(trait => {
-      const [label, ...rest] = trait.split(':');
-      if (rest.length > 0) {
-        return `<strong class="trait-label">${label.trim()}:</strong> ${rest.join(':').trim()}`;
-      }
-      return trait; // If no colon, keep as is
-    }).join('\n') || '';
-  }
-
-  // Parse HTML back to plain text for traits
-  function parseTraits(html: string) {
-    return html
-      .replace(/<strong[^>]*>|<\/strong>/g, '')  // Remove strong tags
-      .split('\n')
-      .map(s => s.trim())
-      .filter(s => s.length > 0);
-  }
-
-  // Handle name/role/traits updates
-  function handleNameBlur() {
-    const newName = nameElement?.innerText.trim();
-    if (newName !== card.name && props.onchange) {
-      props.onchange({ name: newName });
-    }
-  }
-
-  function handleRoleBlur() {
-    const newRole = roleElement?.innerText.trim();
-    if (newRole !== card.role && props.onchange) {
-      props.onchange({ role: newRole });
-    }
-  }
-
-  function handleTraitsBlur() {
-    const newTraits = parseTraits(traitsElement?.innerHTML || '');
-    if (JSON.stringify(newTraits) !== JSON.stringify(card.traits) && props.onchange) {
-      props.onchange({ traits: newTraits });
-    }
-  }
-
-  function addTrait() {
-    const newTraits = [...(card.traits || []), 'Label: Description'];
-    if (props.onchange) {
-      props.onchange({ traits: newTraits });
-    }
-  }
 </script>
 
 {#if card}
@@ -155,10 +151,7 @@
 
       <!-- Stat container -->
       <div class="stat-container">
-        <CardStatSelector 
-          card={card} 
-          onchange={props.onchange} 
-        />
+        <CardStatSelector {card} />
       </div>
 
       <!-- Bottom portrait flourishes -->
@@ -186,7 +179,6 @@
         class="title front"
         contenteditable="true" 
         onblur={handleNameBlur}
-        bind:this={nameElement}
       >{card.name}</h2>
       <div 
         class="role" 

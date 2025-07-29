@@ -1,7 +1,9 @@
 <script lang="ts">
   import { currentDeck } from '$lib/stores/deck';
 
-  let { children, theme = undefined } = $props();
+  const props = $props();
+  const children = props.children;
+  const theme = props.theme;
   const activeTheme = $derived(theme ?? $currentDeck?.meta?.theme ?? 'classic');
 </script>
 

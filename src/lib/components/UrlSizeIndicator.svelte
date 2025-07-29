@@ -3,7 +3,8 @@
   import type { Deck } from '$lib/types';
   import { browser } from '$app/environment';
 
-  const { deck } = $props<{ deck: Deck }>();
+  const props = $props();
+  const deck = props.deck as Deck;
   
   const urlSize = $derived(browser ? new TextEncoder().encode(deckToUrl(deck)).length : 0);
   const sizeInKB = $derived((urlSize / 1024).toFixed(1));

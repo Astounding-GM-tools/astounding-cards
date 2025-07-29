@@ -1,4 +1,4 @@
-import { writable, get, derived } from 'svelte/store';
+import { writable, get } from 'svelte/store';
 import { browser } from '$app/environment';
 import type { Card, Deck, CardStat, ValidationError } from '$lib/types';
 import { validateCard, validateDeck } from '$lib/types';
@@ -24,42 +24,11 @@ import { toasts } from './toast';
  * - Manual scroll position management (flickered)
  */
 
-// Internal store for the current deck ID
-const currentDeckId = writable<string | null>(null);
-
-// Store for validation errors
-export const validationErrors = writable<ValidationError[]>([]);
-
 // Store for the current deck
 export const currentDeck = writable<Deck | null>(null);
 
-// Subscribe to currentDeckId changes to load deck from DB
-if (browser) {
-  currentDeckId.subscribe(async id => {
-    if (!id) {
-      currentDeck.set(null);
-      return;
-    }
-
-    try {
-      const deck = await loadDeck(id);
-      if (deck) {
-        currentDeck.set(deck);
-      } else {
-        currentDeck.set(null);
-      }
-    } catch (error) {
-      console.error('Failed to load deck:', error);
-      currentDeck.set(null);
-    }
-  });
-}
-
-// Store for tracking scroll position
-const scrollPosition = writable(0);
-
-// Store for tracking changes that need saving
-const isDirty = writable(false);
+// Store for the current deck ID
+const currentDeckId = writable<string | null>(null);
 
 // IndexedDB setup
 const DB_NAME = 'card-decks';
@@ -73,26 +42,32 @@ class StorageError extends Error {
   }
 }
 
+// Open database and set up subscriptions
 async function openDB(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     if (!browser) {
-      reject(new StorageError('IndexedDB not available (server-side)'));
+      reject(new Error('IndexedDB not available (server-side)'));
       return;
     }
 
     const request = indexedDB.open(DB_NAME, DB_VERSION);
 
-    request.onerror = () => {
-      const error = request.error || new Error('Unknown database error');
-      reject(new StorageError('Failed to open database', error));
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => {
+      const db = request.result;
+
+      // Set up change listener
+      db.onversionchange = () => {
+        db.close();
+        window.location.reload();
+      };
+
+      resolve(db);
     };
-    request.onsuccess = () => resolve(request.result);
 
     request.onupgradeneeded = (event) => {
       const db = (event.target as IDBOpenDBRequest).result;
-      
       if (!db.objectStoreNames.contains('decks')) {
-        console.log('Creating decks store');
         db.createObjectStore('decks', { keyPath: 'id' });
       }
     };
@@ -120,7 +95,7 @@ export async function loadDeck(id: string): Promise<Deck | null> {
       request.onsuccess = () => {
         const deck = request.result as Deck;
         if (deck) {
-          validationErrors.set([]);
+          // validationErrors.set([]); // This line was removed from the new_code, so it's removed here.
         }
         resolve(deck);
       };
@@ -137,7 +112,7 @@ export async function saveDeck(deck: Deck, allowEmpty = false) {
   // Validate deck
   const errors = validateDeck(deck, allowEmpty);
   if (errors.length > 0) {
-    validationErrors.set(errors);
+    // validationErrors.set(errors); // This line was removed from the new_code, so it's removed here.
     return;
   }
 
@@ -160,30 +135,25 @@ export async function saveDeck(deck: Deck, allowEmpty = false) {
       const transaction = db.transaction(['decks'], 'readwrite');
       const store = transaction.objectStore('decks');
 
-      console.log('Saving deck to IndexedDB:', storableDeck);
       const request = store.put(storableDeck);
 
       request.onerror = () => {
-        console.error('Failed to save deck:', request.error);
         reject(request.error);
       };
 
       request.onsuccess = () => {
-        console.log('Successfully saved deck:', deck.id);
         resolve();
       };
 
       transaction.oncomplete = () => {
-        console.log('Transaction completed for deck:', deck.id);
+        resolve();
       };
 
       transaction.onerror = () => {
-        console.error('Transaction failed:', transaction.error);
         reject(transaction.error);
       };
     });
   } catch (err) {
-    console.error('Failed to save deck:', err);
     throw err;
   }
 }
@@ -233,69 +203,91 @@ export async function deleteDeck(id: string) {
   }
 }
 
-// Update a character in the current deck
-export async function updateCard(id: string, updates: Partial<Card>) {
-  const deck = get(currentDeck);
-  if (!deck) {
-    console.error('No current deck');
-    return;
-  }
-
-  // Find character index
-  const charIndex = deck.cards.findIndex(c => c.id === id);
-  if (charIndex === -1) {
-    console.error('Card not found:', id);
-    return;
-  }
-
-  const currentCard = deck.cards[charIndex];
-
-  // Create updated card, carefully merging updates
-  const updatedCard = {
-    ...currentCard,
-    ...updates,
-    // Special handling for image updates
-    imageBlob: 'imageBlob' in updates 
-      ? updates.imageBlob 
-      : currentCard.imageBlob,
-    image: 'image' in updates 
-      ? updates.image 
-      : currentCard.image,
-    // Special handling for stat updates
-    stat: updates.stat !== undefined 
-      ? updates.stat 
-      : currentCard.stat,
-    // Ensure arrays are properly handled
-    traits: updates.traits || currentCard.traits,
-    secrets: updates.secrets || currentCard.secrets
-  };
-
-  // Ensure we have a plain object for IndexedDB
-  const newDeck = {
-    ...deck,
-    meta: {
-      ...deck.meta,
-      lastEdited: Date.now()
-    },
-    cards: deck.cards.map((c, i) => i === charIndex ? updatedCard : c)
-  };
-
-  // Validate the updated card
-  const errors = validateCard(updatedCard);
-  if (errors.length > 0) {
-    validationErrors.set(errors);
-    return;
-  }
-
+// Function to update a card property
+export async function updateCardProperty(
+  deckId: string,
+  cardId: string,
+  property: keyof Card,
+  value: any
+): Promise<void> {
   try {
-    // Update in-memory store first for immediate UI update
-    currentDeck.set(newDeck);
-    // Then save to IndexedDB
-    await saveDeck(newDeck);
-  } catch (err) {
-    console.error('Failed to save card update:', err);
-    toasts.error('Failed to save card update: ' + (err instanceof Error ? err.message : String(err)));
+    const db = await openDB();
+    const tx = db.transaction('decks', 'readwrite');
+    const store = tx.objectStore('decks');
+
+    // Get current deck
+    const deck = await new Promise<Deck>((resolve, reject) => {
+      const request = store.get(deckId);
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve(request.result);
+    });
+
+    if (!deck) throw new Error('Deck not found');
+
+    // Update the card
+    const cardIndex = deck.cards.findIndex(c => c.id === cardId);
+    if (cardIndex === -1) throw new Error('Card not found');
+
+    const updatedCard = {
+      ...deck.cards[cardIndex],
+      [property]: value
+    };
+
+    deck.cards[cardIndex] = updatedCard;
+    deck.meta.lastEdited = Date.now();
+
+    // Save back to IndexedDB
+    const saveRequest = store.put(deck);
+    await new Promise((resolve, reject) => {
+      saveRequest.onerror = () => reject(saveRequest.error);
+      saveRequest.onsuccess = () => {
+        resolve(undefined);
+      }
+    });
+
+    // Update store immediately for optimistic UI
+    currentDeck.set(deck);
+
+  } catch (error) {
+    toasts.error('Failed to update card: ' + (error instanceof Error ? error.message : String(error)));
+    throw error;
   }
+}
+
+// Subscribe to currentDeckId changes
+if (browser) {
+  currentDeckId.subscribe(async id => {
+    if (!id) {
+      currentDeck.set(null);
+      return;
+    }
+
+    try {
+      const db = await openDB();
+      const tx = db.transaction('decks', 'readonly');
+      const store = tx.objectStore('decks');
+      const request = store.get(id);
+
+      request.onerror = () => {
+        currentDeck.set(null);
+      };
+
+      request.onsuccess = () => {
+        const deck = request.result;
+        if (deck) {
+          currentDeck.set(deck);
+        } else {
+          currentDeck.set(null);
+        }
+      };
+    } catch (error) {
+      currentDeck.set(null);
+    }
+  });
+
+  // Subscribe to currentDeck changes
+  currentDeck.subscribe(deck => {
+  });
 }
 
 // Add new card to current deck
@@ -309,10 +301,10 @@ export function addCard() {
   // Check URL size before adding
   const currentSize = new TextEncoder().encode(deckToUrl(deck)).length;
   if (currentSize > 30000) { // Leave some margin below Chrome's limit
-    validationErrors.set([{ 
-      field: 'deck', 
-      message: 'URL size limit approaching. Consider creating a new deck.' 
-    }]);
+    // validationErrors.set([{ 
+    //   field: 'deck', 
+    //   message: 'URL size limit approaching. Consider creating a new deck.' 
+    // }]); // This line was removed from the new_code, so it's removed here.
     return;
   }
 
@@ -380,27 +372,20 @@ export function deckFromUrl(url: URL): Deck | null {
     // Validate the decoded deck
     const errors = validateDeck(deck);
     if (errors.length > 0) {
-      validationErrors.set(errors);
+      // validationErrors.set(errors); // This line was removed from the new_code, so it's removed here.
       return null;
     }
     
-    validationErrors.set([]);
+    // validationErrors.set([]); // This line was removed from the new_code, so it's removed here.
     return deck;
   } catch (error) {
-    validationErrors.set([{ field: 'url', message: 'Invalid deck data in URL' }]);
+    // validationErrors.set([{ field: 'url', message: 'Invalid deck data in URL' }]); // This line was removed from the new_code, so it's removed here.
     return null;
   }
 }
 
 // Add deck switching functionality
 export async function switchDeck(id: string) {
-  // Save current deck if dirty
-  const currentDirty = get(isDirty);
-  if (currentDirty) {
-    const current = get(currentDeck);
-    if (current) await saveDeck(current);
-  }
-  
   // Load new deck and update lastEdited
   const deck = await loadDeck(id);
   if (deck) {
@@ -415,43 +400,6 @@ export async function switchDeck(id: string) {
     currentDeck.set(updatedDeck);
   }
 }
-
-// Auto-save when dirty
-if (browser) {
-  let saveTimeout: ReturnType<typeof setTimeout>;
-  let currentSaveSubscription: (() => void) | null = null;
-  
-  isDirty.subscribe(dirty => {
-    if (dirty) {
-      // Clear any existing timeout and subscription
-      clearTimeout(saveTimeout);
-      if (currentSaveSubscription) {
-        currentSaveSubscription();
-        currentSaveSubscription = null;
-      }
-
-      // Set new timeout for auto-save
-      saveTimeout = setTimeout(() => {
-        currentSaveSubscription = currentDeck.subscribe(deck => {
-          if (deck) {
-            saveDeck(deck).catch(error => {
-              console.error('Auto-save failed:', error);
-              // Only set validation errors if it's not a storage error
-              if (!(error instanceof StorageError)) {
-                validationErrors.set([{ field: 'save', message: 'Failed to save changes' }]);
-              }
-            });
-          }
-          // Clean up subscription after save attempt
-          if (currentSaveSubscription) {
-            currentSaveSubscription();
-            currentSaveSubscription = null;
-          }
-        });
-      }, SAVE_DEBOUNCE);
-    }
-  });
-} 
 
 // Duplicate an existing deck
 export async function duplicateDeck(deck: Deck, newName?: string): Promise<Deck> {
@@ -527,13 +475,9 @@ export async function copyCardsTo(
   return updatedDeck;
 } 
 
-// Set current deck
-export function setCurrentDeck(deck: Deck | null) {
-  if (deck) {
-    currentDeckId.set(deck.id);
-  } else {
-    currentDeckId.set(null);
-  }
+// Export function to set current deck
+export function setCurrentDeck(id: string | null) {
+  currentDeckId.set(id);
 } 
 
 // Development helper to clear database
@@ -550,7 +494,6 @@ export async function clearDatabase() {
         reject(new StorageError('Failed to clear database', error));
       };
       request.onsuccess = () => {
-        console.log('Database cleared successfully');
         resolve();
       };
     });
@@ -609,7 +552,6 @@ export async function populateWithSampleData() {
     };
 
     await saveDeck(sampleDeck);
-    console.log('Database populated with sample data');
     return sampleDeck;
   } catch (error) {
     throw new StorageError('Failed to populate database', error instanceof Error ? error : undefined);

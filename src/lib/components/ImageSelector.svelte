@@ -8,13 +8,11 @@
   import type { CardSize } from '$lib/types';
   import { fade } from 'svelte/transition';
 
-  const props = $props<{
-    cardSize?: CardSize;
-    onSave?: (blob: Blob | null, sourceUrl?: string) => void;
-    onClose?: () => void;
-    hasExistingImage?: boolean;
-  }>();
-  const cardSize = props.cardSize ?? 'tarot';
+  const props = $props();
+  const cardSize = (props.cardSize ?? 'tarot') as CardSize;
+  const onSave = props.onSave as ((blob: Blob | null, sourceUrl?: string) => void) | undefined;
+  const onClose = props.onClose as (() => void) | undefined;
+  const hasExistingImage = props.hasExistingImage as boolean | undefined;
   
   let fileInput: HTMLInputElement;
   let urlInput: HTMLInputElement;
@@ -87,10 +85,10 @@
   }
 
   async function handleSave() {
-    if (props.onSave) {
+    if (onSave) {
       try {
         loading = true;
-        await props.onSave(lastProcessedBlob || null, previewUrl || undefined);
+        await onSave(lastProcessedBlob || null, previewUrl || undefined);
       } catch (e) {
         error = e instanceof Error ? e.message : 'Failed to save image';
       } finally {
@@ -100,11 +98,11 @@
   }
 
   async function handleUnset() {
-    if (props.onSave) {
+    if (onSave) {
       try {
         loading = true;
-        await props.onSave(null, undefined);
-        if (props.onClose) props.onClose();
+        await onSave(null, undefined);
+        if (onClose) onClose();
       } catch (e) {
         error = e instanceof Error ? e.message : 'Failed to unset image';
       } finally {
@@ -114,14 +112,14 @@
   }
 
   function handleClose() {
-    if (props.onClose) props.onClose();
+    if (onClose) onClose();
   }
 
   // Cleanup preview URL when component is destroyed
   $effect(() => {
     return () => {
       // Only revoke if we didn't pass this URL to the parent
-      if (previewUrl && !props.onSave) {
+      if (previewUrl && !onSave) {
         URL.revokeObjectURL(previewUrl);
       }
     };
@@ -205,7 +203,7 @@
         </div>
 
         <div class="dialog-buttons">
-          {#if props.hasExistingImage}
+          {#if hasExistingImage}
             <button 
               class="unset-btn" 
               onclick={handleUnset}

@@ -1,11 +1,16 @@
+<!-- CardStatSelector.svelte -->
 <script lang="ts">
   import type { CardStat, Portability, Card } from '$lib/types';
   import { currentDeck } from '$lib/stores/deck';
+  import { getDeckContext } from '$lib/stores/deckContext';
   
-  const { card, onchange } = $props<{
+  const props = $props<{
     card: Card;
-    onchange: (updates: Partial<Card>) => void;
   }>();
+  const card = props.card;
+
+  // Get deck context
+  const deckContext = getDeckContext();
 
   let dialogElement = $state<HTMLDialogElement | null>(null);
   let isDialogOpen = $state(false);
@@ -52,10 +57,8 @@
     
     if (!formType) {
       statUpdate = undefined;
-      onchange({ 
-        type: 'character',  // Default to character if no type
-        stat: undefined 
-      });
+      deckContext.updateCard(card.id, 'type', 'character');  // Default to character if no type
+      deckContext.updateCard(card.id, 'stat', undefined);
     } else {
       if (formType === 'location') {
         statUpdate = {
@@ -69,10 +72,8 @@
       }
 
       // Update both type and stat
-      onchange({ 
-        type: formType,
-        stat: statUpdate 
-      });
+      deckContext.updateCard(card.id, 'type', formType);
+      deckContext.updateCard(card.id, 'stat', statUpdate);
     }
 
     // Update local display immediately
@@ -83,10 +84,8 @@
   function clearStat() {
     formType = undefined;
     displayStat = undefined;
-    onchange({ 
-      type: 'character',  // Default to character when clearing
-      stat: undefined 
-    });
+    deckContext.updateCard(card.id, 'type', 'character');  // Default to character when clearing
+    deckContext.updateCard(card.id, 'stat', undefined);
     closeDialog();
   }
 
@@ -127,7 +126,7 @@
           value: { type: 'hard' as const, value: locationCard.id }
         };
         displayStat = statUpdate;
-        onchange({ stat: statUpdate });
+        deckContext.updateCard(card.id, 'stat', statUpdate);
       }
     }
     formArea = value;

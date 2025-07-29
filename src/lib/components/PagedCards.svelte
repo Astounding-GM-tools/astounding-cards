@@ -5,58 +5,60 @@
   import CardBack from './CardBack.svelte';
   import { currentDeck } from '$lib/stores/deck';
   
-  const { onCardChange } = $props<{
-    onCardChange?: (id: string, updates: Partial<Card>) => Promise<void>;
-  }>();
-
   // Use $derived for pure computations
   const cardSize = $derived($currentDeck?.meta.cardSize || 'poker');
   const cardsPerPage = $derived(cardSize === 'poker' ? 9 : 4);
 
-  // Create pages array using $derived
-  const pages = $derived(
-    Array(Math.ceil(($currentDeck?.cards.length || 0) / cardsPerPage))
-      .fill(null)
-      .map((_, i) => {
-        const start = i * cardsPerPage;
-        return $currentDeck?.cards.slice(start, start + cardsPerPage) || [];
-      })
-      .filter(page => page.length > 0)
-  );
+  interface Page {
+    index: number;
+    cards: Card[];
+  }
+
+  const pages = $derived.by(() => {
+    if (!$currentDeck) return [] as Page[];
+    const cards = $currentDeck.cards;
+    const pageCount = Math.ceil(cards.length / cardsPerPage);
+    return Array(pageCount).fill(null).map((_, i) => ({
+      index: i,
+      cards: cards.slice(i * cardsPerPage, (i + 1) * cardsPerPage)
+    }));
+  });
 </script>
 
-{#each pages as page, pageIndex}
-  <!-- Front page -->
-  <div class="page" data-size={cardSize}>
-    <div class="card-grid">
-      {#each page as card (card.id)}
-        <div class="card-wrapper">
-          <CardFront 
-            card={card}
-            onchange={(updates: Partial<Card>) => onCardChange?.(card.id, updates)}
-            theme={$currentDeck?.meta.theme}
-          />
+{#if $currentDeck}
+  {#each pages as page (page.index)}
+    {#if page.cards.length > 0}
+      <!-- Front page -->
+      <div class="page" data-size={cardSize}>
+        <div class="card-grid">
+          {#each page.cards as card (card.id)}
+            <div class="card-wrapper">
+              <CardFront 
+                {card}
+                theme={$currentDeck.meta.theme}
+              />
+            </div>
+          {/each}
         </div>
-      {/each}
-    </div>
-  </div>
+      </div>
 
-  <!-- Back page - immediately after its corresponding front page -->
-  <div class="page" data-size={cardSize}>
-    <div class="card-grid back-grid">
-      {#each page as card (card.id)}
-        <div class="card-wrapper">
-          <CardBack 
-            card={card}
-            onchange={(updates: Partial<Card>) => onCardChange?.(card.id, updates)}
-            theme={$currentDeck?.meta.theme}
-            editable={true}
-          />
+      <!-- Back page - immediately after its corresponding front page -->
+      <div class="page" data-size={cardSize}>
+        <div class="card-grid back-grid">
+          {#each page.cards as card (card.id)}
+            <div class="card-wrapper">
+              <CardBack 
+                {card}
+                theme={$currentDeck.meta.theme}
+                editable={true}
+              />
+            </div>
+          {/each}
         </div>
-      {/each}
-    </div>
-  </div>
-{/each}
+      </div>
+    {/if}
+  {/each}
+{/if}
 
 <style>
   /* A4 page setup for preview */
