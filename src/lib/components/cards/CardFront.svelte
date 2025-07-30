@@ -43,8 +43,38 @@
     }
   }
 
-  // Simple image URL - use card.image directly
-  const backgroundImageValue = $derived(card.image ? `url('${card.image}')` : 'none');
+  // Image URL management - recreate blob URLs from stored blobs
+  let currentImageUrl = $state<string | null>(null);
+  
+  // Effect to manage image URL based on card data
+  $effect(() => {
+    // Clean up previous URL if it was a blob URL
+    if (currentImageUrl && currentImageUrl.startsWith('blob:')) {
+      revokeBlobUrl(currentImageUrl);
+    }
+    
+    // Set new URL
+    if (card.imageBlob) {
+      // Create blob URL from stored blob
+      currentImageUrl = createBlobUrl(card.imageBlob);
+    } else if (card.image) {
+      // Use external URL directly
+      currentImageUrl = card.image;
+    } else {
+      currentImageUrl = null;
+    }
+  });
+  
+  // Clean up on destroy
+  $effect(() => {
+    return () => {
+      if (currentImageUrl && currentImageUrl.startsWith('blob:')) {
+        revokeBlobUrl(currentImageUrl);
+      }
+    };
+  });
+  
+  const backgroundImageValue = $derived(currentImageUrl ? `url('${currentImageUrl}')` : 'none');
 
   // Elements
   let roleElement = $state<HTMLDivElement | null>(null);
@@ -53,21 +83,25 @@
 
   // Image selector
   async function handleImageSave(blob: Blob | null, sourceUrl: string | undefined) {
-    let imageUrl = null;
-    
-    if (blob) {
-      // Create blob URL for the processed image
-      imageUrl = createBlobUrl(blob);
-    } else if (sourceUrl) {
-      // Use the source URL for external images
-      imageUrl = sourceUrl;
+    try {
+      if (blob) {
+        // For blob images, store the blob and DON'T store a blob URL
+        await deckContext.updateCard(card.id, 'imageBlob', blob);
+        await deckContext.updateCard(card.id, 'image', null); // Clear any external URL
+      } else if (sourceUrl) {
+        // For external URLs, store the URL and clear any blob
+        await deckContext.updateCard(card.id, 'image', sourceUrl);
+        await deckContext.updateCard(card.id, 'imageBlob', null);
+      } else {
+        // Clear both
+        await deckContext.updateCard(card.id, 'image', null);
+        await deckContext.updateCard(card.id, 'imageBlob', null);
+      }
+      showImageSelector = false;
+    } catch (error) {
+      console.error('Failed to save image:', error);
+      throw error; // Re-throw so ImageSelector can handle it
     }
-    
-    await deckContext.updateCard(card.id, 'image', imageUrl);
-    if (blob !== undefined) {
-      await deckContext.updateCard(card.id, 'imageBlob', blob || undefined);
-    }
-    showImageSelector = false;
   }
 
 
@@ -116,9 +150,9 @@
         <button 
           class="change-portrait" 
           onclick={() => showImageSelector = true}
-          title={card.image ? "Change image" : "Add image"}
+          title={currentImageUrl ? "Change image" : "Add image"}
         >
-          {card.image ? "Change image" : "Add image"}
+          {currentImageUrl ? "Change image" : "Add image"}
         </button>
 
         {#if showImageSelector}
@@ -126,7 +160,7 @@
             <ImageSelector 
               onSave={handleImageSave}
               onClose={() => showImageSelector = false}
-              hasExistingImage={!!card.image}
+              hasExistingImage={!!currentImageUrl}
             />
           </div>
         {/if}
