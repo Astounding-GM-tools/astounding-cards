@@ -65,25 +65,39 @@
     }
   }
 
-  // Load decks when currentDeckId changes
+  // Load deck when currentDeckId changes
+  let loadingDeckId = $state<string | null>(null);
+  
   $effect(() => {
     const id = $currentDeckId;
-    if (id) {
+    
+    // Prevent infinite loops by tracking what we're loading
+    if (id && id !== loadingDeckId) {
+      loadingDeckId = id;
+      
       getDeck(id).then(deck => {
-        if (deck) {
-          currentDeck.set(deck);
-        } else {
-          // Deck not found, clear the ID
-          currentDeckId.set(null);
-          toasts.error('Deck not found');
+        // Only update if this is still the deck we want to load
+        if ($currentDeckId === id) {
+          if (deck) {
+            currentDeck.set(deck);
+          } else {
+            // Deck not found, clear the ID
+            currentDeck.set(null);
+            toasts.error('Deck not found');
+          }
         }
+        loadingDeckId = null;
       }).catch(err => {
         console.error('Error loading deck:', err);
-        toasts.error('Failed to load deck: ' + err.message);
-        currentDeckId.set(null);
+        if ($currentDeckId === id) {
+          currentDeck.set(null);
+          toasts.error('Failed to load deck: ' + err.message);
+        }
+        loadingDeckId = null;
       });
-    } else {
+    } else if (!id) {
       currentDeck.set(null);
+      loadingDeckId = null;
     }
   });
   
