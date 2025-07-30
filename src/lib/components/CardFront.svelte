@@ -6,6 +6,8 @@
   import { getDeckContext } from '$lib/stores/deckContext';
   import ImageSelector from './ImageSelector.svelte';
   import { debounce } from '$lib/utils/debounce';
+  import { formatTraits, parseTraits, addTrait } from '$lib/utils/card-utils';
+  import { ImageUrlManager } from '$lib/utils/image-handler';
 
   // Props - only for theme and preview
   const props = $props<{
@@ -36,15 +38,13 @@
     }
   }
 
-  // Track image URL locally
-  let currentUrl = $state<string | null>(null);
-  const backgroundStyle = $derived(currentUrl ? `url('${currentUrl}')` : 'none');
+  // Image URL management
+  let imageManager = $state(new ImageUrlManager());
+  const backgroundStyle = $derived(imageManager.url ? `url('${imageManager.url}')` : 'none');
 
-  // Create blob URL from imageBlob when component loads
+  // Update image manager when card changes
   $effect(() => {
-    if (card.imageBlob && !currentUrl) {
-      currentUrl = URL.createObjectURL(card.imageBlob);
-    }
+    imageManager.updateBlob(card.imageBlob);
   });
 
   // Elements
@@ -54,7 +54,6 @@
 
   // Image selector
   async function handleImageSave(blob: Blob | null, previewUrl: string | undefined) {
-    currentUrl = previewUrl || null;
     await deckContext.updateCard(card.id, 'image', previewUrl || null);
     if (blob !== undefined) {
       await deckContext.updateCard(card.id, 'imageBlob', blob || undefined);
@@ -62,23 +61,6 @@
     showImageSelector = false;
   }
 
-  function formatTraits(traits: string[]) {
-    return traits?.map(trait => {
-      const [label, ...rest] = trait.split(':');
-      if (rest.length > 0) {
-        return `<strong class="trait-label">${label.trim()}:</strong> ${rest.join(':').trim()}`;
-      }
-      return trait;
-    }).join('\n') || '';
-  }
-
-  function parseTraits(html: string) {
-    return html
-      .replace(/<strong[^>]*>|<\/strong>/g, '')
-      .split('\n')
-      .map(s => s.trim())
-      .filter(s => s.length > 0);
-  }
 
   function handleRoleBlur() {
     const newRole = roleElement?.innerText.trim();
@@ -94,17 +76,15 @@
     }
   }
 
-  function addTrait() {
-    const newTraits = [...(card.traits || []), 'Label: Description'];
+  function handleAddTrait() {
+    const newTraits = addTrait(card.traits);
     deckContext.updateCard(card.id, 'traits', newTraits);
   }
 
   // Cleanup on destroy
   $effect.root(() => {
     return () => {
-      if (currentUrl) {
-        URL.revokeObjectURL(currentUrl);
-      }
+      imageManager.destroy();
     };
   });
 </script>
@@ -195,7 +175,7 @@
         >{@html formatTraits(card.traits)}</div>
         <button 
           class="add-trait"
-          onclick={addTrait}
+          onclick={handleAddTrait}
         >
           Add Trait
         </button>

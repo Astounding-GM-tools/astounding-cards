@@ -4,6 +4,7 @@
   import CardBase from './Card.svelte';
   import { currentDeck } from '$lib/stores/deck';
   import { getDeckContext } from '$lib/stores/deckContext';
+  import { formatSecrets, parseSecrets, addSecret } from '$lib/utils/card-utils';
 
   // Props - only for theme, preview, and editable
   const props = $props<{
@@ -61,29 +62,12 @@
     }
   }
 
-  function addSecret() {
+  function handleAddSecret() {
     if (!editable) return;
-    const newSecrets = [...(card.secrets || []), 'Label: Description'];
+    const newSecrets = addSecret(card.secrets);
     deckContext.updateCard(card.id, 'secrets', newSecrets);
   }
 
-  function formatSecrets(secrets: string[]) {
-    return secrets?.map(secret => {
-      const [label, ...rest] = secret.split(':');
-      if (rest.length > 0) {
-        return `<strong class="secret-label">${label.trim()}:</strong> ${rest.join(':').trim()}`;
-      }
-      return secret;
-    }).join('\n') || '';
-  }
-
-  function parseSecrets(html: string) {
-    return html
-      .replace(/<strong[^>]*>|<\/strong>/g, '')
-      .split('\n')
-      .map(s => s.trim())
-      .filter(s => s.length > 0);
-  }
 </script>
 
 {#if card}
@@ -124,7 +108,7 @@
         {#if editable}
           <button 
             class="add-secret"
-            onclick={addSecret}
+            onclick={handleAddSecret}
           >
             Add Secret
           </button>

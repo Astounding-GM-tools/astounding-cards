@@ -7,6 +7,7 @@
   import { processImage } from '$lib/utils/image';
   import type { CardSize } from '$lib/types';
   import { fade } from 'svelte/transition';
+  import { ImageUrlManager } from '$lib/utils/image-handler';
 
   const props = $props();
   const cardSize = (props.cardSize ?? 'tarot') as CardSize;
@@ -20,8 +21,9 @@
   let urlValue = $state('');
   let error = $state('');
   let loading = $state(false);
-  let previewUrl = $state('');
   let lastProcessedBlob = $state<Blob | undefined>(undefined);
+  let imageManager = $state(new ImageUrlManager());
+  const previewUrl = $derived(imageManager.url);
 
   // Focus save button when image is loaded
   $effect(() => {
@@ -41,13 +43,10 @@
       // Process the image
       const processed = await processImage(file, cardSize);
       lastProcessedBlob = processed.blob;
-      
-      // Create preview URL
-      if (previewUrl) URL.revokeObjectURL(previewUrl);
-      previewUrl = URL.createObjectURL(processed.blob);
+      imageManager.updateBlob(processed.blob);
     } catch (e) {
       error = e instanceof Error ? e.message : 'Failed to process image';
-      previewUrl = '';
+      imageManager.updateBlob(null);
       lastProcessedBlob = undefined;
     } finally {
       loading = false;
@@ -71,13 +70,10 @@
       // Process the image
       const processed = await processImage(file, cardSize);
       lastProcessedBlob = processed.blob;
-      
-      // Create preview URL
-      if (previewUrl) URL.revokeObjectURL(previewUrl);
-      previewUrl = URL.createObjectURL(processed.blob);
+      imageManager.updateBlob(processed.blob);
     } catch (e) {
       error = e instanceof Error ? e.message : 'Failed to load image';
-      previewUrl = '';
+      imageManager.updateBlob(null);
       lastProcessedBlob = undefined;
     } finally {
       loading = false;
@@ -118,10 +114,7 @@
   // Cleanup preview URL when component is destroyed
   $effect(() => {
     return () => {
-      // Only revoke if we didn't pass this URL to the parent
-      if (previewUrl && !onSave) {
-        URL.revokeObjectURL(previewUrl);
-      }
+      imageManager.destroy();
     };
   });
 </script>
