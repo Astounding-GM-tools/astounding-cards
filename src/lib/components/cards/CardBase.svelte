@@ -1,14 +1,15 @@
 <script lang="ts">
   import { currentDeck } from '$lib/stores/deck';
 
-  const props = $props();
-  const theme = props.theme as string | undefined;
+  const { children, theme }: { children: any, theme?: string } = $props();
   const activeTheme = $derived(theme ?? $currentDeck?.meta?.theme ?? 'classic');
 </script>
 
+{#key activeTheme}
 <div class="card-base" data-theme={activeTheme}>
-  <slot></slot>
+  {@render children()}
 </div>
+{/key}
 
 <style>
   .card-base {

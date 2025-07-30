@@ -84,7 +84,8 @@
     if (onSave) {
       try {
         loading = true;
-        await onSave(lastProcessedBlob || null, previewUrl || undefined);
+        // Pass the blob and let the parent handle URL conversion
+        await onSave(lastProcessedBlob || null, urlValue || undefined);
       } catch (e) {
         error = e instanceof Error ? e.message : 'Failed to save image';
       } finally {
