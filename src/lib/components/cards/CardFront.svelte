@@ -45,11 +45,23 @@
 
   // Image URL management
   let imageManager = $state(new ImageUrlManager());
-  const backgroundStyle = $derived(imageManager.url ? `url('${imageManager.url}')` : 'none');
-
+  
   // Update image manager when card changes
   $effect(() => {
     imageManager.updateBlob(card.imageBlob);
+  });
+  
+  // Determine which image to use - blob URL takes priority over regular URL
+  const backgroundStyle = $derived(() => {
+    const blobUrl = imageManager.url;
+    const regularUrl = card.image;
+    
+    if (blobUrl) {
+      return `url('${blobUrl}')`;
+    } else if (regularUrl) {
+      return `url('${regularUrl}')`;
+    }
+    return 'none';
   });
 
   // Elements
