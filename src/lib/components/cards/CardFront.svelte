@@ -25,8 +25,13 @@
   // Get card from context
   const cardId = props.card.id;
   function getCard(id: string): Card {
+    if (preview) {
+      return props.card;
+    }
     const found = $currentDeck?.cards.find(c => c.id === id);
-    if (!found) throw new Error('Card not found in deck');
+    if (!found) {
+      return props.card; 
+    }
     return found;
   }
   const card = $derived(getCard(cardId));
