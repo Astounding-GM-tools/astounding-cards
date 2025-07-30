@@ -65,13 +65,23 @@
     }
   }
 
-  // Load decks when component mounts
+  // Load decks when currentDeckId changes
   $effect(() => {
     const id = $currentDeckId;
     if (id) {
       getDeck(id).then(deck => {
-        currentDeck.set(deck);
-      }).catch(err => toasts.error(err.message));
+        if (deck) {
+          currentDeck.set(deck);
+        } else {
+          // Deck not found, clear the ID
+          currentDeckId.set(null);
+          toasts.error('Deck not found');
+        }
+      }).catch(err => {
+        console.error('Error loading deck:', err);
+        toasts.error('Failed to load deck: ' + err.message);
+        currentDeckId.set(null);
+      });
     } else {
       currentDeck.set(null);
     }
