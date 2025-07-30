@@ -63,6 +63,8 @@
     }
     return 'none';
   });
+  
+  const backgroundImageValue = $derived(backgroundStyle);
 
   // Elements
   let roleElement = $state<HTMLDivElement | null>(null);
@@ -111,7 +113,7 @@
   <div 
     class="card-content"
     class:preview={preview}
-    style:background-image={backgroundStyle}
+    style:background-image={backgroundImageValue}
   >
     <!-- Top portrait flourishes -->
     <svg class="flourish portrait-flourish top-left" viewBox="0 0 100 100">
