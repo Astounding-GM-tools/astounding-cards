@@ -45,23 +45,32 @@
 
   // Image URL management - recreate blob URLs from stored blobs
   let currentImageUrl = $state<string | null>(null);
+  let lastImageBlob = $state<Blob | null>(null);
+  let lastImageUrl = $state<string | null>(null);
   
-  // Effect to manage image URL based on card data
+  // Effect to manage image URL based on card data - only update when data actually changes
   $effect(() => {
-    // Clean up previous URL if it was a blob URL
-    if (currentImageUrl && currentImageUrl.startsWith('blob:')) {
-      revokeBlobUrl(currentImageUrl);
-    }
-    
-    // Set new URL
-    if (card.imageBlob) {
-      // Create blob URL from stored blob
-      currentImageUrl = createBlobUrl(card.imageBlob);
-    } else if (card.image) {
-      // Use external URL directly
-      currentImageUrl = card.image;
-    } else {
-      currentImageUrl = null;
+    // Only update if the actual data has changed
+    if (card.imageBlob !== lastImageBlob || card.image !== lastImageUrl) {
+      // Clean up previous URL if it was a blob URL
+      if (currentImageUrl && currentImageUrl.startsWith('blob:')) {
+        revokeBlobUrl(currentImageUrl);
+      }
+      
+      // Set new URL
+      if (card.imageBlob) {
+        // Create blob URL from stored blob
+        currentImageUrl = createBlobUrl(card.imageBlob);
+      } else if (card.image) {
+        // Use external URL directly
+        currentImageUrl = card.image;
+      } else {
+        currentImageUrl = null;
+      }
+      
+      // Update tracking vars
+      lastImageBlob = card.imageBlob || null;
+      lastImageUrl = card.image;
     }
   });
   
