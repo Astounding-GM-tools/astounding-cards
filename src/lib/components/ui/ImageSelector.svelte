@@ -39,12 +39,16 @@
     try {
       loading = true;
       error = '';
+      console.log('Processing file:', file.name, file.type, file.size);
       
       // Process the image
       const processed = await processImage(file, cardSize);
+      console.log('Processed image:', processed);
       lastProcessedBlob = processed.blob;
       imageManager.updateBlob(processed.blob);
+      console.log('Updated image manager, URL:', imageManager.url);
     } catch (e) {
+      console.error('Image processing error:', e);
       error = e instanceof Error ? e.message : 'Failed to process image';
       imageManager.updateBlob(null);
       lastProcessedBlob = undefined;

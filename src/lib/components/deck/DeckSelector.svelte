@@ -119,7 +119,11 @@
     
     try {
       await putDeck(updatedDeck);
-      currentDeck.set(updatedDeck); // Update the in-memory store
+      // Reload the deck from database to ensure all components get the update
+      const freshDeck = await getDeck(updatedDeck.id);
+      if (freshDeck) {
+        currentDeck.set(freshDeck);
+      }
       showThemeSelect = false;
       toasts.success('Theme updated');
     } catch (error) {
