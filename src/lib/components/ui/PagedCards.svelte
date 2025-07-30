@@ -1,8 +1,8 @@
 <!-- PagedCards.svelte -->
 <script lang="ts">
   import type { Card } from '$lib/types';
-  import CardFront from './CardFront.svelte';
-  import CardBack from './CardBack.svelte';
+  import CardFront from '../cards/CardFront.svelte';
+  import CardBack from '../cards/CardBack.svelte';
   import { currentDeck } from '$lib/stores/deck';
   
   // Use $derived for pure computations

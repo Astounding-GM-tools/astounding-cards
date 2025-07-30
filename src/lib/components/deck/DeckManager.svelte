@@ -4,7 +4,7 @@
   import type { Card, Deck } from '$lib/types';
   import { baseThemes } from '$lib/themes';
   import type { CardTheme } from '$lib/themes';
-  import ThemeSelect from './ThemeSelect.svelte';
+  import ThemeSelect from '../ui/ThemeSelect.svelte';
   import { createEventDispatcher } from 'svelte';
   import { toasts } from '$lib/stores/toast';
 

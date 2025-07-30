@@ -1,10 +1,10 @@
 <script lang="ts">
   import type { Card } from '$lib/types';
-  import CardBase from './Card.svelte';
+  import CardBase from './CardBase.svelte';
   import CardStatSelector from './CardStatSelector.svelte';
   import { currentDeck } from '$lib/stores/deck';
   import { getDeckContext } from '$lib/stores/deckContext';
-  import ImageSelector from './ImageSelector.svelte';
+  import ImageSelector from '../ui/ImageSelector.svelte';
   import { debounce } from '$lib/utils/debounce';
   import { formatTraits, parseTraits, addTrait } from '$lib/utils/card-utils';
   import { ImageUrlManager } from '$lib/utils/image-handler';

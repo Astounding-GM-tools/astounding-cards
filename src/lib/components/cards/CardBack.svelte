@@ -1,7 +1,7 @@
 <!-- CardBack.svelte -->
 <script lang="ts">
   import type { Card } from '$lib/types';
-  import CardBase from './Card.svelte';
+  import CardBase from './CardBase.svelte';
   import { currentDeck } from '$lib/stores/deck';
   import { getDeckContext } from '$lib/stores/deckContext';
   import { formatSecrets, parseSecrets, addSecret } from '$lib/utils/card-utils';

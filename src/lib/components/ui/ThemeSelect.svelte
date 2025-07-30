@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { CardTheme } from '$lib/themes';
   import { baseThemes } from '$lib/themes';
-  import CardFront from './CardFront.svelte';
+  import CardFront from '../cards/CardFront.svelte';
 
   const props = $props();
   const selectedTheme = props.selectedTheme ?? 'classic';

@@ -3,16 +3,16 @@
   import { currentDeck, currentDeckId, deckFromUrl, addCard, deckToUrl } from '$lib/stores/deck';
   import { getDeck, getAllDecks } from '$lib/db';
   import type { Card } from '$lib/types';
-  import CardFront from '$lib/components/CardFront.svelte';
-  import CardBack from '$lib/components/CardBack.svelte';
-  import DeckSelector from '$lib/components/DeckSelector.svelte';
-  import DeckList from '$lib/components/DeckList.svelte';
-  import Toasts from '$lib/components/Toasts.svelte';
+  import CardFront from '$lib/components/cards/CardFront.svelte';
+  import CardBack from '$lib/components/cards/CardBack.svelte';
+  import DeckSelector from '$lib/components/deck/DeckSelector.svelte';
+  import DeckList from '$lib/components/deck/DeckList.svelte';
+  import Toasts from '$lib/components/ui/Toasts.svelte';
   import { toasts } from '$lib/stores/toast';
-  import PagedCards from '$lib/components/PagedCards.svelte';
-  import PrintInstructions from '$lib/components/PrintInstructions.svelte';
+  import PagedCards from '$lib/components/ui/PagedCards.svelte';
+  import PrintInstructions from '$lib/components/ui/PrintInstructions.svelte';
   import { devMode } from '$lib/stores/dev';
-  import ShareDialog from '$lib/components/ShareDialog.svelte';
+  import ShareDialog from '$lib/components/dialogs/ShareDialog.svelte';
   import { createDeckContext } from '$lib/stores/deckContext';
   
   // Create deck context

@@ -4,7 +4,7 @@
   import type { Deck, CardSize } from '$lib/types';
   import { devMode } from '$lib/stores/dev';
   import { baseThemes } from '$lib/themes';
-  import ThemeSelect from './ThemeSelect.svelte';
+  import ThemeSelect from '../ui/ThemeSelect.svelte';
   import { toasts } from '$lib/stores/toast';
 
   let decks = $state<Deck[]>([]);
