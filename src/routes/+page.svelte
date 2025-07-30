@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { currentDeck } from '$lib/stores/deck';
-  import { loadDeck, deckFromUrl, addCard, saveDeck, listDecks, setCurrentDeck } from '$lib/stores/deck';
+  import { currentDeck, currentDeckId, deckFromUrl, addCard, deckToUrl } from '$lib/stores/deck';
+  import { getDeck, getAllDecks } from '$lib/db';
   import type { Card } from '$lib/types';
   import CardFront from '$lib/components/CardFront.svelte';
   import CardBack from '$lib/components/CardBack.svelte';
@@ -9,7 +9,6 @@
   import DeckList from '$lib/components/DeckList.svelte';
   import Toasts from '$lib/components/Toasts.svelte';
   import { toasts } from '$lib/stores/toast';
-  import { deckToUrl } from '$lib/stores/deck';
   import PagedCards from '$lib/components/PagedCards.svelte';
   import PrintInstructions from '$lib/components/PrintInstructions.svelte';
   import { devMode } from '$lib/stores/dev';
@@ -67,19 +66,28 @@
   }
 
   // Load decks when component mounts
-  $effect.root(() => {
-    // Use a regular function inside the effect
-    function loadDecks() {
+  $effect(() => {
+    const id = $currentDeckId;
+    if (id) {
+      getDeck(id).then(deck => {
+        currentDeck.set(deck);
+      }).catch(err => toasts.error(err.message));
+    } else {
+      currentDeck.set(null);
+    }
+  });
+  
+  onMount(() => {
       loading = true;
-      listDecks()
+      getAllDecks()
         .then(allDecks => {
           if (allDecks.length > 0) {
             // Sort by lastEdited and get most recent
             const sortedDecks = allDecks.sort((a, b) => b.meta.lastEdited - a.meta.lastEdited);
             const mostRecent = sortedDecks[0];
-            return setCurrentDeck(mostRecent.id);
+            currentDeckId.set(mostRecent.id);
           } else {
-            return setCurrentDeck(null);
+            currentDeckId.set(null);
           }
         })
         .catch(err => {
@@ -88,9 +96,6 @@
         .finally(() => {
           loading = false;
         });
-    }
-    
-    loadDecks();
   });
 
   // Function to get the corresponding back position for a card
@@ -135,14 +140,7 @@
         </button>
         <button 
           class="action-button"
-          onclick={() => {
-            const newDeck = addCard();
-            if (newDeck) {
-              saveDeck(newDeck).catch(err => {
-                toasts.error('Failed to save new card');
-              });
-            }
-          }}
+          onclick={addCard}
         >
           ➕ Add Card
         </button>

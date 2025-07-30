@@ -1,6 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
-  import { listDecks } from '$lib/stores/deck';
+  import { getAllDecks } from '$lib/db';
   import type { Deck } from '$lib/types';
   import DeckManager from './DeckManager.svelte';
 
@@ -10,7 +9,7 @@
 
   async function loadDecks() {
     try {
-      decks = await listDecks();
+      decks = await getAllDecks();
       loading = false;
     } catch (e) {
       error = e instanceof Error ? e.message : 'Failed to load decks';

@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { currentDeck } from '$lib/stores/deck';
-  import { deleteDeck, listDecks, duplicateDeck, copyCardsTo, deleteCards, saveDeck } from '$lib/stores/deck';
+  import { currentDeck, currentDeckId, duplicateDeck, copyCardsTo, deleteCards as storeDeleteCards, deleteDeck as storeDeleteDeck } from '$lib/stores/deck';
+  import { getAllDecks, putDeck } from '$lib/db';
   import type { Card, Deck } from '$lib/types';
   import { baseThemes } from '$lib/themes';
   import type { CardTheme } from '$lib/themes';
@@ -59,7 +59,7 @@
         lastEdited: Date.now()
       }
     };
-    await saveDeck(updatedDeck);
+    await putDeck(updatedDeck);
     if ($currentDeck?.id === deck.id) {
       currentDeck.set(updatedDeck);
     }
@@ -68,7 +68,7 @@
   }
 
   async function loadAvailableDecks() {
-    availableDecks = (await listDecks()).filter(d => d.id !== deck.id);
+    availableDecks = (await getAllDecks()).filter(d => d.id !== deck.id);
   }
 
   async function handleDelete() {
@@ -79,15 +79,17 @@
 
     try {
       deleting = true;
-      await deleteDeck(deck.id);
+      await storeDeleteDeck(deck.id);
       emitDeckChange({ action: 'delete', deckId: deck.id });
       // If we're deleting the current deck, clear it
       if ($currentDeck?.id === deck.id) {
-        const decks = await listDecks();
+        const decks = await getAllDecks();
         if (decks.length > 0) {
           currentDeck.set(decks[0]);
+          currentDeckId.set(decks[0].id);
         } else {
           currentDeck.set(null);
+          currentDeckId.set(null);
         }
       }
     } catch (e) {
@@ -128,11 +130,11 @@
 
     try {
       deletingCards = true;
-      const updatedDeck = await deleteCards(deck.id, selectedCardIds);
+      await storeDeleteCards(selectedCardIds);
+      // The deck is already updated in the store, so we need to get it from there
       if ($currentDeck?.id === deck.id) {
-        currentDeck.set(updatedDeck); // Update in-memory store
+        deck = $currentDeck; // Update local prop from store
       }
-      deck = updatedDeck; // Update local prop
       emitDeckChange({ action: 'deleteCards', deckId: deck.id });
       showDeleteCardsDialog = false;
       const numDeleted = selectedCardIds.length;
@@ -167,7 +169,7 @@
           lastEdited: Date.now()
         }
       };
-      await saveDeck(updatedDeck);
+      await putDeck(updatedDeck);
       if ($currentDeck?.id === deck.id) {
         currentDeck.set(updatedDeck); // Update in-memory store
       }

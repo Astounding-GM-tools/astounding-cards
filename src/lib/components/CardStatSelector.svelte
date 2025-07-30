@@ -256,7 +256,6 @@
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 1.6em;
     transition: background-color 0.2s;
     background: rgba(255, 255, 255, 0.95);
     font-family: var(--theme-title-font);  /* Use theme's display font */

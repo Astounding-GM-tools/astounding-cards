@@ -1,23 +1,35 @@
 // deckContext.ts
 import { getContext, setContext } from 'svelte';
-import type { Card } from '$lib/types';
-import { currentDeck, updateCardProperty } from './deck';
-import { derived, get } from 'svelte/store';
+import type { Card, Deck } from '$lib/types';
+import { currentDeck } from './deck';
+import { updateCardProperty } from '$lib/db';
+import { get } from 'svelte/store';
+import { toasts } from './toast';
 
-const DECK_CONTEXT_KEY = Symbol('deck');
+const DECK_CONTEXT_KEY = Symbol('deck-context');
 
 type DeckContext = {
   updateCard: (cardId: string, property: keyof Card, value: any) => Promise<void>;
 };
 
 export function createDeckContext() {
-  const deckId = derived(currentDeck, $deck => $deck?.id);
 
   const context: DeckContext = {
     updateCard: async (cardId: string, property: keyof Card, value: any) => {
-      const id = get(deckId);
-      if (!id) throw new Error('No deck selected');
-      await updateCardProperty(id, cardId, property, value);
+      const deck = get(currentDeck);
+      if (!deck) {
+          toasts.error('No active deck to update.');
+          return;
+      };
+
+      try {
+        const updatedDeck = await updateCardProperty(deck.id, cardId, property, value);
+        currentDeck.set(updatedDeck); // Optimistic UI update
+      } catch (e) {
+        const error = e instanceof Error ? e.message : String(e);
+        toasts.error(`Failed to update card: ${error}`);
+        // Here you might want to reload the deck from DB to rollback the UI
+      }
     }
   };
 
@@ -26,5 +38,9 @@ export function createDeckContext() {
 }
 
 export function getDeckContext(): DeckContext {
-  return getContext(DECK_CONTEXT_KEY);
+  const context = getContext<DeckContext | undefined>(DECK_CONTEXT_KEY);
+  if (!context) {
+    throw new Error('DeckContext not found. Make sure createDeckContext() is called in a parent component.');
+  }
+  return context;
 } 

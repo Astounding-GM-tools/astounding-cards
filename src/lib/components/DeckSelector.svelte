@@ -1,7 +1,6 @@
 <script lang="ts">
-  import { currentDeck } from '$lib/stores/deck';
-  import { listDecks, switchDeck, saveDeck, setCurrentDeck } from '$lib/stores/deck';
-  import { clearDatabase, populateWithSampleData } from '$lib/stores/deck';
+  import { currentDeck, currentDeckId, saveCurrentDeck } from '$lib/stores/deck';
+  import { getAllDecks, getDeck, putDeck, clearDatabase, populateWithSampleData } from '$lib/db';
   import type { Deck, CardSize } from '$lib/types';
   import { devMode } from '$lib/stores/dev';
   import { baseThemes } from '$lib/themes';
@@ -25,7 +24,7 @@
 
   async function loadDecks() {
     try {
-      decks = await listDecks();
+      decks = await getAllDecks();
       loading = false;
     } catch (e) {
       error = e instanceof Error ? e.message : 'Failed to load decks';
@@ -35,7 +34,7 @@
 
   async function handleDeckChange(event: Event) {
     const select = event.target as HTMLSelectElement;
-    await switchDeck(select.value);
+    currentDeckId.set(select.value);
   }
 
   async function handleCreateDeck() {
@@ -59,8 +58,9 @@
         cards: []  // Initialize with empty array of cards
       };
 
-      await saveDeck(newDeck, true);  // Allow empty deck
-      await setCurrentDeck(newDeck);
+      await putDeck(newDeck, true);  // Allow empty deck
+      currentDeck.set(newDeck);
+      currentDeckId.set(newDeck.id);
       showNewDeckDialog = false;
       newDeckName = '';
       loadTrigger++; // Refresh deck list
@@ -96,7 +96,7 @@
     };
     
     try {
-      await saveDeck(updatedDeck);
+      await putDeck(updatedDeck);
       currentDeck.set(updatedDeck); // Update the in-memory store
       toasts.success('Card size updated');
     } catch (error) {
@@ -118,7 +118,7 @@
     };
     
     try {
-      await saveDeck(updatedDeck);
+      await putDeck(updatedDeck);
       currentDeck.set(updatedDeck); // Update the in-memory store
       showThemeSelect = false;
       toasts.success('Theme updated');
