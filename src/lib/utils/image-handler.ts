@@ -38,6 +38,10 @@ export class ImageUrlManager {
   public updateBlob(newBlob?: Blob | null): void {
     this.destroy();
     this.imageBlob = newBlob;
+    // Force URL creation for new blob
+    if (this.imageBlob) {
+      this.currentUrl = createBlobUrl(this.imageBlob);
+    }
   }
 
   public destroy(): void {

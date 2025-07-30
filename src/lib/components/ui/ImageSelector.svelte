@@ -7,7 +7,7 @@
   import { processImage } from '$lib/utils/image';
   import type { CardSize } from '$lib/types';
   import { fade } from 'svelte/transition';
-  import { ImageUrlManager } from '$lib/utils/image-handler';
+  import { createBlobUrl, revokeBlobUrl } from '$lib/utils/image-handler';
 
   const props = $props();
   const cardSize = (props.cardSize ?? 'tarot') as CardSize;
@@ -22,8 +22,7 @@
   let error = $state('');
   let loading = $state(false);
   let lastProcessedBlob = $state<Blob | undefined>(undefined);
-  let imageManager = $state(new ImageUrlManager());
-  const previewUrl = $derived(imageManager.url);
+  let previewUrl = $state<string | null>(null);
 
   // Focus save button when image is loaded
   $effect(() => {
@@ -41,16 +40,25 @@
       error = '';
       console.log('Processing file:', file.name, file.type, file.size);
       
+      // Revoke previous URL if it exists
+      if (previewUrl) {
+        revokeBlobUrl(previewUrl);
+        previewUrl = null;
+      }
+      
       // Process the image
       const processed = await processImage(file, cardSize);
       console.log('Processed image:', processed);
       lastProcessedBlob = processed.blob;
-      imageManager.updateBlob(processed.blob);
-      console.log('Updated image manager, URL:', imageManager.url);
+      previewUrl = createBlobUrl(processed.blob);
+      console.log('Updated preview URL:', previewUrl);
     } catch (e) {
       console.error('Image processing error:', e);
       error = e instanceof Error ? e.message : 'Failed to process image';
-      imageManager.updateBlob(null);
+      if (previewUrl) {
+        revokeBlobUrl(previewUrl);
+        previewUrl = null;
+      }
       lastProcessedBlob = undefined;
     } finally {
       loading = false;
@@ -64,6 +72,11 @@
       loading = true;
       error = '';
       
+      if (previewUrl) {
+        revokeBlobUrl(previewUrl);
+        previewUrl = null;
+      }
+      
       // Fetch and process the image
       const response = await fetch(urlValue);
       if (!response.ok) throw new Error('Failed to fetch image');
@@ -74,10 +87,13 @@
       // Process the image
       const processed = await processImage(file, cardSize);
       lastProcessedBlob = processed.blob;
-      imageManager.updateBlob(processed.blob);
+      previewUrl = createBlobUrl(processed.blob);
     } catch (e) {
       error = e instanceof Error ? e.message : 'Failed to load image';
-      imageManager.updateBlob(null);
+      if (previewUrl) {
+        revokeBlobUrl(previewUrl);
+        previewUrl = null;
+      }
       lastProcessedBlob = undefined;
     } finally {
       loading = false;
@@ -119,7 +135,9 @@
   // Cleanup preview URL when component is destroyed
   $effect(() => {
     return () => {
-      imageManager.destroy();
+      if (previewUrl) {
+        revokeBlobUrl(previewUrl);
+      }
     };
   });
 </script>
