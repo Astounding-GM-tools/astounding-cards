@@ -110,8 +110,9 @@
     position: relative;
     width: 100%;
     height: 100%;
-    /* Ensure crop marks are visible */
-    margin: -1px;  /* Prevent gaps between cards */
+    /* Ensure crop marks are visible with proper spacing */
+    padding: var(--card-padding);
+    box-sizing: border-box;
   }
 
   /* Reset direction for card content */
