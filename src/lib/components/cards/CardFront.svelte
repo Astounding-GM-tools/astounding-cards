@@ -52,7 +52,7 @@
   });
   
   // Determine which image to use - blob URL takes priority over regular URL
-  const backgroundStyle = $derived(() => {
+  const backgroundImageValue = $derived(() => {
     const blobUrl = imageManager.url;
     const regularUrl = card.image;
     
@@ -63,8 +63,6 @@
     }
     return 'none';
   });
-  
-  const backgroundImageValue = $derived(backgroundStyle);
 
   // Elements
   let roleElement = $state<HTMLDivElement | null>(null);
