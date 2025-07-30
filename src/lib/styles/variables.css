@@ -58,49 +58,6 @@
   inherits: true;
 }
 
-/* Typography */
-@property --base-font-size {
-  syntax: '<length>';
-  initial-value: 14px;
-  inherits: true;
-}
-
-@property --title-font-size {
-  syntax: '<length-percentage>';
-  initial-value: 22px;
-  inherits: true;
-}
-
-@property --role-font-size {
-  syntax: '<length-percentage>';
-  initial-value: 16px;
-  inherits: true;
-}
-
-@property --desc-font-size {
-  syntax: '<length-percentage>';
-  initial-value: 14px;
-  inherits: true;
-}
-
-@property --trait-font-size {
-  syntax: '<length-percentage>';
-  initial-value: 14px;
-  inherits: true;
-}
-
-@property --ui-font-size {
-  syntax: '<length-percentage>';
-  initial-value: 14px;
-  inherits: true;
-}
-
-@property --body-line-height {
-  syntax: '<number>';
-  initial-value: 1.2;
-  inherits: true;
-}
-
 /* Base theme variables */
 :root {
   /* Layout */
@@ -140,6 +97,21 @@
   --ui-active-bg: #e0e0e0;
   --ui-text: #333;
   --ui-muted: #666;
+  
+  /* UI Typography */
+  --ui-font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --ui-font-size: 0.9rem;
+  --ui-title-size: 1.2rem;
+  
+  /* Theme Typography (default values) */
+  --theme-title-font: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --theme-body-font: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --theme-title-weight: 700;
+  --theme-body-weight: 400;
+  --role-font-family: var(--theme-body-font);
+  
+  /* Layout constants */
+  --ui-spacing: 0.75rem;
 
   /* Button styles (constant) */
   --button-bg: white;

@@ -62,11 +62,8 @@
     gap: var(--content-gap);
   }
 
+  /* Use global message styles with specific overrides */
   .message {
-    text-align: center;
-    padding: calc(var(--content-gap) * 2);
-    color: var(--ui-muted);
-    font-size: var(--ui-font-size);
     font-style: italic;
     background: var(--ui-bg);
     border: 1px solid var(--ui-border);
@@ -74,7 +71,6 @@
   }
 
   .error {
-    color: var(--toast-error);
     border-color: var(--toast-error);
     background: rgba(244, 67, 54, 0.05);
   }

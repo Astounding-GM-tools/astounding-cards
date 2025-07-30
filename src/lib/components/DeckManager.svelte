@@ -721,53 +721,7 @@
     font-weight: 600;
   }
 
-  .dialog-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 100;
-  }
-
-  .dialog {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: var(--ui-bg);
-    padding: 1.5rem;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    z-index: 101;
-    min-width: 300px;
-  }
-
-  .dialog-buttons {
-    display: flex;
-    justify-content: flex-end;
-    gap: 0.5rem;
-    margin-top: 1rem;
-  }
-
-  .dialog-buttons button {
-    padding: 0.4rem 0.75rem;
-    border: 1px solid var(--button-border);
-    border-radius: 4px;
-    background: var(--button-bg);
-    color: var(--button-text);
-    font-size: var(--ui-font-size);
-    font-family: var(--ui-font-family);
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .dialog-buttons button:hover {
-    background: var(--button-hover-bg);
-  }
-
-  .dialog-buttons button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
+  /* Component-specific dialog styles - use global dialog styles for most */
 
 .overlay-button {
   position: absolute;
