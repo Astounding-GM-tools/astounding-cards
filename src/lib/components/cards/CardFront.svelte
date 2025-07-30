@@ -7,7 +7,7 @@
   import ImageSelector from '../ui/ImageSelector.svelte';
   import { debounce } from '$lib/utils/debounce';
   import { formatTraits, parseTraits, addTrait } from '$lib/utils/card-utils';
-  import { ImageUrlManager } from '$lib/utils/image-handler';
+  import { createBlobUrl, revokeBlobUrl } from '$lib/utils/image-handler';
 
   // Props - only for theme and preview
   const props = $props<{
@@ -43,26 +43,8 @@
     }
   }
 
-  // Image URL management
-  let imageManager = $state(new ImageUrlManager());
-  
-  // Update image manager when card changes
-  $effect(() => {
-    imageManager.updateBlob(card.imageBlob);
-  });
-  
-  // Determine which image to use - blob URL takes priority over regular URL
-  const backgroundImageValue = $derived((() => {
-    const blobUrl = imageManager.url;
-    const regularUrl = card.image;
-    
-    if (blobUrl) {
-      return `url('${blobUrl}')`;
-    } else if (regularUrl) {
-      return `url('${regularUrl}')`;
-    }
-    return 'none';
-  })());
+  // Simple image URL - use card.image directly
+  const backgroundImageValue = $derived(card.image ? `url('${card.image}')` : 'none');
 
   // Elements
   let roleElement = $state<HTMLDivElement | null>(null);
@@ -70,8 +52,18 @@
   let showImageSelector = $state(false);
 
   // Image selector
-  async function handleImageSave(blob: Blob | null, previewUrl: string | undefined) {
-    await deckContext.updateCard(card.id, 'image', previewUrl || null);
+  async function handleImageSave(blob: Blob | null, sourceUrl: string | undefined) {
+    let imageUrl = null;
+    
+    if (blob) {
+      // Create blob URL for the processed image
+      imageUrl = createBlobUrl(blob);
+    } else if (sourceUrl) {
+      // Use the source URL for external images
+      imageUrl = sourceUrl;
+    }
+    
+    await deckContext.updateCard(card.id, 'image', imageUrl);
     if (blob !== undefined) {
       await deckContext.updateCard(card.id, 'imageBlob', blob || undefined);
     }
@@ -98,12 +90,6 @@
     deckContext.updateCard(card.id, 'traits', newTraits);
   }
 
-  // Cleanup on destroy
-  $effect.root(() => {
-    return () => {
-      imageManager.destroy();
-    };
-  });
 </script>
 
 {#if card}

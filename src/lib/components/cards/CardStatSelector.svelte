@@ -22,11 +22,14 @@
   let formArea = $state('');
 
   // Local display state for optimistic updates
-  let displayStat = $state<CardStat | undefined>(undefined);
+  let displayStat = $state<CardStat | undefined>(card.stat);
 
-  // Initialize state from props
-  $effect.pre(() => {
-    displayStat = card.stat;
+  // Update displayStat when card.stat changes (from external updates)
+  $effect(() => {
+    // Avoid proxy equality warnings by comparing stringified versions
+    if (JSON.stringify(card.stat) !== JSON.stringify(displayStat)) {
+      displayStat = card.stat;
+    }
   });
 
   // Reset form state when dialog opens

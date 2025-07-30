@@ -67,12 +67,13 @@
 
   // Load deck when currentDeckId changes
   let loadingDeckId = $state<string | null>(null);
+  let currentLoadedDeckId = $state<string | null>(null);
   
   $effect(() => {
     const id = $currentDeckId;
     
-    // Prevent infinite loops by tracking what we're loading
-    if (id && id !== loadingDeckId) {
+    // Prevent infinite loops by tracking what we're loading and what's loaded
+    if (id && id !== loadingDeckId && id !== currentLoadedDeckId) {
       loadingDeckId = id;
       
       getDeck(id).then(deck => {
@@ -80,9 +81,11 @@
         if ($currentDeckId === id) {
           if (deck) {
             currentDeck.set(deck);
+            currentLoadedDeckId = id;
           } else {
             // Deck not found, clear the ID
             currentDeck.set(null);
+            currentLoadedDeckId = null;
             toasts.error('Deck not found');
           }
         }
@@ -91,12 +94,14 @@
         console.error('Error loading deck:', err);
         if ($currentDeckId === id) {
           currentDeck.set(null);
+          currentLoadedDeckId = null;
           toasts.error('Failed to load deck: ' + err.message);
         }
         loadingDeckId = null;
       });
     } else if (!id) {
       currentDeck.set(null);
+      currentLoadedDeckId = null;
       loadingDeckId = null;
     }
   });
