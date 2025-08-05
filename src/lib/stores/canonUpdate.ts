@@ -169,6 +169,88 @@ export async function canonUpdateCards(updates: Array<{ cardId: string; updates:
   }
 }
 
+// Canon Copy for cards
+export async function canonCopyCards(cardIds: string[], targetDeckId: string | 'new', newDeckName?: string, loadingFields: string[] = [], loadingMessage?: string, successMessage?: string): Promise<boolean> {
+  const deck = get(currentDeck);
+  if (!deck) {
+    toasts.error('No active deck to copy from');
+    return false;
+  }
+
+  if (cardIds.length === 0) {
+    toasts.error('No cards selected for copying');
+    return false;
+  }
+
+  setFieldLoading(true, loadingFields, loadingMessage);
+
+  try {
+    // Get the cards to copy
+    const cardsToCopy = deck.cards.filter(c => cardIds.includes(c.id));
+    
+    // Use the existing copyCardsTo function from deck store
+    const { copyCardsTo } = await import('./deck');
+    await copyCardsTo(cardsToCopy, targetDeckId, newDeckName);
+    
+    // Show success notification if provided
+    if (successMessage) {
+      toasts.success(successMessage);
+    }
+    
+    return true;
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+    toasts.error(`Copy failed: ${errorMsg}`);
+    return false;
+  } finally {
+    setFieldLoading(false, loadingFields);
+  }
+}
+
+// Canon Delete for cards
+export async function canonDeleteCards(cardIds: string[], loadingFields: string[] = [], loadingMessage?: string, successMessage?: string): Promise<boolean> {
+  const deck = get(currentDeck);
+  if (!deck) {
+    toasts.error('No active deck to update');
+    return false;
+  }
+
+  if (cardIds.length === 0) {
+    toasts.error('No cards selected for deletion');
+    return false;
+  }
+
+  setFieldLoading(true, loadingFields, loadingMessage);
+
+  const updatedDeck: Deck = {
+    ...deck,
+    cards: deck.cards.filter(c => !cardIds.includes(c.id)),
+    meta: {
+      ...deck.meta,
+      lastEdited: Date.now()
+    }
+  };
+
+  try {
+    await putDeck(updatedDeck);
+    currentDeck.set(updatedDeck); // Canon state update
+    
+    // Show success notification if provided
+    if (successMessage) {
+      toasts.success(successMessage);
+    }
+    
+    return true;
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+    toasts.error(`Delete failed: ${errorMsg}`);
+    return false;
+  } finally {
+    setFieldLoading(false, loadingFields);
+  }
+}
+
+
 // Canon Delete for deck
 export async function canonDeleteDeck(deckId: string, loadingFields: string[] = [], loadingMessage?: string, successMessage?: string): Promise<boolean> {
   const deck = get(currentDeck);
@@ -204,6 +286,8 @@ export function createCanonUpdateContext() {
     updateDeck: canonUpdateDeck,
     updateCard: canonUpdateCard,
     updateCards: canonUpdateCards,
+    copyCards: canonCopyCards,
+    deleteCards: canonDeleteCards,
     deleteDeck: canonDeleteDeck,
     isFieldLoading,
     loadingState: { subscribe: loadingState.subscribe }

@@ -1,12 +1,17 @@
 <script lang="ts">
+  // TODO: Future refactor - Combine CardBase and CardFront into a single component
+  // This would simplify preview modes, theme previews, and reduce prop passing complexity
+  // Also consider standardizing preview sizing across all preview contexts (deck manager, theme selector, etc.)
   import { currentDeck } from '$lib/stores/deck';
 
-  const { children, theme }: { children: any, theme?: string } = $props();
+  const { children, theme, preview, cardSize }: { children: any, theme?: string, preview?: boolean, cardSize?: string } = $props();
   const activeTheme = $derived(theme ?? $currentDeck?.meta?.theme ?? 'classic');
+  const isPreview = preview ?? false;
+  const size = $derived(cardSize ?? $currentDeck?.meta?.cardSize ?? 'poker');
 </script>
 
 {#key activeTheme}
-<div class="card-base crop-marks" data-theme={activeTheme}>
+<div class="card-base" class:crop-marks={!isPreview} class:preview={isPreview} data-theme={activeTheme} data-size={size}>
   {@render children()}
 </div>
 {/key}
@@ -91,6 +96,17 @@
   }
   :global(.card-grid[data-size="tarot"] > div:nth-child(-n+2)) .crop-marks::before {
     border-bottom-width: 0.1mm;
+  }
+
+  /* Preview mode styles */
+  .card-base.preview {
+    max-width: 300px;
+    aspect-ratio: 63/88; /* Standard poker card ratio */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  }
+
+  .card-base.preview[data-size="tarot"] {
+    aspect-ratio: 70/120; /* Tarot card ratio */
   }
 
   @media print {

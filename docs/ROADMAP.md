@@ -42,10 +42,31 @@ For consistent theme application:
   - [x] Created detailed `CANON_UPDATE_PATTERN.md`
   - [x] Updated `ARCHITECTURE.md` to reflect new patterns
   - [x] Rewrote `README.md` to be user-focused and reference live deployment
+- [x] **Deck Management System**
+  - [x] Implemented unified "Manage Cards" dialog with expandable card previews.
+  - [x] Added Canon Update pattern for card deletion with proper loading states.
+  - [x] Enhanced UI with summary/detail card previews and visual expand indicators.
+  - [x] Fixed deck duplication, deletion, and list synchronization issues.
+  - [x] Implemented "Copy Cards" functionality with a dialog to select a target deck or create a new one.
+  - [x] Integrated copy operation with the Canon Update pattern for consistent UI feedback.
+  - [x] Fixed image copying and deck list refresh issues when copying to a new deck.
 
 ## Next Steps (Pre-Deployment)
 
-### 1. Final Fixes & Polish
+### 1. Component Architecture
+
+- [ ] **Card/CardBase Refactor**
+  - [ ] Combine CardBase and CardFront into a single component
+  - [ ] Simplify preview modes and theme previews
+  - [ ] Standardize preview sizing across all contexts (deck manager, theme selector, etc.)
+  - [ ] Reduce prop passing complexity and improve maintainability
+
+### 2. Final Fixes & Polish
+
+- [ ] **Complete Card Management Operations**
+  - [ ] Implement "Change Theme" for selected cards.
+  - [ ] Fix `DataCloneError` when duplicating a deck.
+  - [x] Removed "Move Cards" (redundant - users can copy to current deck instead).
 
 - [ ] **Crop Marks & Card Positioning**
   - [ ] Re-implement crop marks for front cards

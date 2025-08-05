@@ -8,14 +8,16 @@
   import { formatTraits, parseTraits, addTrait } from '$lib/utils/card-utils';
   import { createBlobUrl, revokeBlobUrl } from '$lib/utils/image-handler';
 
-  // Props - only for theme and preview
+  // Props - for theme, preview, and cardSize
   const props = $props<{
     card: Card;
     theme?: string;
     preview?: boolean;
+    cardSize?: string;
   }>();
   const theme = props.theme;
   const preview = props.preview ?? false;
+  const cardSize = props.cardSize;
   const activeTheme = $derived(theme ?? $currentDeck?.meta?.theme ?? 'classic');
 
   // Get loading states for different fields
@@ -141,7 +143,7 @@
 </script>
 
 {#if card}
-<CardBase theme={activeTheme}>
+<CardBase theme={activeTheme} preview={preview} cardSize={cardSize}>
   <div 
     class="card-content"
     class:preview={preview}

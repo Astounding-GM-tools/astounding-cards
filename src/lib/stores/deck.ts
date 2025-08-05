@@ -83,9 +83,12 @@ export async function addCard() {
 }
 
 // Remove cards from current deck
-export async function deleteCards(cardIds: string[]) {
-    const deck = get(currentDeck);
-    if (!deck) return;
+export async function deleteCards(deckId: string, cardIds: string[]) {
+    const deck = await getDeck(deckId);
+    if (!deck) {
+        toasts.error('Deck not found');
+        return;
+    }
 
     const updatedDeck = {
         ...deck,
@@ -96,8 +99,11 @@ export async function deleteCards(cardIds: string[]) {
         cards: deck.cards.filter(c => !cardIds.includes(c.id))
     };
 
-    currentDeck.set(updatedDeck);
     await putDeck(updatedDeck);
+
+    if (get(currentDeck)?.id === deckId) {
+        currentDeck.set(updatedDeck);
+    }
 }
 
 export async function deleteDeck(deckId: string) {
@@ -181,6 +187,8 @@ export async function copyCardsTo(
   newDeckName?: string
 ): Promise<Deck> {
   let finalTargetDeckId = targetDeckId;
+  let createdNewDeck = false;
+  
   // Create new deck if needed
   if (targetDeckId === 'new') {
     const newDeck: Deck = {
@@ -196,6 +204,7 @@ export async function copyCardsTo(
     };
     finalTargetDeckId = newDeck.id;
     await putDeck(newDeck, true);
+    createdNewDeck = true;
   }
 
   // Load target deck
@@ -209,7 +218,7 @@ export async function copyCardsTo(
       name: card.name,
       role: card.role,
       image: card.image,
-      // Note: imageBlob is intentionally excluded for card copying
+      imageBlob: card.imageBlob, // Include imageBlob for copying images
       traits: [...card.traits],
       secrets: [...card.secrets],
       desc: card.desc,
@@ -231,5 +240,12 @@ export async function copyCardsTo(
   };
 
   await putDeck(updatedDeck);
+  
+  // Refresh deck list if we created a new deck
+  if (createdNewDeck) {
+    const { deckList } = await import('./deckList');
+    await deckList.load();
+  }
+  
   return updatedDeck;
 }

@@ -1,14 +1,14 @@
 <script lang="ts">
-  import { currentDeck, currentDeckId, duplicateDeck, copyCardsTo, deleteCards as storeDeleteCards, deleteDeck as storeDeleteDeck } from '$lib/stores/deck';
+  import { currentDeck, currentDeckId, duplicateDeck, copyCardsTo, deleteDeck as storeDeleteDeck } from '$lib/stores/deck';
   import { deckList } from '$lib/stores/deckList';
   import { getAllDecks, putDeck } from '$lib/db';
   import type { Card, Deck } from '$lib/types';
   import { baseThemes } from '$lib/themes';
-  import type { CardTheme } from '$lib/themes';
+  import CardFront from '../cards/CardFront.svelte';
   import ThemeSelect from '../ui/ThemeSelect.svelte';
   import { createEventDispatcher } from 'svelte';
   import { toasts } from '$lib/stores/toast';
-  import { canonUpdateDeck, canonDeleteDeck, isFieldLoading } from '$lib/stores/canonUpdate';
+  import { canonUpdateDeck, canonDeleteDeck, canonDeleteCards, canonCopyCards, isFieldLoading } from '$lib/stores/canonUpdate';
 
   const props = $props();
   let deck = $state(props.deck as Deck);
@@ -24,11 +24,13 @@
   let showThemeSelect = $state(false);
   let showDeleteConfirm = $state(false);
   let showDuplicateDialog = $state(false);
-  let showDeleteCardsDialog = $state(false);
+  let showManageCardsDialog = $state(false);
+  let showCopyCardsDialog = $state(false);
   let editingName = $state(false);
   let deleting = $state(false);
   let duplicating = $state(false);
   let deletingCards = $state(false);
+  let copyingCards = $state(false);
   let newDeckName = $state('');
   let editedDeckName = $state('');
   let selectedCardIds = $state<string[]>([]);
@@ -38,6 +40,8 @@
   // Get loading states
   const isThemeUpdating = $derived(isFieldLoading('deck-manager-theme'));
   const isNameUpdating = $derived(isFieldLoading('deck-manager-name'));
+  const isDeletingCards = $derived(isFieldLoading('deck-manager-delete-cards'));
+  const isCopyingCards = $derived(isFieldLoading('deck-manager-copy-cards'));
 
   function toggleCard(id: string) {
     if (selectedCardIds.includes(id)) {
@@ -76,7 +80,52 @@
   }
 
   async function loadAvailableDecks() {
-    availableDecks = (await getAllDecks()).filter(d => d.id !== deck.id);
+    // Include all decks (including current) for copy operations
+    availableDecks = await getAllDecks();
+  }
+
+  async function handleCopyCards() {
+    if (selectedCardIds.length === 0) return;
+
+    // Load available decks and show copy dialog
+    await loadAvailableDecks();
+    showCopyCardsDialog = true;
+  }
+
+  async function executeCopyCards() {
+    if (selectedCardIds.length === 0) return;
+
+    const numToCopy = selectedCardIds.length;
+    let newDeckNameForCopy = undefined;
+    
+    // If creating a new deck, validate the name
+    if (targetDeckId === 'new') {
+      if (!newDeckName.trim()) {
+        toasts.error('Please enter a name for the new deck');
+        return;
+      }
+      newDeckNameForCopy = newDeckName.trim();
+    }
+
+    const success = await canonCopyCards(
+      selectedCardIds,
+      targetDeckId,
+      newDeckNameForCopy,
+      ['deck-manager-copy-cards'],
+      'Copying cards...',
+      `Copied ${numToCopy} card${numToCopy !== 1 ? 's' : ''} successfully`
+    );
+    
+    if (success) {
+      showCopyCardsDialog = false;
+      showManageCardsDialog = false;
+      selectedCardIds = [];
+      // Reset form
+      targetDeckId = 'new';
+      newDeckName = '';
+      // Refresh available decks list to include any newly created deck
+      await loadAvailableDecks();
+    }
   }
 
   async function handleDelete() {
@@ -144,30 +193,24 @@
   }
 
   async function handleDeleteCards() {
-    if (!showDeleteCardsDialog) {
-      showDeleteCardsDialog = true;
-      return;
-    }
-
     if (selectedCardIds.length === 0) return;
 
-    try {
-      deletingCards = true;
-      await storeDeleteCards(selectedCardIds);
-      // The deck is already updated in the store, so we need to get it from there
+    const numToDelete = selectedCardIds.length;
+    const success = await canonDeleteCards(
+      selectedCardIds,
+      ['deck-manager-delete-cards'],
+      'Deleting cards...',
+      `Deleted ${numToDelete} card${numToDelete !== 1 ? 's' : ''}`
+    );
+    
+    if (success) {
+      // Update local deck prop from current deck store
       if ($currentDeck?.id === deck.id) {
-        deck = $currentDeck; // Update local prop from store
+        deck = $currentDeck;
       }
       emitDeckChange({ action: 'deleteCards', deckId: deck.id });
-      showDeleteCardsDialog = false;
-      const numDeleted = selectedCardIds.length;
+      showManageCardsDialog = false;
       selectedCardIds = [];
-      toasts.success(`Deleted ${numDeleted} card${numDeleted !== 1 ? 's' : ''}`);
-    } catch (error) {
-      console.error('Failed to delete cards:', error);
-      toasts.error('Failed to delete cards');
-    } finally {
-      deletingCards = false;
     }
   }
 
@@ -289,11 +332,11 @@
       <fieldset class="action-group">
         <legend>Card</legend>
         <button 
-          class="action-button danger"
-          onclick={() => showDeleteCardsDialog = true}
-          title="Delete selected cards from this deck"
+          class="action-button"
+          onclick={() => showManageCardsDialog = true}
+          title="Manage cards in this deck"
         >
-          Delete
+          Manage
         </button>
       </fieldset>
       <fieldset class="action-group">
@@ -326,7 +369,7 @@
     </div>
   </div>
 
-  {#if showDeleteConfirm || showDuplicateDialog || showDeleteCardsDialog}
+  {#if showDeleteConfirm || showDuplicateDialog || showManageCardsDialog || showCopyCardsDialog}
     <div class="dialog-overlay"></div>
   {/if}
 
@@ -381,17 +424,17 @@
         Cancel
       </button>
     </div>
-  {:else if showDeleteCardsDialog}
+  {:else if showManageCardsDialog}
     <div class="dialog-overlay">
       <button 
         class="overlay-button"
         onclick={() => {
-          showDeleteCardsDialog = false;
+          showManageCardsDialog = false;
           selectedCardIds = [];
         }}
         onkeydown={(e) => {
           if (e.key === 'Escape') {
-            showDeleteCardsDialog = false;
+            showManageCardsDialog = false;
             selectedCardIds = [];
           }
         }}
@@ -399,7 +442,7 @@
       ></button>
     </div>
     <div class="dialog copy-dialog" role="dialog" aria-labelledby="delete-cards-title">
-      <h2 id="delete-cards-title">Delete Cards</h2>
+      <h2 id="delete-cards-title">Manage Cards</h2>
       <div class="selection-controls">
         <button 
           class="small"
@@ -423,42 +466,60 @@
       </div>
       <div class="card-list" role="listbox" aria-multiselectable="true">
         {#each deck.cards as card (card.id)}
-          <button 
-            class="card-item" 
-            role="option" 
-            aria-selected={selectedCardIds.includes(card.id)}
-            onclick={() => toggleCard(card.id)}
-          >
-            <input
-              type="checkbox"
-              checked={selectedCardIds.includes(card.id)}
-              onchange={() => toggleCard(card.id)}
-              aria-label="Select {card.name}"
-            />
-            <span class="card-info">
-              <strong>{card.name}</strong>
-              <span class="card-role">{card.role}</span>
-            </span>
-          </button>
+          <details class="card-item-details">
+            <summary class="card-item" role="option" aria-selected={selectedCardIds.includes(card.id)}>
+              <input
+                type="checkbox"
+                checked={selectedCardIds.includes(card.id)}
+                onchange={() => toggleCard(card.id)}
+                aria-label="Select {card.name}"
+              />
+              <div class="card-info">
+                <strong>{card.name}</strong>
+                <span class="card-role">{card.role}</span>
+              </div>
+              <div class="expand-indicator">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                  <path d="M4.427 9.573l3.347-3.377a.25.25 0 01.354 0l3.346 3.377a.25.25 0 01-.177.427H4.604a.25.25 0 01-.177-.427z"/>
+                </svg>
+              </div>
+            </summary>
+            <div class="card-preview">
+              <CardFront {card} theme={deck.meta.theme} preview={true} cardSize={"poker"} />
+            </div>
+          </details>
         {/each}
       </div>
       <div class="dialog-buttons">
         <button 
+          class="action-button"
+          onclick={handleCopyCards}
+          disabled={isCopyingCards || selectedCardIds.length === 0}
+        >
+          {isCopyingCards ? 'Copying...' : 'Copy'}
+        </button>
+        <button 
+          class="action-button"
+          disabled={true || selectedCardIds.length === 0}
+        >
+          Theme
+        </button>
+        <button 
           class="danger"
           onclick={handleDeleteCards}
-          disabled={deletingCards || selectedCardIds.length === 0}
+          disabled={isDeletingCards || selectedCardIds.length === 0}
         >
-          {deletingCards ? 'Deleting...' : `Delete ${selectedCardIds.length} Card${selectedCardIds.length !== 1 ? 's' : ''}`}
+          {isDeletingCards ? 'Deleting...' : `Delete`}
         </button>
         <button 
           class="secondary"
           onclick={() => {
-            showDeleteCardsDialog = false;
+            showManageCardsDialog = false;
             selectedCardIds = [];
           }}
-          disabled={deletingCards}
+          disabled={isDeletingCards || isCopyingCards}
         >
-          Cancel
+          Close
         </button>
       </div>
     </div>
@@ -485,6 +546,65 @@
           onclick={() => showThemeSelect = false}
         >
           Cancel
+        </button>
+      </div>
+    </div>
+  {:else if showCopyCardsDialog}
+    <div class="dialog-overlay">
+      <button 
+        class="overlay-button"
+        onclick={() => {
+          showCopyCardsDialog = false;
+          newDeckName = '';
+          targetDeckId = 'new';
+        }}
+        onkeydown={(e) => {
+          if (e.key === 'Escape') {
+            showCopyCardsDialog = false;
+            newDeckName = '';
+            targetDeckId = 'new';
+          }
+        }}
+        aria-label="Close copy cards dialog"
+      ></button>
+    </div>
+    <div class="dialog copy-cards-dialog" role="dialog" aria-labelledby="copy-cards-title">
+      <h2 id="copy-cards-title">Copy Cards</h2>
+      <p>Copy {selectedCardIds.length} card{selectedCardIds.length !== 1 ? 's' : ''} to:</p>
+      <div class="deck-selection-container">
+        <select bind:value={targetDeckId}>
+          <option value="new">New Deck</option>
+          {#each availableDecks as d}
+            <option value={d.id}>{d.meta.name}</option>
+          {/each}
+        </select>
+        {#if targetDeckId === 'new'}
+          <input 
+            type="text" 
+            bind:value={newDeckName} 
+            placeholder="New deck name" 
+            disabled={isCopyingCards}
+          />
+        {/if}
+      </div>
+      <div class="dialog-buttons">
+        <button 
+          class="secondary"
+          onclick={() => {
+            showCopyCardsDialog = false;
+            newDeckName = '';
+            targetDeckId = 'new';
+          }}
+          disabled={isCopyingCards}
+        >
+          Cancel
+        </button>
+        <button 
+          class="primary"
+          onclick={executeCopyCards}
+          disabled={isCopyingCards || (targetDeckId === 'new' && !newDeckName.trim())}
+        >
+          {isCopyingCards ? 'Copying...' : 'Copy Cards'}
         </button>
       </div>
     </div>
@@ -700,8 +820,36 @@
     transition: background-color 0.2s;
   }
 
-  .card-item:hover {
-    background: var(--ui-hover-bg);
+  .card-item input[type="checkbox"] {
+    pointer-events: all;
+  }
+
+  .card-item-details {
+    border: 1px solid transparent;
+    border-radius: 4px;
+  }
+
+  .card-item-details[open] {
+    border-color: var(--ui-border);
+  }
+
+  .card-preview {
+    padding: 1rem;
+    display: flex;
+    justify-content: center;
+    background: var(--ui-bg-secondary, var(--ui-bg));
+  }
+
+  .expand-indicator {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    transition: transform 0.2s ease;
+    color: var(--ui-muted);
+  }
+
+  .card-item-details[open] .expand-indicator {
+    transform: rotate(180deg);
   }
 
   .card-info {
@@ -746,6 +894,38 @@
     max-width: 1200px;
     max-height: 90vh;
     overflow-y: auto;
+  }
+
+  .copy-cards-dialog {
+    width: 90vw;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  .copy-cards-dialog h2 {
+    margin: 0 0 1rem 0;
+    font-size: var(--ui-title-size);
+    font-family: var(--ui-font-family);
+    font-weight: 600;
+  }
+
+  .deck-selection-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin: 1rem 0;
+  }
+
+  .deck-selection-container select,
+  .deck-selection-container input {
+    padding: 0.5rem;
+    border: 1px solid var(--ui-border);
+    border-radius: 4px;
+    font-family: var(--ui-font-family);
+    font-size: var(--ui-font-size);
+    background: var(--ui-bg);
+    color: var(--ui-text);
   }
 
   .theme-dialog h2 {
