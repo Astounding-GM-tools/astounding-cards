@@ -1,45 +1,40 @@
-## Character Cards
+# Card Deck Creator
 
-A simple, browser-based tool for creating and managing character cards for tabletop RPGs. This is a client-side only application that runs entirely in your browser - no server required!
+🎲 **Try it now at [cards.astounding.games](https://cards.astounding.games)** 🎲
 
-Each card has:
-- Front: Name, portrait, and traits
-- Back: Detailed description and additional notes
+A powerful, browser-based tool for creating and managing custom cards for tabletop RPGs, board games, or any creative project. Create character cards, item cards, location cards, and more!
 
-## Features
+## ✨ Features
 
-- [x] Create and edit character cards
-- [x] Add portraits (stored locally)
-- [x] Add traits
-- [x] Add description
-- [x] Print-friendly layout
-- [x] Multiple themes
-- [x] Share decks via URL
-- [x] Offline support (all data stored in browser)
+- 🎨 **Multiple Card Types**: Characters, items, locations, and custom types
+- 🖼️ **Image Support**: Add portraits and artwork (stored locally in your browser)
+- 🎭 **Multiple Themes**: Classic, Cyberdeck, Cordial, and Scriptorum styles
+- 📱 **Fully Offline**: Works completely in your browser - no internet required after loading
+- 🔗 **Easy Sharing**: Share entire decks via simple URLs
+- 🖨️ **Print Ready**: Optimized layouts for home printing on standard paper
+- 💾 **Auto-Save**: All your work is automatically saved to your browser
+- 🚀 **No Installation**: Just visit the website and start creating!
 
-## Getting Started
+## 🚀 Getting Started
 
-1. Install dependencies:
-```bash
-npm install
-```
+**For Users**: Simply visit [cards.astounding.games](https://cards.astounding.games) and start creating! No installation, registration, or setup required.
 
-2. Start the development server:
-```bash
-npm run dev
-```
+**For Developers**: If you want to contribute to the code or run your own version:
 
-3. Open your browser at `http://localhost:5173`
+1. Clone this repository
+2. Install dependencies: `npm install`
+3. Start development server: `npm run dev`
+4. Open `http://localhost:5173`
 
-That's it! No database setup or environment variables needed.
+## 🎯 How It Works
 
-## How It Works
-
-- All data is stored in your browser using IndexedDB
-- Images are stored as blobs in the same database
-- Decks can be shared via URL (data is serialized into the URL)
-- Everything works offline once loaded
-- See ARCHITECTURE.md for detailed technical documentation
+Card Deck Creator is a **client-side only** application:
+- ✅ All data stored in your browser (IndexedDB)
+- ✅ Images stored locally as blobs
+- ✅ No servers, databases, or accounts needed
+- ✅ Works offline once loaded
+- ✅ Your data stays on your device
+- ✅ Share decks via URL serialization
 
 ## Printing Instructions
 
@@ -91,36 +86,31 @@ For a more durable, professional feel:
 
 This second method gives you sturdy, card-stock quality character cards that feel great to handle and will last longer at the gaming table.
 
-## Development
+## 📚 Documentation
+
+For developers and technical details:
+- **[Architecture Overview](docs/ARCHITECTURE.md)** - System design and patterns
+- **[Canon Update Pattern](docs/CANON_UPDATE_PATTERN.md)** - State management system
+- **[Usage Guide](docs/USAGE.md)** - User guide and features
+- **[Development Roadmap](docs/ROADMAP.md)** - Future plans and features
+
+## 🛠️ Development
 
 This project is built with:
-- SvelteKit (static adapter)
-- TypeScript
-- IndexedDB for local storage
-- URL-based state sharing
+- **SvelteKit** (static adapter for client-side only deployment)
+- **TypeScript** for type safety
+- **IndexedDB** for local browser storage
+- **Canon Update Pattern** for consistent state management
 
-### Current Status
+### Architecture
 
-The application has been refactored to use "Card" terminology throughout instead of "Character", making it more flexible for different types of cards (characters, items, locations). All core functionality is working, including:
-- Card creation and editing
-- Image handling (local storage)
-- Theme selection
-- Deck management
-- URL-based sharing
+The application uses a robust **Canon Update Pattern** for all state changes:
+- Database-first atomic updates
+- Granular loading states for user feedback
+- No optimistic updates - UI reflects persisted state only
+- Centralized update logic for consistency
 
-### Next Task: Create New Deck
-
-The next major task is implementing proper deck creation:
-- Adding a "Create New Deck" button to the deck management interface
-- Implementing the deck creation flow
-- Adding user feedback
-- Handling deck list updates
-- Automatic switching to new deck
-
-Currently, new decks can only be created by:
-- Using dev tools to add sample data
-- Duplicating an existing deck
-- Copying cards to a "new deck"
+All data is stored locally in the browser using IndexedDB, making the app work completely offline while maintaining the ability to share decks via URL serialization.
 
 ### Running Tests
 
