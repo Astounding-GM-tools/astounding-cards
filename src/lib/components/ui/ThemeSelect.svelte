@@ -15,7 +15,7 @@
       name: theme.preview?.title || theme.name,
       role: theme.preview?.role || theme.description,
       traits: theme.preview?.traits || [],
-      image: theme.preview?.portrait || null,
+      image: theme.preview?.portrait ? `/portraits/${theme.preview.portrait}` : null,
       stat: {
         type: 'character' as const,
         value: 'Preview'

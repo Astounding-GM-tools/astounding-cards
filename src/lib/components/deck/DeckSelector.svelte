@@ -1,5 +1,6 @@
 <script lang="ts">
   import { currentDeck, currentDeckId, saveCurrentDeck } from '$lib/stores/deck';
+  import { createEventDispatcher } from 'svelte';
   import { getAllDecks, getDeck, putDeck, clearDatabase, populateWithSampleData } from '$lib/db';
   import { canonUpdateDeck, isFieldLoading } from '$lib/stores/canonUpdate';
   import type { Deck, CardSize } from '$lib/types';
@@ -7,6 +8,10 @@
   import { baseThemes } from '$lib/themes';
   import ThemeSelect from '../ui/ThemeSelect.svelte';
   import { toasts } from '$lib/stores/toast';
+
+  const dispatch = createEventDispatcher<{
+    deckchange: { action: 'create' | 'update', deckId: string };
+  }>();
 
   let decks = $state<Deck[]>([]);
   let loading = $state(true);
@@ -69,6 +74,7 @@
       showNewDeckDialog = false;
       newDeckName = '';
       loadTrigger++; // Refresh deck list
+      dispatch('deckchange', { action: 'create', deckId: newDeck.id });
       toasts.success('Created new deck');
     } catch (error) {
       console.error('Failed to create deck:', error);
@@ -91,15 +97,12 @@
     const select = event.target as HTMLSelectElement;
     const size = select.value as CardSize;
     
-    const success = await canonUpdateDeck(
+    await canonUpdateDeck(
       { cardSize: size },
       ['deck-size'],
-      'Updating card size...'
+      'Updating card size...',
+      'Card size updated'
     );
-    
-    if (success) {
-      toasts.success('Card size updated');
-    }
   }
 
   async function handleThemeChange(themeId: string) {
@@ -108,12 +111,12 @@
     const success = await canonUpdateDeck(
       { theme: themeId },
       ['deck-theme'],
-      'Updating theme...'
+      'Updating theme...',
+      'Theme updated'
     );
     
     if (success) {
       showThemeSelect = false;
-      toasts.success('Theme updated');
     }
   }
 
@@ -219,6 +222,13 @@
         title="Development only: Add sample data"
       >
         Add Sample Data
+      </button>
+      <button 
+        class="sample" 
+        onclick={() => toasts.success('Test toast notification!')}
+        title="Development only: Test toast system"
+      >
+        Test Toast
       </button>
     </fieldset>
   {/if}
@@ -378,16 +388,13 @@
   .dev-controls {
     border-color: var(--toast-warning);
     background: rgba(255, 152, 0, 0.05);
+    display: flex;
+    gap: var(--content-gap);
   }
 
   .dev-controls legend {
     color: var(--toast-warning);
     background: none;
-  }
-
-  .dev-controls {
-    display: flex;
-    gap: var(--content-gap);
   }
 
   button.danger {

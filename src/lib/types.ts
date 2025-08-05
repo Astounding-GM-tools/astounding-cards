@@ -200,10 +200,3 @@ export function isDeck(deck: unknown): deck is Deck {
   );
 }
 
-// For backward compatibility during migration
-// TODO: Remove after migration is complete
-export type Character = Card;
-export type CharacterDeck = Deck;
-export const validateCharacter = validateCard;
-export const isCharacter = isCard;
-export const isCharacterDeck = isDeck; 

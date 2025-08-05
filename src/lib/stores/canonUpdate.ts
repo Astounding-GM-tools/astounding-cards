@@ -4,7 +4,7 @@
 import { writable, get } from 'svelte/store';
 import type { Card, Deck } from '$lib/types';
 import { currentDeck } from './deck';
-import { putDeck } from '$lib/db';
+import { putDeck, deleteDeck as dbDeleteDeck } from '$lib/db';
 import { toasts } from './toast';
 
 // Loading state management
@@ -45,7 +45,7 @@ export function isFieldLoading(field: string): boolean {
 }
 
 // Canon Update for deck metadata
-export async function canonUpdateDeck(updates: Partial<Deck['meta']>, loadingFields: string[] = [], loadingMessage?: string): Promise<boolean> {
+export async function canonUpdateDeck(updates: Partial<Deck['meta']>, loadingFields: string[] = [], loadingMessage?: string, successMessage?: string): Promise<boolean> {
   const deck = get(currentDeck);
   if (!deck) {
     toasts.error('No active deck to update');
@@ -64,8 +64,14 @@ export async function canonUpdateDeck(updates: Partial<Deck['meta']>, loadingFie
   };
 
   try {
-    await putDeck(updatedDeck);
+    await putDeck(updatedDeck, true); // Allow empty decks for theme/size changes
     currentDeck.set(updatedDeck); // Canon state update
+    
+    // Show success notification if provided
+    if (successMessage) {
+      toasts.success(successMessage);
+    }
+    
     return true;
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : 'Unknown error';
@@ -77,7 +83,7 @@ export async function canonUpdateDeck(updates: Partial<Deck['meta']>, loadingFie
 }
 
 // Canon Update for single card
-export async function canonUpdateCard(cardId: string, updates: Partial<Card>, loadingFields: string[] = [], loadingMessage?: string): Promise<boolean> {
+export async function canonUpdateCard(cardId: string, updates: Partial<Card>, loadingFields: string[] = [], loadingMessage?: string, successMessage?: string): Promise<boolean> {
   const deck = get(currentDeck);
   if (!deck) {
     toasts.error('No active deck to update');
@@ -106,6 +112,12 @@ export async function canonUpdateCard(cardId: string, updates: Partial<Card>, lo
   try {
     await putDeck(updatedDeck);
     currentDeck.set(updatedDeck); // Canon state update
+    
+    // Show success notification if provided
+    if (successMessage) {
+      toasts.success(successMessage);
+    }
+    
     return true;
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : 'Unknown error';
@@ -117,7 +129,7 @@ export async function canonUpdateCard(cardId: string, updates: Partial<Card>, lo
 }
 
 // Canon Update for multiple cards
-export async function canonUpdateCards(updates: Array<{ cardId: string; updates: Partial<Card> }>, loadingFields: string[] = [], loadingMessage?: string): Promise<boolean> {
+export async function canonUpdateCards(updates: Array<{ cardId: string; updates: Partial<Card> }>, loadingFields: string[] = [], loadingMessage?: string, successMessage?: string): Promise<boolean> {
   const deck = get(currentDeck);
   if (!deck) {
     toasts.error('No active deck to update');
@@ -141,10 +153,45 @@ export async function canonUpdateCards(updates: Array<{ cardId: string; updates:
   try {
     await putDeck(updatedDeck);
     currentDeck.set(updatedDeck); // Canon state update
+    
+    // Show success notification if provided
+    if (successMessage) {
+      toasts.success(successMessage);
+    }
+    
     return true;
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : 'Unknown error';
     toasts.error(`Update failed: ${errorMsg}`);
+    return false;
+  } finally {
+    setFieldLoading(false, loadingFields);
+  }
+}
+
+// Canon Delete for deck
+export async function canonDeleteDeck(deckId: string, loadingFields: string[] = [], loadingMessage?: string, successMessage?: string): Promise<boolean> {
+  const deck = get(currentDeck);
+  
+  setFieldLoading(true, loadingFields, loadingMessage);
+
+  try {
+    await dbDeleteDeck(deckId);
+    
+    // If we're deleting the current deck, clear it
+    if (deck?.id === deckId) {
+      currentDeck.set(null);
+    }
+    
+    // Show success notification if provided
+    if (successMessage) {
+      toasts.success(successMessage);
+    }
+    
+    return true;
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+    toasts.error(`Delete failed: ${errorMsg}`);
     return false;
   } finally {
     setFieldLoading(false, loadingFields);
@@ -157,6 +204,7 @@ export function createCanonUpdateContext() {
     updateDeck: canonUpdateDeck,
     updateCard: canonUpdateCard,
     updateCards: canonUpdateCards,
+    deleteDeck: canonDeleteDeck,
     isFieldLoading,
     loadingState: { subscribe: loadingState.subscribe }
   };

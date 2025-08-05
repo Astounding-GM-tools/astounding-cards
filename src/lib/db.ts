@@ -161,47 +161,6 @@ export async function deleteDeck(id: string): Promise<void> {
   }
 }
 
-// Function to update a card property
-export async function updateCardProperty(
-  deckId: string,
-  cardId: string,
-  property: keyof Card,
-  value: any
-): Promise<Deck> {
-  const db = await openDB();
-  const tx = db.transaction('decks', 'readwrite');
-  const store = tx.objectStore('decks');
-
-  // Get current deck
-  const deck = await new Promise<Deck>((resolve, reject) => {
-    const request = store.get(deckId);
-    request.onerror = () => reject(request.error);
-    request.onsuccess = () => resolve(request.result);
-  });
-
-  if (!deck) throw new StorageError('Deck not found');
-
-  // Update the card
-  const cardIndex = deck.cards.findIndex(c => c.id === cardId);
-  if (cardIndex === -1) throw new StorageError('Card not found');
-
-  const updatedCard = {
-    ...deck.cards[cardIndex],
-    [property]: value
-  };
-
-  deck.cards[cardIndex] = updatedCard;
-  deck.meta.lastEdited = Date.now();
-
-  // Save back to IndexedDB
-  const saveRequest = store.put(deck);
-  await new Promise((resolve, reject) => {
-    saveRequest.onerror = () => reject(saveRequest.error);
-    saveRequest.onsuccess = () => resolve(undefined);
-  });
-
-  return deck;
-}
 
 // Development helper to clear database
 export async function clearDatabase(): Promise<void> {

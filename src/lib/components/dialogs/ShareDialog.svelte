@@ -4,14 +4,11 @@
   import { deckToUrl } from '$lib/stores/deck';
   import { toasts } from '$lib/stores/toast';
   import ImageMigrationDialog from './ImageMigrationDialog.svelte';
-  import { getDeckContext } from '$lib/stores/deckContext';
+  import { canonUpdateCard } from '$lib/stores/canonUpdate';
 
   const props = $props();
   const deck = props.deck as Deck;
   const onClose = props.onClose as () => void;
-
-  // Get deck context
-  const deckContext = getDeckContext();
 
   let dialogElement: HTMLDialogElement;
   let activeTab = $state<'share' | 'backup'>('share');
@@ -238,9 +235,7 @@
     cards={deck.cards}
     onClose={() => showMigration = false}
     onUpdate={async (id: string, updates: Partial<Card>) => {
-      for (const [key, value] of Object.entries(updates)) {
-        await deckContext.updateCard(id, key as keyof Card, value);
-      }
+      await canonUpdateCard(id, updates, ['card-image'], 'Updating image...');
     }}
   />
 {/if}

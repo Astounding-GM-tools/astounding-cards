@@ -22,14 +22,22 @@
   });
 
   async function handleDeckChange(event: CustomEvent<{ action: string, deckId: string }>) {
+    console.log('DeckList received deckchange event:', event.detail);
     if (event.detail.action === 'delete') {
       // Remove the deck from the list immediately
       decks = decks.filter(d => d.id !== event.detail.deckId);
+    } else if (event.detail.action === 'duplicate') {
+      // For duplication, force reload to ensure new deck appears
+      console.log('Reloading decks after duplication');
+      await loadDecks();
     } else {
       // For other actions, reload the list
       await loadDecks();
     }
   }
+
+  // Expose the method for parent component access
+  export { handleDeckChange };
 
   const sortedDecks = $derived([...decks].sort((a, b) => b.meta.lastEdited - a.meta.lastEdited));
 </script>

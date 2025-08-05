@@ -13,10 +13,6 @@
   import PrintInstructions from '$lib/components/ui/PrintInstructions.svelte';
   import { devMode } from '$lib/stores/dev';
   import ShareDialog from '$lib/components/dialogs/ShareDialog.svelte';
-  import { createDeckContext } from '$lib/stores/deckContext';
-  
-  // Create deck context
-  createDeckContext();
 
   // State
   let showPrintInstructions = $state(false);
@@ -29,6 +25,14 @@
   let printDialog = $state<HTMLDialogElement | null>(null) as unknown as HTMLDialogElement;
   let scrollContainer = $state<HTMLElement | null>(null);
   let shareDialog = $state(false);
+  let deckListRef: any;
+
+  function handleDeckChange(event: CustomEvent<{ action: string, deckId: string }>) {
+    // Forward the event to DeckList if it exists
+    if (deckListRef && deckListRef.handleDeckChange) {
+      deckListRef.handleDeckChange(event);
+    }
+  }
 
   // Store scroll position before update
   let lastScrollPosition = 0;
@@ -189,7 +193,6 @@
     <ShareDialog 
       deck={$currentDeck}
       onClose={() => shareDialog = false}
-      onUpdate={() => {}}
     />
   {/if}
 
@@ -208,8 +211,8 @@
       </button>
     </div>
     <div class="dialog-content">
-      <DeckSelector />
-      <DeckList />
+      <DeckSelector on:deckchange={handleDeckChange} />
+      <DeckList bind:this={deckListRef} />
     </div>
   </dialog>
 

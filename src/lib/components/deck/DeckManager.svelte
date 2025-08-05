@@ -7,7 +7,7 @@
   import ThemeSelect from '../ui/ThemeSelect.svelte';
   import { createEventDispatcher } from 'svelte';
   import { toasts } from '$lib/stores/toast';
-  import { canonUpdateDeck, isFieldLoading } from '$lib/stores/canonUpdate';
+  import { canonUpdateDeck, canonDeleteDeck, isFieldLoading } from '$lib/stores/canonUpdate';
 
   const props = $props();
   let deck = $state(props.deck as Deck);
@@ -60,7 +60,8 @@
     const success = await canonUpdateDeck(
       { theme: themeId },
       ['deck-manager-theme'],
-      'Updating theme...'
+      'Updating theme...',
+      'Theme updated'
     );
     
     if (success) {
@@ -85,17 +86,18 @@
 
     try {
       deleting = true;
-      await storeDeleteDeck(deck.id);
-      emitDeckChange({ action: 'delete', deckId: deck.id });
-      // If we're deleting the current deck, clear it
-      if ($currentDeck?.id === deck.id) {
-        const decks = await getAllDecks();
-        if (decks.length > 0) {
-          currentDeck.set(decks[0]);
-          currentDeckId.set(decks[0].id);
-        } else {
-          currentDeck.set(null);
-          currentDeckId.set(null);
+      const success = await canonDeleteDeck(deck.id, 'Deleting...', 'Deck deleted');
+      if (success) {
+        emitDeckChange({ action: 'delete', deckId: deck.id });
+        if ($currentDeck?.id === deck.id) {
+          const decks = await getAllDecks();
+          if (decks.length > 0) {
+            currentDeck.set(decks[0]);
+            currentDeckId.set(decks[0].id);
+          } else {
+            currentDeck.set(null);
+            currentDeckId.set(null);
+          }
         }
       }
     } catch (e) {
@@ -117,10 +119,13 @@
       duplicating = true;
       const newDeck = await duplicateDeck(deck, newDeckName);
       currentDeck.set(newDeck);
+      console.log('Emitting duplicate event for deck:', newDeck.id);
       emitDeckChange({ action: 'duplicate', deckId: newDeck.id });
       showDuplicateDialog = false;
+      toasts.success('Deck duplicated successfully');
     } catch (e) {
       console.error('Failed to duplicate deck:', e);
+      toasts.error('Failed to duplicate deck');
     } finally {
       duplicating = false;
     }
@@ -169,7 +174,8 @@
     const success = await canonUpdateDeck(
       { name: editedDeckName.trim() },
       ['deck-manager-name'],
-      'Updating deck name...'
+      'Updating deck name...',
+      'Deck name updated'
     );
     
     if (success) {
@@ -179,7 +185,6 @@
       }
       emitDeckChange({ action: 'update', deckId: deck.id });
       editingName = false;
-      toasts.success('Deck name updated');
     } else {
       editingName = false;
     }
@@ -281,6 +286,22 @@
       </fieldset>
       <fieldset class="action-group">
         <legend>Deck</legend>
+        <button 
+          class="action-button"
+          onclick={handleDuplicate}
+          disabled={duplicating}
+          title="Create a copy of this deck"
+        >
+          {duplicating ? 'Duplicating...' : 'Duplicate'}
+        </button>
+        <button 
+          class="action-button"
+          onclick={() => showThemeSelect = true}
+          disabled={isThemeUpdating}
+          title="Change deck theme"
+        >
+          {isThemeUpdating ? 'Updating...' : 'Theme'}
+        </button>
         <button 
           class="action-button danger"
           onclick={handleDelete}

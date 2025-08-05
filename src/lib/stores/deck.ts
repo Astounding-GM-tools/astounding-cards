@@ -79,7 +79,6 @@ export async function addCard() {
   } catch(e) {
       const error = e instanceof Error ? e.message : String(e);
       toasts.error(`Failed to save new card: ${error}`);
-      // a rollback could be implemented here
   };
 }
 
@@ -157,7 +156,7 @@ export async function duplicateDeck(deck: Deck, newName?: string): Promise<Deck>
     }))
   };
 
-  await putDeck(newDeck);
+  await putDeck(newDeck, true); // Allow empty decks when duplicating
   return newDeck;
 }
 

@@ -5,7 +5,6 @@
   import { currentDeck } from '$lib/stores/deck';
   import { canonUpdateCard, isFieldLoading } from '$lib/stores/canonUpdate';
   import ImageSelector from '../ui/ImageSelector.svelte';
-  import { debounce } from '$lib/utils/debounce';
   import { formatTraits, parseTraits, addTrait } from '$lib/utils/card-utils';
   import { createBlobUrl, revokeBlobUrl } from '$lib/utils/image-handler';
 
