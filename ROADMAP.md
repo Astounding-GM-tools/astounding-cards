@@ -107,20 +107,38 @@ For consistent theme application:
   - [x] Fix Scriptorum theme font sizes
   - [x] Fix Type button font size
   - [x] Fix corner flourish styling
+- [x] Svelte 5 Modernization
+  - [x] Abstract database logic into dedicated `db.ts` module
+  - [x] Refactor store architecture for better separation of concerns
+  - [x] Extract reusable business logic into utility modules
+  - [x] Reorganize component structure with logical groupings
+  - [x] Consolidate CSS into shared global stylesheets
+  - [x] Fix blob URL handling for persistent image storage
+  - [x] Eliminate reactive loops and Svelte 5 warnings
+  - [x] Implement proper async handling for database operations
+  - [x] Restore crop marks on card base components
+  - [x] Maintain optimistic UI updates throughout refactoring
 
-### Next Steps (Priority Order)
+## Next Steps (Priority Order)
 
 1. ✅ **Fix CardStatSelector Component**
    - [x] Debug why type selection only works for first card
    - [x] Fix state initialization and persistence
    - [x] Implement optimistic updates
+   - [x] Fix location updates
    - [x] Fix accessibility issues
    - [x] Remove conditional crop marks (always show)
    - [x] Clean up unused CSS selectors
    - [x] Migrate to new context-based data flow
    - [x] Fix styling and functionality regressions
 
-2. **Testing and Cleanup**
+2. **Refine Crop Marks and Card Positioning**
+   - [ ] Re-implement crop marks for front cards
+   - [ ] Ensure consistent crop mark visibility on all cards
+   - [ ] Optimize card margins and padding for print layouts
+   - [ ] Test and verify print-readiness
+
+3. **Testing and Cleanup**
    - [ ] Fix TypeScript/linting warnings
    - [ ] Test card title synchronization
    - [ ] Test card type selection and updates
@@ -130,17 +148,17 @@ For consistent theme application:
    - [ ] Document recent architectural changes
    - [ ] Update component documentation
 
-3. **Data Sharing Implementation**
-   - [ ] Design sharing protocol
-   - [ ] Implement URL-based sharing
-   - [ ] Handle large deck serialization
-   - [ ] Add progress indicators
-   - [ ] Implement share button/UI
-   - [ ] Add success/error feedback
+4. ✅ **Data Sharing Implementation**
+   - [x] Design sharing protocol
+   - [x] Implement URL-based sharing
+   - [x] Handle large deck serialization
+   - [x] Add progress indicators
+   - [x] Implement share button/UI
+   - [x] Add success/error feedback
    - [ ] Test with various deck sizes
    - [ ] Document sharing limitations
 
-4. **Deck Creation**
+5. **Deck Creation**
    - [ ] Add "Create New Deck" button to deck management
    - [ ] Implement proper deck creation flow
    - [ ] Handle database operations correctly
@@ -150,13 +168,13 @@ For consistent theme application:
    - [ ] Consider adding deck description/notes field
    - [ ] Consider adding deck category/tags
 
-5. **Export Implementation**
+6. **Export Implementation**
    - Implement JSON export with proper image URL handling
    - Add .zip backup export with blob data
    - Add progress tracking for large exports
    - Create restore/import functionality
 
-6. **Deck Merge System**
+7. **Deck Merge System**
    - Create merge detection (same deck ID)
    - Build diff viewer UI
      - Show added/removed/modified characters
@@ -175,13 +193,13 @@ For consistent theme application:
      - Change preview
      - Batch operations
 
-7. **Service Card**
+8. **Service Card**
    - Design the card layout
    - Add QR code generation
    - Implement auto-insertion
    - Make it non-deletable
 
-8. **Documentation**
+9. **Documentation**
    - Write IMAGE_HOSTING.md
    - Update USAGE.md with new features
    - Add examples and screenshots
@@ -190,15 +208,15 @@ For consistent theme application:
      - Show conflict resolution
      - Provide best practices
 
-9. **Polish & Testing**
-   - Test sharing with large decks
-   - Test image migration edge cases
-   - Test merge scenarios
-     - Complex character changes
-     - Image format conflicts
-     - Partial updates
-   - Add more user feedback
-   - Improve error handling
+10. **Polish & Testing**
+    - Test sharing with large decks
+    - Test image migration edge cases
+    - Test merge scenarios
+      - Complex character changes
+      - Image format conflicts
+      - Partial updates
+    - Add more user feedback
+    - Improve error handling
 
 ### Future Considerations
 - Consider adding image optimization options

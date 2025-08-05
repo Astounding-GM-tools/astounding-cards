@@ -103,7 +103,6 @@
 /* Title and role width overrides */
 [data-theme="scriptorum"] .content .title {
   max-width: 100%;
-  /* Removed font-size override to use property value */
 }
 
 [data-theme="scriptorum"] .content .role {
@@ -140,7 +139,8 @@
 
 @container (width > 300px) {
   [data-theme="scriptorum"] .content .title {
-    font-size: var(--title-font-size);
+    font-size: clamp(var(--base-font-size), var(--title-font-size), 28px);
+
   }
 }
 

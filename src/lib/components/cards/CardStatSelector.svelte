@@ -24,11 +24,13 @@
   // Local display state for optimistic updates
   let displayStat = $state<CardStat | undefined>(card.stat);
 
-  // Update displayStat when card.stat changes (from external updates)
+  // Sync displayStat with store updates
   $effect(() => {
-    // Avoid proxy equality warnings by comparing stringified versions
-    if (JSON.stringify(card.stat) !== JSON.stringify(displayStat)) {
-      displayStat = card.stat;
+    const currentCard = $currentDeck?.cards.find(c => c.id === card.id);
+    const storeStat = currentCard?.stat;
+    
+    if (JSON.stringify(storeStat) !== JSON.stringify(displayStat)) {
+      displayStat = storeStat;
     }
   });
 
@@ -42,8 +44,13 @@
       formAge = card.stat.value;
     } else if (card.stat?.type === 'item') {
       formPortability = card.stat.value;
-    } else if (card.stat?.type === 'location' && card.stat.value.type === 'soft') {
-      formArea = card.stat.value.value;
+    } else if (card.stat?.type === 'location') {
+      if (card.stat.value.type === 'soft') {
+        formArea = card.stat.value.value;
+      } else if (card.stat.value.type === 'hard') {
+        // For hard links, show the formatted display with the pin icon
+        formArea = formatLocationDisplay(card.stat.value);
+      }
     }
     
     isDialogOpen = true;
@@ -57,11 +64,14 @@
 
   function saveStat() {
     let statUpdate: CardStat | undefined;
+    let updates: Partial<Card>;
     
     if (!formType) {
       statUpdate = undefined;
-      deckContext.updateCard(card.id, 'type', 'character');  // Default to character if no type
-      deckContext.updateCard(card.id, 'stat', undefined);
+      updates = {
+        type: 'character',
+        stat: undefined
+      };
     } else {
       if (formType === 'location') {
         statUpdate = {
@@ -74,21 +84,31 @@
         statUpdate = { type: 'item', value: formPortability };
       }
 
-      // Update both type and stat
-      deckContext.updateCard(card.id, 'type', formType);
-      deckContext.updateCard(card.id, 'stat', statUpdate);
+      updates = {
+        type: formType,
+        stat: statUpdate
+      };
     }
 
-    // Update local display immediately
+    // Optimistic update for immediate feedback
     displayStat = statUpdate;
+    deckContext.updateCardFields(card.id, updates);
+    
     closeDialog();
   }
 
   function clearStat() {
     formType = undefined;
+    
+    const updates = {
+      type: 'character' as const,
+      stat: undefined
+    };
+    
+    // Optimistic update for immediate feedback
     displayStat = undefined;
-    deckContext.updateCard(card.id, 'type', 'character');  // Default to character when clearing
-    deckContext.updateCard(card.id, 'stat', undefined);
+    deckContext.updateCardFields(card.id, updates);
+    
     closeDialog();
   }
 
@@ -128,8 +148,15 @@
           type: 'location' as const,
           value: { type: 'hard' as const, value: locationCard.id }
         };
+        
+        const updates = {
+          type: 'location' as const,
+          stat: statUpdate
+        };
+        
+        // Optimistic update for immediate feedback
         displayStat = statUpdate;
-        deckContext.updateCard(card.id, 'stat', statUpdate);
+        deckContext.updateCardFields(card.id, updates);
       }
     }
     formArea = value;
@@ -231,6 +258,7 @@
               disabled={formType !== 'location'}
               bind:value={formArea}
               list="area-suggestions"
+              oninput={handleLocationInput}
             />
             <datalist id="area-suggestions">
               {#each locationCards as loc}

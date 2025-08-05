@@ -10,6 +10,7 @@ const DECK_CONTEXT_KEY = Symbol('deck-context');
 
 type DeckContext = {
   updateCard: (cardId: string, property: keyof Card, value: any) => Promise<void>;
+  updateCardFields: (cardId: string, updates: Partial<Card>) => Promise<void>;
 };
 
 export function createDeckContext() {
@@ -22,13 +23,61 @@ export function createDeckContext() {
           return;
       };
 
+      // Optimistic update: update store immediately
+      const optimisticDeck = {
+        ...deck,
+        cards: deck.cards.map(c => 
+          c.id === cardId ? { ...c, [property]: value } : c
+        ),
+        meta: {
+          ...deck.meta,
+          lastEdited: Date.now()
+        }
+      };
+      currentDeck.set(optimisticDeck);
+
+      // Update database in background
       try {
-        const updatedDeck = await updateCardProperty(deck.id, cardId, property, value);
-        currentDeck.set(updatedDeck); // Optimistic UI update
+        await updateCardProperty(deck.id, cardId, property, value);
       } catch (e) {
         const error = e instanceof Error ? e.message : String(e);
         toasts.error(`Failed to update card: ${error}`);
-        // Here you might want to reload the deck from DB to rollback the UI
+        // Rollback on error
+        currentDeck.set(deck);
+      }
+    },
+    updateCardFields: async (cardId: string, updates: Partial<Card>) => {
+      const deck = get(currentDeck);
+      if (!deck) {
+          toasts.error('No active deck to update.');
+          return;
+      };
+
+      // Optimistic update: update store immediately with all changes
+      const optimisticDeck = {
+        ...deck,
+        cards: deck.cards.map(c => 
+          c.id === cardId ? { ...c, ...updates } : c
+        ),
+        meta: {
+          ...deck.meta,
+          lastEdited: Date.now()
+        }
+      };
+      currentDeck.set(optimisticDeck);
+
+      // Update database in background
+      try {
+        let currentDeck_forDB = deck;
+        // Apply all updates in sequence to avoid race conditions
+        for (const [property, value] of Object.entries(updates)) {
+          currentDeck_forDB = await updateCardProperty(currentDeck_forDB.id, cardId, property as keyof Card, value);
+        }
+      } catch (e) {
+        const error = e instanceof Error ? e.message : String(e);
+        toasts.error(`Failed to update card: ${error}`);
+        // Rollback on error
+        currentDeck.set(deck);
       }
     }
   };
