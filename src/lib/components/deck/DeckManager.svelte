@@ -1,5 +1,6 @@
 <script lang="ts">
   import { currentDeck, currentDeckId, duplicateDeck, copyCardsTo, deleteCards as storeDeleteCards, deleteDeck as storeDeleteDeck } from '$lib/stores/deck';
+  import { deckList } from '$lib/stores/deckList';
   import { getAllDecks, putDeck } from '$lib/db';
   import type { Card, Deck } from '$lib/types';
   import { baseThemes } from '$lib/themes';
@@ -86,22 +87,30 @@
 
     try {
       deleting = true;
-      const success = await canonDeleteDeck(deck.id, ['deck-delete'], 'Deleting...', 'Deck deleted');
-      if (success) {
-        emitDeckChange({ action: 'delete', deckId: deck.id });
-        if ($currentDeck?.id === deck.id) {
-          const decks = await getAllDecks();
-          if (decks.length > 0) {
-            currentDeck.set(decks[0]);
-            currentDeckId.set(decks[0].id);
-          } else {
-            currentDeck.set(null);
-            currentDeckId.set(null);
-          }
+      await storeDeleteDeck(deck.id);
+      emitDeckChange({ action: 'delete', deckId: deck.id });
+      // Find a new deck to set as current if needed
+      if ($currentDeck?.id === deck.id) {
+        // Reload the deck list first to get the updated list without the deleted deck
+        await deckList.load();
+        
+        if ($deckList.decks.length > 0) {
+          // Sort by lastEdited descending and pick the most recent
+          const sortedDecks = [...$deckList.decks].sort((a, b) => b.meta.lastEdited - a.meta.lastEdited);
+          const mostRecentDeck = sortedDecks[0];
+          currentDeck.set(mostRecentDeck);
+          currentDeckId.set(mostRecentDeck.id);
+        } else {
+          currentDeck.set(null);
+          currentDeckId.set(null);
         }
       }
+      toasts.success('Deck deleted');
+      // Reload the deck list to reflect the change
+      await deckList.load();
     } catch (e) {
       console.error('Failed to delete deck:', e);
+      toasts.error('Failed to delete deck');
     } finally {
       deleting = false;
       showDeleteConfirm = false;
@@ -124,6 +133,8 @@
       emitDeckChange({ action: 'duplicate', deckId: newDeck.id });
       showDuplicateDialog = false;
       toasts.success('Deck duplicated successfully');
+      // Reload the deck list to reflect the change
+      await deckList.load();
     } catch (e) {
       console.error('Failed to duplicate deck:', e);
       toasts.error('Failed to duplicate deck');

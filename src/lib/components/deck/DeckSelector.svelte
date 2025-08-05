@@ -1,5 +1,6 @@
 <script lang="ts">
   import { currentDeck, currentDeckId, saveCurrentDeck } from '$lib/stores/deck';
+  import { deckList } from '$lib/stores/deckList';
   import { createEventDispatcher } from 'svelte';
   import { getAllDecks, getDeck, putDeck, clearDatabase, populateWithSampleData } from '$lib/db';
   import { canonUpdateDeck, isFieldLoading } from '$lib/stores/canonUpdate';
@@ -13,34 +14,13 @@
     deckchange: { action: 'create' | 'update', deckId: string };
   }>();
 
-  let decks = $state<Deck[]>([]);
-  let loading = $state(true);
-  let error = $state<string | null>(null);
   let showThemeSelect = $state(false);
   let showNewDeckDialog = $state(false);
   let newDeckName = $state('');
-  let loadTrigger = $state(0);
-  
-  // Get loading states
-  const isSizeUpdating = $derived(isFieldLoading('deck-size'));
-  const isThemeUpdating = $derived(isFieldLoading('deck-theme'));
 
-  // Load decks when triggered
   $effect(() => {
-    if (loadTrigger >= 0) {
-      loadDecks();
-    }
+    deckList.load();
   });
-
-  async function loadDecks() {
-    try {
-      decks = await getAllDecks();
-      loading = false;
-    } catch (e) {
-      error = e instanceof Error ? e.message : 'Failed to load decks';
-      loading = false;
-    }
-  }
 
   async function handleDeckChange(event: Event) {
     const select = event.target as HTMLSelectElement;
@@ -73,9 +53,8 @@
       currentDeckId.set(newDeck.id);
       showNewDeckDialog = false;
       newDeckName = '';
-      loadTrigger++; // Refresh deck list
+      deckList.load(); // Refresh deck list
       dispatch('deckchange', { action: 'create', deckId: newDeck.id });
-      toasts.success('Created new deck');
     } catch (error) {
       console.error('Failed to create deck:', error);
       toasts.error('Failed to create deck');
@@ -134,16 +113,16 @@
     }
   }
 
-  const sortedDecks = $derived([...decks].sort((a, b) => b.meta.lastEdited - a.meta.lastEdited));
+  const sortedDecks = $derived([...$deckList.decks].sort((a, b) => b.meta.lastEdited - a.meta.lastEdited));
 </script>
 
 <div class="deck-settings">
   <fieldset class="deck-selector">
     <legend>Select current deck</legend>
-    {#if loading}
+    {#if $deckList.loading}
       <span class="status">Loading decks...</span>
-    {:else if error}
-      <span class="status error">{error}</span>
+    {:else if $deckList.error}
+      <span class="status error">{$deckList.error}</span>
     {:else}
       <div class="deck-controls">
         <select 

@@ -1,53 +1,30 @@
 <script lang="ts">
-  import { getAllDecks } from '$lib/db';
-  import type { Deck } from '$lib/types';
+  import { deckList } from '$lib/stores/deckList';
   import DeckManager from './DeckManager.svelte';
 
-  let decks = $state<Deck[]>([]);
-  let loading = $state(true);
-  let error = $state<string | null>(null);
-
-  async function loadDecks() {
-    try {
-      decks = await getAllDecks();
-      loading = false;
-    } catch (e) {
-      error = e instanceof Error ? e.message : 'Failed to load decks';
-      loading = false;
-    }
-  }
-
+  // Initialize the store
   $effect(() => {
-    loadDecks();
+    deckList.load();
   });
 
   let handleDeckChange = $state(async function(event: CustomEvent<{ action: string, deckId: string }>) {
     console.log('DeckList received deckchange event:', event.detail);
-    if (event.detail.action === 'delete') {
-      // Remove the deck from the list immediately
-      decks = decks.filter(d => d.id !== event.detail.deckId);
-    } else if (event.detail.action === 'duplicate') {
-      // For duplication, force reload to ensure new deck appears
-      console.log('Reloading decks after duplication');
-      await loadDecks();
-    } else {
-      // For other actions, reload the list
-      await loadDecks();
-    }
+    // For all actions, reload the deck list from the database
+    await deckList.load();
   });
 
   // Expose the method for parent component access
   export { handleDeckChange };
 
-  const sortedDecks = $derived([...decks].sort((a, b) => b.meta.lastEdited - a.meta.lastEdited));
+  const sortedDecks = $derived([...$deckList.decks].sort((a, b) => b.meta.lastEdited - a.meta.lastEdited));
 </script>
 
 <div class="deck-list">
-  {#if loading}
+  {#if $deckList.loading}
     <div class="message">Loading decks...</div>
-  {:else if error}
-    <div class="message error">{error}</div>
-  {:else if decks.length === 0}
+  {:else if $deckList.error}
+    <div class="message error">{$deckList.error}</div>
+  {:else if $deckList.decks.length === 0}
     <div class="message">No decks found. Create your first deck using the selector above.</div>
   {:else}
     <div class="decks">
