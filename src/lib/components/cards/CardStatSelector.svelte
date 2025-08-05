@@ -2,15 +2,15 @@
 <script lang="ts">
   import type { CardStat, Portability, Card } from '$lib/types';
   import { currentDeck } from '$lib/stores/deck';
-  import { getDeckContext } from '$lib/stores/deckContext';
+  import { canonUpdateCard, isFieldLoading } from '$lib/stores/canonUpdate';
   
   const props = $props<{
     card: Card;
   }>();
   const card = props.card;
 
-  // Get deck context
-  const deckContext = getDeckContext();
+  // Get loading state
+  const isUpdating = $derived(isFieldLoading('card-stats'));
 
   let dialogElement = $state<HTMLDialogElement | null>(null);
   let isDialogOpen = $state(false);
@@ -62,7 +62,7 @@
     dialogElement?.close();
   }
 
-  function saveStat() {
+  async function saveStat() {
     let statUpdate: CardStat | undefined;
     let updates: Partial<Card>;
     
@@ -92,12 +92,17 @@
 
     // Optimistic update for immediate feedback
     displayStat = statUpdate;
-    deckContext.updateCardFields(card.id, updates);
     
-    closeDialog();
+    const success = await canonUpdateCard(card.id, updates, ['card-stats'], 'Saving card stats...');
+    if (success) {
+      closeDialog();
+    } else {
+      // Rollback optimistic update on failure
+      displayStat = card.stat;
+    }
   }
 
-  function clearStat() {
+  async function clearStat() {
     formType = undefined;
     
     const updates = {
@@ -106,10 +111,16 @@
     };
     
     // Optimistic update for immediate feedback
+    const previousStat = displayStat;
     displayStat = undefined;
-    deckContext.updateCardFields(card.id, updates);
     
-    closeDialog();
+    const success = await canonUpdateCard(card.id, updates, ['card-stats'], 'Clearing card stats...');
+    if (success) {
+      closeDialog();
+    } else {
+      // Rollback optimistic update on failure
+      displayStat = previousStat;
+    }
   }
 
   // Get all unique area names and location cards
@@ -154,9 +165,9 @@
           stat: statUpdate
         };
         
-        // Optimistic update for immediate feedback
+        // Use Canon Update for location input
         displayStat = statUpdate;
-        deckContext.updateCardFields(card.id, updates);
+        canonUpdateCard(card.id, updates, ['card-stats'], 'Updating location...');
       }
     }
     formArea = value;
@@ -167,9 +178,13 @@
 {#if displayStat}
   <button 
     class="stat-display {displayStat.type}"
+    class:updating={isUpdating}
     onclick={openDialog}
+    disabled={isUpdating}
   >
-    {#if displayStat.type === 'character'}
+    {#if isUpdating}
+      <span class="updating-text">Updating...</span>
+    {:else if displayStat.type === 'character'}
       Age: {displayStat.value}
     {:else if displayStat.type === 'item'}
       {displayStat.value}
@@ -180,9 +195,15 @@
 {:else}
   <button 
     class="stat-add"
+    class:updating={isUpdating}
     onclick={openDialog}
+    disabled={isUpdating}
   >
-    Type
+    {#if isUpdating}
+      <span class="updating-text">Updating...</span>
+    {:else}
+      Type
+    {/if}
   </button>
 {/if}
 
@@ -274,9 +295,21 @@
     </div>
 
     <div class="dialog-buttons">
-      <button class="clear" onclick={clearStat}>Clear Type</button>
-      <button class="cancel" onclick={closeDialog}>Cancel</button>
-      <button class="save" onclick={saveStat}>Save</button>
+      <button class="clear" onclick={clearStat} disabled={isUpdating}>
+        {#if isUpdating}
+          Clearing...
+        {:else}
+          Clear Type
+        {/if}
+      </button>
+      <button class="cancel" onclick={closeDialog} disabled={isUpdating}>Cancel</button>
+      <button class="save" onclick={saveStat} disabled={isUpdating}>
+        {#if isUpdating}
+          Saving...
+        {:else}
+          Save
+        {/if}
+      </button>
     </div>
   </div>
 </dialog>
