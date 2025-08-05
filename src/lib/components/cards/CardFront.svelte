@@ -3,7 +3,7 @@
   import CardBase from './CardBase.svelte';
   import CardStatSelector from './CardStatSelector.svelte';
   import { currentDeck } from '$lib/stores/deck';
-  import { getDeckContext } from '$lib/stores/deckContext';
+  import { canonUpdateCard, isFieldLoading } from '$lib/stores/canonUpdate';
   import ImageSelector from '../ui/ImageSelector.svelte';
   import { debounce } from '$lib/utils/debounce';
   import { formatTraits, parseTraits, addTrait } from '$lib/utils/card-utils';
@@ -19,8 +19,11 @@
   const preview = props.preview ?? false;
   const activeTheme = $derived(theme ?? $currentDeck?.meta?.theme ?? 'classic');
 
-  // Get deck context
-  const deckContext = getDeckContext();
+  // Get loading states for different fields
+  const isNameUpdating = $derived(isFieldLoading('card-name'));
+  const isRoleUpdating = $derived(isFieldLoading('card-role'));
+  const isTraitsUpdating = $derived(isFieldLoading('card-traits'));
+  const isImageUpdating = $derived(isFieldLoading('card-image'));
 
   // Get card from context
   const cardId = props.card.id;
@@ -36,10 +39,10 @@
   }
   const card = $derived(getCard(cardId));
 
-  function handleNameBlur(e: FocusEvent) {
+  async function handleNameBlur(e: FocusEvent) {
     const newName = (e.target as HTMLElement).textContent?.trim() || '';
     if (newName !== card.name) {
-      deckContext.updateCard(card.id, 'name', newName);
+      await canonUpdateCard(card.id, { name: newName }, ['card-name'], 'Updating name...');
     }
   }
 
@@ -93,20 +96,23 @@
   // Image selector
   async function handleImageSave(blob: Blob | null, sourceUrl: string | undefined) {
     try {
+      let updates: Partial<Card>;
+      
       if (blob) {
-        // For blob images, store the blob and DON'T store a blob URL
-        await deckContext.updateCard(card.id, 'imageBlob', blob);
-        await deckContext.updateCard(card.id, 'image', null); // Clear any external URL
+        // For blob images, store the blob and clear any external URL
+        updates = { imageBlob: blob, image: null };
       } else if (sourceUrl) {
         // For external URLs, store the URL and clear any blob
-        await deckContext.updateCard(card.id, 'image', sourceUrl);
-        await deckContext.updateCard(card.id, 'imageBlob', null);
+        updates = { image: sourceUrl, imageBlob: null };
       } else {
         // Clear both
-        await deckContext.updateCard(card.id, 'image', null);
-        await deckContext.updateCard(card.id, 'imageBlob', null);
+        updates = { image: null, imageBlob: null };
       }
-      showImageSelector = false;
+      
+      const success = await canonUpdateCard(card.id, updates, ['card-image'], 'Saving image...');
+      if (success) {
+        showImageSelector = false;
+      }
     } catch (error) {
       console.error('Failed to save image:', error);
       throw error; // Re-throw so ImageSelector can handle it
@@ -114,23 +120,23 @@
   }
 
 
-  function handleRoleBlur() {
+  async function handleRoleBlur() {
     const newRole = roleElement?.innerText.trim();
     if (newRole !== card.role) {
-      deckContext.updateCard(card.id, 'role', newRole);
+      await canonUpdateCard(card.id, { role: newRole }, ['card-role'], 'Updating role...');
     }
   }
 
-  function handleTraitsBlur() {
+  async function handleTraitsBlur() {
     const newTraits = parseTraits(traitsElement?.innerHTML || '');
     if (JSON.stringify(newTraits) !== JSON.stringify(card.traits)) {
-      deckContext.updateCard(card.id, 'traits', newTraits);
+      await canonUpdateCard(card.id, { traits: newTraits }, ['card-traits'], 'Updating traits...');
     }
   }
 
-  function handleAddTrait() {
+  async function handleAddTrait() {
     const newTraits = addTrait(card.traits);
-    deckContext.updateCard(card.id, 'traits', newTraits);
+    await canonUpdateCard(card.id, { traits: newTraits }, ['card-traits'], 'Adding trait...');
   }
 
 </script>
@@ -158,10 +164,16 @@
       <div class="portrait-container">
         <button 
           class="change-portrait" 
+          class:updating={isImageUpdating}
           onclick={() => showImageSelector = true}
+          disabled={preview || isImageUpdating}
           title={currentImageUrl ? "Change image" : "Add image"}
         >
-          {currentImageUrl ? "Change image" : "Add image"}
+          {#if isImageUpdating}
+            Updating...
+          {:else}
+            {currentImageUrl ? "Change image" : "Add image"}
+          {/if}
         </button>
 
         {#if showImageSelector}
@@ -203,27 +215,53 @@
 
       <h2 
         class="title front"
-        contenteditable="true" 
+        class:updating={isNameUpdating}
+        contenteditable={!preview && !isNameUpdating} 
         onblur={handleNameBlur}
-      >{card.name}</h2>
+      >
+        {#if isNameUpdating}
+          <span class="updating-text">Updating...</span>
+        {:else}
+          {card.name}
+        {/if}
+      </h2>
       <div 
         class="role" 
-        contenteditable="true"
+        class:updating={isRoleUpdating}
+        contenteditable={!preview && !isRoleUpdating}
         onblur={handleRoleBlur}
         bind:this={roleElement}
-      >{card.role}</div>
+      >
+        {#if isRoleUpdating}
+          <span class="updating-text">Updating...</span>
+        {:else}
+          {card.role}
+        {/if}
+      </div>
       <div class="traits">
         <div 
           class="traits-content" 
-          contenteditable="true"
+          class:updating={isTraitsUpdating}
+          contenteditable={!preview && !isTraitsUpdating}
           onblur={handleTraitsBlur}
           bind:this={traitsElement}
-        >{@html formatTraits(card.traits)}</div>
+        >
+          {#if isTraitsUpdating}
+            <span class="updating-text">Updating...</span>
+          {:else}
+            {@html formatTraits(card.traits)}
+          {/if}
+        </div>
         <button 
           class="add-trait"
           onclick={handleAddTrait}
+          disabled={preview || isTraitsUpdating}
         >
-          Add Trait
+          {#if isTraitsUpdating}
+            Adding...
+          {:else}
+            Add Trait
+          {/if}
         </button>
       </div>
     </div>
@@ -524,5 +562,22 @@
   .card-content.preview .portrait-container,
   .card-content.preview .image-input {
     display: none;
+  }
+
+  /* Loading states */
+  .updating {
+    opacity: 0.6;
+    pointer-events: none;
+  }
+
+  .updating-text {
+    font-style: italic;
+    opacity: 0.8;
+  }
+
+  .add-trait:disabled,
+  .change-portrait:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
   }
 </style> 
