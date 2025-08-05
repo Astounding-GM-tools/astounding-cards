@@ -21,7 +21,7 @@ Card Deck Creator is a **client-side only** application built with SvelteKit. It
 
 ### 3. State Management
 - Svelte stores for reactive state
-- **Canon Update Pattern** (see [CANON_UPDATE_PATTERN.md](CANON_UPDATE_PATTERN.md) for detailed documentation):
+- **Canon Update Pattern** (see [CANON_UPDATE_PATTERN.md](./CANON_UPDATE_PATTERN.md) for detailed documentation):
   - Database-first atomic updates
   - Granular loading states for user feedback
   - Centralized update logic in `canonUpdate.ts`
