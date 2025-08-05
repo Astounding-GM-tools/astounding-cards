@@ -139,10 +139,10 @@ export function setCurrentDeckId(id: string | null) {
   currentDeckId.set(id);
 }
 
-// Duplicate an existing deck
+// Duplicate an existing deck with all cards and images
 export async function duplicateDeck(deck: Deck, newName?: string): Promise<Deck> {
   const newDeck: Deck = {
-    id: crypto.randomUUID(),
+    id: crypto.randomUUID(), // New UUID for the deck
     meta: {
       name: newName || `${deck.meta.name} (Copy)`,
       theme: deck.meta.theme,
@@ -150,10 +150,23 @@ export async function duplicateDeck(deck: Deck, newName?: string): Promise<Deck>
       lastEdited: Date.now(),
       createdAt: Date.now()
     },
-    cards: deck.cards.map(char => ({
-      ...char,
-      id: crypto.randomUUID()
-    }))
+    cards: deck.cards.map(card => {
+      // Explicitly build card object to avoid DataCloneError with spread operators
+      return {
+        id: crypto.randomUUID(), // New UUID for each card
+        name: card.name,
+        role: card.role,
+        image: card.image,
+        imageBlob: card.imageBlob, // Preserves images in duplicated cards
+        traits: [...card.traits], // Deep copy arrays
+        secrets: [...card.secrets], // Deep copy arrays
+        desc: card.desc,
+        type: card.type,
+        theme: card.theme,
+        stat: card.stat,
+        gameStats: card.gameStats
+      };
+    })
   };
 
   await putDeck(newDeck, true); // Allow empty decks when duplicating
@@ -189,14 +202,21 @@ export async function copyCardsTo(
   const targetDeck = await getDeck(finalTargetDeckId);
   if (!targetDeck) throw new Error('Target deck not found');
 
-  // Copy cards with new IDs
+  // Copy cards with new IDs (using explicit property assignment to avoid DataCloneError)
   const copiedCards = cards.map(card => {
-    const { imageBlob, ...cardWithoutBlob } = card;
     return {
-      ...cardWithoutBlob,
       id: crypto.randomUUID(),
+      name: card.name,
+      role: card.role,
+      image: card.image,
+      // Note: imageBlob is intentionally excluded for card copying
       traits: [...card.traits],
-      secrets: [...card.secrets]
+      secrets: [...card.secrets],
+      desc: card.desc,
+      type: card.type,
+      theme: card.theme,
+      stat: card.stat,
+      gameStats: card.gameStats
     };
   });
 
