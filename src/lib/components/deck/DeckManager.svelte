@@ -86,7 +86,7 @@
 
     try {
       deleting = true;
-      const success = await canonDeleteDeck(deck.id, 'Deleting...', 'Deck deleted');
+      const success = await canonDeleteDeck(deck.id, ['deck-delete'], 'Deleting...', 'Deck deleted');
       if (success) {
         emitDeckChange({ action: 'delete', deckId: deck.id });
         if ($currentDeck?.id === deck.id) {
@@ -119,6 +119,7 @@
       duplicating = true;
       const newDeck = await duplicateDeck(deck, newDeckName);
       currentDeck.set(newDeck);
+      currentDeckId.set(newDeck.id);
       console.log('Emitting duplicate event for deck:', newDeck.id);
       emitDeckChange({ action: 'duplicate', deckId: newDeck.id });
       showDuplicateDialog = false;

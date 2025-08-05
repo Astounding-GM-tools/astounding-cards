@@ -102,10 +102,10 @@
         updates = { imageBlob: blob, image: null };
       } else if (sourceUrl) {
         // For external URLs, store the URL and clear any blob
-        updates = { image: sourceUrl, imageBlob: null };
+        updates = { image: sourceUrl, imageBlob: undefined };
       } else {
         // Clear both
-        updates = { image: null, imageBlob: null };
+        updates = { image: null, imageBlob: undefined };
       }
       
       const success = await canonUpdateCard(card.id, updates, ['card-image'], 'Saving image...');
