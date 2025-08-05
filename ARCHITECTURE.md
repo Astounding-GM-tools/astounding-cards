@@ -16,18 +16,16 @@ Card Deck Creator is a **client-side only** application built with SvelteKit. It
 - IndexedDB for local storage
   - `decks` object store with `id` as key path
   - Stores complete deck objects including cards and metadata
-- Auto-saving with debounce (1 second delay)
+- Atomic database-first updates (Canon Update pattern)
 - URL-based state sharing for deck distribution
 
 ### 3. State Management
 - Svelte stores for reactive state
-- Store Update Pattern:
-  1. Use writable store for currentDeck (not derived)
-  2. Update store directly with set() when saving changes
-  3. Never force reloads by toggling currentDeckId
-  4. Let keyed each-blocks handle partial updates
-  5. Always update both IndexedDB and in-memory store
-  6. Provide user feedback for all operations
+- **Canon Update Pattern** (see [CANON_UPDATE_PATTERN.md](CANON_UPDATE_PATTERN.md) for detailed documentation):
+  - Database-first atomic updates
+  - Granular loading states for user feedback
+  - Centralized update logic in `canonUpdate.ts`
+  - No optimistic updates - UI reflects persisted state only
 - Toast notifications for user feedback
 - Optimized to prevent scroll jumps and unnecessary re-renders
 
@@ -42,12 +40,12 @@ Card Deck Creator is a **client-side only** application built with SvelteKit. It
 
 1. **Deck Creation/Loading**
    ```
-   User Action → Store Update → IndexedDB Save → UI Update
+   User Action → IndexedDB Save → Store Update → UI Update
    ```
 
-2. **Card Editing**
+2. **Card Editing (Canon Update Pattern)**
    ```
-   Edit Event → Debounced Save → Store Update → IndexedDB Save
+   Edit Event → Loading State → IndexedDB Save → Store Update → UI Update
    ```
 
 3. **Deck Sharing**
@@ -63,6 +61,7 @@ Card Deck Creator is a **client-side only** application built with SvelteKit. It
 ## Key Files and Directories
 
 - `/src/lib/stores/deck.ts` - Core data management
+- `/src/lib/stores/canonUpdate.ts` - Canon Update pattern implementation
 - `/src/lib/components/` - UI components
 - `/src/lib/types.ts` - TypeScript definitions
 - `/src/lib/themes/` - Theme definitions and styles
@@ -73,10 +72,10 @@ Card Deck Creator is a **client-side only** application built with SvelteKit. It
    - Always use IndexedDB for storage
    - Implement proper error handling
    - Validate data before saving
-   - Use debounced saves for performance
 
 2. **State Management**
-   - Follow the store update pattern
+   - Use the Canon Update pattern for all state changes
+   - Provide loading states for user feedback
    - Avoid unnecessary re-renders
    - Maintain scroll position
    - Handle errors gracefully
