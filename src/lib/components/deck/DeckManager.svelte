@@ -7,6 +7,7 @@
   import ThemeSelect from '../ui/ThemeSelect.svelte';
   import { createEventDispatcher } from 'svelte';
   import { toasts } from '$lib/stores/toast';
+  import { canonUpdateDeck, isFieldLoading } from '$lib/stores/canonUpdate';
 
   const props = $props();
   let deck = $state(props.deck as Deck);
@@ -32,6 +33,10 @@
   let selectedCardIds = $state<string[]>([]);
   let targetDeckId = $state<string | 'new'>('new');
   let availableDecks = $state<Deck[]>([]);
+  
+  // Get loading states
+  const isThemeUpdating = $derived(isFieldLoading('deck-manager-theme'));
+  const isNameUpdating = $derived(isFieldLoading('deck-manager-name'));
 
   function toggleCard(id: string) {
     if (selectedCardIds.includes(id)) {
@@ -51,20 +56,21 @@
   }
 
   async function handleThemeChange(themeId: string) {
-    const updatedDeck = {
-      ...deck,
-      meta: {
-        ...deck.meta,
-        theme: themeId,
-        lastEdited: Date.now()
+    // For DeckManager, we need to handle the deck prop update differently
+    const success = await canonUpdateDeck(
+      { theme: themeId },
+      ['deck-manager-theme'],
+      'Updating theme...'
+    );
+    
+    if (success) {
+      // Update local deck prop from current deck store
+      if ($currentDeck?.id === deck.id) {
+        deck = $currentDeck;
       }
-    };
-    await putDeck(updatedDeck);
-    if ($currentDeck?.id === deck.id) {
-      currentDeck.set(updatedDeck);
+      emitDeckChange({ action: 'update', deckId: deck.id });
+      showThemeSelect = false;
     }
-    emitDeckChange({ action: 'update', deckId: deck.id });
-    showThemeSelect = false;
   }
 
   async function loadAvailableDecks() {
@@ -160,26 +166,21 @@
       return;
     }
 
-    try {
-      const updatedDeck = {
-        ...deck,
-        meta: {
-          ...deck.meta,
-          name: editedDeckName.trim(),
-          lastEdited: Date.now()
-        }
-      };
-      await putDeck(updatedDeck);
+    const success = await canonUpdateDeck(
+      { name: editedDeckName.trim() },
+      ['deck-manager-name'],
+      'Updating deck name...'
+    );
+    
+    if (success) {
+      // Update local deck prop from current deck store
       if ($currentDeck?.id === deck.id) {
-        currentDeck.set(updatedDeck); // Update in-memory store
+        deck = $currentDeck;
       }
-      deck = updatedDeck; // Update local prop
       emitDeckChange({ action: 'update', deckId: deck.id });
       editingName = false;
       toasts.success('Deck name updated');
-    } catch (error) {
-      console.error('Failed to update deck name:', error);
-      toasts.error('Failed to update deck name');
+    } else {
       editingName = false;
     }
   }

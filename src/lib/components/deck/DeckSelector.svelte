@@ -1,6 +1,7 @@
 <script lang="ts">
   import { currentDeck, currentDeckId, saveCurrentDeck } from '$lib/stores/deck';
   import { getAllDecks, getDeck, putDeck, clearDatabase, populateWithSampleData } from '$lib/db';
+  import { canonUpdateDeck, isFieldLoading } from '$lib/stores/canonUpdate';
   import type { Deck, CardSize } from '$lib/types';
   import { devMode } from '$lib/stores/dev';
   import { baseThemes } from '$lib/themes';
@@ -14,6 +15,10 @@
   let showNewDeckDialog = $state(false);
   let newDeckName = $state('');
   let loadTrigger = $state(0);
+  
+  // Get loading states
+  const isSizeUpdating = $derived(isFieldLoading('deck-size'));
+  const isThemeUpdating = $derived(isFieldLoading('deck-theme'));
 
   // Load decks when triggered
   $effect(() => {
@@ -86,49 +91,29 @@
     const select = event.target as HTMLSelectElement;
     const size = select.value as CardSize;
     
-    const updatedDeck = {
-      ...$currentDeck,
-      meta: {
-        ...$currentDeck.meta,
-        cardSize: size,
-        lastEdited: Date.now()
-      }
-    };
+    const success = await canonUpdateDeck(
+      { cardSize: size },
+      ['deck-size'],
+      'Updating card size...'
+    );
     
-    try {
-      await putDeck(updatedDeck);
-      currentDeck.set(updatedDeck); // Update the in-memory store
+    if (success) {
       toasts.success('Card size updated');
-    } catch (error) {
-      console.error('Failed to update card size:', error);
-      toasts.error('Failed to update card size');
     }
   }
 
   async function handleThemeChange(themeId: string) {
     if (!$currentDeck) return;
     
-    const updatedDeck = {
-      ...$currentDeck,
-      meta: {
-        ...$currentDeck.meta,
-        theme: themeId,
-        lastEdited: Date.now()
-      }
-    };
+    const success = await canonUpdateDeck(
+      { theme: themeId },
+      ['deck-theme'],
+      'Updating theme...'
+    );
     
-    try {
-      await putDeck(updatedDeck);
-      // Reload the deck from database to ensure all components get the update
-      const freshDeck = await getDeck(updatedDeck.id);
-      if (freshDeck) {
-        currentDeck.set(freshDeck);
-      }
+    if (success) {
       showThemeSelect = false;
       toasts.success('Theme updated');
-    } catch (error) {
-      console.error('Failed to update theme:', error);
-      toasts.error('Failed to update theme');
     }
   }
 
