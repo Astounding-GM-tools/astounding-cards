@@ -3,7 +3,7 @@
   import type { Card } from '$lib/types';
   import CardBase from './CardBase.svelte';
   import { currentDeck } from '$lib/stores/deck';
-  import { getDeckContext } from '$lib/stores/deckContext';
+  import { canonUpdateCard, isFieldLoading } from '$lib/stores/canonUpdate';
   import { formatSecrets, parseSecrets, addSecret } from '$lib/utils/card-utils';
 
   // Props - only for theme, preview, and editable
@@ -18,8 +18,10 @@
   const editable = props.editable ?? true;
   const activeTheme = $derived(theme ?? $currentDeck?.meta?.theme ?? 'classic');
 
-  // Get deck context
-  const deckContext = getDeckContext();
+  // Get loading states for different fields
+  const isNameUpdating = $derived(isFieldLoading('card-back-name'));
+  const isDescUpdating = $derived(isFieldLoading('card-back-desc'));
+  const isSecretsUpdating = $derived(isFieldLoading('card-back-secrets'));
 
   // Get card from context
   const cardId = props.card.id;
@@ -35,11 +37,11 @@
   }
   const card = $derived(getCard(cardId));
 
-  function handleNameBlur(e: FocusEvent) {
+  async function handleNameBlur(e: FocusEvent) {
     if (!editable) return;
     const newName = (e.target as HTMLElement).textContent?.trim() || '';
     if (newName !== card.name) {
-      deckContext.updateCard(card.id, 'name', newName);
+      await canonUpdateCard(card.id, { name: newName }, ['card-back-name'], 'Updating name...');
     }
   }
 
@@ -51,26 +53,26 @@
   $effect(() => {
   });
 
-  function handleDescBlur() {
+  async function handleDescBlur() {
     if (!editable) return;
     const newDesc = descElement?.innerText.trim();
     if (newDesc && newDesc !== card.desc) {
-      deckContext.updateCard(card.id, 'desc', newDesc);
+      await canonUpdateCard(card.id, { desc: newDesc }, ['card-back-desc'], 'Updating description...');
     }
   }
 
-  function handleSecretsBlur() {
+  async function handleSecretsBlur() {
     if (!editable) return;
     const newSecrets = secretsElement ? parseSecrets(secretsElement.innerHTML) : [];
     if (JSON.stringify(newSecrets) !== JSON.stringify(card.secrets)) {
-      deckContext.updateCard(card.id, 'secrets', newSecrets);
+      await canonUpdateCard(card.id, { secrets: newSecrets }, ['card-back-secrets'], 'Updating secrets...');
     }
   }
 
-  function handleAddSecret() {
+  async function handleAddSecret() {
     if (!editable) return;
     const newSecrets = addSecret(card.secrets);
-    deckContext.updateCard(card.id, 'secrets', newSecrets);
+    await canonUpdateCard(card.id, { secrets: newSecrets }, ['card-back-secrets'], 'Adding secret...');
   }
 
 </script>
@@ -93,29 +95,55 @@
 
       <h2 
         class="title back"
-        contenteditable="true"
+        class:updating={isNameUpdating}
+        contenteditable={editable && !isNameUpdating}
         class:disabled={!editable}
         onblur={handleNameBlur}
-      >{card.name}</h2>
+      >
+        {#if isNameUpdating}
+          <span class="updating-text">Updating...</span>
+        {:else}
+          {card.name}
+        {/if}
+      </h2>
       <p 
-        contenteditable={editable}
         class="desc"
+        class:updating={isDescUpdating}
+        contenteditable={editable && !isDescUpdating}
         onblur={handleDescBlur}
         bind:this={descElement}
-      >{card.desc}</p>
+      >
+        {#if isDescUpdating}
+          <span class="updating-text">Updating...</span>
+        {:else}
+          {card.desc}
+        {/if}
+      </p>
       <div class="secrets">
         <div 
           class="secrets-content"
-          contenteditable={editable}
+          class:updating={isSecretsUpdating}
+          contenteditable={editable && !isSecretsUpdating}
           onblur={handleSecretsBlur}
           bind:this={secretsElement}
-        >{@html formatSecrets(card.secrets)}</div>
+        >
+          {#if isSecretsUpdating}
+            <span class="updating-text">Updating...</span>
+          {:else}
+            {@html formatSecrets(card.secrets)}
+          {/if}
+        </div>
         {#if editable}
           <button 
             class="add-secret"
             onclick={handleAddSecret}
+            disabled={isSecretsUpdating}
           >
-            Add Secret
+            {#if isSecretsUpdating}
+              Adding...
+            {:else}
+              Add Secret
+            {/if}
           </button>
         {/if}
       </div>
@@ -335,5 +363,21 @@
   .disabled {
     pointer-events: none;
     opacity: 0.7;
+  }
+
+  /* Loading states */
+  .updating {
+    opacity: 0.6;
+    pointer-events: none;
+  }
+
+  .updating-text {
+    font-style: italic;
+    opacity: 0.8;
+  }
+
+  .add-secret:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
   }
 </style> 
