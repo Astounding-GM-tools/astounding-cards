@@ -92,10 +92,43 @@ For consistent theme application:
 - [ ] Test offline functionality thoroughly
 - [ ] Ensure seamless updates when new versions are deployed
 
+## Game System Presets (In Progress) 🎲
+
+### Foundation Complete ✅
+- [x] **Database Schema**: Extended to support game presets with proper indexes
+- [x] **Type System**: Added `GamePreset`, `MechanicDefinition`, and `CardMechanic` types  
+- [x] **Official Presets**: Created 3 core game systems (Modern Fantasy, Classic Fantasy, Narrative RPG)
+- [x] **Preset Store**: Complete Svelte store with CRUD operations and filtering
+- [x] **GamePresetSelector**: UI component for browsing and selecting game systems
+- [x] **Front/Back Philosophy**: Clear separation of player-visible vs GM-only information
+
+### Next: Implementation 🚧
+- [ ] **Preset Integration**: Add game preset selection to deck creation/editing
+- [ ] **Card Mechanics Editor**: UI for editing back-card game mechanics
+- [ ] **Preset Application**: Logic to apply presets to existing cards
+- [ ] **Custom Preset Builder**: Advanced editor for creating custom game systems
+- [ ] **Preset Sharing**: Import/export functionality for custom presets
+
+### Front/Back Card Design Philosophy 📋
+
+**Front Card (Player-Visible)**:
+- Public character information (age, heritage, clan, profession)
+- Item properties (value, rarity, weight, material) 
+- Location details (area, population, climate)
+- Spell/ability basics (level, school, duration, range)
+
+**Back Card (GM-Only)**:
+- Combat mechanics (HP, AC, attack bonuses, damage)
+- Saving throws and resistances
+- Special abilities and game mechanics
+- Morale, initiative, and tactical information
+
+This allows single-sided printing for player handouts while keeping GM information private on the back.
+
 ## Post-Deployment Roadmap
 
 - **Export/Import System**: Implement JSON and zip export/import
 - **Deck Merge System**: Advanced diffing and merging for shared decks
 - **Service Card**: QR code card for easy sharing
-- **Game System Integration**: Templates and validation for specific TTRPGs
+- **Advanced Game Systems**: Support for more complex RPG mechanics
 - **Commercial Features**: Image hosting, team features, and more

@@ -14,6 +14,46 @@ export interface CardStat {
   value: string | number; // The actual stat value
 }
 
+// Game mechanics system types (back card) - simplified for GM reference cards
+export enum MechanicType {
+  DEFENSE = 'defense',     // AC, Dodge, Armor rating
+  INITIATIVE = 'initiative', // Turn order, speed bonus
+  MOVEMENT = 'movement',   // Movement rate, zones
+  ATTACK = 'attack',       // Weapons, offensive abilities
+  HEALTH = 'health',       // HP, Stress, vitality tracking
+  RESOURCE = 'resource'    // Ammo, spell slots, limited abilities
+}
+
+export interface CardMechanic {
+  id: string;
+  name: string;           // "Longsword", "Hit Points", "Bullets"
+  value: string | number; // "+5, 1d8+3 slashing", 25, "AC 18"
+  description?: string;   // "ring mail and shield", "crossbow bolts"
+  tracked: boolean;       // true = render tracking boxes for printed cards
+  type: MechanicType;     // Category for UI organization
+}
+
+// Game preset system
+export interface GamePreset {
+  id: string;
+  name: string;         // "GM Reference", "Old School Revival", etc.
+  description?: string;
+  version: string;
+  author?: string;
+  
+  // Front card stats (attributes, skills, etc.)
+  frontStats: StatDefinition[];
+  
+  // Back card mechanics (armor class, hit points, saves, etc.)
+  backMechanics: CardMechanic[];
+  
+  // Metadata
+  isOfficial: boolean;  // Curated vs user-created
+  tags: string[];       // "fantasy", "modern", "horror", "sci-fi"
+  created: Date;
+  updated: Date;
+}
+
 // Legacy types - kept for migration
 export type Portability = 'negligible' | 'light' | 'medium' | 'heavy' | 'stationary';
 
@@ -54,11 +94,14 @@ export interface Card {
   // NEW flexible stats system (replaces stat)
   stats?: CardStat[];  // Array of icon+value pairs for front card
   
+  // NEW flexible mechanics system for back card
+  mechanics?: CardMechanic[];  // Array of game mechanics for back card
+  
   // LEGACY - kept for migration
   stat?: LegacyCardStat;
   
   theme?: string;  // Override deck theme
-  gameStats?: { [key: string]: string | number };  // Flexible game system stats (back card)
+  gameStats?: { [key: string]: string | number };  // Flexible game system stats (back card) - DEPRECATED
 }
 
 // Deck type
@@ -123,6 +166,28 @@ export function validateCard(card: Partial<Card>): ValidationError[] {
         }
         if (stat.value === undefined || stat.value === null) {
           errors.push({ field: `stats[${index}].value`, message: 'Stat value is required' });
+        }
+      });
+    }
+  }
+
+  // Validate new mechanics array
+  if (card.mechanics) {
+    if (!Array.isArray(card.mechanics)) {
+      errors.push({ field: 'mechanics', message: 'Mechanics must be an array' });
+    } else {
+      card.mechanics.forEach((mechanic, index) => {
+        if (!mechanic.id || typeof mechanic.id !== 'string') {
+          errors.push({ field: `mechanics[${index}].id`, message: 'Mechanic ID is required' });
+        }
+        if (!mechanic.name || typeof mechanic.name !== 'string') {
+          errors.push({ field: `mechanics[${index}].name`, message: 'Mechanic name is required' });
+        }
+        if (mechanic.value === undefined || mechanic.value === null) {
+          errors.push({ field: `mechanics[${index}].value`, message: 'Mechanic value is required' });
+        }
+        if (!Object.values(MechanicType).includes(mechanic.type)) {
+          errors.push({ field: `mechanics[${index}].type`, message: 'Invalid mechanic type' });
         }
       });
     }

@@ -1,11 +1,11 @@
 // src/lib/db.ts
 import { browser } from '$app/environment';
-import type { Card, Deck } from '$lib/types';
+import type { Card, Deck, GamePreset } from '$lib/types';
 import { validateDeck } from '$lib/types';
 
 // IndexedDB setup
 const DB_NAME = 'card-decks';
-const DB_VERSION = 1;
+const DB_VERSION = 2;  // Increment for game presets
 
 export class StorageError extends Error {
   constructor(message: string, public cause?: Error | DOMException) {
@@ -39,8 +39,19 @@ async function openDB(): Promise<IDBDatabase> {
 
     request.onupgradeneeded = (event) => {
       const db = (event.target as IDBOpenDBRequest).result;
+      
+      // Create decks store (v1)
       if (!db.objectStoreNames.contains('decks')) {
         db.createObjectStore('decks', { keyPath: 'id' });
+      }
+      
+      // Create game presets store (v2)
+      if (!db.objectStoreNames.contains('gamePresets')) {
+        const presetStore = db.createObjectStore('gamePresets', { keyPath: 'id' });
+        presetStore.createIndex('name', 'name');
+        presetStore.createIndex('isOfficial', 'isOfficial');
+        presetStore.createIndex('created', 'created');
+        presetStore.createIndex('tags', 'tags', { multiEntry: true });
       }
     };
   });
@@ -162,6 +173,109 @@ export async function deleteDeck(id: string): Promise<void> {
   }
 }
 
+
+// Game Preset functions
+
+// Get all game presets
+export async function getAllGamePresets(): Promise<GamePreset[]> {
+  try {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction(['gamePresets'], 'readonly');
+      const store = transaction.objectStore('gamePresets');
+
+      const request = store.getAll();
+
+      request.onerror = () => {
+        const error = handleDbError(request);
+        reject(new StorageError('Failed to load game presets', error));
+      };
+      request.onsuccess = () => {
+        const presets = request.result;
+        resolve(presets);
+      };
+    });
+  } catch (error) {
+    throw new StorageError('Failed to load game presets', error instanceof Error ? error : undefined);
+  }
+}
+
+// Get game preset by ID
+export async function getGamePreset(id: string): Promise<GamePreset | null> {
+  try {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction(['gamePresets'], 'readonly');
+      const store = transaction.objectStore('gamePresets');
+
+      const request = store.get(id);
+
+      request.onerror = () => {
+        const error = handleDbError(request);
+        reject(new StorageError('Failed to load game preset', error));
+      };
+      request.onsuccess = () => {
+        const preset = request.result as GamePreset;
+        resolve(preset);
+      };
+    });
+  } catch (error) {
+    throw new StorageError('Failed to load game preset', error instanceof Error ? error : undefined);
+  }
+}
+
+// Save game preset to IndexedDB
+export async function putGamePreset(preset: GamePreset): Promise<void> {
+  if (!browser) return;
+
+  // Prepare preset for storage by ensuring all data is cloneable
+  const storablePreset = {
+    ...preset,
+    frontStats: preset.frontStats.map(stat => ({ ...stat })),
+    backMechanics: preset.backMechanics.map(mechanic => ({ ...mechanic })),
+    tags: [...preset.tags],
+    created: preset.created,
+    updated: preset.updated
+  };
+
+  try {
+    const db = await openDB();
+    return new Promise<void>((resolve, reject) => {
+      const transaction = db.transaction(['gamePresets'], 'readwrite');
+      const store = transaction.objectStore('gamePresets');
+
+      const request = store.put(storablePreset);
+
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve();
+      transaction.oncomplete = () => resolve();
+      transaction.onerror = () => reject(transaction.error);
+    });
+  } catch (err) {
+    throw err;
+  }
+}
+
+// Delete game preset
+export async function deleteGamePreset(id: string): Promise<void> {
+  try {
+    const db = await openDB();
+    return new Promise<void>((resolve, reject) => {
+      const transaction = db.transaction(['gamePresets'], 'readwrite');
+      const store = transaction.objectStore('gamePresets');
+
+      const request = store.delete(id);
+
+      request.onerror = () => {
+        const error = handleDbError(request);
+        reject(new StorageError('Failed to delete game preset', error));
+      };
+      request.onsuccess = () => resolve();
+    });
+  } catch (error) {
+    throw new StorageError('Failed to delete game preset', error instanceof Error ? error : undefined);
+  }
+}
 
 // Development helper to clear database
 export async function clearDatabase(): Promise<void> {

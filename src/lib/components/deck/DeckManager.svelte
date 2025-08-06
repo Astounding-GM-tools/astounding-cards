@@ -6,9 +6,12 @@
   import { baseThemes } from '$lib/themes';
   import CardFront from '../cards/CardFront.svelte';
   import ThemeSelect from '../ui/ThemeSelect.svelte';
+  import GamePresetSelector from '../GamePresetSelector.svelte';
   import { createEventDispatcher } from 'svelte';
   import { toasts } from '$lib/stores/toast';
   import { canonUpdateDeck, canonDeleteDeck, canonDeleteCards, canonCopyCards, canonUpdateCards, isFieldLoading } from '$lib/stores/canonUpdate';
+  import { presetActions } from '$lib/stores/gamePresets';
+  import type { GamePreset } from '$lib/types';
 
   const props = $props();
   let deck = $state(props.deck as Deck);
@@ -27,6 +30,7 @@
   let showManageCardsDialog = $state(false);
   let showCopyCardsDialog = $state(false);
   let showChangeThemeDialog = $state(false);
+  let showPresetSelector = $state(false);
   let editingName = $state(false);
   let deleting = $state(false);
   let duplicating = $state(false);
@@ -38,6 +42,8 @@
   let targetDeckId = $state<string | 'new'>('new');
   let availableDecks = $state<Deck[]>([]);
   let selectedThemeForCards = $state<string>('');
+  let selectedPreset = $state<GamePreset | null>(null);
+  let applyingPreset = $state(false);
   
   // Get loading states
   const isThemeUpdating = $derived(isFieldLoading('deck-manager-theme'));
@@ -307,6 +313,74 @@
       timeStyle: 'short'
     });
   }
+
+  // Preset event handlers
+  function handlePresetSelect(event: CustomEvent<GamePreset>) {
+    selectedPreset = event.detail;
+    console.log('Selected preset:', selectedPreset);
+  }
+
+  function handleCreatePreset() {
+    toasts.info('Custom preset creation will be implemented soon!');
+  }
+
+  async function handleDuplicatePreset(event: CustomEvent<GamePreset>) {
+    const source = event.detail;
+    const duplicateName = `${source.name} (Copy)`;
+    
+    try {
+      const duplicated = await presetActions.duplicate(source.id, duplicateName);
+      if (duplicated) {
+        selectedPreset = duplicated;
+        toasts.success(`Created "${duplicated.name}" successfully`);
+      }
+    } catch (error) {
+      toasts.error('Could not duplicate preset');
+      console.error('Failed to duplicate preset:', error);
+    }
+  }
+
+  async function handleApplyPreset() {
+    if (!selectedPreset || applyingPreset) return;
+    
+    applyingPreset = true;
+    
+    try {
+      // Create updates for all cards in the deck to apply the preset mechanics
+      const cardUpdates = deck.cards.map(card => ({
+        cardId: card.id,
+        updates: {
+          mechanics: selectedPreset.backMechanics.map(mechanic => ({
+            ...mechanic,
+            id: crypto.randomUUID() // Give each card its own copy
+          }))
+        }
+      }));
+      
+      const numCards = cardUpdates.length;
+      const success = await canonUpdateCards(
+        cardUpdates,
+        ['deck-manager-apply-preset'],
+        'Applying preset mechanics...',
+        `Applied "${selectedPreset.name}" mechanics to ${numCards} card${numCards !== 1 ? 's' : ''}`
+      );
+      
+      if (success) {
+        // Update local deck prop from current deck store
+        if ($currentDeck?.id === deck.id) {
+          deck = $currentDeck;
+        }
+        emitDeckChange({ action: 'update', deckId: deck.id });
+        showPresetSelector = false;
+        selectedPreset = null;
+      }
+    } catch (error) {
+      toasts.error('Failed to apply preset');
+      console.error('Failed to apply preset:', error);
+    } finally {
+      applyingPreset = false;
+    }
+  }
 </script>
 
 <div class="deck-manager">
@@ -398,6 +472,13 @@
           {isThemeUpdating ? 'Updating...' : 'Theme'}
         </button>
         <button 
+          class="action-button"
+          onclick={() => showPresetSelector = true}
+          title="Manage game presets"
+        >
+          Presets
+        </button>
+        <button 
           class="action-button danger"
           onclick={handleDelete}
           disabled={deleting}
@@ -409,7 +490,7 @@
     </div>
   </div>
 
-  {#if showDeleteConfirm || showDuplicateDialog || showManageCardsDialog || showCopyCardsDialog || showChangeThemeDialog}
+  {#if showDeleteConfirm || showDuplicateDialog || showManageCardsDialog || showCopyCardsDialog || showChangeThemeDialog || showPresetSelector}
     <div class="dialog-overlay"></div>
   {/if}
 
@@ -677,6 +758,52 @@
             executeChangeTheme();
           }}
         />
+      </div>
+    </div>
+  {:else if showPresetSelector}
+    <div class="dialog-overlay">
+      <button 
+        class="overlay-button"
+        onclick={() => showPresetSelector = false}
+        onkeydown={(e) => e.key === 'Escape' && (showPresetSelector = false)}
+        aria-label="Close preset selector"
+      ></button>
+    </div>
+    <div class="dialog preset-dialog" role="dialog" aria-labelledby="preset-dialog-title">
+      <h2 id="preset-dialog-title">Game Presets</h2>
+      {#if selectedPreset}
+        <div class="selected-preset-info">
+          <h3>Selected: {selectedPreset.name}</h3>
+          <p>{selectedPreset.description}</p>
+          <p><strong>Mechanics:</strong> {selectedPreset.backMechanics.length} items</p>
+        </div>
+      {/if}
+      <GamePresetSelector 
+        selectedPresetId={selectedPreset?.id || null}
+        on:select={handlePresetSelect}
+        on:create={handleCreatePreset}
+        on:duplicate={handleDuplicatePreset}
+      />
+      <div class="dialog-buttons">
+        {#if selectedPreset}
+          <button 
+            class="primary"
+            onclick={handleApplyPreset}
+            disabled={applyingPreset}
+          >
+            {applyingPreset ? 'Applying...' : 'Apply to All Cards'}
+          </button>
+        {/if}
+        <button 
+          class="secondary"
+          onclick={() => {
+            showPresetSelector = false;
+            selectedPreset = null;
+          }}
+          disabled={applyingPreset}
+        >
+          Close
+        </button>
       </div>
     </div>
   {/if}
@@ -1007,6 +1134,35 @@
   }
 
   /* Component-specific dialog styles - use global dialog styles for most */
+
+  .selected-preset-info {
+    background: var(--ui-bg-secondary, var(--ui-bg));
+    padding: 1rem;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+    border: 1px solid var(--ui-border);
+  }
+
+  .selected-preset-info h3 {
+    margin: 0 0 0.5rem 0;
+    color: var(--ui-text);
+    font-family: var(--ui-font-family);
+    font-size: var(--ui-font-size);
+  }
+
+  .selected-preset-info p {
+    margin: 0 0 0.25rem 0;
+    color: var(--ui-muted);
+    font-family: var(--ui-font-family);
+    font-size: calc(var(--ui-font-size) * 0.9);
+  }
+
+  .preset-dialog {
+    width: 90vw;
+    max-width: 800px;
+    max-height: 85vh;
+    overflow-y: auto;
+  }
 
 .overlay-button {
   position: absolute;

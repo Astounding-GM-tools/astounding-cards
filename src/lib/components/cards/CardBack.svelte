@@ -5,6 +5,8 @@
   import { currentDeck } from '$lib/stores/deck';
   import { canonUpdateCard, isFieldLoading } from '$lib/stores/canonUpdate';
   import { formatSecrets, parseSecrets, addSecret } from '$lib/utils/card-utils';
+  import CardMechanicsDisplay from './CardMechanicsDisplay.svelte';
+  import CardMechanicsDialog from './CardMechanicsDialog.svelte';
 
   // Props - only for theme, preview, and editable
   const props = $props<{
@@ -48,6 +50,9 @@
   // Elements
   let descElement = $state<HTMLParagraphElement | null>(null);
   let secretsElement = $state<HTMLDivElement | null>(null);
+  
+  // Dialog state  
+  let showMechanicsDialog = $state(false);
 
   // Subscribe to card updates
   $effect(() => {
@@ -74,6 +79,7 @@
     const newSecrets = addSecret(card.secrets);
     await canonUpdateCard(card.id, { secrets: newSecrets }, ['card-back-secrets'], 'Adding secret...');
   }
+  
 
 </script>
 
@@ -119,6 +125,14 @@
           {card.desc}
         {/if}
       </p>
+      
+      <!-- Mechanics Display -->
+      <CardMechanicsDisplay 
+        {card} 
+        {editable}
+        onedit={() => showMechanicsDialog = true}
+      />
+      
       <div class="secrets">
         <div 
           class="secrets-content"
@@ -150,6 +164,13 @@
     </div>
   </div>
 </CardBase>
+
+{#if showMechanicsDialog}
+  <CardMechanicsDialog 
+    {card}
+    onclose={() => showMechanicsDialog = false}
+  />
+{/if}
 {/if}
 
 <style>
