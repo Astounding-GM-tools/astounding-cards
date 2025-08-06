@@ -8,7 +8,17 @@
   const props = $props<{
     card: Card;
   }>();
-  const card = props.card;
+  const cardId = props.card.id;
+  
+  // Get card reactively from store (like other components do)
+  function getCard(id: string): Card {
+    const found = $currentDeck?.cards.find(c => c.id === id);
+    if (!found) {
+      return props.card; // Fallback to original prop
+    }
+    return found;
+  }
+  const card = $derived(getCard(cardId));
 
   // Get loading state
   const isUpdating = $derived(isFieldLoading('card-stats'));
@@ -29,7 +39,7 @@
   let draggedIndex = $state<number | null>(null);
   let dragOverIndex = $state<number | null>(null);
   
-  // Get current stats (fallback to empty array)
+  // Get current stats (fallback to empty array) - now reactive!
   const currentStats = $derived(card.stats || []);
   
   // Get all available stat definitions (common + deck custom)
