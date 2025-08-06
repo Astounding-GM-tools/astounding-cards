@@ -100,9 +100,17 @@ export async function canonUpdateCard(cardId: string, updates: Partial<Card>, lo
 
   const updatedDeck: Deck = {
     ...deck,
-    cards: deck.cards.map(c => 
-      c.id === cardId ? { ...c, ...updates } : c
-    ),
+    cards: deck.cards.map(c => {
+      if (c.id === cardId) {
+        const updatedCard = { ...c, ...updates };
+        // Properly clone stats array if it exists
+        if (updatedCard.stats) {
+          updatedCard.stats = updatedCard.stats.map(stat => ({ ...stat }));
+        }
+        return updatedCard;
+      }
+      return c;
+    }),
     meta: {
       ...deck.meta,
       lastEdited: Date.now()
@@ -142,7 +150,15 @@ export async function canonUpdateCards(updates: Array<{ cardId: string; updates:
     ...deck,
     cards: deck.cards.map(card => {
       const update = updates.find(u => u.cardId === card.id);
-      return update ? { ...card, ...update.updates } : card;
+      if (update) {
+        const updatedCard = { ...card, ...update.updates };
+        // Properly clone stats array if it exists
+        if (updatedCard.stats) {
+          updatedCard.stats = updatedCard.stats.map(stat => ({ ...stat }));
+        }
+        return updatedCard;
+      }
+      return card;
     }),
     meta: {
       ...deck.meta,

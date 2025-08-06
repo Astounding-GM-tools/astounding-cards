@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { Card } from '$lib/types';
   import CardBase from './CardBase.svelte';
-  import CardStatSelector from './CardStatSelector.svelte';
+  import CardStatsEditor from './CardStatsEditor.svelte';
   import { currentDeck } from '$lib/stores/deck';
   import { canonUpdateCard, isFieldLoading } from '$lib/stores/canonUpdate';
   import ImageSelector from '../ui/ImageSelector.svelte';
@@ -18,7 +18,7 @@
   const theme = props.theme;
   const preview = props.preview ?? false;
   const cardSize = props.cardSize;
-  const activeTheme = $derived(theme ?? $currentDeck?.meta?.theme ?? 'classic');
+  const activeTheme = $derived(card.theme ?? theme ?? $currentDeck?.meta?.theme ?? 'classic');
 
   // Get loading states for different fields
   const isNameUpdating = $derived(isFieldLoading('card-name'));
@@ -188,9 +188,9 @@
         {/if}
       </div>
 
-      <!-- Stat container -->
-      <div class="stat-container">
-        <CardStatSelector {card} />
+      <!-- Stats container -->
+      <div class="stats-container">
+        <CardStatsEditor {card} />
       </div>
 
       <!-- Bottom portrait flourishes -->
@@ -382,7 +382,7 @@
     left: var(--page-margin);
   }
 
-  .stat-container {
+  .stats-container {
     position: absolute;
     top: var(--page-margin);
     right: var(--page-margin);

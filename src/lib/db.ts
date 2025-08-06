@@ -89,11 +89,12 @@ export async function putDeck(deck: Deck, allowEmpty = false): Promise<void> {
   const storableDeck = {
     ...deck,
     cards: deck.cards.map(card => {
-      // Keep the imageBlob for storage
+      // Keep the imageBlob for storage and properly clone all arrays
       return {
         ...card,
         traits: [...card.traits],
-        secrets: [...card.secrets]
+        secrets: [...card.secrets],
+        stats: card.stats ? card.stats.map(stat => ({ ...stat })) : undefined // Deep clone stats array and objects
       };
     })
   };
@@ -191,7 +192,12 @@ const sampleCards: Card[] = [
     traits: ["Appearance: Wears a well-worn tweed jacket", "Personality: Obsessed with ancient mysteries"],
     secrets: ["Hidden: Knows too much about forbidden magic", "Plot: Recently acquired a cursed artifact"],
     desc: "A brilliant but eccentric academic whose research into occult artifacts has led him down dangerous paths.",
-    type: "character"
+    type: "character",
+    stats: [
+      { statId: "age", value: "52" },
+      { statId: "health", value: "6" },
+      { statId: "mana", value: "8" }
+    ]
   },
   {
     id: crypto.randomUUID(),
@@ -201,7 +207,12 @@ const sampleCards: Card[] = [
     traits: ["Appearance: Brass and silver construction", "Property: Points to magical disturbances"],
     secrets: ["Hidden: Has a mind of its own", "Plot: Previous owner vanished mysteriously"],
     desc: "An ornate compass that responds to supernatural phenomena rather than magnetic north.",
-    type: "item"
+    type: "item",
+    stats: [
+      { statId: "value", value: "1,200" },
+      { statId: "rarity", value: "Legendary" },
+      { statId: "weight", value: "Light" }
+    ]
   },
   {
     id: crypto.randomUUID(),
@@ -211,7 +222,11 @@ const sampleCards: Card[] = [
     traits: ["Appearance: Perpetually shrouded in fog", "Property: Time flows strangely here"],
     secrets: ["Hidden: Contains a gateway to elsewhere", "Plot: Local children have been disappearing"],
     desc: "A secluded valley where reality seems to bend and shift, defying the laws of nature.",
-    type: "location"
+    type: "location",
+    stats: [
+      { statId: "area", value: "The Borderlands" },
+      { statId: "level", value: "3" }
+    ]
   }
 ];
 

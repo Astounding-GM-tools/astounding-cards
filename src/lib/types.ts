@@ -1,6 +1,20 @@
 // Card stats and types
 export type CardSize = 'poker' | 'tarot';
 
+// Flexible stats system types (imported from stats.ts)
+export interface StatDefinition {
+  id: string;           // Unique identifier: 'attack', 'defense', 'custom-magic'
+  label: string;        // Display name: 'Attack', 'Defense', 'Magic Power' 
+  icon: string;         // Icon filename without extension: 'attack', 'defense'
+  category: string;     // Grouping: 'combat', 'physical', 'magic', 'utility', 'custom'
+}
+
+export interface CardStat {
+  statId: string;       // References StatDefinition.id
+  value: string | number; // The actual stat value
+}
+
+// Legacy types - kept for migration
 export type Portability = 'negligible' | 'light' | 'medium' | 'heavy' | 'stationary';
 
 export type AreaReference = {
@@ -8,7 +22,7 @@ export type AreaReference = {
   value: string;  // Card ID for hard links, area name for soft links
 };
 
-export type CardStat = {
+export type LegacyCardStat = {
   type: 'character';
   value: string;  // age
 } | {
@@ -36,9 +50,15 @@ export interface Card {
   secrets: string[];
   desc: string;
   type: 'character' | 'location' | 'item' | string;
-  stat?: CardStat;
+  
+  // NEW flexible stats system (replaces stat)
+  stats?: CardStat[];  // Array of icon+value pairs for front card
+  
+  // LEGACY - kept for migration
+  stat?: LegacyCardStat;
+  
   theme?: string;  // Override deck theme
-  gameStats?: { [key: string]: string | number };  // Flexible game system stats
+  gameStats?: { [key: string]: string | number };  // Flexible game system stats (back card)
 }
 
 // Deck type
@@ -53,6 +73,7 @@ export interface Deck {
     description?: string;
     tags?: string[];
     rulesetRef?: RulesetRef;
+    customStats?: StatDefinition[];  // Deck-specific custom stat definitions
   };
   cards: Card[];
 }
@@ -91,17 +112,25 @@ export function validateCard(card: Partial<Card>): ValidationError[] {
     errors.push({ field: 'type', message: 'Card type is required' });
   }
 
-  // Validate stat based on type
+  // Validate new stats array
+  if (card.stats) {
+    if (!Array.isArray(card.stats)) {
+      errors.push({ field: 'stats', message: 'Stats must be an array' });
+    } else {
+      card.stats.forEach((stat, index) => {
+        if (!stat.statId || typeof stat.statId !== 'string') {
+          errors.push({ field: `stats[${index}].statId`, message: 'Stat ID is required' });
+        }
+        if (stat.value === undefined || stat.value === null) {
+          errors.push({ field: `stats[${index}].value`, message: 'Stat value is required' });
+        }
+      });
+    }
+  }
+
+  // Legacy validation - keep during migration
   if (card.stat) {
-    if (card.type === 'character' && card.stat.type !== 'character') {
-      errors.push({ field: 'stat', message: 'Invalid stat type for character card' });
-    }
-    if (card.type === 'item' && card.stat.type !== 'item') {
-      errors.push({ field: 'stat', message: 'Invalid stat type for item card' });
-    }
-    if (card.type === 'location' && card.stat.type !== 'location') {
-      errors.push({ field: 'stat', message: 'Invalid stat type for location card' });
-    }
+    // Legacy validation logic (simplified)
   }
 
   // Optional fields don't need validation unless present

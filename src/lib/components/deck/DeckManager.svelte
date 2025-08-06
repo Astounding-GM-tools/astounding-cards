@@ -8,7 +8,7 @@
   import ThemeSelect from '../ui/ThemeSelect.svelte';
   import { createEventDispatcher } from 'svelte';
   import { toasts } from '$lib/stores/toast';
-  import { canonUpdateDeck, canonDeleteDeck, canonDeleteCards, canonCopyCards, isFieldLoading } from '$lib/stores/canonUpdate';
+  import { canonUpdateDeck, canonDeleteDeck, canonDeleteCards, canonCopyCards, canonUpdateCards, isFieldLoading } from '$lib/stores/canonUpdate';
 
   const props = $props();
   let deck = $state(props.deck as Deck);
@@ -26,6 +26,7 @@
   let showDuplicateDialog = $state(false);
   let showManageCardsDialog = $state(false);
   let showCopyCardsDialog = $state(false);
+  let showChangeThemeDialog = $state(false);
   let editingName = $state(false);
   let deleting = $state(false);
   let duplicating = $state(false);
@@ -36,12 +37,14 @@
   let selectedCardIds = $state<string[]>([]);
   let targetDeckId = $state<string | 'new'>('new');
   let availableDecks = $state<Deck[]>([]);
+  let selectedThemeForCards = $state<string>('');
   
   // Get loading states
   const isThemeUpdating = $derived(isFieldLoading('deck-manager-theme'));
   const isNameUpdating = $derived(isFieldLoading('deck-manager-name'));
   const isDeletingCards = $derived(isFieldLoading('deck-manager-delete-cards'));
   const isCopyingCards = $derived(isFieldLoading('deck-manager-copy-cards'));
+  const isChangingTheme = $derived(isFieldLoading('deck-manager-change-theme'));
 
   function toggleCard(id: string) {
     if (selectedCardIds.includes(id)) {
@@ -90,6 +93,43 @@
     // Load available decks and show copy dialog
     await loadAvailableDecks();
     showCopyCardsDialog = true;
+  }
+
+  async function handleChangeTheme() {
+    if (selectedCardIds.length === 0) return;
+
+    // Set default theme to current deck theme
+    selectedThemeForCards = deck.meta.theme || '';
+    showChangeThemeDialog = true;
+  }
+
+  async function executeChangeTheme() {
+    if (selectedCardIds.length === 0 || !selectedThemeForCards) return;
+
+    const numToUpdate = selectedCardIds.length;
+    const updates = selectedCardIds.map(cardId => ({
+      cardId,
+      updates: { theme: selectedThemeForCards }
+    }));
+
+    const success = await canonUpdateCards(
+      updates,
+      ['deck-manager-change-theme'],
+      'Changing theme...',
+      `Changed theme for ${numToUpdate} card${numToUpdate !== 1 ? 's' : ''}`
+    );
+    
+    if (success) {
+      // Update local deck prop from current deck store
+      if ($currentDeck?.id === deck.id) {
+        deck = $currentDeck;
+      }
+      emitDeckChange({ action: 'update', deckId: deck.id });
+      showChangeThemeDialog = false;
+      showManageCardsDialog = false;
+      selectedCardIds = [];
+      selectedThemeForCards = '';
+    }
   }
 
   async function executeCopyCards() {
@@ -369,7 +409,7 @@
     </div>
   </div>
 
-  {#if showDeleteConfirm || showDuplicateDialog || showManageCardsDialog || showCopyCardsDialog}
+  {#if showDeleteConfirm || showDuplicateDialog || showManageCardsDialog || showCopyCardsDialog || showChangeThemeDialog}
     <div class="dialog-overlay"></div>
   {/if}
 
@@ -485,7 +525,7 @@
               </div>
             </summary>
             <div class="card-preview">
-              <CardFront {card} theme={deck.meta.theme} preview={true} cardSize={"poker"} />
+            <CardFront {card} theme={deck.meta.theme} preview={true} cardSize="poker" />
             </div>
           </details>
         {/each}
@@ -500,9 +540,10 @@
         </button>
         <button 
           class="action-button"
-          disabled={true || selectedCardIds.length === 0}
+          onclick={handleChangeTheme}
+          disabled={isChangingTheme || selectedCardIds.length === 0}
         >
-          Theme
+          {isChangingTheme ? 'Changing...' : 'Theme'}
         </button>
         <button 
           class="danger"
@@ -517,7 +558,7 @@
             showManageCardsDialog = false;
             selectedCardIds = [];
           }}
-          disabled={isDeletingCards || isCopyingCards}
+          disabled={isDeletingCards || isCopyingCards || isChangingTheme}
         >
           Close
         </button>
@@ -606,6 +647,36 @@
         >
           {isCopyingCards ? 'Copying...' : 'Copy Cards'}
         </button>
+      </div>
+    </div>
+  {:else if showChangeThemeDialog}
+    <div class="dialog-overlay">
+      <button 
+        class="overlay-button"
+        onclick={() => {
+          showChangeThemeDialog = false;
+          selectedThemeForCards = '';
+        }}
+        onkeydown={(e) => {
+          if (e.key === 'Escape') {
+            showChangeThemeDialog = false;
+            selectedThemeForCards = '';
+          }
+        }}
+        aria-label="Close change theme dialog"
+      ></button>
+    </div>
+    <div class="dialog theme-dialog" role="dialog" aria-labelledby="change-theme-title">
+      <h2 id="change-theme-title">Change Theme for Selected Cards</h2>
+      <p>Change theme for {selectedCardIds.length} card{selectedCardIds.length !== 1 ? 's' : ''}:</p>
+      <div class="theme-select-wrapper">
+        <ThemeSelect
+          selectedTheme={selectedThemeForCards}
+          onSelect={(themeId) => {
+            selectedThemeForCards = themeId;
+            executeChangeTheme();
+          }}
+        />
       </div>
     </div>
   {/if}

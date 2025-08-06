@@ -169,8 +169,9 @@ export async function duplicateDeck(deck: Deck, newName?: string): Promise<Deck>
         desc: card.desc,
         type: card.type,
         theme: card.theme,
-        stat: card.stat,
-        gameStats: card.gameStats
+        stats: card.stats ? [...card.stats] : undefined, // Deep copy new stats array
+        stat: card.stat ? structuredClone(card.stat) : undefined, // Legacy
+        gameStats: card.gameStats ? structuredClone(card.gameStats) : undefined
       };
     })
   };
@@ -224,8 +225,9 @@ export async function copyCardsTo(
       desc: card.desc,
       type: card.type,
       theme: card.theme,
-      stat: card.stat,
-      gameStats: card.gameStats
+      stats: card.stats ? [...card.stats] : undefined, // Deep copy new stats array
+      stat: card.stat ? structuredClone(card.stat) : undefined, // Legacy
+      gameStats: card.gameStats ? structuredClone(card.gameStats) : undefined
     };
   });
 

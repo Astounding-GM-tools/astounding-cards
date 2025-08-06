@@ -5,6 +5,7 @@
   import { currentDeck } from '$lib/stores/deck';
 
   const { children, theme, preview, cardSize }: { children: any, theme?: string, preview?: boolean, cardSize?: string } = $props();
+  // Note: CardBase doesn't have access to individual card data, theme priority handled in CardFront
   const activeTheme = $derived(theme ?? $currentDeck?.meta?.theme ?? 'classic');
   const isPreview = preview ?? false;
   const size = $derived(cardSize ?? $currentDeck?.meta?.cardSize ?? 'poker');
