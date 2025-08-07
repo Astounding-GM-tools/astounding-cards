@@ -1,19 +1,28 @@
 <script lang="ts">
   import type { Card, CardMechanic } from '../../types';
   import { MechanicType } from '../../types';
+  import { createEventDispatcher } from 'svelte';
   
   let {
     card,
     editable = false,
-    onedit
+    onedit,
+    onapplytemplate,
+    onshowtemplatedialog
   }: {
     card: Card;
     editable?: boolean;
     onedit?: () => void;
+    onapplytemplate?: (mechanics: CardMechanic[]) => void;
+    onshowtemplatedialog?: (cardType: string) => void;
   } = $props();
   
   // Create a reactive derived mechanics array to force updates
   const mechanics = $derived(card.mechanics || []);
+  
+  const dispatch = createEventDispatcher<{
+    showTemplateDialog: { cardType: string };
+  }>();
   
   
   function getTypeIcon(type: MechanicType): string {
@@ -39,6 +48,19 @@
   function renderTrackingBoxes(count: number): number[] {
     return Array.from({ length: Math.max(0, Math.min(count, 30)) }, (_, i) => i);
   }
+  
+  
+  // Handle add stats button click
+  function handleAddStats() {
+    if (mechanics.length > 0) {
+      // If card already has mechanics, go directly to editor
+      onedit?.();
+    } else {
+      // If card has no mechanics, show template dialog first
+      onshowtemplatedialog?.(card.type);
+      dispatch('showTemplateDialog', { cardType: card.type });
+    }
+  }
 </script>
 
 {#if mechanics && mechanics.length > 0}
@@ -57,42 +79,41 @@
       {/if}
     </div>
     
-    <dl class="mechanics-list">
+    <div class="mechanics-list">
       {#each mechanics as mechanic (mechanic.id)}
         <div class="mechanic-item">
-          <dt class="mechanic-name">
+          <div class="mechanic-line">
             <span class="mechanic-icon" title="{mechanic.type}">{getTypeIcon(mechanic.type)}</span>
-            {mechanic.name}
-          </dt>
-          <dd class="mechanic-value">
-            <span class="value">{mechanic.value}</span>
-            {#if mechanic.description}
-              <span class="description">({mechanic.description})</span>
-            {/if}
-            {#if shouldShowTrackingBoxes(mechanic)}
-              <div class="tracking-boxes">
-                {#each renderTrackingBoxes(Number(mechanic.value)) as box}
-                  <span class="tracking-box">□</span>
-                {/each}
-              </div>
-            {/if}
-          </dd>
+            <span class="mechanic-name">{mechanic.name}:</span>
+            <span class="mechanic-value">{mechanic.value}</span>
+          </div>
+          {#if shouldShowTrackingBoxes(mechanic)}
+            <div class="tracking-boxes">
+              {#each renderTrackingBoxes(Number(mechanic.value)) as box}
+                <span class="tracking-box">□</span>
+              {/each}
+            </div>
+          {/if}
+          {#if mechanic.description}
+            <div class="mechanic-description">{mechanic.description}</div>
+          {/if}
         </div>
       {/each}
-    </dl>
+    </div>
   </div>
 {:else if editable}
   <div class="mechanics-display empty" class:editable>
     <button 
       type="button" 
       class="add-mechanics-btn"
-      onclick={() => onedit?.()}
+      onclick={handleAddStats}
       title="Add game mechanics"
     >
       + Add Game Stats
     </button>
   </div>
 {/if}
+
 
 <style>
   .mechanics-display {
@@ -164,44 +185,43 @@
   }
   
   .mechanic-item {
-    display: contents;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2em;
   }
   
-  .mechanic-name {
-    font-weight: 600;
-    color: var(--theme-text);
-    margin: 0;
+  .mechanic-line {
     display: flex;
     align-items: center;
     gap: 0.3em;
-    font-family: var(--theme-title-font);
-    font-size: 0.95em;
   }
   
   .mechanic-icon {
     font-size: 0.9em;
     opacity: 0.8;
+    flex-shrink: 0;
+  }
+  
+  .mechanic-name {
+    font-weight: 600;
+    color: var(--theme-text);
+    font-family: var(--theme-title-font);
+    font-size: 0.95em;
+    flex-shrink: 0;
   }
   
   .mechanic-value {
-    margin: 0 0 0.2em 1.2em;
-    color: var(--theme-text);
-    font-family: var(--theme-body-font);
-    display: flex;
-    align-items: center;
-    gap: 0.4em;
-    flex-wrap: wrap;
-  }
-  
-  .value {
     font-weight: 500;
     color: var(--theme-primary);
+    font-family: var(--theme-body-font);
   }
   
-  .description {
+  .mechanic-description {
     font-style: italic;
     opacity: 0.8;
-    font-size: 0.9em;
+    font-size: 0.85em;
+    color: var(--theme-text);
+    margin-left: 1.2em;
   }
   
   .tracking-boxes {

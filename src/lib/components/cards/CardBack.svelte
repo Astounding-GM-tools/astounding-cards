@@ -7,6 +7,10 @@
   import { formatSecrets, parseSecrets, addSecret } from '$lib/utils/card-utils';
   import CardMechanicsDisplay from './CardMechanicsDisplay.svelte';
   import CardMechanicsDialog from './CardMechanicsDialog.svelte';
+  import StatblockTemplateDialog from '../StatblockTemplateDialog.svelte';
+  import type { CardMechanic } from '$lib/types';
+  import type { StatblockTemplate } from '$lib/statblockTemplates';
+  import { instantiateTemplate } from '$lib/statblockTemplates';
 
   // Props - only for theme, preview, and editable
   const props = $props<{
@@ -54,6 +58,8 @@
   
   // Dialog state  
   let showMechanicsDialog = $state(false);
+  let showTemplateDialog = $state(false);
+  let templateDialogCardType = $state('');
 
   // Subscribe to card updates
   $effect(() => {
@@ -79,6 +85,30 @@
     if (!editable) return;
     const newSecrets = addSecret(card.secrets);
     await canonUpdateCard(card.id, { secrets: newSecrets }, ['card-back-secrets'], 'Adding secret...');
+  }
+  
+  // Handle template application
+  async function handleApplyTemplate(mechanics: CardMechanic[]) {
+    if (!editable) return;
+    await canonUpdateCard(card.id, { mechanics }, ['card-back-mechanics'], 'Applying template...');
+  }
+  
+  // Handle showing template dialog
+  function handleShowTemplateDialog(cardType: string) {
+    templateDialogCardType = cardType;
+    showTemplateDialog = true;
+  }
+  
+  // Handle template selection
+  function handleTemplateSelect(event: CustomEvent<StatblockTemplate>) {
+    const template = event.detail;
+    const newMechanics = instantiateTemplate(template);
+    handleApplyTemplate(newMechanics);
+  }
+  
+  // Handle custom stats creation from template dialog
+  function handleCustomStats() {
+    showMechanicsDialog = true;
   }
   
 
@@ -132,6 +162,9 @@
         card={card} 
         {editable}
         onedit={() => showMechanicsDialog = true}
+        onapplytemplate={handleApplyTemplate}
+        onshowtemplatedialog={handleShowTemplateDialog}
+        on:showTemplateDialog={(event) => handleShowTemplateDialog(event.detail.cardType)}
       />
       
       <div class="secrets">
@@ -172,6 +205,17 @@
     onclose={() => showMechanicsDialog = false}
   />
 {/if}
+{/if}
+
+<!-- Template Selection Dialog - rendered outside card content -->
+{#if showTemplateDialog}
+  <StatblockTemplateDialog 
+    bind:show={showTemplateDialog}
+    cardType={templateDialogCardType}
+    on:select={handleTemplateSelect}
+    on:custom={handleCustomStats}
+    on:cancel={() => showTemplateDialog = false}
+  />
 {/if}
 
 <style>
