@@ -21,10 +21,15 @@
   
   const isMechanicsUpdating = $derived(isFieldLoading('card-mechanics'));
   
-  async function handleSave(updatedCard: Card) {
+  let hasChanges = $state(false);
+  let editedCard = $state<Card | null>(null);
+  
+  async function handleSaveAndClose() {
+    if (!hasChanges || !editedCard || isMechanicsUpdating) return;
+    
     const success = await canonUpdateCard(
       card.id,
-      { mechanics: updatedCard.mechanics },
+      { mechanics: editedCard.mechanics },
       ['card-mechanics'],
       'Updating mechanics...',
       'Mechanics updated successfully'
@@ -63,8 +68,27 @@
     <CardMechanicsEditor 
       {card}
       loading={isMechanicsUpdating}
-      onsave={handleSave}
+      bind:hasChanges
+      bind:editedCard
     />
+    
+    <div class="dialog-actions">
+      <button 
+        class="cancel-button"
+        onclick={handleClose}
+        disabled={isMechanicsUpdating}
+      >
+        Cancel
+      </button>
+      
+      <button 
+        class="save-button"
+        onclick={handleSaveAndClose}
+        disabled={!hasChanges || isMechanicsUpdating}
+      >
+        {isMechanicsUpdating ? 'Saving...' : 'Save Changes'}
+      </button>
+    </div>
   </div>
 </dialog>
 
@@ -95,20 +119,20 @@
     align-items: center;
     margin-bottom: 1.5rem;
     padding-bottom: 1rem;
-    border-bottom: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--ui-border);
   }
   
   .dialog-header h2 {
     margin: 0;
-    color: var(--color-text);
+    color: var(--ui-text);
     font-family: var(--ui-font-family);
   }
   
   .close-button {
     background: none;
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--button-border);
     border-radius: 4px;
-    color: var(--color-text);
+    color: var(--ui-text);
     cursor: pointer;
     padding: 0.5rem;
     font-size: 1.25rem;
@@ -122,12 +146,62 @@
   }
   
   .close-button:hover:not(:disabled) {
-    background: var(--color-bg-secondary);
-    border-color: var(--color-primary);
+    background: var(--ui-hover-bg);
+    border-color: var(--button-primary-bg);
   }
   
   .close-button:disabled {
     opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  .dialog-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-end;
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--ui-border);
+  }
+  
+  .cancel-button {
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--button-border);
+    border-radius: 6px;
+    background: var(--button-bg);
+    color: var(--button-text);
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+  
+  .cancel-button:hover:not(:disabled) {
+    background: var(--button-hover-bg);
+    border-color: var(--ui-muted);
+  }
+  
+  .cancel-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  
+  .save-button {
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--button-primary-bg);
+    border-radius: 6px;
+    background: var(--button-primary-bg);
+    color: var(--button-primary-text);
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+  
+  .save-button:hover:not(:disabled) {
+    background: var(--button-primary-hover);
+  }
+  
+  .save-button:disabled {
+    opacity: 0.6;
     cursor: not-allowed;
   }
 </style>

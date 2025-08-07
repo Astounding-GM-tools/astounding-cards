@@ -3,20 +3,37 @@
   import { MechanicType as MechanicTypes } from '../../types';
   // generateId is replaced with inline crypto.randomUUID() calls
   
-  const props = $props<{
+  let {
+    card,
+    loading = false,
+    onsave,
+    hasChanges = $bindable(),
+    editedCard = $bindable()
+  }: {
     card: Card;
     loading?: boolean;
     onsave?: (card: Card) => void;
-  }>();
-  const card = props.card;
-  const loading = props.loading ?? false;
-  const onsave = props.onsave;
+    hasChanges?: boolean;
+    editedCard?: Card | null;
+  } = $props();
   
   // Local copy for editing
   let mechanics = $state<CardMechanic[]>(card.mechanics ? [...card.mechanics] : []);
   
   // Track if there are any changes
-  const hasChanges = $derived(JSON.stringify(mechanics) !== JSON.stringify(card.mechanics || []));
+  const localHasChanges = $derived(JSON.stringify(mechanics) !== JSON.stringify(card.mechanics || []));
+  
+  // Create the edited card state
+  const localEditedCard = $derived<Card>({
+    ...card,
+    mechanics: mechanics.length > 0 ? mechanics : undefined
+  });
+  
+  // Update parent bindings
+  $effect(() => {
+    hasChanges = localHasChanges;
+    editedCard = localEditedCard;
+  });
   
   // Tracking threshold - above this number, don't render boxes
   const TRACKING_THRESHOLD = 30;
@@ -190,17 +207,6 @@
     <button type="button" class="add-btn" onclick={addMechanic}>
       + Add Mechanic
     </button>
-    
-    {#if hasChanges}
-      <button 
-        type="button" 
-        class="save-btn" 
-        onclick={handleSave}
-        disabled={loading}
-      >
-        {loading ? 'Saving...' : 'Save Changes'}
-      </button>
-    {/if}
   </div>
 </div>
 
@@ -367,23 +373,4 @@
     background: var(--color-bg-secondary);
   }
   
-  .save-btn {
-    padding: 0.5rem 1rem;
-    border: 1px solid var(--color-primary);
-    border-radius: 6px;
-    background: var(--color-primary);
-    color: white;
-    cursor: pointer;
-    font-weight: 500;
-    transition: all 0.2s;
-  }
-  
-  .save-btn:hover:not(:disabled) {
-    background: var(--color-primary-hover);
-  }
-  
-  .save-btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
 </style>

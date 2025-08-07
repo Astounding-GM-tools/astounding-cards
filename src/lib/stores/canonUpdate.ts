@@ -107,6 +107,10 @@ export async function canonUpdateCard(cardId: string, updates: Partial<Card>, lo
         if (updatedCard.stats) {
           updatedCard.stats = updatedCard.stats.map(stat => ({ ...stat }));
         }
+        // Properly clone mechanics array if it exists
+        if (updatedCard.mechanics) {
+          updatedCard.mechanics = updatedCard.mechanics.map(mechanic => ({ ...mechanic }));
+        }
         return updatedCard;
       }
       return c;
@@ -155,6 +159,10 @@ export async function canonUpdateCards(updates: Array<{ cardId: string; updates:
         // Properly clone stats array if it exists
         if (updatedCard.stats) {
           updatedCard.stats = updatedCard.stats.map(stat => ({ ...stat }));
+        }
+        // Properly clone mechanics array if it exists
+        if (updatedCard.mechanics) {
+          updatedCard.mechanics = updatedCard.mechanics.map(mechanic => ({ ...mechanic }));
         }
         return updatedCard;
       }

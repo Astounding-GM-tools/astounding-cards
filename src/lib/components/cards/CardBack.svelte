@@ -38,6 +38,7 @@
     return found;
   }
   const card = $derived(getCard(cardId));
+  
 
   async function handleNameBlur(e: FocusEvent) {
     if (!editable) return;
@@ -128,7 +129,7 @@
       
       <!-- Mechanics Display -->
       <CardMechanicsDisplay 
-        {card} 
+        card={card} 
         {editable}
         onedit={() => showMechanicsDialog = true}
       />

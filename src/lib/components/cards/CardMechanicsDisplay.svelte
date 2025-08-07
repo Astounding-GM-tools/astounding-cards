@@ -2,14 +2,19 @@
   import type { Card, CardMechanic } from '../../types';
   import { MechanicType } from '../../types';
   
-  const props = $props<{
+  let {
+    card,
+    editable = false,
+    onedit
+  }: {
     card: Card;
     editable?: boolean;
     onedit?: () => void;
-  }>();
-  const card = props.card;
-  const editable = props.editable ?? false;
-  const onedit = props.onedit;
+  } = $props();
+  
+  // Create a reactive derived mechanics array to force updates
+  const mechanics = $derived(card.mechanics || []);
+  
   
   function getTypeIcon(type: MechanicType): string {
     switch (type) {
@@ -36,7 +41,7 @@
   }
 </script>
 
-{#if card.mechanics && card.mechanics.length > 0}
+{#if mechanics && mechanics.length > 0}
   <div class="mechanics-display" class:editable>
     <div class="mechanics-header">
       <span class="mechanics-title">Game Stats</span>
@@ -53,7 +58,7 @@
     </div>
     
     <dl class="mechanics-list">
-      {#each card.mechanics as mechanic (mechanic.id)}
+      {#each mechanics as mechanic (mechanic.id)}
         <div class="mechanic-item">
           <dt class="mechanic-name">
             <span class="mechanic-icon" title="{mechanic.type}">{getTypeIcon(mechanic.type)}</span>
