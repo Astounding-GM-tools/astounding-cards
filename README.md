@@ -9,6 +9,8 @@ A powerful, browser-based tool for creating and managing custom cards for tablet
 - 🎨 **Multiple Card Types**: Characters, items, locations, and custom types
 - 🖼️ **Image Support**: Add portraits and artwork (stored locally in your browser)
 - 🎭 **Multiple Themes**: Classic, Cyberdeck, Cordial, and Scriptorum styles
+- 🎯 **Customizable Vocabularies**: Personalize stat names for any RPG system (Health → Hit Points, Defense → Armor Class, etc.)
+- 📋 **Smart Templates**: Quickly add relevant stats with contextual templates that adapt to your vocabulary
 - 📱 **Fully Offline**: Works completely in your browser - no internet required after loading
 - 🔗 **Easy Sharing**: Share entire decks via simple URLs
 - 🖨️ **Print Ready**: Optimized layouts for home printing on standard paper

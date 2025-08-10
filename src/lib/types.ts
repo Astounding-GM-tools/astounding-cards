@@ -33,7 +33,31 @@ export interface CardMechanic {
   type: MechanicType;     // Category for UI organization
 }
 
-// Game preset system
+// Simple vocabulary type for easy editing
+export type StatblockVocabulary = Record<string, string>;
+
+// Deck-level statblock configuration system
+export interface StatblockConfig {
+  id: string;
+  name: string;           // "Traditional RPG", "OSR Style", etc.
+  description?: string;
+  
+  // Vocabulary mapping - customize display names for MechanicTypes
+  vocabulary: {
+    [K in MechanicType]: {
+      name: string;         // "Health" or "Hit Points" or "Stress"
+      defaultValue: string | number; // Default value when adding this type
+      tracked?: boolean;    // Default tracking state
+    }
+  };
+  
+  // Metadata
+  isOfficial: boolean;
+  created: Date;
+  updated: Date;
+}
+
+// Game preset system - DEPRECATED, keeping for migration
 export interface GamePreset {
   id: string;
   name: string;         // "GM Reference", "Old School Revival", etc.
@@ -117,6 +141,7 @@ export interface Deck {
     tags?: string[];
     rulesetRef?: RulesetRef;
     customStats?: StatDefinition[];  // Deck-specific custom stat definitions
+    statblockConfigId?: string;      // Reference to StatblockConfig for this deck
   };
   cards: Card[];
 }

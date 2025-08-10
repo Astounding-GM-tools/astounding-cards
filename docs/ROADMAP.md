@@ -50,6 +50,13 @@ For consistent theme application:
   - [x] Implemented "Copy Cards" functionality with a dialog to select a target deck or create a new one.
   - [x] Integrated copy operation with the Canon Update pattern for consistent UI feedback.
   - [x] Fixed image copying and deck list refresh issues when copying to a new deck.
+- [x] **Vocabulary Customization System**
+  - [x] Replaced complex statblock configuration selector with intuitive vocabulary editor
+  - [x] Implemented simple vocabulary customization for RPG stat names (Health → Hit Points, etc.)
+  - [x] Added vocabulary-aware template system with live previews
+  - [x] Enhanced template dialog to show customized names before applying
+  - [x] Created utility functions for converting between vocabulary formats
+  - [x] Maintained backward compatibility with existing decks
 
 ## Next Steps (Pre-Deployment)
 
@@ -92,22 +99,22 @@ For consistent theme application:
 - [ ] Test offline functionality thoroughly
 - [ ] Ensure seamless updates when new versions are deployed
 
-## Game System Presets (In Progress) 🎲
+## Game System Support ✅
 
-### Foundation Complete ✅
-- [x] **Database Schema**: Extended to support game presets with proper indexes
-- [x] **Type System**: Added `GamePreset`, `MechanicDefinition`, and `CardMechanic` types  
-- [x] **Official Presets**: Created 3 core game systems (Modern Fantasy, Classic Fantasy, Narrative RPG)
-- [x] **Preset Store**: Complete Svelte store with CRUD operations and filtering
-- [x] **GamePresetSelector**: UI component for browsing and selecting game systems
+### Vocabulary Customization System (Complete)
+- [x] **Database Schema**: Extended to support statblock configurations with proper indexes
+- [x] **Type System**: Added `StatblockConfig`, `StatblockVocabulary`, and enhanced `CardMechanic` types  
+- [x] **Official Configurations**: Created multiple RPG system vocabularies (Modern RPG, OSR, Narrative, Investigation)
+- [x] **Configuration Store**: Complete Svelte store with CRUD operations for vocabulary management
+- [x] **Vocabulary Editor**: Intuitive UI component for customizing stat names per deck
+- [x] **Template Integration**: Smart templates that adapt to custom vocabularies with live previews
 - [x] **Front/Back Philosophy**: Clear separation of player-visible vs GM-only information
 
-### Next: Implementation 🚧
-- [ ] **Preset Integration**: Add game preset selection to deck creation/editing
-- [ ] **Card Mechanics Editor**: UI for editing back-card game mechanics
-- [ ] **Preset Application**: Logic to apply presets to existing cards
-- [ ] **Custom Preset Builder**: Advanced editor for creating custom game systems
-- [ ] **Preset Sharing**: Import/export functionality for custom presets
+### Evolution from Complex to Simple
+The vocabulary customization system evolved from initial game preset work, focusing on the most important need: 
+**customizable terminology**. Instead of complex preset selection, users get an intuitive vocabulary editor 
+that lets them adapt any RPG system (D&D → "Hit Points", PbtA → "Stress", etc.) while maintaining 
+all the power of contextual templates and structured data.
 
 ### Front/Back Card Design Philosophy 📋
 

@@ -6,12 +6,13 @@
   import { baseThemes } from '$lib/themes';
   import CardFront from '../cards/CardFront.svelte';
   import ThemeSelect from '../ui/ThemeSelect.svelte';
-  import GamePresetSelector from '../GamePresetSelector.svelte';
+  import StatblockVocabularyEditor from '../StatblockVocabularyEditor.svelte';
   import { createEventDispatcher } from 'svelte';
   import { toasts } from '$lib/stores/toast';
   import { canonUpdateDeck, canonDeleteDeck, canonDeleteCards, canonCopyCards, canonUpdateCards, isFieldLoading } from '$lib/stores/canonUpdate';
-  import { presetActions } from '$lib/stores/gamePresets';
-  import type { GamePreset } from '$lib/types';
+  import { configActions } from '$lib/stores/statblockConfig';
+  import { configToSimpleVocabulary, simpleVocabularyToConfig } from '$lib/statblockConfigs';
+  import type { StatblockVocabulary } from '$lib/types';
 
   const props = $props();
   let deck = $state(props.deck as Deck);
@@ -30,7 +31,7 @@
   let showManageCardsDialog = $state(false);
   let showCopyCardsDialog = $state(false);
   let showChangeThemeDialog = $state(false);
-  let showPresetSelector = $state(false);
+  let showConfigSelector = $state(false);
   let editingName = $state(false);
   let deleting = $state(false);
   let duplicating = $state(false);
@@ -42,8 +43,8 @@
   let targetDeckId = $state<string | 'new'>('new');
   let availableDecks = $state<Deck[]>([]);
   let selectedThemeForCards = $state<string>('');
-  let selectedPreset = $state<GamePreset | null>(null);
-  let applyingPreset = $state(false);
+  let currentVocabulary = $state<StatblockVocabulary | null>(null);
+  let applyingVocabulary = $state(false);
   
   // Get loading states
   const isThemeUpdating = $derived(isFieldLoading('deck-manager-theme'));
@@ -314,55 +315,50 @@
     });
   }
 
-  // Preset event handlers
-  function handlePresetSelect(event: CustomEvent<GamePreset>) {
-    selectedPreset = event.detail;
-    console.log('Selected preset:', selectedPreset);
-  }
-
-  function handleCreatePreset() {
-    toasts.info('Custom preset creation will be implemented soon!');
-  }
-
-  async function handleDuplicatePreset(event: CustomEvent<GamePreset>) {
-    const source = event.detail;
-    const duplicateName = `${source.name} (Copy)`;
-    
-    try {
-      const duplicated = await presetActions.duplicate(source.id, duplicateName);
-      if (duplicated) {
-        selectedPreset = duplicated;
-        toasts.success(`Created "${duplicated.name}" successfully`);
-      }
-    } catch (error) {
-      toasts.error('Could not duplicate preset');
-      console.error('Failed to duplicate preset:', error);
+  // Vocabulary editor event handlers
+  async function loadCurrentVocabulary() {
+    if (deck.meta.statblockConfigId) {
+      const config = await configActions.getByIdOrDefault(deck.meta.statblockConfigId);
+      currentVocabulary = configToSimpleVocabulary(config);
+    } else {
+      const defaultConfig = await configActions.getByIdOrDefault();
+      currentVocabulary = configToSimpleVocabulary(defaultConfig);
     }
   }
 
-  async function handleApplyPreset() {
-    if (!selectedPreset || applyingPreset) return;
+  async function handleSaveVocabulary(event: CustomEvent<StatblockVocabulary>) {
+    const simpleVocabulary = event.detail;
     
-    applyingPreset = true;
+    if (applyingVocabulary) return;
+    applyingVocabulary = true;
     
     try {
-      // Create updates for all cards in the deck to apply the preset mechanics
-      const cardUpdates = deck.cards.map(card => ({
-        cardId: card.id,
-        updates: {
-          mechanics: selectedPreset.backMechanics.map(mechanic => ({
-            ...mechanic,
-            id: crypto.randomUUID() // Give each card its own copy
-          }))
-        }
-      }));
+      // Get the base config to preserve default values and tracking settings
+      const baseConfig = deck.meta.statblockConfigId 
+        ? await configActions.getByIdOrDefault(deck.meta.statblockConfigId)
+        : await configActions.getByIdOrDefault();
       
-      const numCards = cardUpdates.length;
-      const success = await canonUpdateCards(
-        cardUpdates,
-        ['deck-manager-apply-preset'],
-        'Applying preset mechanics...',
-        `Applied "${selectedPreset.name}" mechanics to ${numCards} card${numCards !== 1 ? 's' : ''}`
+      // Convert simple vocabulary back to complex structure
+      const complexVocabulary = simpleVocabularyToConfig(simpleVocabulary, baseConfig);
+      
+      // Create a new custom config with the converted vocabulary
+      const configName = `${deck.meta.name} Custom Vocabulary`;
+      const newConfig = configActions.createNew(
+        configName,
+        `Custom vocabulary for ${deck.meta.name}`,
+        baseConfig
+      );
+      newConfig.vocabulary = complexVocabulary;
+      
+      // Save the new config
+      await configActions.save(newConfig);
+      
+      // Apply it to the deck
+      const success = await canonUpdateDeck(
+        { statblockConfigId: newConfig.id },
+        ['deck-manager-apply-vocabulary'],
+        'Saving vocabulary...',
+        'Vocabulary updated successfully'
       );
       
       if (success) {
@@ -371,15 +367,20 @@
           deck = $currentDeck;
         }
         emitDeckChange({ action: 'update', deckId: deck.id });
-        showPresetSelector = false;
-        selectedPreset = null;
+        showConfigSelector = false;
+        currentVocabulary = null;
       }
     } catch (error) {
-      toasts.error('Failed to apply preset');
-      console.error('Failed to apply preset:', error);
+      toasts.error('Failed to save vocabulary');
+      console.error('Failed to save vocabulary:', error);
     } finally {
-      applyingPreset = false;
+      applyingVocabulary = false;
     }
+  }
+
+  function handleCancelVocabulary() {
+    showConfigSelector = false;
+    currentVocabulary = null;
   }
 </script>
 
@@ -473,10 +474,13 @@
         </button>
         <button 
           class="action-button"
-          onclick={() => showPresetSelector = true}
-          title="Manage game presets"
+          onclick={async () => {
+            await loadCurrentVocabulary();
+            showConfigSelector = true;
+          }}
+          title="Configure statblock vocabulary"
         >
-          Presets
+          Statblocks
         </button>
         <button 
           class="action-button danger"
@@ -490,7 +494,7 @@
     </div>
   </div>
 
-  {#if showDeleteConfirm || showDuplicateDialog || showManageCardsDialog || showCopyCardsDialog || showChangeThemeDialog || showPresetSelector}
+  {#if showDeleteConfirm || showDuplicateDialog || showManageCardsDialog || showCopyCardsDialog || showChangeThemeDialog || showConfigSelector}
     <div class="dialog-overlay"></div>
   {/if}
 
@@ -760,51 +764,26 @@
         />
       </div>
     </div>
-  {:else if showPresetSelector}
+  {:else if showConfigSelector}
     <div class="dialog-overlay">
       <button 
         class="overlay-button"
-        onclick={() => showPresetSelector = false}
-        onkeydown={(e) => e.key === 'Escape' && (showPresetSelector = false)}
-        aria-label="Close preset selector"
+        onclick={() => showConfigSelector = false}
+        onkeydown={(e) => e.key === 'Escape' && (showConfigSelector = false)}
+        aria-label="Close config selector"
       ></button>
     </div>
-    <div class="dialog preset-dialog" role="dialog" aria-labelledby="preset-dialog-title">
-      <h2 id="preset-dialog-title">Game Presets</h2>
-      {#if selectedPreset}
-        <div class="selected-preset-info">
-          <h3>Selected: {selectedPreset.name}</h3>
-          <p>{selectedPreset.description}</p>
-          <p><strong>Mechanics:</strong> {selectedPreset.backMechanics.length} items</p>
-        </div>
+    <div class="dialog config-dialog" role="dialog" aria-labelledby="config-dialog-title">
+      {#if currentVocabulary}
+        <StatblockVocabularyEditor 
+          vocabulary={currentVocabulary}
+          title="Customize Statblock Vocabulary for {deck.meta.name}"
+          on:save={handleSaveVocabulary}
+          on:cancel={handleCancelVocabulary}
+        />
+      {:else}
+        <h2>Loading vocabulary...</h2>
       {/if}
-      <GamePresetSelector 
-        selectedPresetId={selectedPreset?.id || null}
-        on:select={handlePresetSelect}
-        on:create={handleCreatePreset}
-        on:duplicate={handleDuplicatePreset}
-      />
-      <div class="dialog-buttons">
-        {#if selectedPreset}
-          <button 
-            class="primary"
-            onclick={handleApplyPreset}
-            disabled={applyingPreset}
-          >
-            {applyingPreset ? 'Applying...' : 'Apply to All Cards'}
-          </button>
-        {/if}
-        <button 
-          class="secondary"
-          onclick={() => {
-            showPresetSelector = false;
-            selectedPreset = null;
-          }}
-          disabled={applyingPreset}
-        >
-          Close
-        </button>
-      </div>
     </div>
   {/if}
 </div>
@@ -1135,29 +1114,7 @@
 
   /* Component-specific dialog styles - use global dialog styles for most */
 
-  .selected-preset-info {
-    background: var(--ui-bg-secondary, var(--ui-bg));
-    padding: 1rem;
-    border-radius: 6px;
-    margin-bottom: 1rem;
-    border: 1px solid var(--ui-border);
-  }
-
-  .selected-preset-info h3 {
-    margin: 0 0 0.5rem 0;
-    color: var(--ui-text);
-    font-family: var(--ui-font-family);
-    font-size: var(--ui-font-size);
-  }
-
-  .selected-preset-info p {
-    margin: 0 0 0.25rem 0;
-    color: var(--ui-muted);
-    font-family: var(--ui-font-family);
-    font-size: calc(var(--ui-font-size) * 0.9);
-  }
-
-  .preset-dialog {
+  .config-dialog {
     width: 90vw;
     max-width: 800px;
     max-height: 85vh;

@@ -1,8 +1,12 @@
 <!-- Template Selection Dialog for adding contextual stats -->
 <script lang="ts">
   import type { StatblockTemplate } from '../statblockTemplates';
-  import { allTemplates, getTemplatesByCategory } from '../statblockTemplates';
+  import { getTemplatesByCategory } from '../statblockTemplates';
   import { createEventDispatcher } from 'svelte';
+  import { currentDeck } from '../stores/deck';
+  import { configActions } from '../stores/statblockConfig';
+  import { configToSimpleVocabulary } from '../statblockConfigs';
+  import type { StatblockVocabulary } from '../types';
   
   let { 
     show = $bindable(),
@@ -21,11 +25,31 @@
   let selectedTemplate: StatblockTemplate | null = $state(null);
   let selectedCategory: StatblockTemplate['category'] = $state('character');
   let dialogElement = $state<HTMLDialogElement | null>(null);
+  let vocabulary: StatblockVocabulary | null = $state(null);
   
   // Show dialog when show becomes true
   $effect(() => {
     if (show && dialogElement && !dialogElement.open) {
       dialogElement.showModal();
+    }
+  });
+  
+  // Load vocabulary when dialog shows
+  $effect(() => {
+    if (show) {
+      const deckConfigId = $currentDeck?.meta?.statblockConfigId;
+      if (deckConfigId) {
+        configActions.getByIdOrDefault(deckConfigId)
+          .then(deckConfig => {
+            vocabulary = configToSimpleVocabulary(deckConfig);
+          })
+          .catch(error => {
+            console.error('Failed to load vocabulary for preview:', error);
+            vocabulary = null;
+          });
+      } else {
+        vocabulary = null;
+      }
     }
   });
   
@@ -175,7 +199,7 @@
           <div class="preview-stats">
             {#each selectedTemplate.mechanics as mechanic}
               <div class="preview-stat">
-                <span class="stat-name">{mechanic.name}:</span>
+                <span class="stat-name">{vocabulary?.[mechanic.type] || mechanic.name}:</span>
                 <span class="stat-value">{mechanic.value}</span>
                 {#if mechanic.description}
                   <span class="stat-description">({mechanic.description})</span>

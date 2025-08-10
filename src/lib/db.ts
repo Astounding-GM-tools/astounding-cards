@@ -1,11 +1,11 @@
 // src/lib/db.ts
 import { browser } from '$app/environment';
-import type { Card, Deck, GamePreset } from '$lib/types';
+import type { Card, Deck, GamePreset, StatblockConfig } from '$lib/types';
 import { validateDeck } from '$lib/types';
 
 // IndexedDB setup
 const DB_NAME = 'card-decks';
-const DB_VERSION = 2;  // Increment for game presets
+const DB_VERSION = 3;  // Increment for statblock configs
 
 export class StorageError extends Error {
   constructor(message: string, public cause?: Error | DOMException) {
@@ -52,6 +52,14 @@ async function openDB(): Promise<IDBDatabase> {
         presetStore.createIndex('isOfficial', 'isOfficial');
         presetStore.createIndex('created', 'created');
         presetStore.createIndex('tags', 'tags', { multiEntry: true });
+      }
+      
+      // Create statblock configs store (v3)
+      if (!db.objectStoreNames.contains('statblockConfigs')) {
+        const configStore = db.createObjectStore('statblockConfigs', { keyPath: 'id' });
+        configStore.createIndex('name', 'name');
+        configStore.createIndex('isOfficial', 'isOfficial');
+        configStore.createIndex('created', 'created');
       }
     };
   });
@@ -274,6 +282,107 @@ export async function deleteGamePreset(id: string): Promise<void> {
     });
   } catch (error) {
     throw new StorageError('Failed to delete game preset', error instanceof Error ? error : undefined);
+  }
+}
+
+// StatblockConfig functions
+
+// Get all statblock configurations
+export async function getAllStatblockConfigs(): Promise<StatblockConfig[]> {
+  try {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction(['statblockConfigs'], 'readonly');
+      const store = transaction.objectStore('statblockConfigs');
+
+      const request = store.getAll();
+
+      request.onerror = () => {
+        const error = handleDbError(request);
+        reject(new StorageError('Failed to load statblock configs', error));
+      };
+      request.onsuccess = () => {
+        const configs = request.result;
+        resolve(configs);
+      };
+    });
+  } catch (error) {
+    throw new StorageError('Failed to load statblock configs', error instanceof Error ? error : undefined);
+  }
+}
+
+// Get statblock config by ID
+export async function getStatblockConfig(id: string): Promise<StatblockConfig | null> {
+  try {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction(['statblockConfigs'], 'readonly');
+      const store = transaction.objectStore('statblockConfigs');
+
+      const request = store.get(id);
+
+      request.onerror = () => {
+        const error = handleDbError(request);
+        reject(new StorageError('Failed to load statblock config', error));
+      };
+      request.onsuccess = () => {
+        const config = request.result as StatblockConfig;
+        resolve(config);
+      };
+    });
+  } catch (error) {
+    throw new StorageError('Failed to load statblock config', error instanceof Error ? error : undefined);
+  }
+}
+
+// Save statblock config to IndexedDB
+export async function putStatblockConfig(config: StatblockConfig): Promise<void> {
+  if (!browser) return;
+
+  // Prepare config for storage by ensuring all data is cloneable
+  const storableConfig = {
+    ...config,
+    vocabulary: { ...config.vocabulary },
+    created: config.created,
+    updated: config.updated
+  };
+
+  try {
+    const db = await openDB();
+    return new Promise<void>((resolve, reject) => {
+      const transaction = db.transaction(['statblockConfigs'], 'readwrite');
+      const store = transaction.objectStore('statblockConfigs');
+
+      const request = store.put(storableConfig);
+
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve();
+      transaction.oncomplete = () => resolve();
+      transaction.onerror = () => reject(transaction.error);
+    });
+  } catch (err) {
+    throw err;
+  }
+}
+
+// Delete statblock config
+export async function deleteStatblockConfig(id: string): Promise<void> {
+  try {
+    const db = await openDB();
+    return new Promise<void>((resolve, reject) => {
+      const transaction = db.transaction(['statblockConfigs'], 'readwrite');
+      const store = transaction.objectStore('statblockConfigs');
+
+      const request = store.delete(id);
+
+      request.onerror = () => {
+        const error = handleDbError(request);
+        reject(new StorageError('Failed to delete statblock config', error));
+      };
+      request.onsuccess = () => resolve();
+    });
+  } catch (error) {
+    throw new StorageError('Failed to delete statblock config', error instanceof Error ? error : undefined);
   }
 }
 

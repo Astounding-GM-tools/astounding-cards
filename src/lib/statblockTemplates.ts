@@ -228,3 +228,20 @@ export function instantiateTemplate(template: StatblockTemplate): CardMechanic[]
     id: crypto.randomUUID()
   }));
 }
+
+// Convert template mechanics to actual CardMechanics with IDs, using custom vocabulary
+export function instantiateTemplateWithVocabulary(
+  template: StatblockTemplate, 
+  vocabulary: Record<string, string>
+): CardMechanic[] {
+  return template.mechanics.map(mechanic => {
+    // Use vocabulary mapping if available for this mechanic type
+    const customName = vocabulary[mechanic.type];
+    
+    return {
+      ...mechanic,
+      name: customName || mechanic.name, // Use custom name or fallback to template name
+      id: crypto.randomUUID()
+    };
+  });
+}

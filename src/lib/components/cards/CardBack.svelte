@@ -10,7 +10,9 @@
   import StatblockTemplateDialog from '../StatblockTemplateDialog.svelte';
   import type { CardMechanic } from '$lib/types';
   import type { StatblockTemplate } from '$lib/statblockTemplates';
-  import { instantiateTemplate } from '$lib/statblockTemplates';
+  import { instantiateTemplate, instantiateTemplateWithVocabulary } from '$lib/statblockTemplates';
+  import { configActions } from '$lib/stores/statblockConfig';
+  import { configToSimpleVocabulary } from '$lib/statblockConfigs';
 
   // Props - only for theme, preview, and editable
   const props = $props<{
@@ -61,9 +63,6 @@
   let showTemplateDialog = $state(false);
   let templateDialogCardType = $state('');
 
-  // Subscribe to card updates
-  $effect(() => {
-  });
 
   async function handleDescBlur() {
     if (!editable) return;
@@ -100,10 +99,32 @@
   }
   
   // Handle template selection
-  function handleTemplateSelect(event: CustomEvent<StatblockTemplate>) {
+  async function handleTemplateSelect(event: CustomEvent<StatblockTemplate>) {
     const template = event.detail;
-    const newMechanics = instantiateTemplate(template);
-    handleApplyTemplate(newMechanics);
+    
+    // Get the current deck's vocabulary configuration
+    const deckConfigId = $currentDeck?.meta?.statblockConfigId;
+    
+    if (deckConfigId) {
+      try {
+        // Load the config from the store
+        const deckConfig = await configActions.getByIdOrDefault(deckConfigId);
+        
+        // Convert the config to simple vocabulary format for template instantiation
+        const vocabulary = configToSimpleVocabulary(deckConfig);
+        const newMechanics = instantiateTemplateWithVocabulary(template, vocabulary);
+        await handleApplyTemplate(newMechanics);
+      } catch (error) {
+        console.error('Failed to load deck config:', error);
+        // Fallback to default instantiation on error
+        const newMechanics = instantiateTemplate(template);
+        await handleApplyTemplate(newMechanics);
+      }
+    } else {
+      // Fallback to default instantiation if no vocabulary is configured
+      const newMechanics = instantiateTemplate(template);
+      await handleApplyTemplate(newMechanics);
+    }
   }
   
   // Handle custom stats creation from template dialog
