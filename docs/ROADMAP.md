@@ -63,20 +63,20 @@ For consistent theme application:
 
 ### 2. Final Fixes & Polish
 
-- [ ] **Complete Card Management Operations**
-  - [ ] Implement "Change Theme" for selected cards.
-  - [ ] Fix `DataCloneError` when duplicating a deck.
+- [x] **Complete Card Management Operations**
+  - [x] Implement "Change Theme" for selected cards.
+  - [x] Fix `DataCloneError` when duplicating a deck.
   - [x] Removed "Move Cards" (redundant - users can copy to current deck instead).
 
 - [ ] **Crop Marks & Card Positioning**
   - [ ] Re-implement crop marks for front cards
   - [ ] Ensure consistent crop mark visibility on all cards
   - [ ] Optimize card margins and padding for print layouts
-- [ ] **Deck Creation Flow**
-  - [ ] Add "Create New Deck" button to deck management
-  - [ ] Implement deck creation logic
-  - [ ] Update deck list after creation
-  - [ ] Switch to new deck automatically
+- [x] **Deck Creation Flow**
+  - [x] Add "Create New Deck" button to deck management
+  - [x] Implement deck creation logic
+  - [x] Update deck list after creation
+  - [x] Switch to new deck automatically
 - [ ] **Final Testing**
   - [ ] Fix any remaining TypeScript/linting warnings
   - [ ] Test card title synchronization
