@@ -111,24 +111,38 @@
   });
   
   onMount(() => {
-      loading = true;
-      getAllDecks()
-        .then(allDecks => {
-          if (allDecks.length > 0) {
-            // Sort by lastEdited and get most recent
-            const sortedDecks = allDecks.sort((a, b) => b.meta.lastEdited - a.meta.lastEdited);
-            const mostRecent = sortedDecks[0];
-            currentDeckId.set(mostRecent.id);
-          } else {
-            currentDeckId.set(null);
-          }
-        })
-        .catch(err => {
-          error = err instanceof Error ? err.message : String(err);
-        })
-        .finally(() => {
-          loading = false;
-        });
+    loading = true;
+    
+    // Check for URL deck data first
+    const url = new URL(window.location.href);
+    const urlDeck = deckFromUrl(url);
+    
+    if (urlDeck) {
+      // Load deck from URL directly
+      currentDeck.set(urlDeck);
+      currentDeckId.set(urlDeck.id);
+      loading = false;
+      return;
+    }
+    
+    // Otherwise, load from database as usual
+    getAllDecks()
+      .then(allDecks => {
+        if (allDecks.length > 0) {
+          // Sort by lastEdited and get most recent
+          const sortedDecks = allDecks.sort((a, b) => b.meta.lastEdited - a.meta.lastEdited);
+          const mostRecent = sortedDecks[0];
+          currentDeckId.set(mostRecent.id);
+        } else {
+          currentDeckId.set(null);
+        }
+      })
+      .catch(err => {
+        error = err instanceof Error ? err.message : String(err);
+      })
+      .finally(() => {
+        loading = false;
+      });
   });
 
   // Function to get the corresponding back position for a card
