@@ -5,10 +5,11 @@
 ## 🎯 **Mission: Extract ALL component logic for warp speed development**
 
 ### **Progress Tracker:**
-- ✅ **StatblockVocabularyEditor** - COMPLETE (35 tests, 5ms execution) 
+- ✅ **StatblockVocabularyEditor** - COMPLETE (35 tests, 6ms execution) 
 - ✅ **DeckManager** - COMPLETE (78 tests, 19ms execution)
-- 🚧 **StatsDialog** - NEXT UP
-- ⏳ **CardEditor Components** - QUEUED  
+- ✅ **CardStatsEditor** - COMPLETE (86 tests, 16ms execution)
+- 🚧 **CardFront/CardBack Components** - NEXT UP
+- ⏳ **Other CardEditor Components** - QUEUED  
 - ⏳ **Store Logic** - QUEUED
 - ⏳ **Shared Utilities** - QUEUED
 
@@ -39,15 +40,18 @@
   - Vocabulary validation
 - **Impact:** Central to app, now fully testable and refactorable
 
-#### ⏳ StatsDialog *(NEXT UP)*
-- **Complexity:** HIGH - Complex stat manipulation
-- **Logic Opportunities:**
-  - Stat addition/removal/reordering
-  - Template application
-  - Validation and conflict resolution
-  - Drag-and-drop state management
-- **Expected Functions:** ~8-10 functions
-- **Impact:** Core gameplay feature
+#### ✅ CardStatsEditor *(COMPLETED)*
+- **Logic File:** `CardStatsEditor.svelte.ts`
+- **Tests:** 86 comprehensive tests
+- **Speed:** 16ms execution time
+- **Functions:** 25+ pure functions with full coverage
+- **Extracted Logic:**
+  - Stat addition/removal/reordering with drag & drop
+  - State management and validation
+  - Custom stat creation and management
+  - Stat definition lookups and grouping
+  - Sorting and summary calculations
+- **Impact:** Core gameplay feature now fully testable
 
 ### 🎮 **Tier 2: Card Management Logic**
 
@@ -118,20 +122,20 @@
 
 ---
 
-## 🎯 **Current Focus: DeckManager Extraction**
+## 🎯 **Current Focus: CardFront/CardBack Components**
 
 ### **Today's Mission:**
-1. **Analyze** DeckManager.svelte for extractable logic
-2. **Create** DeckManager.svelte.ts with pure functions
+1. **Analyze** CardFront/CardBack components for extractable logic
+2. **Create** corresponding .svelte.ts files with pure functions
 3. **Test** all functions with comprehensive coverage
-4. **Integrate** back into component
+4. **Integrate** back into components
 5. **Identify** common patterns for shared utilities
 
 ### **Expected Outcomes:**
-- **~15 pure functions** with full test coverage
-- **Sub-10ms test execution** time
-- **Cleaner component** focused on presentation
-- **Reusable deck operations** for other components
+- **~6-8 pure functions per component** with full test coverage
+- **Sub-10ms test execution** time each
+- **Cleaner components** focused on presentation
+- **Reusable rendering logic** for other components
 
 ---
 
@@ -148,4 +152,4 @@ By the end of this roadmap:
 
 ---
 
-*Last Updated: Starting DeckManager extraction*
+*Last Updated: Completed CardStatsEditor extraction (86 tests), moving to CardFront/CardBack*
