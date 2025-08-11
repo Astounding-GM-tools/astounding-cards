@@ -237,15 +237,13 @@
     border: 1px solid var(--border-color);
   }
   
-  .stat-icon,
-  .mechanic-icon {
+  .stat-icon {
     width: 24px;
     height: 24px;
     flex-shrink: 0;
   }
   
-  .stat-icon img,
-  .mechanic-icon img {
+  .stat-icon img {
     width: 100%;
     height: 100%;
     filter: var(--icon-filter);
@@ -263,9 +261,7 @@
   }
   
   .stat-category,
-  .mechanic-type,
-  .mechanic-category,
-  .mechanic-default {
+  .mechanic-type {
     font-size: 0.8rem;
     color: var(--text-muted);
   }

@@ -212,6 +212,7 @@
             class:dragging={draggedIndex === index}
             class:drag-over={dragOverIndex === index}
             draggable="true"
+            role="listitem"
             ondragstart={(e) => handleDragStart(e, index)}
             ondragover={(e) => handleDragOver(e, index)}
             ondragleave={handleDragLeave}

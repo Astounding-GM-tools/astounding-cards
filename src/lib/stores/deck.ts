@@ -4,6 +4,7 @@ import type { Card, Deck } from '$lib/types';
 import { validateDeck } from '$lib/types';
 import { putDeck, getDeck, deleteDeck as dbDeleteDeck } from '$lib/db';
 import { toasts } from './toast';
+import { deckList } from './deckList';
 import { browser } from '$app/environment';
 
 export const currentDeck = writable<Deck | null>(null);
@@ -245,7 +246,6 @@ export async function copyCardsTo(
   
   // Refresh deck list if we created a new deck
   if (createdNewDeck) {
-    const { deckList } = await import('./deckList');
     await deckList.load();
   }
   

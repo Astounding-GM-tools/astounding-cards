@@ -75,6 +75,13 @@ For consistent theme application:
   - [x] Fix `DataCloneError` when duplicating a deck.
   - [x] Removed "Move Cards" (redundant - users can copy to current deck instead).
 
+- [ ] **Card Sizing & Typography Overhaul**
+  - [ ] Fix container query (cqw) font sizing issues - cards should look identical across sizes
+  - [ ] Ensure Poker and Tarot cards are visually identical, just scaled (Poker = smaller/harder to read)
+  - [ ] Overhaul theme font size system - limit to semantic keywords (smaller, larger, etc.)
+  - [ ] Remove absolute font sizes from themes to prevent sizing conflicts across card dimensions
+  - [ ] Implement proper fluid typography that scales consistently with card size
+
 - [ ] **Crop Marks & Card Positioning**
   - [ ] Re-implement crop marks for front cards
   - [ ] Ensure consistent crop mark visibility on all cards

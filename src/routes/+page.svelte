@@ -219,6 +219,7 @@
   <PrintInstructions bind:dialog={printDialog} />
 
   <!-- Main content -->
+   <h1>{$currentDeck?.meta.name || "Astounding Game Cards" }</h1>
   <div class="cards-scroll-container" bind:this={scrollContainer}>
     {#if loading}
       <div class="message">Loading...</div>

@@ -3,7 +3,7 @@
 
 import { writable, get } from 'svelte/store';
 import type { Card, Deck } from '$lib/types';
-import { currentDeck } from './deck';
+import { currentDeck, copyCardsTo } from './deck';
 import { putDeck, deleteDeck as dbDeleteDeck } from '$lib/db';
 import { toasts } from './toast';
 
@@ -213,7 +213,6 @@ export async function canonCopyCards(cardIds: string[], targetDeckId: string | '
     const cardsToCopy = deck.cards.filter(c => cardIds.includes(c.id));
     
     // Use the existing copyCardsTo function from deck store
-    const { copyCardsTo } = await import('./deck');
     await copyCardsTo(cardsToCopy, targetDeckId, newDeckName);
     
     // Show success notification if provided
