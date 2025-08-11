@@ -4,7 +4,6 @@ import {
   initializeDragState,
   resetStatsEditorState,
   updateStatsEditorState,
-  statExists,
   validateStatForm,
   addStatToArray,
   removeStatFromArray,
@@ -16,21 +15,13 @@ import {
   endDrag,
   handleDrop,
   getAvailableStats,
-  getUsedStatIds,
-  isStatUsed,
   findStatDefinition,
   getStatLabel,
   getStatIcon,
   groupStatsByCategory,
-  validateCustomStat,
-  createCustomStatDefinition,
-  generateCustomStatId,
   statsChanged,
-  sortStats,
-  getStatsSummary,
   type StatsEditorState,
-  type DragState,
-  type StatFormData
+  type DragState
 } from './CardStatsEditor.svelte.js';
 import type { CardStat, StatDefinition } from '$lib/types';
 
@@ -137,25 +128,9 @@ describe('CardStatsEditor Logic', () => {
     });
   });
 
-  describe('statExists', () => {
-    it('returns true for existing stat', () => {
-      expect(statExists(mockStats, 'health')).toBe(true);
-      expect(statExists(mockStats, 'attack')).toBe(true);
-    });
-
-    it('returns false for non-existing stat', () => {
-      expect(statExists(mockStats, 'magic')).toBe(false);
-      expect(statExists(mockStats, 'nonexistent')).toBe(false);
-    });
-
-    it('handles empty stats array', () => {
-      expect(statExists([], 'health')).toBe(false);
-    });
-  });
-
   describe('validateStatForm', () => {
     it('validates correct form data', () => {
-      const data: StatFormData = { statId: 'magic', value: 25 };
+      const data = { statId: 'magic', value: 25 };
       const result = validateStatForm(data, mockStats);
       
       expect(result.isValid).toBe(true);
@@ -163,7 +138,7 @@ describe('CardStatsEditor Logic', () => {
     });
 
     it('rejects empty stat ID', () => {
-      const data: StatFormData = { statId: '', value: 25 };
+      const data = { statId: '', value: 25 };
       const result = validateStatForm(data, mockStats);
       
       expect(result.isValid).toBe(false);
@@ -171,7 +146,7 @@ describe('CardStatsEditor Logic', () => {
     });
 
     it('rejects whitespace-only stat ID', () => {
-      const data: StatFormData = { statId: '   ', value: 25 };
+      const data = { statId: '   ', value: 25 };
       const result = validateStatForm(data, mockStats);
       
       expect(result.isValid).toBe(false);
@@ -179,7 +154,7 @@ describe('CardStatsEditor Logic', () => {
     });
 
     it('rejects empty value', () => {
-      const data: StatFormData = { statId: 'magic', value: '' };
+      const data = { statId: 'magic', value: '' };
       const result = validateStatForm(data, mockStats);
       
       expect(result.isValid).toBe(false);
@@ -187,7 +162,7 @@ describe('CardStatsEditor Logic', () => {
     });
 
     it('rejects null value', () => {
-      const data: StatFormData = { statId: 'magic', value: null as any };
+      const data = { statId: 'magic', value: null as any };
       const result = validateStatForm(data, mockStats);
       
       expect(result.isValid).toBe(false);
@@ -195,7 +170,7 @@ describe('CardStatsEditor Logic', () => {
     });
 
     it('rejects undefined value', () => {
-      const data: StatFormData = { statId: 'magic', value: undefined as any };
+      const data = { statId: 'magic', value: undefined as any };
       const result = validateStatForm(data, mockStats);
       
       expect(result.isValid).toBe(false);
@@ -203,7 +178,7 @@ describe('CardStatsEditor Logic', () => {
     });
 
     it('rejects duplicate stat', () => {
-      const data: StatFormData = { statId: 'health', value: 25 };
+      const data = { statId: 'health', value: 25 };
       const result = validateStatForm(data, mockStats);
       
       expect(result.isValid).toBe(false);
@@ -211,7 +186,7 @@ describe('CardStatsEditor Logic', () => {
     });
 
     it('accepts zero as valid value', () => {
-      const data: StatFormData = { statId: 'magic', value: 0 };
+      const data = { statId: 'magic', value: 0 };
       const result = validateStatForm(data, mockStats);
       
       expect(result.isValid).toBe(true);
@@ -435,30 +410,6 @@ describe('CardStatsEditor Logic', () => {
     });
   });
 
-  describe('getUsedStatIds', () => {
-    it('returns set of used stat IDs', () => {
-      const result = getUsedStatIds(mockStats);
-      
-      expect(result).toEqual(new Set(['health', 'attack', 'defense']));
-    });
-
-    it('handles empty stats', () => {
-      const result = getUsedStatIds([]);
-      
-      expect(result).toEqual(new Set());
-    });
-  });
-
-  describe('isStatUsed', () => {
-    it('returns true for used stat', () => {
-      expect(isStatUsed('health', mockStats)).toBe(true);
-    });
-
-    it('returns false for unused stat', () => {
-      expect(isStatUsed('magic', mockStats)).toBe(false);
-    });
-  });
-
   describe('findStatDefinition', () => {
     it('finds existing definition', () => {
       const result = findStatDefinition('health', mockDefinitions);
@@ -522,109 +473,6 @@ describe('CardStatsEditor Logic', () => {
     });
   });
 
-  describe('validateCustomStat', () => {
-    it('validates correct custom stat', () => {
-      const result = validateCustomStat('My Custom Stat', 'star');
-      
-      expect(result.isValid).toBe(true);
-    });
-
-    it('rejects empty label', () => {
-      const result = validateCustomStat('');
-      
-      expect(result.isValid).toBe(false);
-      expect(result.error).toBe('Custom stat label is required');
-    });
-
-    it('rejects whitespace-only label', () => {
-      const result = validateCustomStat('   ');
-      
-      expect(result.isValid).toBe(false);
-      expect(result.error).toBe('Custom stat label is required');
-    });
-
-    it('rejects too short label', () => {
-      const result = validateCustomStat('A');
-      
-      expect(result.isValid).toBe(false);
-      expect(result.error).toBe('Label must be at least 2 characters');
-    });
-
-    it('rejects too long label', () => {
-      const longLabel = 'A'.repeat(51);
-      const result = validateCustomStat(longLabel);
-      
-      expect(result.isValid).toBe(false);
-      expect(result.error).toBe('Label cannot exceed 50 characters');
-    });
-
-    it('accepts label at boundaries', () => {
-      expect(validateCustomStat('AB').isValid).toBe(true);
-      expect(validateCustomStat('A'.repeat(50)).isValid).toBe(true);
-    });
-  });
-
-  describe('createCustomStatDefinition', () => {
-    it('creates custom stat with all fields', () => {
-      const result = createCustomStatDefinition('test', 'Test Stat', 'gear', 'Special');
-      
-      expect(result).toEqual({
-        id: 'test',
-        label: 'Test Stat',
-        icon: 'gear',
-        category: 'Special'
-      });
-    });
-
-    it('uses default values for optional fields', () => {
-      const result = createCustomStatDefinition('test', 'Test Stat');
-      
-      expect(result.icon).toBe('star');
-      expect(result.category).toBe('Custom');
-    });
-
-    it('trims input values', () => {
-      const result = createCustomStatDefinition('  test  ', '  Test Stat  ', '  gear  ', '  Special  ');
-      
-      expect(result.id).toBe('test');
-      expect(result.label).toBe('Test Stat');
-      expect(result.icon).toBe('gear');
-      expect(result.category).toBe('Special');
-    });
-
-    it('handles empty icon gracefully', () => {
-      const result = createCustomStatDefinition('test', 'Test Stat', '');
-      
-      expect(result.icon).toBe('star');
-    });
-  });
-
-  describe('generateCustomStatId', () => {
-    it('generates ID from label', () => {
-      const result = generateCustomStatId('My Custom Stat');
-      
-      expect(result).toBe('custom_my_custom_stat_1704110400000');
-    });
-
-    it('handles special characters', () => {
-      const result = generateCustomStatId('Test & Special-Stat!');
-      
-      expect(result).toBe('custom_test_special_stat_1704110400000');
-    });
-
-    it('handles multiple spaces and underscores', () => {
-      const result = generateCustomStatId('Test    Multiple___Spaces');
-      
-      expect(result).toBe('custom_test_multiple_spaces_1704110400000');
-    });
-
-    it('removes leading and trailing underscores', () => {
-      const result = generateCustomStatId('___Test___');
-      
-      expect(result).toBe('custom_test_1704110400000');
-    });
-  });
-
   describe('statsChanged', () => {
     it('detects no change', () => {
       const result = statsChanged(mockStats, [...mockStats]);
@@ -662,115 +510,6 @@ describe('CardStatsEditor Logic', () => {
       const result = statsChanged(mockStats, modified);
       
       expect(result).toBe(true);
-    });
-  });
-
-  describe('sortStats', () => {
-    it('sorts by label ascending', () => {
-      const result = sortStats(mockStats, mockDefinitions, 'label');
-      
-      expect(result[0].statId).toBe('attack');  // Attack
-      expect(result[1].statId).toBe('defense'); // Defense
-      expect(result[2].statId).toBe('health');  // Health
-    });
-
-    it('sorts by value descending', () => {
-      const result = sortStats(mockStats, mockDefinitions, 'value');
-      
-      expect(result[0].value).toBe(100); // health
-      expect(result[1].value).toBe(75);  // attack
-      expect(result[2].value).toBe(50);  // defense
-    });
-
-    it('sorts by category', () => {
-      const mixedStats = [
-        { statId: 'magic', value: 30 },
-        { statId: 'health', value: 100 },
-        { statId: 'attack', value: 75 }
-      ];
-      
-      const result = sortStats(mixedStats, mockDefinitions, 'category');
-      
-      // Combat (attack) comes before Core (health) comes before Special (magic)
-      expect(result[0].statId).toBe('attack');
-      expect(result[1].statId).toBe('health');
-      expect(result[2].statId).toBe('magic');
-    });
-
-    it('handles missing definitions gracefully', () => {
-      const statsWithMissing = [
-        ...mockStats,
-        { statId: 'unknown', value: 25 }
-      ];
-      
-      const result = sortStats(statsWithMissing, mockDefinitions, 'label');
-      
-      expect(result).toHaveLength(4);
-      // Should not throw error
-    });
-
-    it('does not modify original array', () => {
-      const original = [...mockStats];
-      sortStats(mockStats, mockDefinitions, 'label');
-      
-      expect(mockStats).toEqual(original);
-    });
-  });
-
-  describe('getStatsSummary', () => {
-    it('calculates summary for numeric stats', () => {
-      const result = getStatsSummary(mockStats);
-      
-      expect(result.count).toBe(3);
-      expect(result.hasNumericValues).toBe(true);
-      expect(result.totalNumericValue).toBe(225); // 100 + 75 + 50
-    });
-
-    it('handles mixed numeric and string values', () => {
-      const mixedStats = [
-        ...mockStats,
-        { statId: 'mood', value: 'happy' },
-        { statId: 'power', value: '25' } // String number
-      ];
-      
-      const result = getStatsSummary(mixedStats);
-      
-      expect(result.count).toBe(5);
-      expect(result.hasNumericValues).toBe(true);
-      expect(result.totalNumericValue).toBe(250); // 225 + 25 from string
-    });
-
-    it('handles all non-numeric values', () => {
-      const nonNumericStats = [
-        { statId: 'mood', value: 'happy' },
-        { statId: 'state', value: 'confused' }
-      ];
-      
-      const result = getStatsSummary(nonNumericStats);
-      
-      expect(result.count).toBe(2);
-      expect(result.hasNumericValues).toBe(false);
-      expect(result.totalNumericValue).toBe(0);
-    });
-
-    it('handles empty stats array', () => {
-      const result = getStatsSummary([]);
-      
-      expect(result.count).toBe(0);
-      expect(result.hasNumericValues).toBe(false);
-      expect(result.totalNumericValue).toBe(0);
-    });
-
-    it('handles zero values correctly', () => {
-      const statsWithZero = [
-        { statId: 'health', value: 0 },
-        { statId: 'attack', value: 10 }
-      ];
-      
-      const result = getStatsSummary(statsWithZero);
-      
-      expect(result.hasNumericValues).toBe(true);
-      expect(result.totalNumericValue).toBe(10);
     });
   });
 });

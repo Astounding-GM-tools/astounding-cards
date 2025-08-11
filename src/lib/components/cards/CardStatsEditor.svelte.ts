@@ -76,12 +76,6 @@ export function updateStatsEditorState(
   return { ...state, ...updates };
 }
 
-/**
- * Check if a stat already exists in the current stats
- */
-export function statExists(stats: CardStat[], statId: string): boolean {
-  return stats.some(stat => stat.statId === statId);
-}
 
 /**
  * Validate stat form data before adding
@@ -98,7 +92,7 @@ export function validateStatForm(data: StatFormData, existingStats: CardStat[]):
     return { isValid: false, error: 'Please enter a value' };
   }
 
-  if (statExists(existingStats, data.statId)) {
+  if (existingStats.some(stat => stat.statId === data.statId)) {
     return { isValid: false, error: 'This stat is already added' };
   }
 
@@ -237,19 +231,6 @@ export function getAvailableStats(
   return allStats.filter(stat => !usedStatIds.has(stat.id));
 }
 
-/**
- * Get stats that are currently in use
- */
-export function getUsedStatIds(stats: CardStat[]): Set<string> {
-  return new Set(stats.map(stat => stat.statId));
-}
-
-/**
- * Check if a stat definition is already used
- */
-export function isStatUsed(statId: string, usedStats: CardStat[]): boolean {
-  return usedStats.some(stat => stat.statId === statId);
-}
 
 /**
  * Find stat definition by ID
@@ -299,57 +280,6 @@ export function groupStatsByCategory(
   }, {} as Record<string, StatDefinition[]>);
 }
 
-/**
- * Validate custom stat data
- */
-export function validateCustomStat(label: string, icon?: string): {
-  isValid: boolean;
-  error?: string;
-} {
-  if (!label.trim()) {
-    return { isValid: false, error: 'Custom stat label is required' };
-  }
-
-  if (label.trim().length < 2) {
-    return { isValid: false, error: 'Label must be at least 2 characters' };
-  }
-
-  if (label.trim().length > 50) {
-    return { isValid: false, error: 'Label cannot exceed 50 characters' };
-  }
-
-  return { isValid: true };
-}
-
-/**
- * Create a custom stat definition
- */
-export function createCustomStatDefinition(
-  id: string,
-  label: string,
-  icon: string = 'star',
-  category: string = 'Custom'
-): StatDefinition {
-  return {
-    id: id.trim(),
-    label: label.trim(),
-    icon: icon.trim() || 'star',
-    category: category.trim() || 'Custom'
-  };
-}
-
-/**
- * Generate a unique stat ID for custom stats
- */
-export function generateCustomStatId(label: string): string {
-  const baseId = label
-    .toLowerCase()
-    .replace(/[^a-z0-9]/g, '_')
-    .replace(/_+/g, '_')
-    .replace(/^_|_$/g, '');
-  
-  return `custom_${baseId}_${Date.now()}`;
-}
 
 /**
  * Check if stats have changed compared to original
@@ -370,63 +300,3 @@ export function statsChanged(original: CardStat[], current: CardStat[]): boolean
   return false;
 }
 
-/**
- * Sort stats by a given criteria
- */
-export function sortStats(
-  stats: CardStat[],
-  definitions: StatDefinition[],
-  sortBy: 'label' | 'value' | 'category' = 'label'
-): CardStat[] {
-  return [...stats].sort((a, b) => {
-    const defA = findStatDefinition(a.statId, definitions);
-    const defB = findStatDefinition(b.statId, definitions);
-
-    switch (sortBy) {
-      case 'label':
-        const labelA = defA?.label || a.statId;
-        const labelB = defB?.label || b.statId;
-        return labelA.localeCompare(labelB);
-      
-      case 'value':
-        const valueA = typeof a.value === 'number' ? a.value : parseFloat(String(a.value)) || 0;
-        const valueB = typeof b.value === 'number' ? b.value : parseFloat(String(b.value)) || 0;
-        return valueB - valueA; // Descending order
-      
-      case 'category':
-        const categoryA = defA?.category || 'Other';
-        const categoryB = defB?.category || 'Other';
-        return categoryA.localeCompare(categoryB);
-      
-      default:
-        return 0;
-    }
-  });
-}
-
-/**
- * Get stats summary for display
- */
-export function getStatsSummary(stats: CardStat[]): {
-  count: number;
-  hasNumericValues: boolean;
-  totalNumericValue: number;
-} {
-  const count = stats.length;
-  let hasNumericValues = false;
-  let totalNumericValue = 0;
-
-  for (const stat of stats) {
-    const numValue = typeof stat.value === 'number' ? stat.value : parseFloat(String(stat.value));
-    if (!isNaN(numValue)) {
-      hasNumericValues = true;
-      totalNumericValue += numValue;
-    }
-  }
-
-  return {
-    count,
-    hasNumericValues,
-    totalNumericValue
-  };
-}
