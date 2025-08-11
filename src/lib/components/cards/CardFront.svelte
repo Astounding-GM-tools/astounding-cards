@@ -7,6 +7,7 @@
   import ImageSelector from '../ui/ImageSelector.svelte';
   import { formatTraits, parseTraits, addTrait } from '$lib/utils/card-utils';
   import { createBlobUrl, revokeBlobUrl } from '$lib/utils/image-handler';
+  import { untrack } from 'svelte';
   import {
     resolveCardTheme,
     hasImageDataChanged,
@@ -34,8 +35,8 @@
   const preview = props.preview ?? false;
   const cardSize = props.cardSize;
   
-  // Use pure function for theme resolution
-  const activeTheme = $derived(resolveCardTheme(card.theme, theme, $currentDeck?.meta?.theme));
+  // Use pure function for theme resolution - use props.card to avoid circular dependency
+  const activeTheme = $derived(resolveCardTheme(props.card.theme, theme, $currentDeck?.meta?.theme));
 
   // Get loading states for different fields
   const isNameUpdating = $derived(isFieldLoading('card-name'));
@@ -77,8 +78,11 @@
   // Image URL management using pure state management
   let imageState = $state<ImageState>(initializeImageState());
   
-  // Effect to manage image URL based on card data - using pure logic for change detection
+  // Effect to manage image URL based on card data - only respond to actual changes
   $effect(() => {
+    const currentImageBlob = card.imageBlob;
+    const currentImageUrl = card.image;
+    
     // Use pure function to check if data has changed
     if (hasImageDataChanged(card, imageState.lastBlob, imageState.lastUrl)) {
       // Clean up previous URL if it was a blob URL
@@ -88,19 +92,19 @@
       
       // Set new URL
       let newUrl: string | null = null;
-      if (card.imageBlob) {
+      if (currentImageBlob) {
         // Create blob URL from stored blob
-        newUrl = createBlobUrl(card.imageBlob);
-      } else if (card.image) {
+        newUrl = createBlobUrl(currentImageBlob);
+      } else if (currentImageUrl) {
         // Use external URL directly
-        newUrl = card.image;
+        newUrl = currentImageUrl;
       }
       
       // Update state using pure function
       imageState = updateImageState(imageState, {
         currentUrl: newUrl,
-        lastBlob: card.imageBlob || null,
-        lastUrl: card.image || null
+        lastBlob: currentImageBlob || null,
+        lastUrl: currentImageUrl || null
       });
     }
   });

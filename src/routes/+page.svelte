@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, untrack } from 'svelte';
   import { currentDeck, currentDeckId, deckFromUrl, addCard, deckToUrl } from '$lib/stores/deck';
   import { getDeck, getAllDecks } from '$lib/db';
   import type { Card } from '$lib/types';
@@ -82,23 +82,30 @@
       
       getDeck(id).then(deck => {
         // Only update if this is still the deck we want to load
-        if ($currentDeckId === id) {
+        if (untrack(() => $currentDeckId) === id) {
           if (deck) {
-            currentDeck.set(deck);
-            currentLoadedDeckId = id;
+            // Use untrack to prevent reactive loops when setting the deck
+            untrack(() => {
+              currentDeck.set(deck);
+              currentLoadedDeckId = id;
+            });
           } else {
             // Deck not found, clear the ID
-            currentDeck.set(null);
-            currentLoadedDeckId = null;
+            untrack(() => {
+              currentDeck.set(null);
+              currentLoadedDeckId = null;
+            });
             toasts.error('Deck not found');
           }
         }
         loadingDeckId = null;
       }).catch(err => {
         console.error('Error loading deck:', err);
-        if ($currentDeckId === id) {
-          currentDeck.set(null);
-          currentLoadedDeckId = null;
+        if (untrack(() => $currentDeckId) === id) {
+          untrack(() => {
+            currentDeck.set(null);
+            currentLoadedDeckId = null;
+          });
           toasts.error('Failed to load deck: ' + err.message);
         }
         loadingDeckId = null;

@@ -57,11 +57,24 @@
   // Get current stats (fallback to empty array) - now reactive!
   const currentStats = $derived(card.stats || []);
   
-  // Get all available stat definitions (common + deck custom)
+  // Get all available stat definitions (common + deck custom) - use static data to avoid loops
   const customStats = $derived($currentDeck?.meta?.customStats || []);
   const allStatDefinitions = $derived([...COMMON_STATS, ...customStats]);
-  const availableStats = $derived(getAvailableStats(allStatDefinitions, editorState.editingStats));
-  const statsByCategory = $derived(groupStatsByCategory(availableStats));
+  
+  // Calculate these when needed during dialog operations, not reactively
+  function getAvailableStatsForDialog(editingStats: typeof editorState.editingStats) {
+    return getAvailableStats(allStatDefinitions, editingStats);
+  }
+  
+  function getStatsByCategoryForDialog(editingStats: typeof editorState.editingStats) {
+    const available = getAvailableStats(allStatDefinitions, editingStats);
+    return groupStatsByCategory(available);
+  }
+  
+  // Use static computed values for dialog display
+  const statsByCategory = $derived(
+    isDialogOpen ? getStatsByCategoryForDialog(editorState.editingStats) : {}
+  );
 
   function openDialog() {
     // Initialize editor state with current stats
@@ -117,12 +130,49 @@
     }
   }
 
+  // Create memoized static versions to break reactive loops
+  let _statIconCache = new Map<string, string>();
+  let _statLabelCache = new Map<string, string>();
+  let _lastCustomStatsHash = '';
+  
   function getStatIcon(statId: string): string {
-    return getStatIconFromDef(statId, allStatDefinitions);
+    // Generate a hash for the current custom stats to check if cache is valid
+    const currentCustomStatsHash = JSON.stringify($currentDeck?.meta?.customStats || []);
+    
+    // Clear cache if custom stats changed
+    if (currentCustomStatsHash !== _lastCustomStatsHash) {
+      _statIconCache.clear();
+      _statLabelCache.clear();
+      _lastCustomStatsHash = currentCustomStatsHash;
+    }
+    
+    if (!_statIconCache.has(statId)) {
+      const customStats = $currentDeck?.meta?.customStats || [];
+      const definitions = [...COMMON_STATS, ...customStats];
+      _statIconCache.set(statId, getStatIconFromDef(statId, definitions));
+    }
+    
+    return _statIconCache.get(statId) || 'help-circle';
   }
 
   function getStatLabel(statId: string): string {
-    return getStatLabelFromDef(statId, allStatDefinitions);
+    // Generate a hash for the current custom stats to check if cache is valid
+    const currentCustomStatsHash = JSON.stringify($currentDeck?.meta?.customStats || []);
+    
+    // Clear cache if custom stats changed
+    if (currentCustomStatsHash !== _lastCustomStatsHash) {
+      _statIconCache.clear();
+      _statLabelCache.clear();
+      _lastCustomStatsHash = currentCustomStatsHash;
+    }
+    
+    if (!_statLabelCache.has(statId)) {
+      const customStats = $currentDeck?.meta?.customStats || [];
+      const definitions = [...COMMON_STATS, ...customStats];
+      _statLabelCache.set(statId, getStatLabelFromDef(statId, definitions));
+    }
+    
+    return _statLabelCache.get(statId) || 'Unknown';
   }
   
   // Drag and drop functions using pure logic
