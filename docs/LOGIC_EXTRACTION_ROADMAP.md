@@ -8,7 +8,8 @@
 - ✅ **StatblockVocabularyEditor** - COMPLETE (35 tests, 6ms execution) 
 - ✅ **DeckManager** - COMPLETE (78 tests, 19ms execution)
 - ✅ **CardStatsEditor** - COMPLETE (86 tests, 16ms execution)
-- 🚧 **CardFront/CardBack Components** - NEXT UP
+- ✅ **CardFront** - COMPLETE (46 tests, 4ms execution)
+- 🚧 **CardBack Component** - NEXT UP
 - ⏳ **Other CardEditor Components** - QUEUED  
 - ⏳ **Store Logic** - QUEUED
 - ⏳ **Shared Utilities** - QUEUED
@@ -55,13 +56,26 @@
 
 ### 🎮 **Tier 2: Card Management Logic**
 
-#### ⏳ CardFront/CardBack Components
+#### ✅ CardFront *(COMPLETED)*
+- **Logic File:** `CardFront.svelte.ts`
+- **Tests:** 46 comprehensive tests
+- **Speed:** 4ms execution time
+- **Functions:** 15 pure functions with full coverage
+- **Extracted Logic:**
+  - Theme resolution and image URL management
+  - Image state management and CSS generation
+  - Content validation for names and roles
+  - Button text/title generation
+  - UI state helpers and flourish visibility
+- **Impact:** Clean separation of rendering logic and UI state
+
+#### ⏳ CardBack Component
 - **Logic Opportunities:**
-  - Card rendering logic
-  - Image handling and optimization
-  - Text formatting and overflow
-  - Theme application
-- **Expected Functions:** ~6-8 functions per component
+  - Content validation and template application
+  - Theme resolution and mechanics handling
+  - Template instantiation logic
+  - Content formatting helpers
+- **Expected Functions:** ~8-10 functions
 
 #### ⏳ CardEditor Components  
 - **Logic Opportunities:**
@@ -122,20 +136,20 @@
 
 ---
 
-## 🎯 **Current Focus: CardFront/CardBack Components**
+## 🎯 **Current Focus: CardBack Component**
 
 ### **Today's Mission:**
-1. **Analyze** CardFront/CardBack components for extractable logic
-2. **Create** corresponding .svelte.ts files with pure functions
+1. **Analyze** CardBack component for extractable logic
+2. **Create** CardBack.svelte.ts with pure functions
 3. **Test** all functions with comprehensive coverage
-4. **Integrate** back into components
+4. **Integrate** back into component
 5. **Identify** common patterns for shared utilities
 
 ### **Expected Outcomes:**
-- **~6-8 pure functions per component** with full test coverage
-- **Sub-10ms test execution** time each
-- **Cleaner components** focused on presentation
-- **Reusable rendering logic** for other components
+- **~8-10 pure functions** with full test coverage
+- **Sub-10ms test execution** time
+- **Cleaner component** focused on presentation
+- **Reusable template and content logic** for other components
 
 ---
 
@@ -152,4 +166,4 @@ By the end of this roadmap:
 
 ---
 
-*Last Updated: Completed CardStatsEditor extraction (86 tests), moving to CardFront/CardBack*
+*Last Updated: Completed CardFront extraction (46 tests), moving to CardBack*

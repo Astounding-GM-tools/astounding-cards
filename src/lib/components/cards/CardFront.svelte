@@ -7,6 +7,21 @@
   import ImageSelector from '../ui/ImageSelector.svelte';
   import { formatTraits, parseTraits, addTrait } from '$lib/utils/card-utils';
   import { createBlobUrl, revokeBlobUrl } from '$lib/utils/image-handler';
+  import {
+    resolveCardTheme,
+    hasImageDataChanged,
+    createBackgroundImageValue,
+    createImageUpdateParams,
+    validateCardName,
+    validateCardRole,
+    hasContentChanged,
+    getImageButtonText,
+    getImageButtonTitle,
+    shouldShowTopRightFlourish,
+    initializeImageState,
+    updateImageState,
+    type ImageState
+  } from './CardFront.svelte.ts';
 
   // Props - for theme, preview, and cardSize
   const props = $props<{
@@ -18,7 +33,9 @@
   const theme = props.theme;
   const preview = props.preview ?? false;
   const cardSize = props.cardSize;
-  const activeTheme = $derived(card.theme ?? theme ?? $currentDeck?.meta?.theme ?? 'classic');
+  
+  // Use pure function for theme resolution
+  const activeTheme = $derived(resolveCardTheme(card.theme, theme, $currentDeck?.meta?.theme));
 
   // Get loading states for different fields
   const isNameUpdating = $derived(isFieldLoading('card-name'));
@@ -42,73 +59,81 @@
 
   async function handleNameBlur(e: FocusEvent) {
     const newName = (e.target as HTMLElement).textContent?.trim() || '';
-    if (newName !== card.name) {
-      await canonUpdateCard(card.id, { name: newName }, ['card-name'], 'Updating name...');
+    const validation = validateCardName(newName);
+    
+    if (!validation.isValid) {
+      // Reset to original name if invalid
+      if (e.target) {
+        (e.target as HTMLElement).textContent = card.name;
+      }
+      return;
+    }
+    
+    if (hasContentChanged(card.name, validation.trimmedName)) {
+      await canonUpdateCard(card.id, { name: validation.trimmedName }, ['card-name'], 'Updating name...');
     }
   }
 
-  // Image URL management - recreate blob URLs from stored blobs
-  let currentImageUrl = $state<string | null>(null);
-  let lastImageBlob = $state<Blob | null>(null);
-  let lastImageUrl = $state<string | null>(null);
+  // Image URL management using pure state management
+  let imageState = $state<ImageState>(initializeImageState());
   
-  // Effect to manage image URL based on card data - only update when data actually changes
+  // Effect to manage image URL based on card data - using pure logic for change detection
   $effect(() => {
-    // Only update if the actual data has changed
-    if (card.imageBlob !== lastImageBlob || card.image !== lastImageUrl) {
+    // Use pure function to check if data has changed
+    if (hasImageDataChanged(card, imageState.lastBlob, imageState.lastUrl)) {
       // Clean up previous URL if it was a blob URL
-      if (currentImageUrl && currentImageUrl.startsWith('blob:')) {
-        revokeBlobUrl(currentImageUrl);
+      if (imageState.currentUrl && imageState.currentUrl.startsWith('blob:')) {
+        revokeBlobUrl(imageState.currentUrl);
       }
       
       // Set new URL
+      let newUrl: string | null = null;
       if (card.imageBlob) {
         // Create blob URL from stored blob
-        currentImageUrl = createBlobUrl(card.imageBlob);
+        newUrl = createBlobUrl(card.imageBlob);
       } else if (card.image) {
         // Use external URL directly
-        currentImageUrl = card.image;
-      } else {
-        currentImageUrl = null;
+        newUrl = card.image;
       }
       
-      // Update tracking vars
-      lastImageBlob = card.imageBlob || null;
-      lastImageUrl = card.image;
+      // Update state using pure function
+      imageState = updateImageState(imageState, {
+        currentUrl: newUrl,
+        lastBlob: card.imageBlob || null,
+        lastUrl: card.image || null
+      });
     }
   });
   
   // Clean up on destroy
   $effect(() => {
     return () => {
-      if (currentImageUrl && currentImageUrl.startsWith('blob:')) {
-        revokeBlobUrl(currentImageUrl);
+      if (imageState.currentUrl && imageState.currentUrl.startsWith('blob:')) {
+        revokeBlobUrl(imageState.currentUrl);
       }
     };
   });
   
-  const backgroundImageValue = $derived(currentImageUrl ? `url('${currentImageUrl}')` : 'none');
+  // Use pure function for background image CSS generation
+  const backgroundImageValue = $derived(createBackgroundImageValue(imageState.currentUrl));
+  
+  // Use pure functions for button text and title
+  const imageButtonText = $derived(getImageButtonText(!!imageState.currentUrl, isImageUpdating));
+  const imageButtonTitle = $derived(getImageButtonTitle(!!imageState.currentUrl));
+  
+  // Use pure function for flourish visibility
+  const showTopRightFlourish = $derived(shouldShowTopRightFlourish(card));
 
   // Elements
   let roleElement = $state<HTMLDivElement | null>(null);
   let traitsElement = $state<HTMLDivElement | null>(null);
   let showImageSelector = $state(false);
 
-  // Image selector
+  // Image selector using pure function for update parameters
   async function handleImageSave(blob: Blob | null, sourceUrl: string | undefined) {
     try {
-      let updates: Partial<Card>;
-      
-      if (blob) {
-        // For blob images, store the blob and clear any external URL
-        updates = { imageBlob: blob, image: null };
-      } else if (sourceUrl) {
-        // For external URLs, store the URL and clear any blob
-        updates = { image: sourceUrl, imageBlob: undefined };
-      } else {
-        // Clear both
-        updates = { image: null, imageBlob: undefined };
-      }
+      // Use pure function to create update parameters
+      const updates = createImageUpdateParams(blob, sourceUrl);
       
       const success = await canonUpdateCard(card.id, updates, ['card-image'], 'Saving image...');
       if (success) {
@@ -122,9 +147,19 @@
 
 
   async function handleRoleBlur() {
-    const newRole = roleElement?.innerText.trim();
-    if (newRole !== card.role) {
-      await canonUpdateCard(card.id, { role: newRole }, ['card-role'], 'Updating role...');
+    const newRole = roleElement?.innerText.trim() || '';
+    const validation = validateCardRole(newRole);
+    
+    if (!validation.isValid) {
+      // Reset to original role if invalid
+      if (roleElement) {
+        roleElement.textContent = card.role;
+      }
+      return;
+    }
+    
+    if (hasContentChanged(card.role || '', validation.trimmedRole)) {
+      await canonUpdateCard(card.id, { role: validation.trimmedRole }, ['card-role'], 'Updating role...');
     }
   }
 
@@ -153,7 +188,7 @@
     <svg class="flourish portrait-flourish top-left" viewBox="0 0 100 100">
       <use href="#flourish-{activeTheme}" />
     </svg>
-    {#if !card.stat}
+    {#if showTopRightFlourish}
     <svg class="flourish portrait-flourish top-right" viewBox="0 0 100 100">
       <use href="#flourish-{activeTheme}" />
     </svg>
@@ -168,13 +203,9 @@
           class:updating={isImageUpdating}
           onclick={() => showImageSelector = true}
           disabled={preview || isImageUpdating}
-          title={currentImageUrl ? "Change image" : "Add image"}
+          title={imageButtonTitle}
         >
-          {#if isImageUpdating}
-            Updating...
-          {:else}
-            {currentImageUrl ? "Change image" : "Add image"}
-          {/if}
+          {imageButtonText}
         </button>
 
         {#if showImageSelector}
@@ -182,7 +213,7 @@
             <ImageSelector 
               onSave={handleImageSave}
               onClose={() => showImageSelector = false}
-              hasExistingImage={!!currentImageUrl}
+              hasExistingImage={!!imageState.currentUrl}
             />
           </div>
         {/if}
