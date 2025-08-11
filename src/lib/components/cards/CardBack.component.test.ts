@@ -20,67 +20,33 @@ describe('CardBack Component Integration', () => {
     // by trying to import the pure logic functions that CardBack uses
     
     const {
-      initializeCardBackState,
-      updateCardBackState,
-      resetDialogs,
       getCardData,
       resolveActiveTheme,
-      validateCardName,
-      validateCardDescription,
-      validateSecrets,
-      processNameBlur,
-      processDescriptionBlur,
-      processSecretsBlur,
-      contentHasChanged,
-      prepareTemplateDialog,
-      applyTemplateWithVocabulary,
-      createTemplateHandler,
+      processNameFromBlur,
+      nameHasChanged,
+      processDescriptionFromElement,
+      shouldUpdateDescription,
+      processSecretsFromElement,
+      secretsHaveChanged,
       addSecretToArray,
-      formatSecretsForDisplay,
-      parseSecretsFromHtml,
-      validateMechanics,
-      mechanicsHaveChanged,
-      showMechanicsDialog,
-      hideMechanicsDialog,
-      showTemplateDialog,
-      hideTemplateDialog,
-      prepareUpdatePayload,
-      createFieldUpdateHandler,
-      isEditable,
-      getContentEditableState,
-      shouldDisableElement
-    } = await import('./CardBack.logic.js');
+      applyTemplateWithVocabulary,
+      isEditableMode,
+      shouldBeContentEditable
+    } = await import('./CardBack.svelte.js');
 
     // Verify all functions are imported and are functions
-    expect(typeof initializeCardBackState).toBe('function');
-    expect(typeof updateCardBackState).toBe('function');
-    expect(typeof resetDialogs).toBe('function');
     expect(typeof getCardData).toBe('function');
     expect(typeof resolveActiveTheme).toBe('function');
-    expect(typeof validateCardName).toBe('function');
-    expect(typeof validateCardDescription).toBe('function');
-    expect(typeof validateSecrets).toBe('function');
-    expect(typeof processNameBlur).toBe('function');
-    expect(typeof processDescriptionBlur).toBe('function');
-    expect(typeof processSecretsBlur).toBe('function');
-    expect(typeof contentHasChanged).toBe('function');
-    expect(typeof prepareTemplateDialog).toBe('function');
-    expect(typeof applyTemplateWithVocabulary).toBe('function');
-    expect(typeof createTemplateHandler).toBe('function');
+    expect(typeof processNameFromBlur).toBe('function');
+    expect(typeof nameHasChanged).toBe('function');
+    expect(typeof processDescriptionFromElement).toBe('function');
+    expect(typeof shouldUpdateDescription).toBe('function');
+    expect(typeof processSecretsFromElement).toBe('function');
+    expect(typeof secretsHaveChanged).toBe('function');
     expect(typeof addSecretToArray).toBe('function');
-    expect(typeof formatSecretsForDisplay).toBe('function');
-    expect(typeof parseSecretsFromHtml).toBe('function');
-    expect(typeof validateMechanics).toBe('function');
-    expect(typeof mechanicsHaveChanged).toBe('function');
-    expect(typeof showMechanicsDialog).toBe('function');
-    expect(typeof hideMechanicsDialog).toBe('function');
-    expect(typeof showTemplateDialog).toBe('function');
-    expect(typeof hideTemplateDialog).toBe('function');
-    expect(typeof prepareUpdatePayload).toBe('function');
-    expect(typeof createFieldUpdateHandler).toBe('function');
-    expect(typeof isEditable).toBe('function');
-    expect(typeof getContentEditableState).toBe('function');
-    expect(typeof shouldDisableElement).toBe('function');
+    expect(typeof applyTemplateWithVocabulary).toBe('function');
+    expect(typeof isEditableMode).toBe('function');
+    expect(typeof shouldBeContentEditable).toBe('function');
   });
 
   it('should be able to create component props without errors', () => {
