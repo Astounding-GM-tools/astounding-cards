@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
   resolveCardTheme,
-  resolveImageUrl,
   hasImageDataChanged,
   createBackgroundImageValue,
   createImageUpdateParams,
@@ -59,40 +58,6 @@ describe('CardFront Logic', () => {
     });
   });
 
-  describe('resolveImageUrl', () => {
-    it('prioritizes blob over image URL', () => {
-      const card = createBasicCard({
-        imageBlob: new Blob(['test'], { type: 'image/png' }),
-        image: 'https://example.com/image.jpg'
-      });
-      
-      const result = resolveImageUrl(card);
-      expect(result).toBe('BLOB_PLACEHOLDER');
-    });
-
-    it('returns image URL when no blob exists', () => {
-      const card = createBasicCard({
-        image: 'https://example.com/image.jpg'
-      });
-      
-      const result = resolveImageUrl(card);
-      expect(result).toBe('https://example.com/image.jpg');
-    });
-
-    it('returns null when no image or blob exists', () => {
-      const card = createBasicCard();
-      
-      const result = resolveImageUrl(card);
-      expect(result).toBeNull();
-    });
-
-    it('returns null when image is null', () => {
-      const card = createBasicCard({ image: null });
-      
-      const result = resolveImageUrl(card);
-      expect(result).toBeNull();
-    });
-  });
 
   describe('hasImageDataChanged', () => {
     it('detects blob change', () => {

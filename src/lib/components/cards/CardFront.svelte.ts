@@ -24,22 +24,6 @@ export function resolveCardTheme(
   return cardTheme ?? propTheme ?? deckTheme ?? fallbackTheme;
 }
 
-/**
- * Determine the appropriate image URL to use
- */
-export function resolveImageUrl(card: Card): string | null {
-  if (card.imageBlob) {
-    // Note: The actual blob URL creation happens in the component
-    // This just indicates that a blob exists and should be converted
-    return 'BLOB_PLACEHOLDER';
-  }
-  
-  if (card.image) {
-    return card.image;
-  }
-  
-  return null;
-}
 
 /**
  * Check if image data has changed
