@@ -13,6 +13,33 @@
   import { configActions } from '$lib/stores/statblockConfig';
   import { configToSimpleVocabulary, simpleVocabularyToConfig } from '$lib/statblockConfigs';
   import type { StatblockVocabulary } from '$lib/types';
+  import {
+    initializeDeckManagerState,
+    toggleCardSelection,
+    selectAllCards,
+    selectNoCards,
+    validateDeckName,
+    generateDuplicateName,
+    createThemeUpdateParams,
+    validateCopyCardsParams,
+    validateThemeChangeParams,
+    createCardOperationMessage,
+    formatDate,
+    formatDateTime,
+    resetDeckManagerState,
+    updateDeckManagerState,
+    hasSelectedCards,
+    getSelectedCards,
+    findMostRecentDeck,
+    generateVocabularyConfigName,
+    generateVocabularyConfigDescription,
+    validateVocabularySave,
+    deckHasCards,
+    getSelectedCardCount,
+    areAllCardsSelected,
+    areSomeCardsSelected,
+    type DeckManagerState
+  } from './DeckManager.svelte.ts';
 
   const props = $props();
   let deck = $state(props.deck as Deck);
@@ -54,20 +81,16 @@
   const isChangingTheme = $derived(isFieldLoading('deck-manager-change-theme'));
 
   function toggleCard(id: string) {
-    if (selectedCardIds.includes(id)) {
-      selectedCardIds = selectedCardIds.filter(cardId => cardId !== id);
-    } else {
-      selectedCardIds = [...selectedCardIds, id];
-    }
+    selectedCardIds = toggleCardSelection(selectedCardIds, id);
   }
 
-  // Select all/none for cards
+  // Select all/none for cards using pure functions
   function selectAll() {
-    selectedCardIds = deck.cards.map((card: Card) => card.id);
+    selectedCardIds = selectAllCards(deck.cards);
   }
 
   function selectNone() {
-    selectedCardIds = [];
+    selectedCardIds = selectNoCards();
   }
 
   async function handleThemeChange(themeId: string) {
@@ -111,19 +134,24 @@
   }
 
   async function executeChangeTheme() {
-    if (selectedCardIds.length === 0 || !selectedThemeForCards) return;
+    // Validate theme change using pure function
+    const themeParams = { cardIds: selectedCardIds, themeId: selectedThemeForCards };
+    const validation = validateThemeChangeParams(themeParams);
+    
+    if (!validation.isValid) {
+      toasts.error(validation.error || 'Invalid theme change operation');
+      return;
+    }
 
     const numToUpdate = selectedCardIds.length;
-    const updates = selectedCardIds.map(cardId => ({
-      cardId,
-      updates: { theme: selectedThemeForCards }
-    }));
+    const updates = createThemeUpdateParams(selectedCardIds, selectedThemeForCards);
+    const successMessage = `Changed theme for ${createCardOperationMessage('updated', numToUpdate).toLowerCase()}`;
 
     const success = await canonUpdateCards(
       updates,
       ['deck-manager-change-theme'],
       'Changing theme...',
-      `Changed theme for ${numToUpdate} card${numToUpdate !== 1 ? 's' : ''}`
+      successMessage
     );
     
     if (success) {
@@ -140,19 +168,18 @@
   }
 
   async function executeCopyCards() {
-    if (selectedCardIds.length === 0) return;
+    // Validate copy operation using pure function
+    const copyParams = { cardIds: selectedCardIds, targetDeckId, newDeckName };
+    const validation = validateCopyCardsParams(copyParams);
+    
+    if (!validation.isValid) {
+      toasts.error(validation.error || 'Invalid copy operation');
+      return;
+    }
 
     const numToCopy = selectedCardIds.length;
-    let newDeckNameForCopy = undefined;
-    
-    // If creating a new deck, validate the name
-    if (targetDeckId === 'new') {
-      if (!newDeckName.trim()) {
-        toasts.error('Please enter a name for the new deck');
-        return;
-      }
-      newDeckNameForCopy = newDeckName.trim();
-    }
+    const successMessage = createCardOperationMessage('copied', numToCopy);
+    let newDeckNameForCopy = targetDeckId === 'new' ? newDeckName.trim() : undefined;
 
     const success = await canonCopyCards(
       selectedCardIds,
@@ -160,7 +187,7 @@
       newDeckNameForCopy,
       ['deck-manager-copy-cards'],
       'Copying cards...',
-      `Copied ${numToCopy} card${numToCopy !== 1 ? 's' : ''} successfully`
+      successMessage
     );
     
     if (success) {
@@ -216,7 +243,14 @@
   async function handleDuplicate() {
     if (!showDuplicateDialog) {
       showDuplicateDialog = true;
-      newDeckName = `${deck.meta.name} (Copy)`;
+      newDeckName = generateDuplicateName(deck.meta.name);
+      return;
+    }
+
+    // Validate the deck name using pure function
+    const validation = validateDeckName(newDeckName);
+    if (!validation.isValid) {
+      toasts.error(validation.error || 'Invalid deck name');
       return;
     }
 
@@ -240,14 +274,16 @@
   }
 
   async function handleDeleteCards() {
-    if (selectedCardIds.length === 0) return;
+    if (!hasSelectedCards(selectedCardIds)) return;
 
-    const numToDelete = selectedCardIds.length;
+    const numToDelete = getSelectedCardCount(selectedCardIds);
+    const successMessage = createCardOperationMessage('deleted', numToDelete);
+    
     const success = await canonDeleteCards(
       selectedCardIds,
       ['deck-manager-delete-cards'],
       'Deleting cards...',
-      `Deleted ${numToDelete} card${numToDelete !== 1 ? 's' : ''}`
+      successMessage
     );
     
     if (success) {
@@ -302,17 +338,13 @@
     }
   }
 
-  function formatDate(timestamp: number): string {
-    return new Date(timestamp).toLocaleString(navigator.language, { 
-      dateStyle: 'short'
-    });
+  // Use pure formatting functions
+  function formatDateDisplay(timestamp: number): string {
+    return formatDate(timestamp);
   }
 
-  function formatDateTime(timestamp: number): string {
-    return new Date(timestamp).toLocaleString(navigator.language, { 
-      dateStyle: 'short',
-      timeStyle: 'short'
-    });
+  function formatDateTimeDisplay(timestamp: number): string {
+    return formatDateTime(timestamp);
   }
 
   // Vocabulary editor event handlers
@@ -436,10 +468,10 @@
         </span>
       </div>
       <div class="info-line date">
-        <span class="date-label">Created</span> {formatDate(deck.meta.createdAt)}
+        <span class="date-label">Created</span> {formatDateDisplay(deck.meta.createdAt)}
       </div>
       <div class="info-line date">
-        <span class="date-label">Edited</span> {formatDateTime(deck.meta.lastEdited)}
+        <span class="date-label">Edited</span> {formatDateTimeDisplay(deck.meta.lastEdited)}
       </div>
     </div>
 

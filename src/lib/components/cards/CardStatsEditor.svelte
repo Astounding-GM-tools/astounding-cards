@@ -4,6 +4,30 @@
   import { COMMON_STATS, getStatDefinition, getStatsByCategory, createCustomStatId, validateStatId } from '$lib/stats';
   import { currentDeck } from '$lib/stores/deck';
   import { canonUpdateCard, isFieldLoading } from '$lib/stores/canonUpdate';
+  import {
+    initializeStatsEditorState,
+    initializeDragState,
+    resetStatsEditorState,
+    updateStatsEditorState,
+    validateStatForm,
+    addStatToArray,
+    removeStatFromArray,
+    updateStatInArray,
+    reorderStats,
+    startDrag,
+    dragOver,
+    clearDragOver,
+    endDrag,
+    handleDrop,
+    getAvailableStats,
+    findStatDefinition,
+    getStatLabel as getStatLabelFromDef,
+    getStatIcon as getStatIconFromDef,
+    groupStatsByCategory,
+    statsChanged,
+    type StatsEditorState,
+    type DragState
+  } from './CardStatsEditor.svelte.js';
   
   const props = $props<{
     card: Card;
@@ -26,18 +50,9 @@
   let dialogElement = $state<HTMLDialogElement | null>(null);
   let isDialogOpen = $state(false);
   
-  // Form state
-  let editingStats = $state<CardStat[]>([]);
-  let selectedStatId = $state<string>('');
-  let newStatValue = $state<string | number>('');
-  let showAddStat = $state(false);
-  let showCustomStatForm = $state(false);
-  let customStatLabel = $state('');
-  let customStatIcon = $state('');
-  
-  // Drag and drop state
-  let draggedIndex = $state<number | null>(null);
-  let dragOverIndex = $state<number | null>(null);
+  // Initialize state using pure functions
+  let editorState = $state<StatsEditorState>(initializeStatsEditorState());
+  let dragState = $state<DragState>(initializeDragState());
   
   // Get current stats (fallback to empty array) - now reactive!
   const currentStats = $derived(card.stats || []);
@@ -45,55 +60,56 @@
   // Get all available stat definitions (common + deck custom)
   const customStats = $derived($currentDeck?.meta?.customStats || []);
   const allStatDefinitions = $derived([...COMMON_STATS, ...customStats]);
-  const statsByCategory = $derived(getStatsByCategory(customStats));
+  const availableStats = $derived(getAvailableStats(allStatDefinitions, editorState.editingStats));
+  const statsByCategory = $derived(groupStatsByCategory(availableStats));
 
   function openDialog() {
-    // Copy current stats for editing
-    editingStats = [...currentStats];
+    // Initialize editor state with current stats
+    editorState = initializeStatsEditorState(currentStats);
     isDialogOpen = true;
     dialogElement?.showModal();
   }
 
   function closeDialog() {
+    // Reset all state using pure function
+    editorState = resetStatsEditorState(editorState);
     isDialogOpen = false;
-    showAddStat = false;
-    showCustomStatForm = false;
-    selectedStatId = '';
-    newStatValue = '';
-    customStatLabel = '';
-    customStatIcon = '';
     dialogElement?.close();
   }
 
-  function addStat() {
-    if (!selectedStatId || !newStatValue) return;
+  function addStatHandler() {
+    const formData = { statId: editorState.selectedStatId, value: editorState.newStatValue };
+    const validation = validateStatForm(formData, editorState.editingStats);
     
-    // Check if stat already exists
-    const exists = editingStats.some(stat => stat.statId === selectedStatId);
-    if (exists) return;
+    if (!validation.isValid) {
+      // Could show validation error to user
+      return;
+    }
     
-    editingStats = [...editingStats, { 
-      statId: selectedStatId, 
-      value: newStatValue 
-    }];
+    // Add stat using pure function
+    const newStats = addStatToArray(editorState.editingStats, formData.statId, formData.value);
     
-    selectedStatId = '';
-    newStatValue = '';
-    showAddStat = false;
+    // Update state using pure function
+    editorState = updateStatsEditorState(editorState, {
+      editingStats: newStats,
+      selectedStatId: '',
+      newStatValue: '',
+      showAddStat: false
+    });
   }
 
-  function removeStat(statId: string) {
-    editingStats = editingStats.filter(stat => stat.statId !== statId);
+  function removeStatHandler(statId: string) {
+    const newStats = removeStatFromArray(editorState.editingStats, statId);
+    editorState = updateStatsEditorState(editorState, { editingStats: newStats });
   }
 
-  function updateStatValue(statId: string, value: string | number) {
-    editingStats = editingStats.map(stat => 
-      stat.statId === statId ? { ...stat, value } : stat
-    );
+  function updateStatValueHandler(statId: string, value: string | number) {
+    const newStats = updateStatInArray(editorState.editingStats, statId, value);
+    editorState = updateStatsEditorState(editorState, { editingStats: newStats });
   }
 
   async function saveStats() {
-    const updates = { stats: editingStats };
+    const updates = { stats: editorState.editingStats };
     
     const success = await canonUpdateCard(card.id, updates, ['card-stats'], 'Saving stats...');
     if (success) {
@@ -102,18 +118,16 @@
   }
 
   function getStatIcon(statId: string): string {
-    const definition = getStatDefinition(statId, customStats);
-    return definition?.icon || 'question-mark';
+    return getStatIconFromDef(statId, allStatDefinitions);
   }
 
   function getStatLabel(statId: string): string {
-    const definition = getStatDefinition(statId, customStats);
-    return definition?.label || statId;
+    return getStatLabelFromDef(statId, allStatDefinitions);
   }
   
-  // Drag and drop functions
+  // Drag and drop functions using pure logic
   function handleDragStart(event: DragEvent, index: number) {
-    draggedIndex = index;
+    dragState = startDrag(dragState, index);
     if (event.dataTransfer) {
       event.dataTransfer.effectAllowed = 'move';
       event.dataTransfer.setData('text/plain', index.toString());
@@ -122,39 +136,26 @@
   
   function handleDragOver(event: DragEvent, index: number) {
     event.preventDefault();
-    dragOverIndex = index;
+    dragState = dragOver(dragState, index);
     if (event.dataTransfer) {
       event.dataTransfer.dropEffect = 'move';
     }
   }
   
   function handleDragLeave() {
-    dragOverIndex = null;
+    dragState = clearDragOver(dragState);
   }
   
-  function handleDrop(event: DragEvent, dropIndex: number) {
+  function handleDropEvent(event: DragEvent, dropIndex: number) {
     event.preventDefault();
     
-    if (draggedIndex === null || draggedIndex === dropIndex) {
-      draggedIndex = null;
-      dragOverIndex = null;
-      return;
-    }
-    
-    // Reorder the stats array
-    const newStats = [...editingStats];
-    const [movedStat] = newStats.splice(draggedIndex, 1);
-    newStats.splice(dropIndex, 0, movedStat);
-    editingStats = newStats;
-    
-    // Reset drag state
-    draggedIndex = null;
-    dragOverIndex = null;
+    const result = handleDrop(editorState.editingStats, dragState, dropIndex);
+    editorState = updateStatsEditorState(editorState, { editingStats: result.stats });
+    dragState = result.dragState;
   }
   
   function handleDragEnd() {
-    draggedIndex = null;
-    dragOverIndex = null;
+    dragState = endDrag();
   }
 </script>
 
@@ -204,19 +205,19 @@
     
     <!-- Current Stats -->
     <div class="current-stats">
-      {#if editingStats.length > 0}
+      {#if editorState.editingStats.length > 0}
         <p class="drag-hint">💡 Drag the grip icon (⋮⋮) to reorder stats</p>
-        {#each editingStats as stat, index}
+        {#each editorState.editingStats as stat, index}
           <div 
             class="stat-editor"
-            class:dragging={draggedIndex === index}
-            class:drag-over={dragOverIndex === index}
+            class:dragging={dragState.draggedIndex === index}
+            class:drag-over={dragState.dragOverIndex === index}
             draggable="true"
             role="listitem"
             ondragstart={(e) => handleDragStart(e, index)}
             ondragover={(e) => handleDragOver(e, index)}
             ondragleave={handleDragLeave}
-            ondrop={(e) => handleDrop(e, index)}
+            ondrop={(e) => handleDropEvent(e, index)}
             ondragend={handleDragEnd}
           >
             <div class="drag-handle" title="Drag to reorder">
@@ -233,12 +234,12 @@
             <input
               type="text"
               bind:value={stat.value}
-              onchange={(e) => updateStatValue(stat.statId, e.target.value)}
+              onchange={(e) => updateStatValueHandler(stat.statId, e.target.value)}
               placeholder="Value"
             />
             <button 
               class="remove-stat"
-              onclick={() => removeStat(stat.statId)}
+              onclick={() => removeStatHandler(stat.statId)}
               title="Remove stat"
             >
               ×
@@ -251,7 +252,7 @@
     </div>
 
     <!-- Add New Stat -->
-    {#if showAddStat}
+    {#if editorState.showAddStat}
       <div class="add-stat-form">
         <h3>Add Stat</h3>
         <div class="stat-categories">
@@ -260,13 +261,13 @@
               <h4>{category}</h4>
               <div class="stat-options">
                 {#each stats as definition}
-                  {@const isUsed = editingStats.some(s => s.statId === definition.id)}
+                  {@const isUsed = editorState.editingStats.some(s => s.statId === definition.id)}
                   <button
                     class="stat-option"
-                    class:selected={selectedStatId === definition.id}
+                    class:selected={editorState.selectedStatId === definition.id}
                     class:used={isUsed}
                     disabled={isUsed}
-                    onclick={() => selectedStatId = definition.id}
+                    onclick={() => editorState = updateStatsEditorState(editorState, { selectedStatId: definition.id })}
                   >
                     <img 
                       src="/icons/game-icons/{definition.icon}.svg" 
@@ -281,27 +282,27 @@
           {/each}
         </div>
         
-        {#if selectedStatId}
+        {#if editorState.selectedStatId}
           <div class="stat-value-input">
             <input
               type="text"
-              bind:value={newStatValue}
+              bind:value={editorState.newStatValue}
               placeholder="Enter value"
             />
-            <button onclick={addStat}>Add</button>
+            <button onclick={addStatHandler}>Add</button>
           </div>
         {/if}
         
-        <button class="secondary" onclick={() => showAddStat = false}>Cancel</button>
+        <button class="secondary" onclick={() => editorState = updateStatsEditorState(editorState, { showAddStat: false })}>Cancel</button>
       </div>
     {/if}
 
     <!-- Dialog Buttons -->
     <div class="dialog-buttons">
-      {#if !showAddStat}
+      {#if !editorState.showAddStat}
         <button 
           class="add-button"
-          onclick={() => showAddStat = true}
+          onclick={() => editorState = updateStatsEditorState(editorState, { showAddStat: true })}
         >
           Add Stat
         </button>
