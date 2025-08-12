@@ -70,40 +70,37 @@ Create `Component.component.test.ts` to verify integration:
 | **CardFront** | ✅ Complete | `CardFront.svelte.ts` | 42 tests ✅ | 2 tests ✅ | All extracted functions in use |
 | **CardStatsEditor** | ✅ Complete | `CardStatsEditor.svelte.ts` | 55 tests ✅ | 2 tests ✅ | All extracted functions in use |
 | **CardBack** | ✅ Complete | `CardBack.svelte.ts` | 38 tests ✅ | 2 tests ✅ | **Clean extraction** - only used functions |
+| **CardMechanicsDisplay** | ✅ Complete | `CardMechanicsDisplay.svelte.ts` | 32 tests ✅ | 2 tests ✅ | **Perfect methodology** - 5/5 functions used |
 
-**Total: 135 pure logic tests + 6 integration tests = 141 tests**
+**Total: 167 pure logic tests + 8 integration tests = 175 tests**
 
 ### 🔄 **NEXT COMPONENTS** (Priority order)
 
 | Component | Priority | Complexity | Estimated Logic Functions |
 |-----------|----------|------------|----------------------------|
-| **CardMechanicsDisplay** | HIGH | Medium | ~8-15 functions |
 | **CardMechanicsDialog** | HIGH | High | ~15-25 functions |
+| **CardMechanicsEditor** | HIGH | High | ~15-25 functions |
 | **StatblockTemplateDialog** | MEDIUM | High | ~20-30 functions |
 | **CardBase** | LOW | Low | ~5-10 functions |
 | **ImageSelector** | LOW | Medium | ~10-15 functions |
 
-### 🎯 **TOMORROW'S SESSION PLAN**
+### 🎯 **NEXT SESSION PLAN**
 
-1. **Analyze CardMechanicsDisplay** (30 minutes)
+1. **Analyze CardMechanicsDialog** (30 minutes)
    - Read component thoroughly
+   - This is likely one of the most complex components remaining
    - Map actual usage vs potential extraction
-   - Identify ~8-15 pure functions that are actually used
+   - Plan extraction strategy for form handling, validation, drag-drop
 
-2. **Extract & Test CardMechanicsDisplay** (60 minutes)
-   - Create focused `CardMechanicsDisplay.svelte.ts`
-   - Create comprehensive test suite (`CardMechanicsDisplay.svelte.test.ts`)
-   - Create integration test (`CardMechanicsDisplay.component.test.ts`)
-
-3. **Analyze CardMechanicsDialog** (30 minutes)
-   - Read component thoroughly
-   - This is likely the most complex component remaining
-   - Plan extraction strategy
-
-4. **Extract & Test CardMechanicsDialog** (90 minutes)
+2. **Extract & Test CardMechanicsDialog** (90 minutes)
    - Complex component with form handling, validation, drag-drop
    - Likely ~15-25 functions with comprehensive tests
    - May require multiple test files if very large
+
+3. **Analyze CardMechanicsEditor** (30 minutes)
+   - Read component thoroughly
+   - Identify patterns and reusable logic
+   - Plan extraction for editing workflows
 
 ---
 
@@ -184,6 +181,6 @@ Create `Component.component.test.ts` to verify integration:
 
 ---
 
-**Last Updated**: August 11, 2025
-**Next Session**: Focus on CardMechanicsDisplay analysis and extraction
+**Last Updated**: August 12, 2025
+**Next Session**: Focus on CardMechanicsDialog analysis and extraction
 **Methodology Status**: ✅ Proven and Refined
