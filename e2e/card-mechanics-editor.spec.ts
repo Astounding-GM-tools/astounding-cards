@@ -3,10 +3,27 @@ import { expect, test } from '@playwright/test';
 test.describe('CardMechanicsEditor Workflow', () => {
 
   test.beforeEach(async ({ page }) => {
-    // Navigate to the app and create a new deck and card
+    // Navigate to the app
     await page.goto('/');
-    await page.click('button:has-text("Create Deck")');
-    await page.click('button:has-text("Add Card")');
+    await page.waitForLoadState('networkidle');
+    
+    // Create a new deck - click Manage Decks first to open the menu
+    await page.click('button:has-text("📚 Manage Decks")');
+    await page.waitForTimeout(500);
+    
+    // Then click Create New Deck
+    await page.click('button:has-text("➕ Create New Deck")');
+    await page.waitForTimeout(500);
+    
+    // Fill in deck name and create
+    const nameInput = page.locator('input[placeholder*="deck"], input[placeholder*="name"]');
+    await nameInput.fill('Test Deck');
+    await page.click('button.primary:has-text("Create")');
+    await page.waitForTimeout(1000);
+    
+    // Add a card to the deck
+    await page.click('button:has-text("➕ Add Card")');
+    await page.waitForTimeout(1000);
   });
 
   test('should open mechanics dialog and add/remove mechanics', async ({ page }) => {
