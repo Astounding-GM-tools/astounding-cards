@@ -71,36 +71,35 @@ Create `Component.component.test.ts` to verify integration:
 | **CardStatsEditor** | ✅ Complete | `CardStatsEditor.svelte.ts` | 55 tests ✅ | 2 tests ✅ | All extracted functions in use |
 | **CardBack** | ✅ Complete | `CardBack.svelte.ts` | 38 tests ✅ | 2 tests ✅ | **Clean extraction** - only used functions |
 | **CardMechanicsDisplay** | ✅ Complete | `CardMechanicsDisplay.svelte.ts` | 32 tests ✅ | 2 tests ✅ | **Perfect methodology** - 5/5 functions used |
+| **CardMechanicsEditor** | ✅ Complete | `CardMechanicsEditor.svelte.ts` | 54 tests ✅ | 2 tests ✅ | **Comprehensive** - 11 functions + Playwright tests |
 
-**Total: 167 pure logic tests + 8 integration tests = 175 tests**
+**Total: 221 pure logic tests + 10 integration tests = 231 tests**
 
 ### 🔄 **NEXT COMPONENTS** (Priority order)
 
 | Component | Priority | Complexity | Estimated Logic Functions |
 |-----------|----------|------------|----------------------------|
-| **CardMechanicsDialog** | HIGH | High | ~15-25 functions |
-| **CardMechanicsEditor** | HIGH | High | ~15-25 functions |
-| **StatblockTemplateDialog** | MEDIUM | High | ~20-30 functions |
+| **StatblockTemplateDialog** | HIGH | High | ~15-25 functions |
+| **ImageSelector** | MEDIUM | Medium | ~8-15 functions |
 | **CardBase** | LOW | Low | ~5-10 functions |
-| **ImageSelector** | LOW | Medium | ~10-15 functions |
+
+**Note**: CardMechanicsDialog was analyzed and found to be a simple wrapper (~8 lines of logic) around CardMechanicsEditor, so extraction is not needed.
 
 ### 🎯 **NEXT SESSION PLAN**
 
-1. **Analyze CardMechanicsDialog** (30 minutes)
-   - Read component thoroughly
-   - This is likely one of the most complex components remaining
-   - Map actual usage vs potential extraction
-   - Plan extraction strategy for form handling, validation, drag-drop
+1. **Analyze StatblockTemplateDialog** (45 minutes)
+   - Read component thoroughly - likely most complex remaining component
+   - Map template selection, filtering, preview logic
+   - Plan extraction strategy for complex form handling and validation
 
-2. **Extract & Test CardMechanicsDialog** (90 minutes)
-   - Complex component with form handling, validation, drag-drop
-   - Likely ~15-25 functions with comprehensive tests
-   - May require multiple test files if very large
+2. **Extract & Test StatblockTemplateDialog** (90 minutes)
+   - Complex component with template management, filtering, data transformation
+   - Likely ~15-25 functions covering template processing and UI logic
+   - Comprehensive test suite for all template operations
 
-3. **Analyze CardMechanicsEditor** (30 minutes)
-   - Read component thoroughly
-   - Identify patterns and reusable logic
-   - Plan extraction for editing workflows
+3. **Analyze ImageSelector** (30 minutes)
+   - Read component for file upload, validation, and preview logic
+   - Plan extraction for image processing utilities
 
 ---
 
@@ -182,5 +181,5 @@ Create `Component.component.test.ts` to verify integration:
 ---
 
 **Last Updated**: August 12, 2025
-**Next Session**: Focus on CardMechanicsDialog analysis and extraction
+**Next Session**: Focus on StatblockTemplateDialog analysis and extraction
 **Methodology Status**: ✅ Proven and Refined
