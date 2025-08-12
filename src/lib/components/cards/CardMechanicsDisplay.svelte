@@ -2,6 +2,13 @@
   import type { Card, CardMechanic } from '../../types';
   import { MechanicType } from '../../types';
   import { createEventDispatcher } from 'svelte';
+  import {
+    getTypeIcon,
+    isNumeric,
+    shouldShowTrackingBoxes,
+    renderTrackingBoxes,
+    getAddStatsAction
+  } from './CardMechanicsDisplay.svelte.js';
   
   let {
     card,
@@ -24,39 +31,15 @@
     showTemplateDialog: { cardType: string };
   }>();
   
-  
-  function getTypeIcon(type: MechanicType): string {
-    switch (type) {
-      case MechanicType.DEFENSE: return '🛡️';
-      case MechanicType.INITIATIVE: return '⚡';
-      case MechanicType.MOVEMENT: return '👟';
-      case MechanicType.ATTACK: return '⚔️';
-      case MechanicType.HEALTH: return '❤️';
-      case MechanicType.RESOURCE: return '📦';
-      default: return '📋';
-    }
-  }
-  
-  function isNumeric(value: string | number): boolean {
-    return typeof value === 'number' || !isNaN(Number(value));
-  }
-  
-  function shouldShowTrackingBoxes(mechanic: CardMechanic): boolean {
-    return mechanic.tracked && isNumeric(mechanic.value) && Number(mechanic.value) <= 30;
-  }
-  
-  function renderTrackingBoxes(count: number): number[] {
-    return Array.from({ length: Math.max(0, Math.min(count, 30)) }, (_, i) => i);
-  }
-  
-  
-  // Handle add stats button click
+  // Handle add stats button click using extracted logic
   function handleAddStats() {
-    if (mechanics.length > 0) {
-      // If card already has mechanics, go directly to editor
+    const action = getAddStatsAction(mechanics.length > 0);
+    
+    if (action.shouldOpenEditor) {
       onedit?.();
-    } else {
-      // If card has no mechanics, show template dialog first
+    }
+    
+    if (action.shouldShowTemplate) {
       onshowtemplatedialog?.(card.type);
       dispatch('showTemplateDialog', { cardType: card.type });
     }
