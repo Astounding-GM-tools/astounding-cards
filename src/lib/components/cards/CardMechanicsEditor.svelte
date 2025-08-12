@@ -1,7 +1,18 @@
 <script lang="ts">
   import type { Card, CardMechanic, MechanicType } from '../../types';
   import { MechanicType as MechanicTypes } from '../../types';
-  // generateId is replaced with inline crypto.randomUUID() calls
+  import {
+    addMechanic as addMechanicPure,
+    removeMechanic as removeMechanicPure,
+    moveMechanic as moveMechanicPure,
+    canMoveMechanic,
+    createUpdatedCard,
+    getTypeIcon,
+    getTypeName,
+    isNumeric,
+    hasChanges as hasChangesPure,
+    shouldShowTrackingWarning
+  } from './CardMechanicsEditor.svelte.js';
   
   let {
     card,
@@ -20,14 +31,11 @@
   // Local copy for editing
   let mechanics = $state<CardMechanic[]>(card.mechanics ? [...card.mechanics] : []);
   
-  // Track if there are any changes
-  const localHasChanges = $derived(JSON.stringify(mechanics) !== JSON.stringify(card.mechanics || []));
+  // Track if there are any changes using pure function
+  const localHasChanges = $derived(hasChangesPure(card.mechanics, mechanics));
   
-  // Create the edited card state
-  const localEditedCard = $derived<Card>({
-    ...card,
-    mechanics: mechanics.length > 0 ? mechanics : undefined
-  });
+  // Create the edited card state using pure function
+  const localEditedCard = $derived<Card>(createUpdatedCard(card, mechanics));
   
   // Update parent bindings
   $effect(() => {
@@ -39,60 +47,22 @@
   const TRACKING_THRESHOLD = 30;
   
   function addMechanic() {
-    mechanics = [...mechanics, {
-      id: crypto.randomUUID(),
-      name: 'New Mechanic',
-      value: 0,
-      description: '',
-      tracked: false,
-      type: MechanicTypes.ATTACK
-    }];
+    mechanics = addMechanicPure(mechanics);
   }
   
   function removeMechanic(index: number) {
-    mechanics = mechanics.filter((_, i) => i !== index);
+    mechanics = removeMechanicPure(mechanics, index);
   }
   
   function moveMechanic(index: number, direction: 'up' | 'down') {
-    if ((direction === 'up' && index === 0) || (direction === 'down' && index === mechanics.length - 1)) {
-      return;
-    }
-    
-    const newIndex = direction === 'up' ? index - 1 : index + 1;
-    const newMechanics = [...mechanics];
-    [newMechanics[index], newMechanics[newIndex]] = [newMechanics[newIndex], newMechanics[index]];
-    mechanics = newMechanics;
+    mechanics = moveMechanicPure(mechanics, index, direction);
   }
   
   function handleSave() {
     if (loading) return;
     
-    const updatedCard: Card = {
-      ...card,
-      mechanics: mechanics.length > 0 ? mechanics : undefined
-    };
-    
+    const updatedCard = createUpdatedCard(card, mechanics);
     onsave?.(updatedCard);
-  }
-  
-  function getTypeIcon(type: MechanicType): string {
-    switch (type) {
-      case MechanicTypes.DEFENSE: return '🛡️';
-      case MechanicTypes.INITIATIVE: return '⚡';
-      case MechanicTypes.MOVEMENT: return '👟';
-      case MechanicTypes.ATTACK: return '⚔️';
-      case MechanicTypes.HEALTH: return '❤️';
-      case MechanicTypes.RESOURCE: return '📦';
-      default: return '📋';
-    }
-  }
-  
-  function getTypeName(type: MechanicType): string {
-    return type.charAt(0).toUpperCase() + type.slice(1);
-  }
-  
-  function isNumeric(value: string | number): boolean {
-    return typeof value === 'number' || !isNaN(Number(value));
   }
 </script>
 
@@ -184,10 +154,8 @@
               />
               <span class="checkbox-text">
                 Trackable
-                {#if mechanic.tracked}
-                  {#if isNumeric(mechanic.value) && Number(mechanic.value) > TRACKING_THRESHOLD}
-                    <span class="warning">(>30 - no boxes will be rendered)</span>
-                  {/if}
+                {#if shouldShowTrackingWarning(mechanic, TRACKING_THRESHOLD)}
+                  <span class="warning">(>30 - no boxes will be rendered)</span>
                 {/if}
               </span>
             </label>
