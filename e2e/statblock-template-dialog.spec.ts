@@ -179,14 +179,36 @@ test.describe('StatblockTemplateDialog E2E Tests', () => {
     
     // Open Deck Management
     await page.getByTestId('manage-decks-button').click();
-    await page.waitForTimeout(500);
+    await page.waitForTimeout(1000);
     
-    // Click the Statblocks button (it exists but might be hidden)
-    const statblocksButton = page.locator('button:has-text("Statblocks")');
-    console.log('Statblocks button exists:', await statblocksButton.count());
+    // Look for the sample deck in the deck list
+    const sampleDeckName = devTools.getSampleDataInfo().deckName; // "Tales of the Uncanny"
+    console.log(`Looking for deck: ${sampleDeckName}`);
     
-    // Force the click even if hidden, as the discovery test showed it exists
-    await statblocksButton.click({ force: true });
+    // Take a screenshot to see the current deck management state
+    await page.screenshot({ path: 'debug-deck-management-open.png' });
+    
+    // Look for any visible Statblocks button in the deck list
+    // Since the sample deck is already created, there should be a Statblocks button available
+    const statblocksButtons = page.locator('button:has-text("Statblocks")');
+    const buttonCount = await statblocksButtons.count();
+    console.log(`Found ${buttonCount} total Statblocks buttons`);
+    
+    // Find the first visible Statblocks button
+    const visibleStatblocksButtons = page.locator('button:has-text("Statblocks"):visible');
+    const visibleButtonCount = await visibleStatblocksButtons.count();
+    console.log(`Found ${visibleButtonCount} visible Statblocks buttons`);
+    
+    if (visibleButtonCount > 0) {
+      console.log('✅ Found visible Statblocks button - clicking it');
+      const firstVisibleButton = visibleStatblocksButtons.first();
+      await expect(firstVisibleButton).toBeVisible();
+      await firstVisibleButton.click();
+    } else {
+      // Take another screenshot to debug the issue
+      await page.screenshot({ path: 'debug-no-statblocks-buttons.png' });
+      throw new Error(`Could not find any visible Statblocks buttons. Found ${buttonCount} total buttons but none visible.`);
+    }
     
     // Verify StatblockTemplateDialog opened
     const dialog = page.locator('dialog').first();
