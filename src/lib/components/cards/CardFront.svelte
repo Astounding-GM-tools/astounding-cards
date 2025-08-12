@@ -83,11 +83,14 @@
     const currentImageBlob = card.imageBlob;
     const currentImageUrl = card.image;
     
+    // Use untrack to read current imageState to avoid circular dependency
+    const currentState = untrack(() => imageState);
+    
     // Use pure function to check if data has changed
-    if (hasImageDataChanged(card, imageState.lastBlob, imageState.lastUrl)) {
+    if (hasImageDataChanged(card, currentState.lastBlob, currentState.lastUrl)) {
       // Clean up previous URL if it was a blob URL
-      if (imageState.currentUrl && imageState.currentUrl.startsWith('blob:')) {
-        revokeBlobUrl(imageState.currentUrl);
+      if (currentState.currentUrl && currentState.currentUrl.startsWith('blob:')) {
+        revokeBlobUrl(currentState.currentUrl);
       }
       
       // Set new URL
@@ -100,11 +103,13 @@
         newUrl = currentImageUrl;
       }
       
-      // Update state using pure function
-      imageState = updateImageState(imageState, {
-        currentUrl: newUrl,
-        lastBlob: currentImageBlob || null,
-        lastUrl: currentImageUrl || null
+      // Update state using pure function - use untrack to prevent infinite loop
+      untrack(() => {
+        imageState = updateImageState(currentState, {
+          currentUrl: newUrl,
+          lastBlob: currentImageBlob || null,
+          lastUrl: currentImageUrl || null
+        });
       });
     }
   });

@@ -41,7 +41,9 @@
   $effect(() => {
     if ($currentDeck && scrollContainer && lastScrollPosition > 0) {
       scrollContainer.scrollTop = lastScrollPosition;
-      lastScrollPosition = 0;
+      untrack(() => {
+        lastScrollPosition = 0;
+      });
     }
   });
 
@@ -70,13 +72,14 @@
   }
 
   // Load deck when currentDeckId changes
-  let loadingDeckId = $state<string | null>(null);
-  let currentLoadedDeckId = $state<string | null>(null);
+  // Use non-reactive variables to track loading state to avoid circular dependencies
+  let loadingDeckId: string | null = null;
+  let currentLoadedDeckId: string | null = null;
   
   $effect(() => {
     const id = $currentDeckId;
     
-    // Prevent infinite loops by tracking what we're loading and what's loaded
+    // Prevent infinite loops by tracking what we're loading and what's loaded using non-reactive variables
     if (id && id !== loadingDeckId && id !== currentLoadedDeckId) {
       loadingDeckId = id;
       
@@ -87,14 +90,14 @@
             // Use untrack to prevent reactive loops when setting the deck
             untrack(() => {
               currentDeck.set(deck);
-              currentLoadedDeckId = id;
             });
+            currentLoadedDeckId = id;
           } else {
             // Deck not found, clear the ID
             untrack(() => {
               currentDeck.set(null);
-              currentLoadedDeckId = null;
             });
+            currentLoadedDeckId = null;
             toasts.error('Deck not found');
           }
         }
@@ -104,35 +107,42 @@
         if (untrack(() => $currentDeckId) === id) {
           untrack(() => {
             currentDeck.set(null);
-            currentLoadedDeckId = null;
           });
+          currentLoadedDeckId = null;
           toasts.error('Failed to load deck: ' + err.message);
         }
         loadingDeckId = null;
       });
     } else if (!id) {
-      currentDeck.set(null);
+      untrack(() => {
+        currentDeck.set(null);
+      });
       currentLoadedDeckId = null;
       loadingDeckId = null;
     }
   });
   
   onMount(() => {
-    loading = true;
-    
     // Check for URL deck data first
     const url = new URL(window.location.href);
     const urlDeck = deckFromUrl(url);
     
     if (urlDeck) {
-      // Load deck from URL directly
-      currentDeck.set(urlDeck);
-      currentDeckId.set(urlDeck.id);
-      loading = false;
+      // Load deck from URL directly - use untrack to prevent reactive loops
+      untrack(() => {
+        loading = true;
+        currentDeck.set(urlDeck);
+        currentDeckId.set(urlDeck.id);
+        loading = false;
+      });
       return;
     }
     
-    // Otherwise, load from database as usual
+    // Otherwise, load from database as usual - wrap in untrack to prevent reactive issues
+    untrack(() => {
+      loading = true;
+    });
+    
     getAllDecks()
       .then(allDecks => {
         if (allDecks.length > 0) {
@@ -145,10 +155,14 @@
         }
       })
       .catch(err => {
-        error = err instanceof Error ? err.message : String(err);
+        untrack(() => {
+          error = err instanceof Error ? err.message : String(err);
+        });
       })
       .finally(() => {
-        loading = false;
+        untrack(() => {
+          loading = false;
+        });
       });
   });
 
