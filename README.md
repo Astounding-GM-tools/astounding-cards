@@ -2,7 +2,7 @@
 
 🎲 **Try it now at [cards.astounding.games](https://cards.astounding.games)** 🎲
 
-A powerful, browser-based tool for creating and managing custom cards for tabletop RPGs, board games, or any creative project. Create character cards, item cards, location cards, and more!
+Browser tool for creating and managing custom cards for tabletop RPGs, board games, or any creative project. Create character cards, item cards, location cards, and more!
 
 ## ✨ Features
 
@@ -19,7 +19,7 @@ A powerful, browser-based tool for creating and managing custom cards for tablet
 
 ## 🚀 Getting Started
 
-**For Users**: Simply visit [cards.astounding.games](https://cards.astounding.games) and start creating! No installation, registration, or setup required.
+**For Users**: Visit [cards.astounding.games](https://cards.astounding.games) and start creating! No installation, registration, or setup required.
 
 **For Developers**: If you want to contribute to the code or run your own version:
 
@@ -90,11 +90,23 @@ This second method gives you sturdy, card-stock quality character cards that fee
 
 ## 📚 Documentation
 
-For developers and technical details:
-- **[Architecture Overview](docs/ARCHITECTURE.md)** - System design and patterns
+### For Users:
+- **[Usage Guide](docs/USAGE.md)** - Complete user guide and feature walkthrough
+
+### For Developers:
+- **[Architecture Overview](docs/ARCHITECTURE.md)** - System design and technical patterns
 - **[Canon Update Pattern](docs/CANON_UPDATE_PATTERN.md)** - State management system
-- **[Usage Guide](docs/USAGE.md)** - User guide and features
-- **[Development Roadmap](docs/ROADMAP.md)** - Future plans and features
+- **[Development Rules](docs/DEVELOPMENT_RULES.md)** - Svelte 5 runes mode standards
+- **[Development Methodology](docs/DEVELOPMENT_METHODOLOGY.md)** - Project development approach
+
+### Project Status & Planning:
+- **[Development Roadmap](docs/ROADMAP.md)** - Future plans and feature roadmap
+- **[Logic Extraction Roadmap](docs/LOGIC_EXTRACTION_ROADMAP.md)** - Component refactoring progress
+- **[Refactoring Checklist](docs/REFACTORING_CHECKLIST.md)** - Systematic refactoring tracking
+
+### Testing & Quality:
+- **[Dev Tools Summary](docs/DEV_TOOLS_SUMMARY.md)** - E2E testing infrastructure
+- **Current Test Status**: 244+ tests (231 unit + 13+ E2E) with comprehensive coverage
 
 ## 🛠️ Development
 
