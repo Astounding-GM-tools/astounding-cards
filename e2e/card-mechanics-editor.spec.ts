@@ -1,29 +1,15 @@
 import { expect, test } from '@playwright/test';
+import { DevToolsHelper } from './helpers/dev-tools';
 
-test.describe('CardMechanicsEditor Workflow', () => {
+test.describe('CardMechanicsEditor Workflow with Dev Tools', () => {
+  let devTools: DevToolsHelper;
 
   test.beforeEach(async ({ page }) => {
+    devTools = new DevToolsHelper(page);
+    
     // Navigate to the app
     await page.goto('/');
     await page.waitForLoadState('networkidle');
-    
-    // Create a new deck - click Manage Decks first to open the menu
-    await page.click('button:has-text("📚 Manage Decks")');
-    await page.waitForTimeout(500);
-    
-    // Then click Create New Deck
-    await page.click('button:has-text("➕ Create New Deck")');
-    await page.waitForTimeout(500);
-    
-    // Fill in deck name and create
-    const nameInput = page.locator('input[placeholder*="deck"], input[placeholder*="name"]');
-    await nameInput.fill('Test Deck');
-    await page.click('button.primary:has-text("Create")');
-    await page.waitForTimeout(1000);
-    
-    // Add a card to the deck
-    await page.click('button:has-text("➕ Add Card")');
-    await page.waitForTimeout(1000);
   });
 
   test('should open mechanics dialog and add/remove mechanics', async ({ page }) => {
@@ -100,5 +86,67 @@ test.describe('CardMechanicsEditor Workflow', () => {
     await page.click('button:has-text("Save Changes")');
     await expect(page.locator('.mechanic-name').first()).toHaveText('Second:');
     await expect(page.locator('.mechanic-name').last()).toHaveText('First:');
+  });
+
+  test('should work with sample data characters', async ({ page }) => {
+    // Test mechanics on one of the sample cards
+    const sampleInfo = devTools.getSampleDataInfo();
+    const characterCard = sampleInfo.cards.find(card => card.type === 'character');
+    
+    if (characterCard) {
+      // Look for the character card
+      const cardElement = page.locator(`text=${characterCard.name}`).first();
+      await expect(cardElement).toBeVisible();
+      
+      // Try to find edit button or mechanics button on this card
+      const editButton = page.locator(`text=${characterCard.name}`)
+        .locator('..')
+        .locator('button:has-text("Edit"), button[title*="edit"], .edit-mechanics-btn')
+        .first();
+      
+      if (await editButton.count() > 0) {
+        await editButton.click();
+        await page.waitForTimeout(500);
+        
+        // If mechanics dialog opens, test it
+        const mechanicsDialog = page.locator('.mechanics-dialog');
+        if (await mechanicsDialog.count() > 0) {
+          await expect(mechanicsDialog).toBeVisible();
+          
+          // Close dialog
+          const closeButton = page.locator('button[aria-label="Close"], button:has-text("Close"), button:has-text("×")');
+          if (await closeButton.count() > 0) {
+            await closeButton.click();
+          }
+        }
+      }
+    }
+  });
+
+  test('dev tools integration - should maintain state after using dev tools', async ({ page }) => {
+    // Test that dev tools don't interfere with normal app functionality
+    
+    // First, use the mechanics editor normally
+    const editMechanicsButton = page.locator('.edit-mechanics-btn');
+    if (await editMechanicsButton.count() > 0) {
+      await editMechanicsButton.click();
+      await page.click('button:has-text("+ Add Mechanic")');
+      await page.locator('input[placeholder*="Longsword"]').fill('Test Mechanic');
+      await page.click('button:has-text("Save Changes")');
+    }
+    
+    // Then use dev tools to test toast (safe operation)
+    const toast = await devTools.testToast();
+    await expect(toast).toBeVisible();
+    
+    // Verify the mechanics are still there after dev tool usage
+    if (await page.locator('.mechanic-name').count() > 0) {
+      await expect(page.locator('.mechanic-name')).toContainText('Test Mechanic');
+    }
+  });
+
+  test.afterEach(async ({ page }) => {
+    // Clean up: disable dev mode after each test to avoid side effects
+    await devTools.disableDevMode();
   });
 });

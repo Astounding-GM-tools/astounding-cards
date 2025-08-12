@@ -181,6 +181,7 @@
     <div class="settings-row">
       <button 
         class="action-button"
+        data-testid="manage-decks-button"
         onclick={() => deckDialog?.showModal()}
       >
         📚 Manage Decks

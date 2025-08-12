@@ -186,10 +186,11 @@
   {/if}
 
   {#if $devMode}
-    <fieldset class="dev-controls">
+    <fieldset class="dev-controls" data-testid="dev-tools-section">
       <legend>Dev Tools - be careful!</legend>
       <button 
         class="danger" 
+        data-testid="clear-database-button"
         onclick={handleClearDatabase}
         title="Development only: Clear all data"
       >
@@ -197,6 +198,7 @@
       </button>
       <button 
         class="sample" 
+        data-testid="add-sample-data-button"
         onclick={handlePopulateSampleData}
         title="Development only: Add sample data"
       >
@@ -204,6 +206,7 @@
       </button>
       <button 
         class="sample" 
+        data-testid="test-toast-button"
         onclick={() => toasts.success('Test toast notification!')}
         title="Development only: Test toast system"
       >
