@@ -3,6 +3,14 @@
   import { createEventDispatcher } from 'svelte';
   import { gamePresets, officialPresets, customPresets, presetsLoading, presetActions } from '../stores/gamePresets';
   import type { GamePreset } from '../types';
+  import { 
+    createGamePresetSelectorState, 
+    toggleCustomPresets, 
+    formatTags, 
+    getPresetIcon,
+    getPresetStatsText,
+    type GamePresetSelectorState 
+  } from './GamePresetSelector.svelte';
   
 const props = $props<{
     selectedPresetId?: string | null;
@@ -19,7 +27,7 @@ const props = $props<{
     duplicate: GamePreset;
   }>();
   
-  let showCustom = $state(false);
+  let state = $state<GamePresetSelectorState>(createGamePresetSelectorState());
   
   // Handle preset selection
   function selectPreset(preset: GamePreset) {
@@ -36,20 +44,9 @@ const props = $props<{
     dispatch('duplicate', preset);
   }
   
-  // Format tags for display
-  function formatTags(tags: string[]): string {
-    return tags.join(', ');
-  }
-  
-  // Get icon for preset based on tags
-  function getPresetIcon(preset: GamePreset): string {
-    if (preset.tags.includes('fantasy')) return '🐉';
-    if (preset.tags.includes('sci-fi')) return '🚀';
-    if (preset.tags.includes('horror')) return '👻';
-    if (preset.tags.includes('modern')) return '🏢';
-    if (preset.tags.includes('pbta')) return '📖';
-    if (preset.tags.includes('old-school')) return '📜';
-    return '🎲';
+  // Handle toggling custom presets visibility
+  function handleToggleCustom() {
+    state = toggleCustomPresets(state);
   }
 </script>
 
@@ -108,19 +105,19 @@ const props = $props<{
     </div>
     
     <!-- Custom Presets -->
-    {#if $customPresets.length > 0 || showCustom}
+    {#if $customPresets.length > 0 || state.showCustom}
       <div class="preset-section">
         <div class="section-toggle">
           <h4>Custom Systems</h4>
           <button 
             class="btn btn-ghost btn-sm"
-            onclick={() => showCustom = !showCustom}
+            onclick={handleToggleCustom}
           >
-            {showCustom ? '▲' : '▼'}
+            {state.showCustom ? '▲' : '▼'}
           </button>
         </div>
         
-        {#if showCustom}
+        {#if state.showCustom}
           <div class="preset-grid">
             {#each $customPresets as preset (preset.id)}
               <div 
