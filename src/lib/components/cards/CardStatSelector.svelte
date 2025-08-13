@@ -1,8 +1,20 @@
 <!-- CardStatSelector.svelte -->
 <script lang="ts">
-  import type { CardStat, Portability, Card } from '$lib/types';
+  import type { Card } from '$lib/types';
   import { currentDeck } from '$lib/stores/deck';
   import { canonUpdateCard, isFieldLoading } from '$lib/stores/canonUpdate';
+  import {
+    createCardStatSelectorState,
+    getAreaNames,
+    getLocationCards,
+    formatLocationDisplay,
+    initializeFormValues,
+    createStatUpdate,
+    createClearStatUpdate,
+    processLocationInput,
+    syncDisplayStat,
+    type CardStatSelectorState
+  } from './CardStatSelector.svelte';
   
   const props = $props<{
     card: Card;
@@ -12,139 +24,73 @@
   // Get loading state
   const isUpdating = $derived(isFieldLoading('card-stats'));
 
-  let dialogElement = $state<HTMLDialogElement | null>(null);
-  let isDialogOpen = $state(false);
-  
-  // Form state - separate from the card state
-  let formType = $state<'character' | 'item' | 'location' | undefined>(undefined);
-  let formAge = $state('');
-  let formPortability = $state<Portability>('light');
-  let formArea = $state('');
+  // State management using extracted logic
+  let state = $state<CardStatSelectorState>(createCardStatSelectorState(card.stat));
 
-  // Local display state for optimistic updates
-  let displayStat = $state<CardStat | undefined>(card.stat);
+  // Derived data using extracted functions
+  const areaNames = $derived(getAreaNames($currentDeck));
+  const locationCards = $derived(getLocationCards($currentDeck, card.id));
 
   // Sync displayStat with store updates
   $effect(() => {
     const currentCard = $currentDeck?.cards.find(c => c.id === card.id);
     const storeStat = currentCard?.stat;
     
-    if (JSON.stringify(storeStat) !== JSON.stringify(displayStat)) {
-      displayStat = storeStat;
+    const newDisplayStat = syncDisplayStat(storeStat, state.displayStat);
+    if (newDisplayStat !== state.displayStat) {
+      state.displayStat = newDisplayStat;
     }
   });
 
   // Reset form state when dialog opens
   function openDialog() {
-    // Set form type based on card type
-    formType = card.type as 'character' | 'item' | 'location';
+    state = initializeFormValues(card, state);
     
-    // Initialize form values from current stat
-    if (card.stat?.type === 'character') {
-      formAge = card.stat.value;
-    } else if (card.stat?.type === 'item') {
-      formPortability = card.stat.value;
-    } else if (card.stat?.type === 'location') {
-      if (card.stat.value.type === 'soft') {
-        formArea = card.stat.value.value;
-      } else if (card.stat.value.type === 'hard') {
-        // For hard links, show the formatted display with the pin icon
-        formArea = formatLocationDisplay(card.stat.value);
-      }
+    // Handle hard link formatting for location
+    if (card.stat?.type === 'location' && card.stat.value.type === 'hard') {
+      state.formArea = formatLocationDisplay(card.stat.value, locationCards);
     }
     
-    isDialogOpen = true;
-    dialogElement?.showModal();
+    state.isDialogOpen = true;
+    state.dialogElement?.showModal();
   }
 
   function closeDialog() {
-    isDialogOpen = false;
-    dialogElement?.close();
+    state.isDialogOpen = false;
+    state.dialogElement?.close();
   }
 
   async function saveStat() {
-    let statUpdate: CardStat | undefined;
-    let updates: Partial<Card>;
-    
-    if (!formType) {
-      statUpdate = undefined;
-      updates = {
-        type: 'character',
-        stat: undefined
-      };
-    } else {
-      if (formType === 'location') {
-        statUpdate = {
-          type: 'location',
-          value: { type: 'soft', value: formArea }
-        };
-      } else if (formType === 'character') {
-        statUpdate = { type: 'character', value: formAge };
-      } else {
-        statUpdate = { type: 'item', value: formPortability };
-      }
-
-      updates = {
-        type: formType,
-        stat: statUpdate
-      };
-    }
+    const { statUpdate, updates } = createStatUpdate(state);
 
     // Optimistic update for immediate feedback
-    displayStat = statUpdate;
+    state.displayStat = statUpdate;
     
     const success = await canonUpdateCard(card.id, updates, ['card-stats'], 'Saving card stats...');
     if (success) {
       closeDialog();
     } else {
       // Rollback optimistic update on failure
-      displayStat = card.stat;
+      state.displayStat = card.stat;
     }
   }
 
   async function clearStat() {
-    formType = undefined;
+    state.formType = undefined;
     
-    const updates = {
-      type: 'character' as const,
-      stat: undefined
-    };
+    const { updates } = createClearStatUpdate();
     
     // Optimistic update for immediate feedback
-    const previousStat = displayStat;
-    displayStat = undefined;
+    const previousStat = state.displayStat;
+    state.displayStat = undefined;
     
     const success = await canonUpdateCard(card.id, updates, ['card-stats'], 'Clearing card stats...');
     if (success) {
       closeDialog();
     } else {
       // Rollback optimistic update on failure
-      displayStat = previousStat;
+      state.displayStat = previousStat;
     }
-  }
-
-  // Get all unique area names and location cards
-  const areaNames = $derived(
-    [...new Set(
-      ($currentDeck?.cards || [])
-        .map(c => c.stat?.type === 'location' && c.stat.value.type === 'soft' ? c.stat.value.value : null)
-        .filter((name): name is string => name !== null)
-    )]
-  );
-
-  const locationCards = $derived(
-    ($currentDeck?.cards || [])
-      .filter(c => c.stat?.type === 'location' && c.id !== card.id)
-      .map(c => ({ id: c.id, name: c.name }))
-  );
-
-  // Format location display
-  function formatLocationDisplay(value: { type: 'hard' | 'soft', value: string }): string {
-    if (value.type === 'hard') {
-      const card = locationCards.find(c => c.id === value.value);
-      return card ? `📍 ${card.name}` : value.value;
-    }
-    return value.value;
   }
 
   // Handle location input change
@@ -152,44 +98,33 @@
     const input = event.target as HTMLInputElement;
     const value = input.value;
     
-    if (value.startsWith('📍 ')) {
-      const locationCard = locationCards.find(c => `📍 ${c.name}` === value);
-      if (locationCard) {
-        const statUpdate = {
-          type: 'location' as const,
-          value: { type: 'hard' as const, value: locationCard.id }
-        };
-        
-        const updates = {
-          type: 'location' as const,
-          stat: statUpdate
-        };
-        
-        // Use Canon Update for location input
-        displayStat = statUpdate;
-        canonUpdateCard(card.id, updates, ['card-stats'], 'Updating location...');
-      }
+    const result = processLocationInput(value, locationCards);
+    if (result.isHardLink && result.statUpdate && result.updates) {
+      // Use Canon Update for location input
+      state.displayStat = result.statUpdate;
+      canonUpdateCard(card.id, result.updates, ['card-stats'], 'Updating location...');
     }
-    formArea = value;
+    
+    state.formArea = value;
   }
 </script>
 
 <!-- Stat Display/Trigger -->
-{#if displayStat}
+{#if state.displayStat}
   <button 
-    class="stat-display {displayStat.type}"
+    class="stat-display {state.displayStat.type}"
     class:updating={isUpdating}
     onclick={openDialog}
     disabled={isUpdating}
   >
     {#if isUpdating}
       <span class="updating-text">Updating...</span>
-    {:else if displayStat.type === 'character'}
-      Age: {displayStat.value}
-    {:else if displayStat.type === 'item'}
-      {displayStat.value}
-    {:else if displayStat.type === 'location'}
-      {formatLocationDisplay(displayStat.value)}
+    {:else if state.displayStat.type === 'character'}
+      Age: {state.displayStat.value}
+    {:else if state.displayStat.type === 'item'}
+      {state.displayStat.value}
+    {:else if state.displayStat.type === 'location'}
+      {formatLocationDisplay(state.displayStat.value, locationCards)}
     {/if}
   </button>
 {:else}
@@ -209,9 +144,9 @@
 
 <!-- Type/Stat Selector Modal -->
 <dialog 
-  bind:this={dialogElement} 
+  bind:this={state.dialogElement} 
   class="stat-dialog"
-  onclose={() => isDialogOpen = false}
+  onclose={() => state.isDialogOpen = false}
 >
   <div class="dialog-content">
     <h2>Card Type</h2>
@@ -224,15 +159,15 @@
           name="stat-type"
           value="character"
           checked={card.type === 'character'}
-          bind:group={formType}
+          bind:group={state.formType}
         />
         <div class="stat-details">
           <span class="type-label">Character</span>
           <input
             type="text"
             placeholder="Age"
-            disabled={formType !== 'character'}
-            bind:value={formAge}
+            disabled={state.formType !== 'character'}
+            bind:value={state.formAge}
           />
         </div>
       </label>
@@ -244,13 +179,13 @@
           name="stat-type"
           value="item"
           checked={card.type === 'item'}
-          bind:group={formType}
+          bind:group={state.formType}
         />
         <div class="stat-details">
           <span class="type-label">Item</span>
           <select
-            disabled={formType !== 'item'}
-            bind:value={formPortability}
+            disabled={state.formType !== 'item'}
+            bind:value={state.formPortability}
           >
             <option value="negligible">Negligible</option>
             <option value="light">Light</option>
@@ -268,7 +203,7 @@
           name="stat-type"
           value="location"
           checked={card.type === 'location'}
-          bind:group={formType}
+          bind:group={state.formType}
         />
         <div class="stat-details">
           <span class="type-label">Location</span>
@@ -276,8 +211,8 @@
             <input
               type="text"
               placeholder="Area"
-              disabled={formType !== 'location'}
-              bind:value={formArea}
+              disabled={state.formType !== 'location'}
+              bind:value={state.formArea}
               list="area-suggestions"
               oninput={handleLocationInput}
             />

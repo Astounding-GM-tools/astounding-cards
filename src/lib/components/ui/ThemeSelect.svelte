@@ -1,30 +1,13 @@
 <script lang="ts">
-  import type { CardTheme } from '$lib/themes';
   import { baseThemes } from '$lib/themes';
   import CardFront from '../cards/CardFront.svelte';
+  import { createPreviewCard } from './ThemeSelect.svelte';
 
   const props = $props();
   const selectedTheme = props.selectedTheme ?? 'classic';
   const onSelect = props.onSelect as (themeId: string) => void;
 
   const themes = Object.values(baseThemes);
-
-  function createPreviewCard(theme: CardTheme) {
-    return {
-      id: 'preview',  // Required by Card type
-      name: theme.preview?.title || theme.name,
-      role: theme.preview?.role || theme.description,
-      traits: theme.preview?.traits || [],
-      image: theme.preview?.portrait ? `/portraits/${theme.preview.portrait}` : null,
-      stat: {
-        type: 'character' as const,
-        value: 'Preview'
-      },
-      desc: '',  // Required by type but not used in preview
-      secrets: [],  // Required by type but not used in preview
-      type: 'Preview'  // Required by Card type
-    };
-  }
 </script>
 
 <div class="theme-select">

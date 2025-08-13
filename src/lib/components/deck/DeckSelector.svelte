@@ -9,14 +9,24 @@
   import { baseThemes } from '$lib/themes';
   import ThemeSelect from '../ui/ThemeSelect.svelte';
   import { toasts } from '$lib/stores/toast';
+  import {
+    createDeckSelectorState,
+    handleDeckDialogKeydown,
+    createNewDeckObject,
+    sortDecksByLastEdited,
+    getCardSizeInfo,
+    resetNewDeckDialog,
+    openNewDeckDialog,
+    setThemeSelectVisible,
+    updateNewDeckName,
+    type DeckSelectorState
+  } from './DeckSelector.svelte';
 
   const dispatch = createEventDispatcher<{
     deckchange: { action: 'create' | 'update', deckId: string };
   }>();
 
-  let showThemeSelect = $state(false);
-  let showNewDeckDialog = $state(false);
-  let newDeckName = $state('');
+  let state = $state<DeckSelectorState>(createDeckSelectorState());
 
   $effect(() => {
     deckList.load();
@@ -28,31 +38,20 @@
   }
 
   async function handleCreateDeck() {
-    if (!showNewDeckDialog) {
-      showNewDeckDialog = true;
+    if (!state.showNewDeckDialog) {
+      state = openNewDeckDialog(state);
       return;
     }
 
-    if (!newDeckName.trim()) return;
+    if (!state.newDeckName.trim()) return;
 
     try {
-      const newDeck: Deck = {
-        id: crypto.randomUUID(),
-        meta: {
-          name: newDeckName.trim(),
-          theme: 'classic',
-          cardSize: 'poker',
-          lastEdited: Date.now(),
-          createdAt: Date.now()
-        },
-        cards: []  // Initialize with empty array of cards
-      };
+      const newDeck = createNewDeckObject(state.newDeckName);
 
       await putDeck(newDeck, true);  // Allow empty deck
       currentDeck.set(newDeck);
       currentDeckId.set(newDeck.id);
-      showNewDeckDialog = false;
-      newDeckName = '';
+      state = resetNewDeckDialog(state);
       deckList.load(); // Refresh deck list
       dispatch('deckchange', { action: 'create', deckId: newDeck.id });
     } catch (error) {
@@ -62,12 +61,10 @@
   }
 
   function handleKeydown(event: KeyboardEvent) {
-    if (event.key === 'Enter' && newDeckName.trim()) {
-      handleCreateDeck();
-    } else if (event.key === 'Escape') {
-      showNewDeckDialog = false;
-      newDeckName = '';
-    }
+    handleDeckDialogKeydown(event, state.newDeckName, {
+      onEnter: handleCreateDeck,
+      onEscape: () => state = resetNewDeckDialog(state)
+    });
   }
 
   async function handleSizeChange(event: Event) {
@@ -95,7 +92,7 @@
     );
     
     if (success) {
-      showThemeSelect = false;
+      state = setThemeSelectVisible(state, false);
     }
   }
 
@@ -113,7 +110,7 @@
     }
   }
 
-  const sortedDecks = $derived([...$deckList.decks].sort((a, b) => b.meta.lastEdited - a.meta.lastEdited));
+  const sortedDecks = $derived(sortDecksByLastEdited($deckList.decks));
 </script>
 
 <div class="deck-settings">
@@ -163,9 +160,7 @@
         <option value="tarot">Tarot (4 per page)</option>
       </select>
       <p class="size-info">
-        {$currentDeck.meta.cardSize === 'poker' 
-          ? 'Standard playing card size, 9 cards per page'
-          : 'Larger cards with more readable text, 4 cards per page'}
+        {getCardSizeInfo($currentDeck.meta.cardSize || 'poker')}
       </p>
     </fieldset>
 
@@ -173,7 +168,7 @@
       <legend>Card theme</legend>
       <button 
         class="theme-button"
-        onclick={() => showThemeSelect = true}
+        onclick={() => state = setThemeSelectVisible(state, true)}
         aria-label="Change theme"
       >
         <div class="theme-info">
@@ -216,12 +211,12 @@
   {/if}
 </div>
 
-{#if showThemeSelect}
+{#if state.showThemeSelect}
   <div class="dialog-overlay">
     <button 
       class="overlay-button"
-      onclick={() => showThemeSelect = false}
-      onkeydown={(e) => e.key === 'Escape' && (showThemeSelect = false)}
+      onclick={() => state = setThemeSelectVisible(state, false)}
+      onkeydown={(e) => e.key === 'Escape' && (state = setThemeSelectVisible(state, false))}
       aria-label="Close theme selector"
     ></button>
   </div>
@@ -234,7 +229,7 @@
     <div class="dialog-buttons">
       <button 
         class="secondary"
-        onclick={() => showThemeSelect = false}
+        onclick={() => state = setThemeSelectVisible(state, false)}
       >
         Cancel
       </button>
@@ -242,12 +237,12 @@
   </div>
 {/if}
 
-{#if showNewDeckDialog}
+{#if state.showNewDeckDialog}
   <div class="dialog-overlay">
     <button 
       class="overlay-button"
-      onclick={() => showNewDeckDialog = false}
-      onkeydown={(e) => e.key === 'Escape' && (showNewDeckDialog = false)}
+      onclick={() => state = resetNewDeckDialog(state)}
+      onkeydown={(e) => e.key === 'Escape' && (state = resetNewDeckDialog(state))}
       aria-label="Close new deck dialog"
     ></button>
   </div>
@@ -255,7 +250,7 @@
     <h2 id="new-deck-dialog-title">Create New Deck</h2>
     <input
       type="text"
-      bind:value={newDeckName}
+      bind:value={state.newDeckName}
       placeholder="Enter deck name"
       onkeydown={handleKeydown}
     >
@@ -263,16 +258,13 @@
       <button 
         class="primary"
         onclick={handleCreateDeck}
-        disabled={!newDeckName.trim()}
+        disabled={!state.newDeckName.trim()}
       >
         Create
       </button>
       <button 
         class="secondary"
-        onclick={() => {
-          showNewDeckDialog = false;
-          newDeckName = '';
-        }}
+        onclick={() => state = resetNewDeckDialog(state)}
       >
         Cancel
       </button>
