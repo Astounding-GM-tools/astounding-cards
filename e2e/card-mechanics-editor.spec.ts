@@ -10,13 +10,31 @@ test.describe('CardMechanicsEditor Workflow with Dev Tools', () => {
     // Navigate to the app
     await page.goto('/');
     await page.waitForLoadState('networkidle');
+    
+    // Setup sample data for consistent testing
+    console.log('=== Setting up test environment with sample data ===');
+    await devTools.setupTestEnvironment();
+    await page.waitForTimeout(1000);
+    console.log('✅ Sample data environment ready');
   });
 
   test('should open mechanics dialog and add/remove mechanics', async ({ page }) => {
-    // 1. Open the mechanics dialog
-    const editMechanicsButton = page.locator('.edit-mechanics-btn');
-    await editMechanicsButton.click();
-    await expect(page.locator('.mechanics-dialog')).toBeVisible();
+    console.log('=== Testing mechanics dialog add/remove functionality ===');
+    
+    // 1. Open the mechanics dialog via "Add Game Stats" button (more reliable)
+    console.log('--- Step 1: Opening mechanics dialog ---');
+    const addStatsButton = page.locator('button:has-text("+ Add Game Stats")').first();
+    await expect(addStatsButton).toBeVisible();
+    await addStatsButton.click();
+    await expect(page.locator('.template-dialog')).toBeVisible();
+    console.log('✅ Template dialog opened');
+    
+    // Select custom option to get to mechanics editor
+    const customTab = page.locator('.category-tab').filter({ hasText: 'Custom' });
+    if (await customTab.count() > 0) {
+      await customTab.click();
+      console.log('✅ Custom category selected');
+    }
 
     // 2. Add a new mechanic
     const addMechanicButton = page.locator('button:has-text("+ Add Mechanic")');

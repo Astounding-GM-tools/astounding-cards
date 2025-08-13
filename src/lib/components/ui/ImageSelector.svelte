@@ -4,10 +4,23 @@
   Processes and previews images before saving
 -->
 <script lang="ts">
-  import { processImage } from '$lib/utils/image';
   import type { CardSize } from '$lib/types';
   import { fade } from 'svelte/transition';
-  import { createBlobUrl, revokeBlobUrl } from '$lib/utils/image-handler';
+  import {
+    initializeImageSelectorState,
+    updateUrlValue,
+    handleFileChange,
+    handleUrlLoad,
+    handleSaveAction,
+    handleUnsetAction,
+    canSave,
+    isProcessing,
+    hasError,
+    hasPreview,
+    getSaveButtonTitle,
+    cleanupPreviewUrl,
+    type ImageSelectorState
+  } from './ImageSelector.svelte.ts';
 
   const props = $props();
   const cardSize = (props.cardSize ?? 'tarot') as CardSize;
@@ -18,15 +31,11 @@
   let fileInput: HTMLInputElement;
   let urlInput: HTMLInputElement;
   let saveButton: HTMLButtonElement;
-  let urlValue = $state('');
-  let error = $state('');
-  let loading = $state(false);
-  let lastProcessedBlob = $state<Blob | undefined>(undefined);
-  let previewUrl = $state<string | null>(null);
+  let state = $state<ImageSelectorState>(initializeImageSelectorState());
 
   // Focus save button when image is loaded
   $effect(() => {
-    if (previewUrl && !loading && !error && saveButton) {
+    if (hasPreview(state) && !isProcessing(state) && !hasError(state) && saveButton) {
       saveButton.focus();
     }
   });
@@ -35,97 +44,22 @@
     const file = (event.currentTarget as HTMLInputElement).files?.[0];
     if (!file) return;
     
-    try {
-      loading = true;
-      error = '';
-      console.log('Processing file:', file.name, file.type, file.size);
-      
-      // Revoke previous URL if it exists
-      if (previewUrl) {
-        revokeBlobUrl(previewUrl);
-        previewUrl = null;
-      }
-      
-      // Process the image
-      const processed = await processImage(file, cardSize);
-      console.log('Processed image:', processed);
-      lastProcessedBlob = processed.blob;
-      previewUrl = createBlobUrl(processed.blob);
-      console.log('Updated preview URL:', previewUrl);
-    } catch (e) {
-      console.error('Image processing error:', e);
-      error = e instanceof Error ? e.message : 'Failed to process image';
-      if (previewUrl) {
-        revokeBlobUrl(previewUrl);
-        previewUrl = null;
-      }
-      lastProcessedBlob = undefined;
-    } finally {
-      loading = false;
-    }
+    state = await handleFileChange(state, file, cardSize);
   }
 
   async function handleUrl() {
-    if (!urlValue) return;
+    if (!state.urlValue) return;
     
-    try {
-      loading = true;
-      error = '';
-      
-      if (previewUrl) {
-        revokeBlobUrl(previewUrl);
-        previewUrl = null;
-      }
-      
-      // Fetch and process the image
-      const response = await fetch(urlValue);
-      if (!response.ok) throw new Error('Failed to fetch image');
-      
-      const blob = await response.blob();
-      const file = new File([blob], 'image', { type: blob.type });
-      
-      // Process the image
-      const processed = await processImage(file, cardSize);
-      lastProcessedBlob = processed.blob;
-      previewUrl = createBlobUrl(processed.blob);
-    } catch (e) {
-      error = e instanceof Error ? e.message : 'Failed to load image';
-      if (previewUrl) {
-        revokeBlobUrl(previewUrl);
-        previewUrl = null;
-      }
-      lastProcessedBlob = undefined;
-    } finally {
-      loading = false;
-    }
+    state = await handleUrlLoad(state, cardSize);
   }
 
   async function handleSave() {
-    if (onSave) {
-      try {
-        loading = true;
-        // Pass the blob and let the parent handle URL conversion
-        await onSave(lastProcessedBlob || null, urlValue || undefined);
-      } catch (e) {
-        error = e instanceof Error ? e.message : 'Failed to save image';
-      } finally {
-        loading = false;
-      }
-    }
+    state = await handleSaveAction(state, { onSave, onClose });
   }
 
   async function handleUnset() {
-    if (onSave) {
-      try {
-        loading = true;
-        await onSave(null, undefined);
-        if (onClose) onClose();
-      } catch (e) {
-        error = e instanceof Error ? e.message : 'Failed to unset image';
-      } finally {
-        loading = false;
-      }
-    }
+    state = await handleUnsetAction(state, { onSave, onClose });
+    if (onClose) onClose();
   }
 
   function handleClose() {
@@ -135,9 +69,7 @@
   // Cleanup preview URL when component is destroyed
   $effect(() => {
     return () => {
-      if (previewUrl) {
-        revokeBlobUrl(previewUrl);
-      }
+      cleanupPreviewUrl(state.previewUrl);
     };
   });
 </script>
@@ -175,14 +107,15 @@
               <div class="url-field">
                 <input
                   bind:this={urlInput}
-                  bind:value={urlValue}
+                  bind:value={state.urlValue}
                   type="url"
                   id="url"
                   placeholder="https://..."
+                  oninput={(e) => state = updateUrlValue(state, (e.currentTarget as HTMLInputElement).value)}
                 />
                 <button 
                   onclick={() => handleUrl()}
-                  disabled={loading || !urlValue}
+                  disabled={isProcessing(state) || !state.urlValue}
                   class="load-btn"
                 >
                   Load
@@ -194,18 +127,18 @@
           <!-- Right side: Preview -->
           <div class="preview-column">
             <div class="preview-container">
-              {#if loading}
+              {#if isProcessing(state)}
                 <div class="preview loading">
                   <div class="loading-indicator"></div>
                 </div>
-              {:else if error}
+              {:else if hasError(state)}
                 <div class="preview error">
-                  <div class="status error">{error}</div>
+                  <div class="status error">{state.error}</div>
                 </div>
-              {:else if previewUrl}
+              {:else if hasPreview(state)}
                 <div class="preview" transition:fade>
                   <img 
-                    src={previewUrl} 
+                    src={state.previewUrl} 
                     alt="Preview"
                   />
                 </div>
@@ -237,8 +170,8 @@
             class="save-btn" 
             bind:this={saveButton}
             onclick={handleSave}
-            disabled={!previewUrl || !lastProcessedBlob}
-            title={previewUrl ? '' : 'No image chosen'}
+            disabled={!canSave(state)}
+            title={getSaveButtonTitle(state)}
           >
             Save
           </button>

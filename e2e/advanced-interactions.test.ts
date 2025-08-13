@@ -1,13 +1,21 @@
 import { expect, test } from '@playwright/test';
+import { DevToolsHelper } from './helpers/dev-tools';
 
 test.describe('Statblock Templates and Advanced Features', () => {
-  test('should use statblock templates to add multiple stats', async ({ page }) => {
+  let devTools: DevToolsHelper;
+
+  test.beforeEach(async ({ page }) => {
+    devTools = new DevToolsHelper(page);
     await page.goto('/');
+    await page.waitForLoadState('networkidle');
     
-    // Create deck and card
-    await page.click('button:has-text("Create Deck")');
-    await page.click('button:has-text("Add Card")');
-    
+    // Setup sample data for consistent testing
+    await devTools.setupTestEnvironment();
+    await page.waitForTimeout(1000);
+  });
+
+  test('should use statblock templates to add multiple stats', async ({ page }) => {
+    // Use sample data environment - no need to create deck and card
     // Open stats editor
     const statsButton = page.locator('button:has-text("Stats"), .stats-add').first();
     if (await statsButton.isVisible()) {
@@ -143,9 +151,28 @@ test.describe('Statblock Templates and Advanced Features', () => {
       }
     }
   });
+
+  test.afterEach(async ({ page }) => {
+    await devTools.disableDevMode();
+  });
 });
 
 test.describe('Deck Management and Sharing', () => {
+  let devTools: DevToolsHelper;
+
+  test.beforeEach(async ({ page }) => {
+    devTools = new DevToolsHelper(page);
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+    
+    // Setup sample data for consistent testing
+    await devTools.setupTestEnvironment();
+    await page.waitForTimeout(1000);
+  });
+
+  test.afterEach(async ({ page }) => {
+    await devTools.disableDevMode();
+  });
   test('should duplicate a deck with all cards', async ({ page }) => {
     await page.goto('/');
     
