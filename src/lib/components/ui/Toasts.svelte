@@ -5,7 +5,7 @@
     handleToastKeydown,
     createRemoveHandler,
     TOAST_ANIMATION
-  } from './Toasts.svelte';
+  } from './Toasts.svelte.ts';
 </script>
 
 <div class="toast-container" role="status" aria-live="polite">

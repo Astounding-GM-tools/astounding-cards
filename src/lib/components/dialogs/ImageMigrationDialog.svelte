@@ -13,7 +13,7 @@
     canSaveMigration,
     IMAGE_PROCESSING_DEBOUNCE_MS,
     type ImageMigrationState
-  } from './ImageMigrationDialog.svelte';
+  } from './ImageMigrationDialog.svelte.ts';
 
   const props = $props();
   const cards = props.cards as Card[];

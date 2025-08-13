@@ -20,7 +20,7 @@
     setThemeSelectVisible,
     updateNewDeckName,
     type DeckSelectorState
-  } from './DeckSelector.svelte';
+  } from './DeckSelector.svelte.ts';
 
   const dispatch = createEventDispatcher<{
     deckchange: { action: 'create' | 'update', deckId: string };

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { currentDeck } from '$lib/stores/deck';
-  import { resolveActiveTheme } from './Card.svelte';
+  import { resolveActiveTheme } from './Card.svelte.ts';
 
   const props = $props();
   const children = props.children;

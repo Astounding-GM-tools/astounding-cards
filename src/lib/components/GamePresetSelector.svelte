@@ -10,7 +10,7 @@
     getPresetIcon,
     getPresetStatsText,
     type GamePresetSelectorState 
-  } from './GamePresetSelector.svelte';
+  } from './GamePresetSelector.svelte.ts';
   
 const props = $props<{
     selectedPresetId?: string | null;

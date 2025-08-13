@@ -3,7 +3,7 @@
   // This would simplify preview modes, theme previews, and reduce prop passing complexity
   // Also consider standardizing preview sizing across all preview contexts (deck manager, theme selector, etc.)
   import { currentDeck } from '$lib/stores/deck';
-  import { createCardBaseState, type CardBaseState } from './CardBase.svelte';
+  import { createCardBaseState, type CardBaseState } from './CardBase.svelte.ts';
 
   const { children, theme, preview, cardSize }: { children: any, theme?: string, preview?: boolean, cardSize?: string } = $props();
   

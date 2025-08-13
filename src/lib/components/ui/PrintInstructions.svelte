@@ -7,9 +7,18 @@
     getCardsPerPageText,
     getCardDimensionsText,
     getCurrentCardSize
-  } from './PrintInstructions.svelte';
+  } from './PrintInstructions.svelte.ts';
   
-  export let dialog: HTMLDialogElement;
+  const props = $props<{ dialog: HTMLDialogElement }>();
+  
+  let dialogElement = $state<HTMLDialogElement>();
+  
+  // Sync the prop with the local state when it changes
+  $effect(() => {
+    if (props.dialog && dialogElement !== props.dialog) {
+      dialogElement = props.dialog;
+    }
+  });
   
   // Derive card size and related text
   const cardSize = $derived(getCurrentCardSize($currentDeck));
@@ -19,14 +28,14 @@
 </script>
 
 <dialog 
-  bind:this={dialog}
+  bind:this={dialogElement}
   class="print-dialog"
 >
   <div class="dialog-header">
     <h2>🖨️ Print Instructions</h2>
     <button 
       class="close-button"
-      onclick={() => closeDialog(dialog)}
+      onclick={() => closeDialog(dialogElement)}
     >
       ×
     </button>
