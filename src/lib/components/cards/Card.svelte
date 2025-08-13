@@ -1,10 +1,11 @@
 <script lang="ts">
   import { currentDeck } from '$lib/stores/deck';
+  import { resolveActiveTheme } from './Card.svelte';
 
   const props = $props();
   const children = props.children;
   const theme = props.theme;
-  const activeTheme = $derived(theme ?? $currentDeck?.meta?.theme ?? 'classic');
+  const activeTheme = $derived(resolveActiveTheme(theme, $currentDeck));
 </script>
 
 <div class="card crop-marks">

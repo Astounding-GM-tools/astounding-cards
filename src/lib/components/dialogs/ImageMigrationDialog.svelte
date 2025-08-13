@@ -1,8 +1,19 @@
 <script lang="ts">
   import type { Card } from '$lib/types';
   import { fade } from 'svelte/transition';
-  import { processImage } from '$lib/utils/image';
   import { toasts } from '$lib/stores/toast';
+  import {
+    createImageMigrationState,
+    resetStateForCard,
+    getCardsThatNeedMigration,
+    getFirstCardToMigrate,
+    getNextCardToMigrate,
+    processImageUrl,
+    createImageUpdateObject,
+    canSaveMigration,
+    IMAGE_PROCESSING_DEBOUNCE_MS,
+    type ImageMigrationState
+  } from './ImageMigrationDialog.svelte';
 
   const props = $props();
   const cards = props.cards as Card[];
@@ -10,11 +21,7 @@
   const onUpdate = props.onUpdate as (id: string, updates: Partial<Card>) => Promise<void>;
 
   let dialogElement: HTMLDialogElement;
-  let loading = $state(false);
-  let selectedCard = $state<Card | null>(null);
-  let urlInput = $state('');
-  let previewUrl = $state<string | null>(null);
-  let optimizedBlob = $state<Blob | null>(null);
+  let state = $state<ImageMigrationState>(createImageMigrationState());
 
   // Show dialog when mounted
   $effect(() => {
@@ -22,83 +29,61 @@
   });
 
   // Get cards that need migration
-  const needsMigration = $derived(cards.filter((card: Card) => {
-    if (!card.image) return false;
-    return card.image === 'blob:local' || (!card.image.includes(':') && !card.image.startsWith('http'));
-  }));
+  const needsMigration = $derived(getCardsThatNeedMigration(cards));
 
   // Auto-select first card when dialog opens or when list changes
   $effect(() => {
-    if (needsMigration.length > 0 && !selectedCard) {
-      selectedCard = needsMigration[0];
+    if (needsMigration.length > 0 && !state.selectedCard) {
+      state.selectedCard = needsMigration[0];
     }
   });
 
   // Reset state when card changes
   $effect(() => {
-    if (selectedCard) {
-      urlInput = '';
-      previewUrl = null;
-      optimizedBlob = null;
+    if (state.selectedCard) {
+      state = resetStateForCard(state);
     }
   });
 
   // Test URL when input changes (debounced)
   $effect(() => {
-    if (!urlInput) {
-      previewUrl = null;
-      optimizedBlob = null;
+    if (!state.urlInput) {
+      state.previewUrl = null;
+      state.optimizedBlob = null;
       return;
     }
 
     const timeoutId = setTimeout(async () => {
       try {
-        loading = true;
-        const response = await fetch(urlInput);
-        if (!response.ok) throw new Error('Failed to fetch image');
+        state.loading = true;
+        const result = await processImageUrl(state.urlInput);
         
-        const blob = await response.blob();
-        const file = new File([blob], 'image', { type: blob.type });
-        
-        const processed = await processImage(file);
-        optimizedBlob = processed.blob;
-        
-        if (previewUrl) URL.revokeObjectURL(previewUrl);
-        previewUrl = URL.createObjectURL(processed.blob);
+        if (state.previewUrl) URL.revokeObjectURL(state.previewUrl);
+        state.previewUrl = result.previewUrl;
+        state.optimizedBlob = result.optimizedBlob;
       } catch (e) {
-        previewUrl = null;
-        optimizedBlob = null;
+        state.previewUrl = null;
+        state.optimizedBlob = null;
       } finally {
-        loading = false;
+        state.loading = false;
       }
-    }, 500);
+    }, IMAGE_PROCESSING_DEBOUNCE_MS);
 
     return () => clearTimeout(timeoutId);
   });
 
   async function handleSave() {
-    if (!selectedCard || !urlInput) return;
+    if (!state.selectedCard || !canSaveMigration(state.urlInput, state.loading, state.optimizedBlob)) return;
 
     try {
-      await onUpdate(selectedCard.id, {
-        image: urlInput,
-        imageBlob: optimizedBlob || undefined
-      });
+      const updates = createImageUpdateObject(state.urlInput, state.optimizedBlob);
+      await onUpdate(state.selectedCard.id, updates);
 
       toasts.success('Image updated successfully');
 
-      // Get fresh list of remaining cards after update
-      const remainingCards = cards.filter((card: Card) => {
-        if (!card.image) return false;
-        return card.image === 'blob:local' || (!card.image.includes(':') && !card.image.startsWith('http'));
-      });
-
-      if (remainingCards.length > 0) {
-        // Find the next card that still needs migration
-        const nextCard = remainingCards.find((card: Card) => card.id !== selectedCard?.id);
-        if (nextCard) {
-          selectedCard = nextCard;
-        }
+      const nextCard = getNextCardToMigrate(cards, state.selectedCard.id);
+      if (nextCard) {
+        state.selectedCard = nextCard;
       } else {
         toasts.success('All images have been migrated!');
         handleClose();
@@ -142,8 +127,8 @@
             {#each needsMigration as card}
               <button
                 class="card-button"
-                class:active={selectedCard?.id === card.id}
-                onclick={() => selectedCard = card}
+                class:active={state.selectedCard?.id === card.id}
+                onclick={() => state.selectedCard = card}
               >
                 {card.name}
                 {#if card.image === 'blob:local'}
@@ -156,9 +141,9 @@
           </div>
         </div>
 
-        {#if selectedCard}
+        {#if state.selectedCard}
           <div class="migration-form" transition:fade>
-            <h3>Migrate: {selectedCard.name}</h3>
+            <h3>Migrate: {state.selectedCard.name}</h3>
             
             <div class="image-comparison">
               <div class="image-column">
@@ -166,9 +151,9 @@
                 <div class="image-container">
                   <div 
                     class="image-preview"
-                    style:background-image={selectedCard.imageBlob ? `url(${URL.createObjectURL(selectedCard.imageBlob)})` : 'none'}
+                    style:background-image={state.selectedCard.imageBlob ? `url(${URL.createObjectURL(state.selectedCard.imageBlob)})` : 'none'}
                   >
-                    {#if !selectedCard.imageBlob}
+                    {#if !state.selectedCard.imageBlob}
                       <span class="no-image">No image set</span>
                     {/if}
                   </div>
@@ -180,12 +165,12 @@
                 <div class="image-container">
                   <div 
                     class="image-preview"
-                    class:loading
-                    style:background-image={previewUrl ? `url(${previewUrl})` : 'none'}
+                    class:loading={state.loading}
+                    style:background-image={state.previewUrl ? `url(${state.previewUrl})` : 'none'}
                   >
-                    {#if loading}
+                    {#if state.loading}
                       <span class="loading-text">Loading...</span>
-                    {:else if !previewUrl}
+                    {:else if !state.previewUrl}
                       <span class="no-image">Enter a URL to preview</span>
                     {/if}
                   </div>
@@ -198,7 +183,7 @@
                 Image URL
                 <input
                   type="url"
-                  bind:value={urlInput}
+                  bind:value={state.urlInput}
                   placeholder="https://example.com/your-image.jpg - Enter URL to preview"
                 />
               </label>
@@ -206,10 +191,10 @@
 
             <button
               class="primary-button"
-              disabled={!urlInput || loading || !optimizedBlob}
+              disabled={!canSaveMigration(state.urlInput, state.loading, state.optimizedBlob)}
               onclick={handleSave}
             >
-              {#if loading}
+              {#if state.loading}
                 Loading...
               {:else}
                 Save & Continue

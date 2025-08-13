@@ -3,16 +3,16 @@
   // This would simplify preview modes, theme previews, and reduce prop passing complexity
   // Also consider standardizing preview sizing across all preview contexts (deck manager, theme selector, etc.)
   import { currentDeck } from '$lib/stores/deck';
+  import { createCardBaseState, type CardBaseState } from './CardBase.svelte';
 
   const { children, theme, preview, cardSize }: { children: any, theme?: string, preview?: boolean, cardSize?: string } = $props();
+  
   // Note: CardBase doesn't have access to individual card data, theme priority handled in CardFront
-  const activeTheme = $derived(theme ?? $currentDeck?.meta?.theme ?? 'classic');
-  const isPreview = preview ?? false;
-  const size = $derived(cardSize ?? $currentDeck?.meta?.cardSize ?? 'poker');
+  const state = $derived<CardBaseState>(createCardBaseState(theme, preview, cardSize, $currentDeck));
 </script>
 
-{#key activeTheme}
-<div class="card-base" class:crop-marks={!isPreview} class:preview={isPreview} data-theme={activeTheme} data-size={size}>
+{#key state.activeTheme}
+<div class="card-base" class:crop-marks={!state.isPreview} class:preview={state.isPreview} data-theme={state.activeTheme} data-size={state.size}>
   {@render children()}
 </div>
 {/key}
