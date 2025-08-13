@@ -2,21 +2,28 @@
   import { deckToUrl } from '$lib/stores/deck';
   import type { Deck } from '$lib/types';
   import { browser } from '$app/environment';
+  import {
+    getUrlSizeInfo,
+    getWarningMessage,
+    type UrlSizeInfo
+  } from './UrlSizeIndicator.svelte';
 
   const props = $props();
   const deck = props.deck as Deck;
   
-  const urlSize = $derived(browser ? new TextEncoder().encode(deckToUrl(deck)).length : 0);
-  const sizeInKB = $derived((urlSize / 1024).toFixed(1));
-  const warningLevel = $derived(urlSize > 30000 ? 'high' : urlSize > 25000 ? 'medium' : 'low');
+  const urlSizeInfo = $derived<UrlSizeInfo>(browser ? getUrlSizeInfo(deckToUrl(deck)) : {
+    urlSize: 0,
+    sizeInKB: '0.0',
+    warningLevel: 'low'
+  });
+  
+  const warningMessage = $derived(getWarningMessage(urlSizeInfo.warningLevel));
 </script>
 
-<div class="size-indicator {warningLevel}">
-  URL Size: {sizeInKB}KB
-  {#if warningLevel === 'high'}
-    <span class="warning">Near limit - consider creating new deck</span>
-  {:else if warningLevel === 'medium'}
-    <span class="warning">Approaching size limit</span>
+<div class="size-indicator {urlSizeInfo.warningLevel}">
+  URL Size: {urlSizeInfo.sizeInKB}KB
+  {#if warningMessage}
+    <span class="warning">{warningMessage}</span>
   {/if}
 </div>
 

@@ -1,7 +1,21 @@
 <!-- PrintInstructions.svelte -->
 <script lang="ts">
   import { currentDeck } from '$lib/stores/deck';
+  import {
+    closeDialog,
+    getCardSizeDisplayName,
+    getCardsPerPageText,
+    getCardDimensionsText,
+    getCurrentCardSize
+  } from './PrintInstructions.svelte';
+  
   export let dialog: HTMLDialogElement;
+  
+  // Derive card size and related text
+  const cardSize = $derived(getCurrentCardSize($currentDeck));
+  const cardSizeDisplayName = $derived(getCardSizeDisplayName(cardSize));
+  const cardsPerPageText = $derived(getCardsPerPageText(cardSize));
+  const cardDimensionsText = $derived(getCardDimensionsText(cardSize));
 </script>
 
 <dialog 
@@ -12,7 +26,7 @@
     <h2>🖨️ Print Instructions</h2>
     <button 
       class="close-button"
-      onclick={() => dialog.close()}
+      onclick={() => closeDialog(dialog)}
     >
       ×
     </button>
@@ -29,12 +43,8 @@
 
     <h3>Card Layout</h3>
     <p>
-      Current size: <strong>{$currentDeck?.meta.cardSize === 'poker' ? 'Poker' : 'Tarot'}</strong>
-      {#if $currentDeck?.meta.cardSize === 'poker'}
-        (9 cards per page, standard playing card size)
-      {:else}
-        (4 cards per page, larger size for better readability)
-      {/if}
+      Current size: <strong>{cardSizeDisplayName}</strong>
+      {cardsPerPageText}
     </p>
     <ul>
       <li>Front and back pages are automatically aligned for double-sided printing</li>
@@ -76,11 +86,7 @@
       <li>Use thicker paper (160-200 gsm) for best results</li>
       <li>Print in grayscale/black & white to save color ink</li>
       <li>
-        {#if $currentDeck?.meta.cardSize === 'poker'}
-          Cards will be standard poker size (2.5" × 3.5" / 63mm × 88mm)
-        {:else}
-          Cards will be larger tarot size (approximately 3.75" × 5.25" / 95mm × 133mm)
-        {/if}
+        {cardDimensionsText}
       </li>
     </ul>
 
