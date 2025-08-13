@@ -69,5 +69,37 @@ Successfully completed the extraction of core logic from `ImageSelector.svelte` 
 - **Focus on Public API**: Only export functions that are actually consumed by the component or tests
 - **Internal vs. External**: Helper functions used only internally should remain private
 
+## ShareDialog Component Refactoring - COMPLETED
+
+### ✅ **NEW IMPROVED WORKFLOW**: Dead Code Cleanup FIRST
+
+For ShareDialog, we used a smarter approach:
+1. **Analyzed component usage FIRST** - identified exactly which functions were called
+2. **Extracted only used functions** - avoided over-extraction 
+3. **Created focused tests** - 19 unit tests + 6 integration tests
+4. **No dead code cleanup needed** - got it right the first time!
+
+### Files Created/Modified
+- **NEW**: `src/lib/components/dialogs/ShareDialog.svelte.ts` - 8 focused functions
+- **NEW**: `src/lib/components/dialogs/ShareDialog.svelte.test.ts` - 19 unit tests
+- **NEW**: `src/lib/components/dialogs/ShareDialog.component.test.ts` - 6 integration tests
+- **MODIFIED**: `src/lib/components/dialogs/ShareDialog.svelte` - Refactored to use extracted logic
+
+### Functions Extracted (all actually used)
+1. `initializeShareDialogState()` - Initialize state
+2. `calculateDeckStats()` - Calculate URL size and image statistics
+3. `getBrowserSupport()` - Get browser support for URL size
+4. `getUrlSizeStatus()` - Get URL size status (success/warning/error)
+5. `shareAsUrl()` - Copy URL to clipboard
+6. `shareAsJson()` - Download as JSON file
+7. `handleShare()` - Main share handler with migration check
+8. `BROWSER_LIMITS` - Browser URL length constants
+
+### Key Benefits
+- **100% usage efficiency** - Every extracted function is actually used
+- **Focused API** - Only 8 public functions vs previous 22+ over-extractions
+- **Better workflow** - Analyze first, extract second, test third
+- **Faster development** - No cleanup phase needed
+
 ## Next Steps
-The ImageSelector component is now fully extracted, tested, and cleaned of dead code. This follows the same successful pattern used for other components in the project and brings the ImageSelector up to the same high standard of testability and maintainability.
+Both ImageSelector and ShareDialog are now fully extracted and tested. The ShareDialog extraction demonstrates the improved "analyze first" workflow that should be used for future components.
