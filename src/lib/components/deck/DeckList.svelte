@@ -1,22 +1,22 @@
 <script lang="ts">
   import { deckList } from '$lib/stores/deckList';
   import DeckManager from './DeckManager.svelte';
+  import {
+    sortDecksByLastEdited,
+    createDeckChangeHandler
+  } from './DeckList.svelte.ts';
 
   // Initialize the store
   $effect(() => {
     deckList.load();
   });
 
-  let handleDeckChange = $state(async function(event: CustomEvent<{ action: string, deckId: string }>) {
-    console.log('DeckList received deckchange event:', event.detail);
-    // For all actions, reload the deck list from the database
-    await deckList.load();
-  });
+  let handleDeckChange = $state(createDeckChangeHandler(deckList));
 
   // Expose the method for parent component access
   export { handleDeckChange };
 
-  const sortedDecks = $derived([...$deckList.decks].sort((a, b) => b.meta.lastEdited - a.meta.lastEdited));
+  const sortedDecks = $derived(sortDecksByLastEdited($deckList.decks));
 </script>
 
 <div class="deck-list">

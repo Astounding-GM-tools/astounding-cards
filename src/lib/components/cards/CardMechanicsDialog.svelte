@@ -1,7 +1,13 @@
 <script lang="ts">
   import type { Card } from '../../types';
-  import { canonUpdateCard, isFieldLoading } from '../../stores/canonUpdate';
+  import { isFieldLoading } from '../../stores/canonUpdate';
   import CardMechanicsEditor from './CardMechanicsEditor.svelte';
+  import {
+    initializeMechanicsDialogState,
+    handleSaveAndClose as handleSaveAndCloseLogic,
+    handleClose as handleCloseLogic,
+    type MechanicsDialogState
+  } from './CardMechanicsDialog.svelte.ts';
   
   const props = $props<{
     card: Card;
@@ -11,6 +17,7 @@
   const onclose = props.onclose;
   
   let dialogElement = $state<HTMLDialogElement | null>(null);
+  let state = $state<MechanicsDialogState>(initializeMechanicsDialogState());
   
   // Show dialog when mounted
   $effect(() => {
@@ -21,29 +28,12 @@
   
   const isMechanicsUpdating = $derived(isFieldLoading('card-mechanics'));
   
-  let hasChanges = $state(false);
-  let editedCard = $state<Card | null>(null);
-  
   async function handleSaveAndClose() {
-    if (!hasChanges || !editedCard || isMechanicsUpdating) return;
-    
-    const success = await canonUpdateCard(
-      card.id,
-      { mechanics: editedCard.mechanics },
-      ['card-mechanics'],
-      'Updating mechanics...',
-      'Mechanics updated successfully'
-    );
-    
-    if (success) {
-      handleClose();
-    }
+    await handleSaveAndCloseLogic(card, state, isMechanicsUpdating, onclose);
   }
   
   function handleClose() {
-    if (isMechanicsUpdating) return;
-    dialogElement?.close();
-    onclose?.();
+    handleCloseLogic(dialogElement, isMechanicsUpdating, onclose);
   }
 </script>
 
@@ -68,8 +58,8 @@
     <CardMechanicsEditor 
       {card}
       loading={isMechanicsUpdating}
-      bind:hasChanges
-      bind:editedCard
+      bind:hasChanges={state.hasChanges}
+      bind:editedCard={state.editedCard}
     />
     
     <div class="dialog-actions">
@@ -84,7 +74,7 @@
       <button 
         class="save-button"
         onclick={handleSaveAndClose}
-        disabled={!hasChanges || isMechanicsUpdating}
+        disabled={!state.hasChanges || isMechanicsUpdating}
       >
         {isMechanicsUpdating ? 'Saving...' : 'Save Changes'}
       </button>

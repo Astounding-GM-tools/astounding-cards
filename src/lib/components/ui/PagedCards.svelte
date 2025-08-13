@@ -4,25 +4,13 @@
   import CardFront from '../cards/CardFront.svelte';
   import CardBack from '../cards/CardBack.svelte';
   import { currentDeck } from '$lib/stores/deck';
+  import {
+    createPaginatedCards,
+    type Page
+  } from './PagedCards.svelte.ts';
   
-  // Use $derived for pure computations
-  const cardSize = $derived($currentDeck?.meta.cardSize || 'poker');
-  const cardsPerPage = $derived(cardSize === 'poker' ? 9 : 4);
-
-  interface Page {
-    index: number;
-    cards: Card[];
-  }
-
-  const pages = $derived.by(() => {
-    if (!$currentDeck) return [] as Page[];
-    const cards = $currentDeck.cards;
-    const pageCount = Math.ceil(cards.length / cardsPerPage);
-    return Array(pageCount).fill(null).map((_, i) => ({
-      index: i,
-      cards: cards.slice(i * cardsPerPage, (i + 1) * cardsPerPage)
-    }));
-  });
+  const paginationData = $derived(createPaginatedCards($currentDeck));
+  const { pages, cardSize } = $derived(paginationData);
 </script>
 
 {#if $currentDeck}
