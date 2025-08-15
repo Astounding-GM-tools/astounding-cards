@@ -126,7 +126,7 @@ export async function applyTemplateWithVocabulary(
       const vocabulary = configToSimpleVocabulary(deckConfig);
       return instantiateTemplateWithVocabulary(template, vocabulary);
     } catch (error) {
-      console.error('Failed to load deck config:', error);
+    // Failed to load deck config
       // Fallback to default instantiation on error
       return instantiateTemplate(template);
     }

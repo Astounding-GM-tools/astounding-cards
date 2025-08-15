@@ -105,13 +105,8 @@ async function processFileImage(
   cardSize: CardSize
 ): Promise<ImageProcessingResult> {
   try {
-    console.log('Processing file:', file.name, file.type, file.size);
-    
     const processed = await processImage(file, cardSize);
-    console.log('Processed image:', processed);
-    
     const previewUrl = createBlobUrl(processed.blob);
-    console.log('Updated preview URL:', previewUrl);
     
     return {
       blob: processed.blob,

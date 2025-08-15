@@ -2,5 +2,6 @@
     "cSpell.words": [
         "Longsword",
         "statblock"
-    ]
+    ],
+    "kiroAgent.configureMCP": "Disabled"
 }

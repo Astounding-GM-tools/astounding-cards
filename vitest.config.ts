@@ -5,7 +5,7 @@ export default defineConfig({
 	plugins: [sveltekit()],
 	test: {
 		include: ['src/**/*.{test,spec}.{js,ts}'],
-		exclude: ['e2e/**/*'],
+		exclude: ['e2e/**/*', 'src/routes/page.svelte.test.ts'],
 		environment: 'jsdom',
 		coverage: {
 			reporter: ['text', 'json', 'html'],

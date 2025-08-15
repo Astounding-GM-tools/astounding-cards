@@ -105,9 +105,9 @@ export async function initializeOfficialPresets() {
       }
     }
     
-    console.log('Official game presets initialized');
+    // Official game presets initialized
   } catch (error) {
-    console.error('Failed to initialize official presets:', error);
+    // Surface via caller if needed; keep console clean in production
   }
 }
 

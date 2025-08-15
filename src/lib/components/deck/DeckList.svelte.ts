@@ -14,7 +14,6 @@ export function sortDecksByLastEdited(decks: Deck[]): Deck[] {
  */
 export function createDeckChangeHandler(deckList: DeckListStore) {
   return async function handleDeckChange(event: CustomEvent<{ action: string, deckId: string }>) {
-    console.log('DeckList received deckchange event:', event.detail);
     // For all actions, reload the deck list from the database
     await deckList.load();
   };

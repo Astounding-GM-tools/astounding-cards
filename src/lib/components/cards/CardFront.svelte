@@ -149,7 +149,7 @@
         showImageSelector = false;
       }
     } catch (error) {
-      console.error('Failed to save image:', error);
+      // Failed to save image
       throw error; // Re-throw so ImageSelector can handle it
     }
   }

@@ -232,7 +232,7 @@
       // Reload the deck list to reflect the change
       await deckList.load();
     } catch (e) {
-      console.error('Failed to delete deck:', e);
+      // Error surfaced via toast below
       toasts.error('Failed to delete deck');
     } finally {
       deleting = false;
@@ -259,14 +259,14 @@
       const newDeck = await duplicateDeck(deck, newDeckName);
       currentDeck.set(newDeck);
       currentDeckId.set(newDeck.id);
-      console.log('Emitting duplicate event for deck:', newDeck.id);
+      // Emit duplicate event for deck
       emitDeckChange({ action: 'duplicate', deckId: newDeck.id });
       showDuplicateDialog = false;
       toasts.success('Deck duplicated successfully');
       // Reload the deck list to reflect the change
       await deckList.load();
     } catch (e) {
-      console.error('Failed to duplicate deck:', e);
+      // Error surfaced via toast below
       toasts.error('Failed to duplicate deck');
     } finally {
       duplicating = false;
@@ -404,7 +404,6 @@
       }
     } catch (error) {
       toasts.error('Failed to save vocabulary');
-      console.error('Failed to save vocabulary:', error);
     } finally {
       applyingVocabulary = false;
     }
@@ -696,7 +695,7 @@
       <h2 id="theme-dialog-title">Select Theme</h2>
       <ThemeSelect
         selectedTheme={deck.meta.theme}
-        onSelect={handleThemeChange}
+        onSelect={(themeId: string) => handleThemeChange(themeId)}
       />
       <div class="dialog-buttons">
         <button 
@@ -789,7 +788,7 @@
       <div class="theme-select-wrapper">
         <ThemeSelect
           selectedTheme={selectedThemeForCards}
-          onSelect={(themeId) => {
+          onSelect={(themeId: string) => {
             selectedThemeForCards = themeId;
             executeChangeTheme();
           }}

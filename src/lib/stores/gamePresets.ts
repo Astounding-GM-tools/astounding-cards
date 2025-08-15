@@ -35,7 +35,7 @@ export const presetActions = {
       const presets = await getAllGamePresets();
       gamePresets.set(presets);
     } catch (error) {
-      console.error('Failed to load game presets:', error);
+    // Failed to load game presets
       gamePresets.set([]);
     } finally {
       presetsLoading.set(false);
@@ -66,7 +66,7 @@ export const presetActions = {
         return [...presets];
       });
     } catch (error) {
-      console.error('Failed to save preset:', error);
+    // Failed to save preset
       throw error;
     }
   },
@@ -83,7 +83,7 @@ export const presetActions = {
         presets.filter(p => p.id !== id)
       );
     } catch (error) {
-      console.error('Failed to delete preset:', error);
+    // Failed to delete preset
       throw error;
     }
   },

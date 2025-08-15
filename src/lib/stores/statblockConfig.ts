@@ -44,7 +44,7 @@ export const configActions = {
       const configs = await getAllStatblockConfigs();
       statblockConfigs.set(configs);
     } catch (error) {
-      console.error('Failed to load statblock configs:', error);
+    // Failed to load statblock configs
       configsError.set(error instanceof Error ? error.message : 'Unknown error');
       statblockConfigs.set([]);
     } finally {
@@ -66,7 +66,7 @@ export const configActions = {
       }
       
     } catch (error) {
-      console.error('Failed to initialize official configs:', error);
+    // Failed to initialize official configs
       throw error;
     }
   },
@@ -95,7 +95,7 @@ export const configActions = {
         return [...configs];
       });
     } catch (error) {
-      console.error('Failed to save statblock config:', error);
+    // Failed to save statblock config
       throw error;
     }
   },
@@ -112,7 +112,7 @@ export const configActions = {
         configs.filter(c => c.id !== id)
       );
     } catch (error) {
-      console.error('Failed to delete statblock config:', error);
+    // Failed to delete statblock config
       throw error;
     }
   },
@@ -200,7 +200,7 @@ export const configActions = {
       // Reload
       await this.load();
     } catch (error) {
-      console.error('Failed to reset to defaults:', error);
+    // Failed to reset to defaults
       throw error;
     }
   }

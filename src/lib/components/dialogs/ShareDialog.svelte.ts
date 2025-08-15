@@ -96,7 +96,6 @@ export async function shareAsUrl(deck: Deck): Promise<void> {
     await navigator.clipboard.writeText(shareUrl);
     toasts.success('Share URL copied! Send this URL to share your deck.');
   } catch (err) {
-    console.error('Failed to copy URL:', err);
     toasts.error('Failed to copy URL to clipboard');
   }
 }
@@ -111,14 +110,18 @@ export async function shareAsJson(deck: Deck): Promise<void> {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${deck.meta.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.json`;
+    const filename = `${deck.meta.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.json`;
+    // Set property; set attribute only if available (for simple mocks)
+    (a as HTMLAnchorElement).download = filename;
+    if (typeof (a as any).setAttribute === 'function') {
+      a.setAttribute('download', filename);
+    }
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
     toasts.success('JSON file downloaded successfully');
   } catch (err) {
-    console.error('Failed to download JSON:', err);
     toasts.error('Failed to download JSON file');
   }
 }

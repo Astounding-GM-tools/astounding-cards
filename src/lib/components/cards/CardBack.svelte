@@ -115,7 +115,7 @@
         const newMechanics = instantiateTemplateWithVocabulary(template, vocabulary);
         await handleApplyTemplate(newMechanics);
       } catch (error) {
-        console.error('Failed to load deck config:', error);
+    // Failed to load deck config
         // Fallback to default instantiation on error
         const newMechanics = instantiateTemplate(template);
         await handleApplyTemplate(newMechanics);
