@@ -1,11 +1,10 @@
 .card {
-    font-size: 3cqw;
-
     display: flex;
     flex-direction: column;
     aspect-ratio: 5/7;
+    flex: 0 0 auto;
     position: relative;
-    padding: 8px;
+    padding: 2%;
 
     container-type: inline-size;
     container-name: card;
@@ -16,7 +15,7 @@
     position: absolute;
     width: var(--page-padding);
     height: var(--page-padding);
-    border: 1px solid #000;
+    border: 0.25mm solid #000;
     z-index: 1;
 }
 
@@ -47,4 +46,3 @@
     border-right-style: none;
     border-bottom-style: none;
 }
-

@@ -5,30 +5,13 @@
     import StatFocus from '$lib/next/components/stats/StatFocus.svelte';
     import StatBlock from '$lib/next/components/stats/StatBlock.svelte';
     import TraitList from '$lib/next/components/traits/TraitList.svelte';
-    import type { Card as CardType } from '$lib/next/types/card';
+
+    import { mockDeck } from './mocks';
     
     let isPoker = false;
-
-    const mockCard: CardType = {
-        id: 'test-1',
-        name: 'Mountain Pass',
-        subtitle: 'Treacherous Route',
-        description: 'A narrow passage through the mountains',
-        image: null,
-        traits: [
-            { label: 'Terrain', value: 'Mountain', isPublic: true },
-            { label: 'Climate', value: 'Cold', isPublic: true },
-            { label: 'Secret', value: 'Hidden Cave', isPublic: false }
-        ],
-        stats: [
-            { id: 'defense', name: 'Defense', value: 15, tracked: false, isPublic: true },
-            { id: 'population', name: 'Population', value: '50 Bandits', tracked: false, isPublic: false },
-            { id: 'area', name: 'Area', value: '2 miles', tracked: false, isPublic: true }
-        ]
-    };
 </script>
 
-<section class="test-layout">
+<section class="deck">
     <h1>New Card Layout Test</h1>
     
     <label>
@@ -38,30 +21,45 @@
     
     <Page layout={isPoker ? 'poker' : 'tarot'}>
         <!-- Front of card - role as subtitle -->
-        <Card>
-            <div class="front">
-                <Header title={mockCard.name} subtitle={mockCard.subtitle} />
-                <StatFocus />
+         {#each mockDeck as card}
+            <Card>
+                <Header 
+                    title={card.name} 
+                    subtitle={card.subtitle} 
+                />
+                <StatFocus stats={card.stats} />
                 <TraitList />
-            </div>
-        </Card>
+            </Card>
+        {/each}
+    </Page>
 
-        <!-- Back of card - description as subtitle -->
-        <Card>
-            <div class="back">
-                <Header title={mockCard.name} subtitle={mockCard.description} />
+    <Page layout={isPoker ? 'poker' : 'tarot'}>
+        {#each mockDeck as card}
+            <Card>
+                <Header 
+                    back
+                    title={card.name} 
+                    subtitle={card.description} 
+                 />
                 <StatBlock />
-                <TraitList />
-            </div>
-        </Card>
+                <TraitList back />
+            </Card>
+        {/each}
     </Page>
 </section>
 
 <style>
-    .test-layout {
+    .deck {
         margin: 20px auto;
-        width: 100%;
-        max-width: 1000px;
+    }
+
+    :global(.page), :global(.page *) {
+        box-sizing: border-box;
+    }
+
+    :global(body) {
+        margin: 0;
+        padding: 0;
     }
     
     h1 {
@@ -71,23 +69,5 @@
     label {
         display: block;
         margin-bottom: 1rem;
-    }
-
-    .front, .back {
-        height: 100%;
-        padding: var(--card-padding);
-        display: flex;
-        flex-direction: column;
-        gap: var(--section-spacing);
-    }
-
-    .front {
-        background: var(--color-background);
-        color: var(--color-text);
-    }
-
-    .back {
-        background: white;
-        color: black;
     }
 </style>

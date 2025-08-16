@@ -1,6 +1,14 @@
 .header {
     display: flex;
     flex-direction: column;
+    margin-top: auto;
+    max-width: 100cqw;
+    font-size: var(--font-size);
+}
+
+.header.back {
+    color: var(--color);
+    margin-top: 1em;
 }
 
 .header-title {

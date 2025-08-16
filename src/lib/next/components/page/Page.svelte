@@ -22,6 +22,10 @@
         /* Default grid: tarot layout */
         grid-template-columns: repeat(2, 1fr);
         grid-template-rows: repeat(2, 1fr);
+        margin: 0 auto;
+        min-width: 210mm;
+        max-width: 215.9mm;
+        width: 100%;
     }
 
     .page[data-layout="poker"] {
