@@ -32,7 +32,7 @@ describe('CardStatSelector Component Integration', () => {
 
   it('should create initial state correctly', () => {
     const initialStat: CardStat = {
-      type: 'character',
+      statId: 'age',
       value: 'Adult'
     };
 
@@ -50,35 +50,56 @@ describe('CardStatSelector Component Integration', () => {
   it('should extract area names from deck', () => {
     const mockDeck: Deck = {
       id: 'test-deck',
-      name: 'Test Deck',
+      meta: {
+        name: 'Test Deck',
+        theme: 'classic',
+        cardSize: 'poker',
+        lastEdited: Date.now(),
+        createdAt: Date.now()
+      },
       cards: [
         {
           id: '1',
           name: 'Card 1',
+          role: 'Test Role',
+          image: null,
+          traits: [],
+          secrets: [],
+          desc: 'Test description',
           type: 'location',
           stat: {
             type: 'location',
             value: { type: 'soft', value: 'Forest' }
           }
-        },
+        } as Card,
         {
           id: '2', 
           name: 'Card 2',
+          role: 'Test Role',
+          image: null,
+          traits: [],
+          secrets: [],
+          desc: 'Test description',
           type: 'location',
           stat: {
             type: 'location',
             value: { type: 'soft', value: 'Mountain' }
           }
-        },
+        } as Card,
         {
           id: '3',
           name: 'Card 3', 
+          role: 'Test Role',
+          image: null,
+          traits: [],
+          secrets: [],
+          desc: 'Test description',
           type: 'character',
           stat: {
             type: 'character',
             value: 'Young'
           }
-        }
+        } as Card
       ] as Card[]
     };
 
@@ -201,13 +222,13 @@ describe('CardStatSelector Component Integration', () => {
 
     const characterUpdate = createStatUpdate(characterState);
     expect(characterUpdate.statUpdate).toEqual({
-      type: 'character',
+      statId: 'age',
       value: 'Young'
     });
     expect(characterUpdate.updates).toEqual({
       type: 'character',
       stat: {
-        type: 'character',
+        statId: 'age',
         value: 'Young'
       }
     });
@@ -221,7 +242,7 @@ describe('CardStatSelector Component Integration', () => {
 
     const itemUpdate = createStatUpdate(itemState);
     expect(itemUpdate.statUpdate).toEqual({
-      type: 'item',
+      statId: 'portability',
       value: 'medium'
     });
 
@@ -234,7 +255,7 @@ describe('CardStatSelector Component Integration', () => {
 
     const locationUpdate = createStatUpdate(locationState);
     expect(locationUpdate.statUpdate).toEqual({
-      type: 'location',
+      statId: 'area',
       value: { type: 'soft', value: 'Mountain Peak' }
     });
 
@@ -270,13 +291,13 @@ describe('CardStatSelector Component Integration', () => {
     const hardLinkResult = processLocationInput('📍 Forest', locationCards);
     expect(hardLinkResult.isHardLink).toBe(true);
     expect(hardLinkResult.statUpdate).toEqual({
-      type: 'location',
+      statId: 'area',
       value: { type: 'hard', value: '1' }
     });
     expect(hardLinkResult.updates).toEqual({
       type: 'location',
       stat: {
-        type: 'location',
+        statId: 'area',
         value: { type: 'hard', value: '1' }
       }
     });
@@ -293,23 +314,23 @@ describe('CardStatSelector Component Integration', () => {
   });
 
   it('should sync display stat correctly', () => {
-    const currentStat: CardStat = {
+    const currentStat = {
       type: 'character',
       value: 'Adult'
     };
 
-    const newStat: CardStat = {
-      type: 'character', 
+    const newStat = {
+      type: 'character',
       value: 'Elder'
     };
 
     // Test when stats are different
     const syncedStat = syncDisplayStat(newStat, currentStat);
-    expect(syncedStat).toEqual(newStat);
+    expect(syncedStat).toEqual({ statId: 'age', value: 'Elder' });
 
     // Test when stats are the same
     const sameStat = syncDisplayStat(currentStat, currentStat);
-    expect(sameStat).toEqual(currentStat);
+    expect(sameStat).toEqual({ statId: 'age', value: 'Adult' });
 
     // Test with undefined values
     const syncedUndefined = syncDisplayStat(undefined, currentStat);

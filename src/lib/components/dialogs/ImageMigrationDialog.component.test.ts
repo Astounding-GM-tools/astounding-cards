@@ -28,25 +28,53 @@ describe('ImageMigrationDialog Component Integration', () => {
     {
       id: '1',
       name: 'Card 1',
+      role: 'Test Role',
       image: 'blob:local',
-      imageBlob: new Blob(['old-image'], { type: 'image/png' })
+      imageBlob: new Blob(['old-image'], { type: 'image/png' }),
+      traits: [],
+      secrets: [],
+      desc: 'Test description',
+      type: 'character',
+      stats: [],
+      mechanics: []
     } as Card,
     {
       id: '2',
       name: 'Card 2',
+      role: 'Test Role',
       image: 'some-invalid-url',
-      imageBlob: null
+      imageBlob: null,
+      traits: [],
+      secrets: [],
+      desc: 'Test description',
+      type: 'character',
+      stats: [],
+      mechanics: []
     } as Card,
     {
       id: '3',
       name: 'Card 3',
+      role: 'Test Role',
       image: 'https://example.com/valid-image.jpg',
-      imageBlob: null
+      imageBlob: null,
+      traits: [],
+      secrets: [],
+      desc: 'Test description',
+      type: 'character',
+      stats: [],
+      mechanics: []
     } as Card,
     {
       id: '4',
       name: 'Card 4',
-      image: null
+      role: 'Test Role',
+      image: null,
+      traits: [],
+      secrets: [],
+      desc: 'Test description',
+      type: 'character',
+      stats: [],
+      mechanics: []
     } as Card
   ];
 

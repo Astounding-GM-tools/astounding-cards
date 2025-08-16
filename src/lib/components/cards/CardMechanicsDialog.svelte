@@ -16,8 +16,8 @@
   const card = props.card;
   const onclose = props.onclose;
   
-  let dialogElement = $state<HTMLDialogElement | null>(null);
-  let state = $state<MechanicsDialogState>(initializeMechanicsDialogState());
+  let dialogElement: HTMLDialogElement | null = null;
+  let state: MechanicsDialogState = initializeMechanicsDialogState();
   
   // Show dialog when mounted
   $effect(() => {

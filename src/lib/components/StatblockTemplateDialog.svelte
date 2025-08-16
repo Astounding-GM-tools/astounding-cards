@@ -23,7 +23,7 @@
   }>();
   
   let selectedTemplate: StatblockTemplate | null = $state(null);
-  let selectedCategory: StatblockTemplate['category'] = $state('character');
+
   let dialogElement = $state<HTMLDialogElement | null>(null);
   let vocabulary: StatblockVocabulary | null = $state(null);
   
@@ -54,21 +54,25 @@
   });
   
   // Get templates by category
+  type CategoryKey = 'character' | 'item' | 'spell' | 'other';
+  
   const categories = [
-    { key: 'character', label: 'Character', icon: '👤' },
-    { key: 'item', label: 'Item', icon: '⚔️' },
-    { key: 'spell', label: 'Ability', icon: '✨' },
-    { key: 'other', label: 'Custom', icon: '📋' }
-  ] as const;
+    { key: 'character' as const, label: 'Character', icon: '👤' },
+    { key: 'item' as const, label: 'Item', icon: '⚔️' },
+    { key: 'spell' as const, label: 'Ability', icon: '✨' },
+    { key: 'other' as const, label: 'Custom', icon: '📋' }
+  ];
+  
+  let selectedCategory: CategoryKey = $state('character');
   
   const templatesForCategory = $derived(
-    selectedCategory === 'other' ? [] : getTemplatesByCategory(selectedCategory)
+    selectedCategory === ('other' as CategoryKey) ? [] : getTemplatesByCategory(selectedCategory)
   );
   
   // Auto-select category based on card type if available
   $effect(() => {
     if (cardType) {
-      const typeMap: Record<string, StatblockTemplate['category']> = {
+      const typeMap: Record<string, CategoryKey> = {
         'character': 'character',
         'creature': 'character', // Map creatures to character category
         'item': 'item',

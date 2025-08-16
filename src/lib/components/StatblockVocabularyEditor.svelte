@@ -106,7 +106,7 @@
             <input
               type="text"
               bind:value={stat.label}
-              oninput={(e) => updateCustomStat(index, e.target.value)}
+              oninput={(e) => updateCustomStat(index, (e.target as HTMLInputElement).value)}
               placeholder="Enter stat name (e.g., Stress, Sanity, Mana)"
             />
             <button

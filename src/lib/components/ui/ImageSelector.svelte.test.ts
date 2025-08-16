@@ -104,7 +104,12 @@ describe('ImageSelector Pure Logic Functions', () => {
       const mockBlob = createMockBlob();
       const mockPreviewUrl = 'blob:http://localhost/preview';
 
-      vi.mocked(processImage).mockResolvedValue({ blob: mockBlob });
+      vi.mocked(processImage).mockResolvedValue({ 
+        blob: mockBlob, 
+        width: 100, 
+        height: 100, 
+        format: 'webp' 
+      });
       vi.mocked(createBlobUrl).mockReturnValue(mockPreviewUrl);
 
       const result = await handleFileChange(initialState, mockFile, 'tarot');
@@ -156,7 +161,12 @@ describe('ImageSelector Pure Logic Functions', () => {
       };
 
       vi.mocked(fetch).mockResolvedValue(mockResponse as Response);
-      vi.mocked(processImage).mockResolvedValue({ blob: mockBlob });
+      vi.mocked(processImage).mockResolvedValue({ 
+        blob: mockBlob, 
+        width: 100, 
+        height: 100, 
+        format: 'webp' 
+      });
       vi.mocked(createBlobUrl).mockReturnValue(mockPreviewUrl);
 
       const result = await handleUrlLoad(initialState, 'tarot');

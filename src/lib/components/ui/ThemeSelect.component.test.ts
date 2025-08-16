@@ -13,13 +13,16 @@ describe('ThemeSelect Component Integration', () => {
       id: 'test-theme',
       name: 'Test Theme',
       description: 'A test theme',
+      colors: { primary: '#000', secondary: '#fff' },
+      typography: { fontFamily: 'Arial', fontSize: '14px' },
+      decoration: { border: 'none' },
       preview: {
         title: 'Preview Title',
         role: 'Preview Role',
         traits: ['trait1', 'trait2'],
         portrait: 'test-portrait.jpg'
       }
-    };
+    } as any;
     
     const card = module.createPreviewCard(mockTheme);
     
@@ -37,8 +40,11 @@ describe('ThemeSelect Component Integration', () => {
     const mockTheme = {
       id: 'minimal-theme',
       name: 'Minimal Theme',
-      description: 'A minimal theme'
-    };
+      description: 'A minimal theme',
+      colors: { primary: '#000', secondary: '#fff' },
+      typography: { fontFamily: 'Arial', fontSize: '14px' },
+      decoration: { border: 'none' }
+    } as any;
     
     const card = module.createPreviewCard(mockTheme);
     

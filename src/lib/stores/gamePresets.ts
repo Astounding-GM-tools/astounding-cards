@@ -148,7 +148,7 @@ export const presetActions = {
       })),
       mechanics: preset.backMechanics.map(mechanic => ({
         mechanicId: mechanic.id,
-        value: mechanic.defaultValue
+        value: mechanic.value || ''
       }))
     }));
   }

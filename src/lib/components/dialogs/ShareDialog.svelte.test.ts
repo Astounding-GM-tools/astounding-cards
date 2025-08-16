@@ -63,19 +63,22 @@ const createMockDeck = (cards: Card[] = []): Deck => ({
     cardSize: 'poker',
     lastEdited: Date.now(),
     createdAt: Date.now(),
-    version: '1.0'
+
   },
   cards
 });
 
-const createMockCard = (image?: string): Card => ({
+const createMockCard = (image?: string | null): Card => ({
   id: 'test-card',
   name: 'Test Card',
+  role: 'Test Role',
+  image: image || null,
+  traits: [],
+  secrets: [],
+  desc: 'Test description',
   type: 'character',
-  traits: {},
   stats: [],
-  mechanics: [],
-  image
+  mechanics: []
 });
 
 describe('ShareDialog Pure Logic Functions', () => {

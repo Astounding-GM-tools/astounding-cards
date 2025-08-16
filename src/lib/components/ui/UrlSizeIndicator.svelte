@@ -6,7 +6,7 @@
     getUrlSizeInfo,
     getWarningMessage,
     type UrlSizeInfo
-  } from './UrlSizeIndicator.svelte';
+  } from './UrlSizeIndicator.svelte.ts';
 
   const props = $props();
   const deck = props.deck as Deck;

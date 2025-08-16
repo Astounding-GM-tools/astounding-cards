@@ -99,7 +99,17 @@ export function initializeFormValues(
       newState.formArea = card.stat.value.value;
     } else if (card.stat.value.type === 'hard') {
       // For hard links, show the formatted display with the pin icon
-      const locationCards = getLocationCards({ cards: [] } as Deck, card.id);
+      const locationCards = getLocationCards({ 
+        id: 'temp', 
+        cards: [], 
+        meta: { 
+          name: 'temp', 
+          theme: 'classic', 
+          cardSize: 'poker', 
+          lastEdited: 0, 
+          createdAt: 0 
+        } 
+      } as Deck, card.id);
       newState.formArea = formatLocationDisplay(card.stat.value, locationCards);
     }
   }
@@ -128,20 +138,20 @@ export function createStatUpdate(state: CardStatSelectorState): {
   
   if (state.formType === 'location') {
     statUpdate = {
-      type: 'location',
+      statId: 'area',
       value: { type: 'soft', value: state.formArea }
-    };
+    } as any;
   } else if (state.formType === 'character') {
-    statUpdate = { type: 'character', value: state.formAge };
+    statUpdate = { statId: 'age', value: state.formAge } as any;
   } else {
-    statUpdate = { type: 'item', value: state.formPortability };
+    statUpdate = { statId: 'portability', value: state.formPortability } as any;
   }
 
   return {
     statUpdate,
     updates: {
       type: state.formType,
-      stat: statUpdate
+      stat: statUpdate as any
     }
   };
 }
@@ -175,13 +185,13 @@ export function processLocationInput(
     const locationCard = locationCards.find(c => `📍 ${c.name}` === value);
     if (locationCard) {
       const statUpdate = {
-        type: 'location' as const,
+        statId: 'area',
         value: { type: 'hard' as const, value: locationCard.id }
-      };
+      } as any;
       
       const updates = {
         type: 'location' as const,
-        stat: statUpdate
+        stat: statUpdate as any
       };
       
       return {
@@ -198,14 +208,31 @@ export function processLocationInput(
 // === Synchronization Functions ===
 
 /**
+ * Converts a legacy stat to the new format
+ */
+function convertLegacyStatToNew(stat: LegacyCardStat): CardStat {
+  switch (stat.type) {
+    case 'character':
+      return { statId: 'age', value: stat.value };
+    case 'item':
+      return { statId: 'portability', value: stat.value };
+    case 'location':
+      return { statId: 'area', value: stat.value };
+  }
+}
+
+/**
  * Syncs display stat with store updates
  */
 export function syncDisplayStat(
-  currentStoreStat: CardStat | undefined,
+  currentStoreStat: LegacyCardStat | undefined,
   currentDisplayStat: CardStat | undefined
 ): CardStat | undefined {
-  if (JSON.stringify(currentStoreStat) !== JSON.stringify(currentDisplayStat)) {
-    return currentStoreStat;
+  if (!currentStoreStat) return undefined;
+  
+  const newStat = convertLegacyStatToNew(currentStoreStat);
+  if (JSON.stringify(newStat) !== JSON.stringify(currentDisplayStat)) {
+    return newStat;
   }
   return currentDisplayStat;
 }

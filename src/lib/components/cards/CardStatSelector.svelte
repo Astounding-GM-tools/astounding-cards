@@ -14,7 +14,7 @@
     processLocationInput,
     syncDisplayStat,
     type CardStatSelectorState
-  } from './CardStatSelector.svelte';
+  } from './CardStatSelector.svelte.ts';
   
   const props = $props<{
     card: Card;
@@ -112,19 +112,19 @@
 <!-- Stat Display/Trigger -->
 {#if state.displayStat}
   <button 
-    class="stat-display {state.displayStat.type}"
+    class="stat-display {state.displayStat.statId}"
     class:updating={isUpdating}
     onclick={openDialog}
     disabled={isUpdating}
   >
     {#if isUpdating}
       <span class="updating-text">Updating...</span>
-    {:else if state.displayStat.type === 'character'}
+    {:else if state.displayStat.statId === 'age'}
       Age: {state.displayStat.value}
-    {:else if state.displayStat.type === 'item'}
+    {:else if state.displayStat.statId === 'portability'}
       {state.displayStat.value}
-    {:else if state.displayStat.type === 'location'}
-      {formatLocationDisplay(state.displayStat.value, locationCards)}
+    {:else if state.displayStat.statId === 'area' && typeof state.displayStat.value === 'object' && 'type' in state.displayStat.value}
+      {formatLocationDisplay(state.displayStat.value as { type: 'hard' | 'soft', value: string }, locationCards)}
     {/if}
   </button>
 {:else}

@@ -22,9 +22,12 @@ function createBasicCard(overrides: Partial<Card> = {}): Card {
     id: 'test-card',
     name: 'Test Card',
     role: 'Test Role',
-    desc: 'Test description',
+    image: null,
     traits: [],
     secrets: [],
+    desc: 'Test description',
+    type: 'character',
+    stats: [],
     mechanics: [],
     ...overrides
   };
@@ -73,7 +76,6 @@ describe('CardFront Logic', () => {
 
     it('detects image URL change', () => {
       const card = createBasicCard({
-        imageBlob: null,
         image: 'new-url'
       });
       

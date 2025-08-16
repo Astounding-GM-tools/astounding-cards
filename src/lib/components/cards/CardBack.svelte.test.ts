@@ -13,7 +13,7 @@ import {
   isEditableMode,
   shouldBeContentEditable
 } from './CardBack.svelte.js';
-import type { Card } from '$lib/types';
+import { MechanicType, type Card } from '$lib/types';
 import type { StatblockTemplate } from '$lib/statblockTemplates';
 
 describe('CardBack Pure Logic - Only Used Functions', () => {
@@ -25,11 +25,14 @@ describe('CardBack Pure Logic - Only Used Functions', () => {
     mockCard = {
       id: 'test-card',
       name: 'Test Card',
+      role: 'Test Role',
+      image: null,
+      traits: [],
+      secrets: [],
       desc: 'Test description',
-      imageUrl: '',
+      type: 'character',
       stats: [],
-      mechanics: [],
-      secrets: []
+      mechanics: []
     };
 
     mockDeckCards = [
@@ -37,11 +40,14 @@ describe('CardBack Pure Logic - Only Used Functions', () => {
       {
         id: 'other-card',
         name: 'Other Card',
+        role: 'Other Role',
+        image: null,
+        traits: [],
+        secrets: [],
         desc: 'Other description',
-        imageUrl: '',
+        type: 'character',
         stats: [],
-        mechanics: [],
-        secrets: []
+        mechanics: []
       }
     ];
 
@@ -49,13 +55,15 @@ describe('CardBack Pure Logic - Only Used Functions', () => {
       id: 'test-template',
       name: 'Test Template',
       description: 'Test template description',
-      cardType: 'character',
+      category: 'character',
+      icon: '👤',
       mechanics: [
         {
           name: 'Test Mechanic',
+          value: '',
           description: 'Test mechanic description',
-          cost: '',
-          tags: []
+          tracked: false,
+          type: MechanicType.HEALTH
         }
       ]
     };
@@ -108,7 +116,7 @@ describe('CardBack Pure Logic - Only Used Functions', () => {
   describe('processNameFromBlur', () => {
     it('extracts trimmed name from blur event', () => {
       const mockTarget = { textContent: '  Test Name  ' };
-      const mockEvent = { target: mockTarget } as FocusEvent;
+      const mockEvent = { target: mockTarget } as unknown as FocusEvent;
       
       const result = processNameFromBlur(mockEvent);
       expect(result).toBe('Test Name');
@@ -116,7 +124,7 @@ describe('CardBack Pure Logic - Only Used Functions', () => {
 
     it('returns empty string for null textContent', () => {
       const mockTarget = { textContent: null };
-      const mockEvent = { target: mockTarget } as FocusEvent;
+      const mockEvent = { target: mockTarget } as unknown as FocusEvent;
       
       const result = processNameFromBlur(mockEvent);
       expect(result).toBe('');

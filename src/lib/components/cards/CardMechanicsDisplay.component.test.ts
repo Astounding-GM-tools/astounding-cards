@@ -21,15 +21,14 @@ describe('CardMechanicsDisplay Component Integration', () => {
     // Create mock card to verify type compatibility
     const mockCard: Card = {
       id: 'test-card',
-      deckId: 'test-deck', 
       name: 'Test Card',
-      type: 'character',
+      role: 'Test Role',
       image: null,
-      imageBlob: null,
-      mechanics: [],
-      description: 'Test description',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      traits: [],
+      secrets: [],
+      desc: 'Test description',
+      type: 'character',
+      mechanics: []
     };
 
     // Verify prop types are correct (TypeScript compilation check)

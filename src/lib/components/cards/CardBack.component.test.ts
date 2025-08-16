@@ -7,11 +7,14 @@ describe('CardBack Component Integration', () => {
   const mockCard: Card = {
     id: 'test-card',
     name: 'Test Card',
+    role: 'Test Role',
+    image: null,
+    traits: [],
+    secrets: [],
     desc: 'Test description',
-    imageUrl: '',
+    type: 'character',
     stats: [],
-    mechanics: [],
-    secrets: []
+    mechanics: []
   };
 
   // Test that CardBack can be instantiated and imports work
@@ -51,7 +54,7 @@ describe('CardBack Component Integration', () => {
 
   it('should be able to create component props without errors', () => {
     // Test that we can create valid component props
-    const props: ComponentProps<CardBack> = {
+    const props = {
       card: mockCard,
       theme: 'classic',
       preview: false,

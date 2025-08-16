@@ -252,7 +252,7 @@
     </div>
   </dialog>
 
-  <PrintInstructions bind:dialog={printDialog} />
+  <PrintInstructions dialog={printDialog} />
 
   <!-- Main content -->
    <h1>{$currentDeck?.meta.name || "Astounding Game Cards" }</h1>

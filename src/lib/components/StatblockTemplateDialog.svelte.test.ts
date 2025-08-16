@@ -5,6 +5,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
+import { MechanicType } from '$lib/types';
 import {
   mapCardTypeToCategory,
   selectTemplate,
@@ -35,8 +36,8 @@ const mockTemplate: StatblockTemplate = {
   category: 'character',
   icon: '🧪',
   mechanics: [
-    { type: 'health', name: 'Health', value: '10' },
-    { type: 'strength', name: 'Strength', value: '15' }
+    { type: MechanicType.HEALTH, name: 'Health', value: '10', tracked: false },
+    { type: 'strength', name: 'Strength', value: '15', tracked: false }
   ]
 };
 
@@ -47,9 +48,9 @@ const mockItemTemplate: StatblockTemplate = {
   category: 'item',
   icon: '⚔️',
   mechanics: [
-    { type: 'damage', name: 'Damage', value: '1d6' },
-    { type: 'weight', name: 'Weight', value: '2 lbs' },
-    { type: 'value', name: 'Value', value: '50gp' }
+    { type: MechanicType.ATTACK, name: 'Damage', value: '1d6', tracked: false },
+    { type: MechanicType.RESOURCE, name: 'Weight', value: '2 lbs', tracked: false },
+    { type: MechanicType.RESOURCE, name: 'Value', value: '50gp', tracked: false }
   ]
 };
 
@@ -351,7 +352,7 @@ describe('StatblockTemplateDialog Pure Logic Functions', () => {
     it('should handle templates with different mechanic counts', () => {
       const singleMechanicTemplate: StatblockTemplate = {
         ...mockTemplate,
-        mechanics: [{ type: 'health', name: 'Health', value: '10' }]
+        mechanics: [{ type: MechanicType.HEALTH, name: 'Health', value: '10', tracked: false }]
       };
       expect(getConfirmButtonText(singleMechanicTemplate, 'character')).toBe('Add 1 Stats');
 

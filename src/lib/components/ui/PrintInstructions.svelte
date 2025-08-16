@@ -35,7 +35,7 @@
     <h2>🖨️ Print Instructions</h2>
     <button 
       class="close-button"
-      onclick={() => closeDialog(dialogElement)}
+      onclick={() => dialogElement && closeDialog(dialogElement)}
     >
       ×
     </button>

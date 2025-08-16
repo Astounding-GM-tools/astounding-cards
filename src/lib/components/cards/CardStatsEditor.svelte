@@ -284,7 +284,7 @@
             <input
               type="text"
               bind:value={stat.value}
-              onchange={(e) => updateStatValueHandler(stat.statId, e.target.value)}
+              onchange={(e) => updateStatValueHandler(stat.statId, (e.target as HTMLInputElement).value)}
               placeholder="Value"
             />
             <button 

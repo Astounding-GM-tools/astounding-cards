@@ -30,15 +30,14 @@ describe('CardMechanicsEditor Logic', () => {
   // Helper to create test card
   const createTestCard = (overrides: Partial<Card> = {}): Card => ({
     id: 'test-card',
-    deckId: 'test-deck',
     name: 'Test Card',
-    type: 'character',
+    role: 'Test Role',
     image: null,
-    imageBlob: null,
+    traits: [],
+    secrets: [],
+    desc: 'Test card',
+    type: 'character',
     mechanics: [],
-    description: 'Test card',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
     ...overrides
   });
 
@@ -356,14 +355,14 @@ describe('CardMechanicsEditor Logic', () => {
     });
 
     it('should return true when mechanics are added', () => {
-      const original = [];
+      const original: CardMechanic[] = [];
       const current = [createTestMechanic()];
       expect(hasChanges(original, current)).toBe(true);
     });
 
     it('should return true when mechanics are removed', () => {
       const original = [createTestMechanic()];
-      const current = [];
+      const current: CardMechanic[] = [];
       expect(hasChanges(original, current)).toBe(true);
     });
 
@@ -381,9 +380,9 @@ describe('CardMechanicsEditor Logic', () => {
       expect(hasChanges(original, current)).toBe(true);
     });
 
-    it('should handle deep object comparison', () => {
-      const original = [createTestMechanic({ value: { complex: 'object' } })];
-      const current = [createTestMechanic({ value: { complex: 'object' } })];
+    it('should handle string value comparison', () => {
+      const original = [createTestMechanic({ value: 'test-value' })];
+      const current = [createTestMechanic({ value: 'test-value' })];
       expect(hasChanges(original, current)).toBe(false);
     });
   });

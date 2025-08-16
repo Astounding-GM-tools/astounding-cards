@@ -13,11 +13,15 @@ describe('Card Component Integration', () => {
   it('should resolve active theme correctly', () => {
     const deck: Deck = {
       id: 'test-deck',
-      name: 'Test Deck',
+      cards: [],
       meta: {
-        theme: 'dark'
+        name: 'Test Deck',
+        theme: 'dark',
+        cardSize: 'poker',
+        lastEdited: Date.now(),
+        createdAt: Date.now()
       }
-    } as Deck;
+    };
 
     // Test with prop theme (highest priority)
     expect(resolveActiveTheme('custom', deck)).toBe('custom');
@@ -35,7 +39,14 @@ describe('Card Component Integration', () => {
     // Test with deck without meta
     const deckWithoutMeta = {
       id: 'test-deck-2',
-      name: 'Test Deck 2'
+      cards: [],
+      meta: {
+        name: 'Test Deck 2',
+        theme: 'classic',
+        cardSize: 'poker',
+        lastEdited: Date.now(),
+        createdAt: Date.now()
+      }
     } as Deck;
     expect(resolveActiveTheme(undefined, deckWithoutMeta)).toBe('classic');
   });

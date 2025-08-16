@@ -37,9 +37,9 @@ describe('DeckManager Logic', () => {
 
   beforeEach(() => {
     mockCards = [
-      { id: 'card1', name: 'Card 1', role: 'Role 1', desc: 'Desc 1', type: 'character', traits: [], secrets: [], stat: { type: 'character', value: '' } },
-      { id: 'card2', name: 'Card 2', role: 'Role 2', desc: 'Desc 2', type: 'character', traits: [], secrets: [], stat: { type: 'character', value: '' } },
-      { id: 'card3', name: 'Card 3', role: 'Role 3', desc: 'Desc 3', type: 'character', traits: [], secrets: [], stat: { type: 'character', value: '' } }
+      { id: 'card1', name: 'Card 1', role: 'Role 1', image: null, desc: 'Desc 1', type: 'character', traits: [], secrets: [], stat: { type: 'character', value: '' } } as Card,
+      { id: 'card2', name: 'Card 2', role: 'Role 2', image: null, desc: 'Desc 2', type: 'character', traits: [], secrets: [], stat: { type: 'character', value: '' } } as Card,
+      { id: 'card3', name: 'Card 3', role: 'Role 3', image: null, desc: 'Desc 3', type: 'character', traits: [], secrets: [], stat: { type: 'character', value: '' } } as Card
     ];
 
     mockDeck = {

@@ -21,11 +21,15 @@ describe('CardBase Component Integration', () => {
   it('should resolve active theme correctly', () => {
     const deck: Deck = {
       id: 'test-deck',
-      name: 'Test Deck',
+      cards: [],
       meta: {
-        theme: 'dark'
+        name: 'Test Deck',
+        theme: 'dark',
+        cardSize: 'poker',
+        lastEdited: Date.now(),
+        createdAt: Date.now()
       }
-    } as Deck;
+    };
 
     // Test with prop theme (highest priority)
     expect(resolveActiveTheme('custom', deck)).toBe('custom');
@@ -40,19 +44,27 @@ describe('CardBase Component Integration', () => {
   it('should resolve card size correctly', () => {
     const pokerDeck: Deck = {
       id: 'test-deck',
-      name: 'Test Deck',
+      cards: [],
       meta: {
-        cardSize: 'poker'
+        name: 'Test Deck',
+        theme: 'classic',
+        cardSize: 'poker',
+        lastEdited: Date.now(),
+        createdAt: Date.now()
       }
-    } as Deck;
+    };
 
     const tarotDeck: Deck = {
       id: 'test-deck-2',
-      name: 'Test Deck 2',
+      cards: [],
       meta: {
-        cardSize: 'tarot'
+        name: 'Test Deck 2',
+        theme: 'classic',
+        cardSize: 'tarot',
+        lastEdited: Date.now(),
+        createdAt: Date.now()
       }
-    } as Deck;
+    };
 
     // Test with prop cardSize (highest priority)
     expect(resolveCardSize('tarot', pokerDeck)).toBe('tarot');
@@ -68,12 +80,15 @@ describe('CardBase Component Integration', () => {
   it('should create complete card base state correctly', () => {
     const deck: Deck = {
       id: 'test-deck',
-      name: 'Test Deck',
+      cards: [],
       meta: {
+        name: 'Test Deck',
         theme: 'dark',
-        cardSize: 'tarot'
+        cardSize: 'tarot',
+        lastEdited: Date.now(),
+        createdAt: Date.now()
       }
-    } as Deck;
+    };
 
     // Test with all props provided
     const state1 = createCardBaseState('custom', true, 'poker', deck);

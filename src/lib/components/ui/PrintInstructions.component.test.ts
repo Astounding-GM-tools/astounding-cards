@@ -51,21 +51,27 @@ describe('PrintInstructions Component Integration', () => {
   it('should get current card size from deck', () => {
     const pokerDeck: Deck = {
       id: 'test-deck',
-      name: 'Test Deck',
+      cards: [],
       meta: {
-        cardSize: 'poker'
-      },
-      cards: []
-    } as Deck;
+        name: 'Test Deck',
+        theme: 'classic',
+        cardSize: 'poker',
+        lastEdited: Date.now(),
+        createdAt: Date.now()
+      }
+    };
 
     const tarotDeck: Deck = {
       id: 'test-deck-2',
-      name: 'Test Deck 2',
+      cards: [],
       meta: {
-        cardSize: 'tarot'
-      },
-      cards: []
-    } as Deck;
+        name: 'Test Deck 2',
+        theme: 'classic',
+        cardSize: 'tarot',
+        lastEdited: Date.now(),
+        createdAt: Date.now()
+      }
+    };
 
     expect(getCurrentCardSize(pokerDeck)).toBe('poker');
     expect(getCurrentCardSize(tarotDeck)).toBe('tarot');
