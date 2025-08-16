@@ -1,0 +1,18 @@
+.header {
+    display: flex;
+    flex-direction: column;
+}
+
+.header-title {
+    font-family: var(--font-title);
+    color: var(--color);
+    margin: 0;
+    font-size: 1.2em;
+}
+
+.header-subtitle {
+    font-family: var(--font-body);
+    color: var(--accent);
+    margin: 0;
+    font-size: 1em;
+}

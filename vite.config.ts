@@ -4,6 +4,11 @@ import { defineConfig } from 'vite';
 
 export default defineConfig({
 	plugins: [sveltekit(), devtoolsJson()],
+	resolve: {
+		alias: {
+			'@styles': '/src/lib/styles'
+		}
+	},
 	test: {
 		projects: [
 			{

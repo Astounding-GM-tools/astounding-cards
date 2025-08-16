@@ -1,0 +1,50 @@
+.card {
+    font-size: 3cqw;
+
+    display: flex;
+    flex-direction: column;
+    aspect-ratio: 5/7;
+    position: relative;
+    padding: 8px;
+
+    container-type: inline-size;
+    container-name: card;
+}
+
+.crop-mark {
+    --crop-offset: calc(-1 * var(--page-padding));
+    position: absolute;
+    width: var(--page-padding);
+    height: var(--page-padding);
+    border: 1px solid #000;
+    z-index: 1;
+}
+
+.crop-mark.top-left {
+    top: var(--crop-offset);
+    left: var(--crop-offset);
+    border-left-style: none;
+    border-top-style: none;
+}
+
+.crop-mark.top-right {
+    top: var(--crop-offset);
+    right: var(--crop-offset);
+    border-right-style: none;
+    border-top-style: none;
+}
+
+.crop-mark.bottom-left {
+    bottom: var(--crop-offset);
+    left: var(--crop-offset);
+    border-left-style: none;
+    border-bottom-style: none;
+}
+
+.crop-mark.bottom-right {
+    bottom: var(--crop-offset);
+    right: var(--crop-offset);
+    border-right-style: none;
+    border-bottom-style: none;
+}
+
