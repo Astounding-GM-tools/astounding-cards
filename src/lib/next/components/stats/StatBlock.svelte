@@ -1,21 +1,76 @@
 <script lang="ts">
+    import type { Stat } from '$lib/next/types/card';
+
+    let { stats = [] } = $props<{
+        stats: Stat[];
+    }>();
+
+    const createTrackBoxes = (count: number) => {
+        let boxes = '';
+
+        if (count > 12) {
+            for (let i = 0; i < count; i++) {
+                boxes += ((i + 1) % 10 === 0) ? '▢' : '⬚';
+            }
+        } else {
+            for (let i = 0; i < count; i++) {
+                boxes += '□';
+            }
+        }
+        return boxes;
+    }
+
 </script>
 
-<span class="stat-block">StatBlock</span>
+<section class="stat-block">
+    {#each stats.filter((stat: Stat) => !stat.isPublic) as stat}
+        <div class="stat-item" data-id={stat.id}>
+            <header class="stat-item-header">
+                <span class="stat-item-label-and-value">
+                    {stat.name}: {stat.value}
+                </span>
+                
+                {#if stat.tracked && typeof stat.value === 'number'}
+                    <span class="stat-item-tracker">
+                        {createTrackBoxes(stat.value)}
+                    </span>
+                {/if}
+            </header>
+
+            {#if stat.description}
+                <div class="stat-item-description">{stat.description}</div>
+            {/if}
+        </div>
+    {/each}
+</section>
 
 <style>
-    .stat-block {
-        padding: 0.5em;
-        background: lightgreen;
-        border-radius: 14px;
-        font-size: 12px;
-        text-align: center;
-        margin: 4px;
-        margin-top: auto;
-        min-height: 40px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        max-width: 100cqw;
+	.stat-block {
+		font-size: var(--font-size);
+		margin-top: auto;
+	}
+
+    .stat-item {
+        margin-bottom: 0.5em;
+    }
+
+    .stat-item-header {        
+        overflow-wrap: break-word;
+        word-break: break-word;
+    }
+
+    .stat-item-label-and-value {
+        white-space: nowrap;
+        margin-right: 0.5em;
+    }
+
+    .stat-item-tracker {
+        font-size: 0.86em;
+        line-height: 0.8;
+    }
+
+    .stat-item-description {
+        font-size: 0.8em;
+        color: var(--color);
     }
 </style>
