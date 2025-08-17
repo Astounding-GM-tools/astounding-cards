@@ -10,5 +10,26 @@
 </header>
 
 <style>
-    @import './Header.css';
+    .header {
+    display: flex;
+    flex-direction: column;
+    margin-top: auto;
+    max-width: 100cqw;
+    font-size: var(--font-size);
+}
+
+.header.back {
+    margin-top: 1em;
+}
+
+.header-title {
+    font-family: var(--font-title);
+    color: var(--accent);
+    margin: 0;
+    font-size: 1.2em;
+}
+
+.header-subtitle {
+    margin: 0;
+}
 </style>

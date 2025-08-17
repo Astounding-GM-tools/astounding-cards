@@ -1,13 +1,13 @@
 <script lang="ts">
-    import type { CardStat } from '$lib/next/types/card';
+    import type { Stat } from '$lib/next/types/card';
 
     const { stats = [] } = $props<{
-        stats: CardStat[];
+        stats: Stat[];
     }>();
 </script>
 
 <section class="stat-focus">
-    {#each stats.filter((stat: CardStat) => stat.isPublic) as stat}
+    {#each stats.filter((stat: Stat) => stat.isPublic) as stat}
         <article class="stat-item" data-id={stat.id}>
             <div class="stat-item-label">{stat.name}</div>
             <div class="stat-item-value">{stat.value}</div>

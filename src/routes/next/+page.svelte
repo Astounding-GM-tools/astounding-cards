@@ -43,7 +43,7 @@
                     title={card.name} 
                     subtitle={card.description} 
                  />
-                <StatBlock />
+                <StatBlock stats={card.stats} />
                 <TraitList traits={card.traits.filter((trait: Trait) => !trait.isPublic)} />
             </Card>
         {/each}
