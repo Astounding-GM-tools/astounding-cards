@@ -9,12 +9,24 @@
     import TraitList from '$lib/next/components/traits/TraitList.svelte';
 
     import { mockDeck } from './mocks';
-    
+    import SomeContent from '$lib/components/SomeContent/SomeContent.svelte';
+    import { dialogStore } from '$lib/next/components/dialog/dialogStore.svelte';
+
     let isPoker = false;
+
+    function openDialog() {
+        dialogStore.setContent(SomeContent);
+    }
 </script>
 
 <section class="deck">
     <h1>New Card Layout Test</h1>
+
+    <nav>
+        <button onclick={() => openDialog()}>
+            Open Dialog
+        </button>
+    </nav>
     
     <label>
         <input type="checkbox" bind:checked={isPoker} />
