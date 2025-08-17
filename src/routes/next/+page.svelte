@@ -26,7 +26,7 @@
          {#each mockDeck as card}
             <Card>
                 <Header 
-                    title={card.name} 
+                    title={card.title} 
                     subtitle={card.subtitle} 
                 />
                 <StatFocus stats={card.stats} />
@@ -40,7 +40,7 @@
             <Card>
                 <Header 
                     back
-                    title={card.name} 
+                    title={card.title} 
                     subtitle={card.description} 
                  />
                 <StatBlock stats={card.stats} />

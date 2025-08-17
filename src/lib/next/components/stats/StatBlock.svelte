@@ -24,10 +24,10 @@
 
 <section class="stat-block">
     {#each stats.filter((stat: Stat) => !stat.isPublic) as stat}
-        <div class="stat-item" data-id={stat.id}>
+        <div class="stat-item">
             <header class="stat-item-header">
                 <span class="stat-item-label-and-value">
-                    {stat.name}: {stat.value}
+                    {stat.label}: {stat.value}
                 </span>
                 
                 {#if stat.tracked && typeof stat.value === 'number'}
