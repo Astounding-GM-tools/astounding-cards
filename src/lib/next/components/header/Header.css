@@ -7,20 +7,16 @@
 }
 
 .header.back {
-    color: var(--color);
     margin-top: 1em;
 }
 
 .header-title {
     font-family: var(--font-title);
-    color: var(--color);
+    color: var(--accent);
     margin: 0;
     font-size: 1.2em;
 }
 
 .header-subtitle {
-    font-family: var(--font-body);
-    color: var(--accent);
     margin: 0;
-    font-size: 1em;
 }

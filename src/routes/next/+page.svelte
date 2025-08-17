@@ -1,4 +1,6 @@
 <script lang="ts">
+    import type { Trait } from '$lib/next/types/card';
+    
     import Page from '$lib/next/components/page/Page.svelte';
     import Card from '$lib/next/components/card/Card.svelte';
     import Header from '$lib/next/components/header/Header.svelte';
@@ -28,7 +30,7 @@
                     subtitle={card.subtitle} 
                 />
                 <StatFocus stats={card.stats} />
-                <TraitList />
+                <TraitList traits={card.traits.filter((trait: Trait) => trait.isPublic)} />
             </Card>
         {/each}
     </Page>
@@ -42,7 +44,7 @@
                     subtitle={card.description} 
                  />
                 <StatBlock />
-                <TraitList back />
+                <TraitList traits={card.traits.filter((trait: Trait) => !trait.isPublic)} />
             </Card>
         {/each}
     </Page>

@@ -5,6 +5,8 @@
     flex: 0 0 auto;
     position: relative;
     padding: 2%;
+    font-family: var(--font-body);
+    color: var(--color);
 
     container-type: inline-size;
     container-name: card;

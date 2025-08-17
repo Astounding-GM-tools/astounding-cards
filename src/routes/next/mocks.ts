@@ -25,7 +25,7 @@ export const mockCardTwo = {
     description: 'An ornate compass that responds to supernatural phenomena rather than magnetic north.',
     image: null,
     traits: [
-        { label: 'Appearance', value: 'Brass and silver construction', isPublic: true },
+        { label: 'Appearance', value: 'Brass and silver construction, always warm to the touch', isPublic: true },
         { label: 'Property', value: 'Points to magical disturbances', isPublic: true },
         { label: 'Hidden', value: 'Has a mind of its own', isPublic: false }
     ],

@@ -8,7 +8,7 @@ export interface CardStat {
     isPublic: boolean;    // Whether to show on front of card
 }
 
-export interface CardTrait {
+export interface Trait {
     label: string;
     value: string;
     isPublic: boolean;    // Whether to show on front of card
@@ -21,7 +21,7 @@ export interface Card {
     description: string;
     image: string | null;
     imageBlob?: Blob;
-    traits: CardTrait[];
+    traits: Trait[];
     stats: CardStat[];
     theme?: string;       // Visual styling only
 }

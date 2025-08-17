@@ -1,24 +1,36 @@
 <script lang="ts">
-    const { back } = $props<{
-        back?: boolean;
-    }>();
+	import type { Trait } from '$lib/next/types/card';
+
+	const { traits = [] } = $props<{
+		traits: Trait[];
+	}>();
 </script>
 
-<span class="trait-list">TraitList {back ? 'back' : 'front'}</span>
+<dl class="trait-list">
+	{#each traits as trait}
+		<dt class="trait-label">{trait.label}</dt>
+		<dd class="trait-value">{trait.value}</dd>
+	{/each}
+</dl>
 
 <style>
-    .trait-list {
-        display: inline-block;
-        padding: 0.5em;
-        background: lightblue;
-        border-radius: 14px;
-        font-size: 12px;
-        text-align: center;
-        margin: 4px;
-        min-height: 40px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        max-width: 100cqw;
-    }
+	.trait-list {
+		display: grid;
+		font-size: var(--font-size);
+		gap: 0.2em 0.5em;
+		grid-template-columns: auto 1fr;
+		margin: 0.6em 0;
+	}
+
+	.trait-label {
+		font-size: 0.8em;
+		font-weight: bold;
+		grid-column: 1;
+	}
+
+	.trait-value {
+		font-size: 0.8em;
+		grid-column: 2;
+		margin: 0;
+	}
 </style>
