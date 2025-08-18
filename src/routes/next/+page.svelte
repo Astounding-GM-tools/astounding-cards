@@ -15,12 +15,12 @@
     import CardEditDialog from '$lib/next/components/dialogs/CardEditDialog.svelte';
     import { onMount } from 'svelte';
 
-    let isPoker = false;
+    let isPoker = $state(false);
     let isInitializing = $state(true);
     let selectedCardId = $state<string | null>(null);
 
-    // Get layout preference from deck or default to tarot
-    let layout = $derived(nextDeckStore.deck?.meta.layout || 'tarot');
+    // Get layout preference from deck or default to tarot, but allow override
+    let layout = $derived(isPoker ? 'poker' : 'tarot');
     let cards = $derived(nextDeckStore.deck?.cards || []);
     let deckTitle = $derived(nextDeckStore.deck?.meta.title || 'Sample Deck');
     
@@ -45,11 +45,15 @@
         try {
             // Check if we already have a deck loaded
             if (nextDeckStore.deck) {
+                isInitializing = false;
                 return;
             }
             
             // Try to load sample data if no deck exists
-            await loadSampleData();
+            const success = await loadSampleData();
+            if (!success) {
+                console.warn('Failed to load sample data, but continuing...');
+            }
             
         } catch (error) {
             console.error('Error during page initialization:', error);
@@ -91,7 +95,7 @@
         <p>No cards found. <button onclick={() => nextDevStore.setupTestEnvironment()}>Load Sample Data</button></p>
     {:else}
         <!-- Card Fronts -->
-        <Page layout={isPoker ? 'poker' : 'tarot'}>
+        <Page layout={layout}>
             {#each cards as card}
                 <Card>
                     <button 
@@ -111,7 +115,7 @@
         </Page>
 
         <!-- Card Backs -->
-        <Page layout={isPoker ? 'poker' : 'tarot'}>
+        <Page layout={layout}>
             {#each cards as card}
                 <Card>
                     <Header 

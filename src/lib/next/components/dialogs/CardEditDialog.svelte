@@ -15,6 +15,13 @@
     import { nextDeckStore } from '$lib/next/stores/deckStore.svelte.js';
     import { dialogStore } from '../dialog/dialogStore.svelte.js';
     
+    // Import actual card components
+    import CardComponent from '../card/Card.svelte';
+    import Header from '../header/Header.svelte';
+    import StatFocus from '../stats/StatFocus.svelte';
+    import StatBlock from '../stats/StatBlock.svelte';
+    import TraitList from '../traits/TraitList.svelte';
+    
     // Props passed when dialog opens
     const { cardId }: { cardId: string } = $props();
     
@@ -28,6 +35,14 @@
         description: '',
         // We'll add stats and traits later
     });
+    
+    // Create preview card with live form data
+    let previewCard = $derived(card ? {
+        ...card,
+        title: formData.title,
+        subtitle: formData.subtitle,
+        description: formData.description
+    } : null);
     
     // Update form when card changes
     $effect(() => {
@@ -82,60 +97,30 @@
 
 {#if card}
     <div class="card-edit-dialog">
-        <header class="dialog-header">
-            <h2>Edit Card</h2>
-            <button class="close-button" onclick={cancelChanges} title="Close">×</button>
-        </header>
-        
         <div class="dialog-content">
-            <!-- Live Preview Section -->
-            <section class="preview-section">
-                <h3>Preview</h3>
-                <div class="mini-card">
-                    <div class="mini-card-content">
-                        <h4>{formData.title || 'Untitled Card'}</h4>
-                        <p class="subtitle">{formData.subtitle || 'No subtitle'}</p>
-                        <p class="description">{formData.description || 'No description'}</p>
-                    </div>
-                </div>
-            </section>
-            
             <!-- Edit Form Section -->
             <section class="edit-section">
-                <h3>Basic Information</h3>
-                
-                <div class="form-group">
-                    <label for="title">Title</label>
+                <fieldset class="form-fieldset">
+                    <legend>Basic Info</legend>
                     <input 
-                        id="title"
                         type="text" 
                         bind:value={formData.title}
-                        placeholder="Enter card title"
+                        placeholder="Card title"
                         maxlength="100"
                     />
-                </div>
-                
-                <div class="form-group">
-                    <label for="subtitle">Subtitle</label>
                     <input 
-                        id="subtitle"
                         type="text" 
                         bind:value={formData.subtitle}
-                        placeholder="Enter card subtitle (e.g., Character, Item, Location)"
+                        placeholder="Subtitle (e.g., Character, Item)"
                         maxlength="50"
                     />
-                </div>
-                
-                <div class="form-group">
-                    <label for="description">Description</label>
                     <textarea 
-                        id="description"
                         bind:value={formData.description}
-                        placeholder="Enter card description"
-                        rows="4"
+                        placeholder="Description"
+                        rows="2"
                         maxlength="500"
                     ></textarea>
-                </div>
+                </fieldset>
                 
                 <!-- TODO: Add Stats and Traits sections -->
                 <div class="coming-soon">
@@ -146,6 +131,40 @@
                         <li>🖼️ Image Upload</li>
                     </ul>
                 </div>
+            </section>
+            
+            <!-- Live Preview Section -->
+            <section class="preview-section">
+                {#if previewCard}
+                    <div class="preview-container" data-layout="poker">
+                        <!-- Front Card Preview -->
+                        <div class="preview-wrapper">
+                            <CardComponent>
+                                <Header 
+                                    title={previewCard.title} 
+                                    subtitle={previewCard.subtitle} 
+                                />
+                                <StatFocus stats={previewCard.stats} />
+                                <TraitList traits={previewCard.traits.filter(trait => trait.isPublic)} />
+                            </CardComponent>
+                            <div class="card-label">Front</div>
+                        </div>
+                        
+                        <!-- Back Card Preview -->
+                        <div class="preview-wrapper">
+                            <CardComponent>
+                                <Header 
+                                    back
+                                    title={previewCard.title} 
+                                    subtitle={previewCard.description} 
+                                />
+                                <StatBlock stats={previewCard.stats} />
+                                <TraitList traits={previewCard.traits.filter(trait => !trait.isPublic)} />
+                            </CardComponent>
+                            <div class="card-label">Back</div>
+                        </div>
+                    </div>
+                {/if}
             </section>
         </div>
         
@@ -191,122 +210,60 @@
     .card-edit-dialog {
         display: flex;
         flex-direction: column;
-        min-height: 70vh;
-        max-height: 90vh;
+        height: 90vh;
         width: 100%;
-        max-width: 900px;
+        max-width: 1000px;
         font-family: var(--font-body);
-    }
-    
-    .dialog-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding-bottom: 1rem;
-        border-bottom: 1px solid #eee;
-        margin-bottom: 1rem;
-    }
-    
-    .dialog-header h2 {
-        margin: 0;
-        color: var(--color);
-        font-family: var(--font-title);
-    }
-    
-    .close-button {
-        background: none;
-        border: none;
-        font-size: 1.5rem;
-        cursor: pointer;
-        color: var(--accent);
-        width: 2rem;
-        height: 2rem;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    
-    .close-button:hover {
-        background: #f0f0f0;
     }
     
     .dialog-content {
         display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 2rem;
+        grid-template-columns: 2fr 1fr;
+        gap: 1rem;
         flex: 1;
-        overflow-y: auto;
+        overflow: hidden;
+        padding: 0.75rem;
     }
     
-    .preview-section h3,
-    .edit-section h3 {
-        margin: 0 0 1rem 0;
-        color: var(--color);
-        font-family: var(--font-title);
-        font-size: 1.1rem;
-    }
-    
-    /* Live Preview Styles */
-    .mini-card {
-        border: 2px solid var(--accent);
-        border-radius: 8px;
-        padding: 1rem;
-        background: white;
-        aspect-ratio: 5/7;
+    .edit-section {
         display: flex;
         flex-direction: column;
+        gap: 0.75rem;
+        overflow-y: auto;
+        padding-right: 0.5rem;
     }
     
-    .mini-card h4 {
-        margin: 0 0 0.5rem 0;
-        color: var(--accent);
-        font-family: var(--font-title);
-        font-size: 1.1rem;
-    }
-    
-    .mini-card .subtitle {
-        margin: 0 0 1rem 0;
-        color: var(--color);
-        font-size: 0.9rem;
-    }
-    
-    .mini-card .description {
-        margin: 0;
-        color: var(--color);
-        font-size: 0.8rem;
-        line-height: 1.3;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        display: -webkit-box;
-        -webkit-line-clamp: 6;
-        -webkit-box-orient: vertical;
-    }
-    
-    /* Form Styles */
-    .form-group {
-        margin-bottom: 1.5rem;
-    }
-    
-    .form-group label {
-        display: block;
-        margin-bottom: 0.5rem;
-        font-weight: 500;
-        color: var(--color);
-    }
-    
-    .form-group input,
-    .form-group textarea {
-        width: 100%;
-        padding: 0.75rem;
+    /* Fieldset Form Styles */
+    .form-fieldset {
         border: 1px solid #ddd;
         border-radius: 4px;
-        font-family: var(--font-body);
-        font-size: 1rem;
+        padding: 0.75rem;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
     }
     
-    .form-group input:focus,
-    .form-group textarea:focus {
+    .form-fieldset legend {
+        font-weight: 600;
+        color: var(--color);
+        font-size: 0.85rem;
+        padding: 0 0.5rem;
+    }
+    
+    .form-fieldset input,
+    .form-fieldset textarea {
+        width: 100%;
+        padding: 0.4rem 0.5rem;
+        border: 1px solid #ddd;
+        border-radius: 3px;
+        font-family: var(--font-body);
+        font-size: 0.9rem;
+        resize: vertical;
+    }
+    
+    .form-fieldset input:focus,
+    .form-fieldset textarea:focus {
         outline: none;
         border-color: var(--accent);
         box-shadow: 0 0 0 2px rgba(74, 85, 104, 0.1);
@@ -316,37 +273,83 @@
         background: #f8f9fa;
         border: 1px solid #e9ecef;
         border-radius: 4px;
-        padding: 1rem;
-        margin-top: 2rem;
+        padding: 0.5rem;
+        font-size: 0.8rem;
     }
     
     .coming-soon p {
-        margin: 0 0 0.5rem 0;
+        margin: 0 0 0.25rem 0;
         color: var(--accent);
     }
     
     .coming-soon ul {
         margin: 0;
-        padding-left: 1.5rem;
+        padding-left: 1.25rem;
     }
     
     .coming-soon li {
         color: var(--color);
-        margin-bottom: 0.25rem;
+        margin-bottom: 0.125rem;
     }
     
-    /* Footer Styles */
+    /* Preview Section */
+    .preview-section {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .preview-container {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .preview-wrapper {
+        position: relative;
+        width: 100%;
+        height: 280px; /* Double the height for larger cards */
+        overflow: hidden;
+    }
+    
+    /* Scale the actual cards to fit in preview - much larger now */
+    .preview-wrapper :global(.card) {
+        transform: scale(0.8);
+        transform-origin: top center;
+        height: 350px; /* Scaled to 0.8 gives us 280px */
+        border: 1px solid var(--accent);
+        background: white;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin: 0 auto;
+    }
+    
+    .card-label {
+        position: absolute;
+        bottom: -1.25rem;
+        left: 0;
+        right: 0;
+        text-align: center;
+        font-size: 0.65rem;
+        color: var(--accent);
+        font-weight: 500;
+    }
+    
+    /* Footer Styles - More Compact */
     .dialog-footer {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding-top: 1rem;
+        padding: 0.5rem 0.75rem;
         border-top: 1px solid #eee;
-        margin-top: 1rem;
+        background: white;
+        flex-shrink: 0;
+        position: sticky;
+        bottom: 0;
+        z-index: 10;
     }
     
     .dialog-status {
-        font-size: 0.9rem;
+        font-size: 0.8rem;
     }
     
     .saving {
@@ -363,16 +366,17 @@
     
     .dialog-actions {
         display: flex;
-        gap: 0.5rem;
+        gap: 0.375rem;
     }
     
     .dialog-actions button {
-        padding: 0.75rem 1.5rem;
+        padding: 0.375rem 0.75rem;
         border: 1px solid #ddd;
-        border-radius: 4px;
+        border-radius: 3px;
         background: white;
         cursor: pointer;
         font-family: var(--font-body);
+        font-size: 0.85rem;
     }
     
     .dialog-actions button:hover:not(:disabled) {
@@ -418,10 +422,19 @@
     @media (max-width: 768px) {
         .dialog-content {
             grid-template-columns: 1fr;
+            gap: 0.75rem;
         }
         
         .card-edit-dialog {
-            min-height: 80vh;
+            height: 95vh;
+        }
+        
+        .preview-section {
+            order: -1; /* Show preview first on mobile */
+        }
+        
+        .preview-wrapper {
+            height: 200px;
         }
     }
 </style>

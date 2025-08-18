@@ -47,7 +47,7 @@
         min-width: 24em;
         max-width: min(90vw, 48em);
         max-height: 90vh;
-        padding: 2em;
+        padding: 0; /* Remove padding to let CardEditDialog control it */
         border: none;
         border-radius: 6px;
         box-shadow: 
@@ -61,7 +61,7 @@
 
         /* Center it nicely */
         margin: auto;
-        overflow: auto;
+        overflow: hidden; /* Let the dialog content handle scrolling */
     }
 
     dialog::backdrop {
