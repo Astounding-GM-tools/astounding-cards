@@ -3,15 +3,15 @@
  * 
  * Manages state for the dialog system:
  * - Controls dialog visibility (isOpen)
- * - Manages dialog content (component to render)
+ * - Manages dialog content (snippet to render)
  * - Handles state cleanup on close
  * 
  * Usage:
  * ```ts
  * import { dialogStore } from './dialogStore.svelte';
  * 
- * // Open dialog with content
- * dialogStore.setContent(MyComponent);
+ * // Open dialog with content snippet
+ * dialogStore.setContent(MyContentSnippet);
  * 
  * // Close dialog (also cleans up content)
  * dialogStore.close();
@@ -29,8 +29,8 @@ function createDialogStore() {
             isOpen = false;
             content = null;  // Clean up content when closing
         },
-        setContent(component: any) {
-            content = component;
+        setContent(snippet: any) {
+            content = snippet;
             this.open();
         }
     };
