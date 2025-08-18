@@ -1,5 +1,3 @@
-import type { Theme } from "./deck";
-
 export interface Trait {
     label: string;
     value: string;
@@ -23,5 +21,4 @@ export interface Card {
     imageBlob?: Blob;
     traits: Trait[];
     stats: Stat[];
-    theme?: Theme;
 }
