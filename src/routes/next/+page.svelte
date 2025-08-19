@@ -123,13 +123,19 @@
         <Page layout={layout}>
             {#each cards as card}
                 <Card>
-                    <Header 
-                        back
-                        title={card.title} 
-                        subtitle={card.description} 
-                     />
-                    <StatBlock stats={card.stats} />
-                    <TraitList traits={card.traits.filter((trait: Trait) => !trait.isPublic)} />
+                    <button 
+                        class="card-edit-overlay"
+                        onclick={() => openCardEditor(card)}
+                        title="Click to edit {card.title}"
+                    >
+                        <Header 
+                            back
+                            title={card.title} 
+                            subtitle={card.description} 
+                         />
+                        <StatBlock stats={card.stats} />
+                        <TraitList traits={card.traits.filter((trait: Trait) => !trait.isPublic)} />
+                    </button>
                 </Card>
             {/each}
         </Page>
@@ -155,9 +161,12 @@
     
     .card-edit-overlay {
         all: unset;
-        display: block;
+        display: flex;
+        flex-direction: column;
         width: 100%;
         height: 100%;
+        padding: 0;
+        margin: 0;
         cursor: pointer;
         transition: opacity 0.2s ease;
     }

@@ -22,6 +22,8 @@
     import StatBlock from '../stats/StatBlock.svelte';
     import TraitList from '../traits/TraitList.svelte';
     
+    import type { Trait, Stat } from '$lib/next/types/card.js';
+    
     // Props passed when dialog opens
     const { cardId }: { cardId: string } = $props();
     
@@ -33,7 +35,8 @@
         title: '',
         subtitle: '',
         description: '',
-        // We'll add stats and traits later
+        stats: [] as Stat[],
+        traits: [] as Trait[]
     });
     
     // Create preview card with live form data
@@ -41,8 +44,11 @@
         ...card,
         title: formData.title,
         subtitle: formData.subtitle,
-        description: formData.description
+        description: formData.description,
+        stats: formData.stats,
+        traits: formData.traits
     } : null);
+    
     
     // Update form when card changes
     $effect(() => {
@@ -50,6 +56,8 @@
             formData.title = card.title;
             formData.subtitle = card.subtitle;
             formData.description = card.description;
+            formData.stats = card.stats || [];
+            formData.traits = card.traits || [];
         }
     });
     
@@ -62,7 +70,9 @@
             hasChanges = 
                 formData.title !== card.title ||
                 formData.subtitle !== card.subtitle ||
-                formData.description !== card.description;
+                formData.description !== card.description ||
+                JSON.stringify(formData.stats) !== JSON.stringify(card.stats) ||
+                JSON.stringify(formData.traits) !== JSON.stringify(card.traits);
         }
     });
     
@@ -73,7 +83,9 @@
         const success = await nextDeckStore.updateCard(card.id, {
             title: formData.title,
             subtitle: formData.subtitle,
-            description: formData.description
+            description: formData.description,
+            stats: formData.stats,
+            traits: formData.traits
         }, 'Saving card changes...');
         
         if (success) {
@@ -122,15 +134,114 @@
                     ></textarea>
                 </fieldset>
                 
-                <!-- TODO: Add Stats and Traits sections -->
-                <div class="coming-soon">
-                    <p><strong>Coming Next:</strong></p>
-                    <ul>
-                        <li>📊 Stats Editor</li>
-                        <li>🏷️ Traits Editor</li>
-                        <li>🖼️ Image Upload</li>
-                    </ul>
-                </div>
+                <!-- Stats Section -->
+                <fieldset class="form-fieldset">
+                    <legend>Stats</legend>
+                    {#each formData.stats as stat, index}
+                        <div class="inline-attribute-editor">
+                            <!-- Line 1: title + public -->
+                            <div class="attribute-row">
+                                <input 
+                                    type="text" 
+                                    bind:value={stat.title}
+                                    placeholder="Stat title"
+                                    class="title-input"
+                                />
+                                <label class="checkbox-label">
+                                    <input type="checkbox" bind:checked={stat.isPublic} />
+                                    Public
+                                </label>
+                            </div>
+                            
+                            <!-- Line 2: value + tracked (stat mode only) -->
+                            <div class="attribute-row">
+                                <input 
+                                    type="number" 
+                                    bind:value={stat.value}
+                                    placeholder="Value"
+                                    class="value-input"
+                                    min="0"
+                                    max="999"
+                                    oninput={(e) => {
+                                        const num = parseInt(e.target.value) || 0;
+                                        stat.value = Math.max(0, Math.min(999, num));
+                                    }}
+                                />
+                                <label class="checkbox-label">
+                                    <input type="checkbox" bind:checked={stat.tracked} />
+                                    Tracked
+                                </label>
+                            </div>
+                            
+                            <!-- Line 3: description -->
+                            <div class="attribute-row">
+                                <textarea 
+                                    bind:value={stat.description}
+                                    placeholder="Optional description"
+                                    class="description-input"
+                                    rows="1"
+                                ></textarea>
+                                <button 
+                                    class="delete-btn"
+                                    onclick={() => formData.stats.splice(index, 1)}
+                                >
+                                    🗑️
+                                </button>
+                            </div>
+                        </div>
+                    {/each}
+                    <button 
+                        class="add-attribute-btn"
+                        onclick={() => formData.stats.push({ title: '', isPublic: true, value: 0, tracked: false, description: '' })}
+                    >
+                        + Add Stat
+                    </button>
+                </fieldset>
+                
+                <!-- Traits Section -->
+                <fieldset class="form-fieldset">
+                    <legend>Traits</legend>
+                    {#each formData.traits as trait, index}
+                        <div class="inline-attribute-editor">
+                            <!-- Line 1: title + public -->
+                            <div class="attribute-row">
+                                <input 
+                                    type="text" 
+                                    bind:value={trait.title}
+                                    placeholder="Trait title"
+                                    class="title-input"
+                                />
+                                <label class="checkbox-label">
+                                    <input type="checkbox" bind:checked={trait.isPublic} />
+                                    Public
+                                </label>
+                            </div>
+                            
+                            <!-- Line 3: description (no line 2 for traits) -->
+                            <div class="attribute-row">
+                                <textarea 
+                                    bind:value={trait.description}
+                                    placeholder="Description"
+                                    class="description-input"
+                                    rows="1"
+                                    required
+                                ></textarea>
+                                <button 
+                                    class="delete-btn"
+                                    onclick={() => formData.traits.splice(index, 1)}
+                                >
+                                    🗑️
+                                </button>
+                            </div>
+                        </div>
+                    {/each}
+                    <button 
+                        class="add-attribute-btn"
+                        onclick={() => formData.traits.push({ title: '', isPublic: true, description: '' })}
+                    >
+                        + Add Trait
+                    </button>
+                </fieldset>
             </section>
             
             <!-- Live Preview Section -->
@@ -205,6 +316,7 @@
         </div>
     </div>
 {/if}
+
 
 <style>
     .card-edit-dialog {
@@ -290,6 +402,178 @@
     .coming-soon li {
         color: var(--color);
         margin-bottom: 0.125rem;
+    }
+    
+    /* Attribute List Styles */
+    .attribute-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .attribute-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem;
+        border: 1px solid #eee;
+        border-radius: 3px;
+        background: #fafafa;
+    }
+    
+    .attribute-summary {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .attribute-title {
+        font-weight: 600;
+        font-size: 0.85rem;
+        color: var(--color);
+    }
+    
+    .attribute-value {
+        font-size: 0.8rem;
+        color: var(--accent);
+        font-weight: 500;
+    }
+    
+    .attribute-description {
+        font-size: 0.75rem;
+        color: #666;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .attribute-meta {
+        font-size: 0.7rem;
+        color: #999;
+    }
+    
+    .edit-attribute-btn {
+        padding: 0.25rem 0.5rem;
+        border: 1px solid #ddd;
+        border-radius: 3px;
+        background: white;
+        cursor: pointer;
+        font-family: var(--font-body);
+        font-size: 0.75rem;
+        flex-shrink: 0;
+    }
+    
+    .edit-attribute-btn:hover {
+        background: #f5f5f5;
+    }
+    
+    .add-attribute-btn {
+        padding: 0.5rem;
+        border: 1px dashed #ccc;
+        border-radius: 3px;
+        background: white;
+        cursor: pointer;
+        font-family: var(--font-body);
+        font-size: 0.8rem;
+        color: #666;
+        text-align: center;
+    }
+    
+    .add-attribute-btn:hover {
+        background: #f9f9f9;
+        border-color: var(--accent);
+        color: var(--accent);
+    }
+    
+    /* Inline Attribute Editor Styles */
+    .inline-attribute-editor {
+        border: 1px solid #eee;
+        border-radius: 4px;
+        padding: 0.5rem;
+        background: #fafafa;
+        margin-bottom: 0.5rem;
+    }
+    
+    .attribute-row {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 0.5rem;
+        align-items: center;
+        margin-bottom: 0.375rem;
+    }
+    
+    .attribute-row:last-child {
+        margin-bottom: 0;
+    }
+    
+    .title-input {
+        padding: 0.375rem 0.5rem;
+        border: 1px solid #ddd;
+        border-radius: 3px;
+        font-family: var(--font-body);
+        font-size: 0.85rem;
+        min-width: 0;
+    }
+    
+    .value-input {
+        width: 80px;
+        padding: 0.375rem 0.5rem;
+        border: 1px solid #ddd;
+        border-radius: 3px;
+        font-family: var(--font-body);
+        font-size: 0.85rem;
+        text-align: center;
+    }
+    
+    .description-input {
+        padding: 0.375rem 0.5rem;
+        border: 1px solid #ddd;
+        border-radius: 3px;
+        font-family: var(--font-body);
+        font-size: 0.85rem;
+        resize: vertical;
+        min-height: 32px;
+    }
+    
+    .checkbox-label {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        font-size: 0.8rem;
+        color: #666;
+        cursor: pointer;
+        white-space: nowrap;
+    }
+    
+    .checkbox-label input[type="checkbox"] {
+        margin: 0;
+    }
+    
+    .delete-btn {
+        padding: 0.25rem 0.375rem;
+        border: 1px solid #ddd;
+        border-radius: 3px;
+        background: white;
+        cursor: pointer;
+        font-size: 0.8rem;
+        color: #999;
+        flex-shrink: 0;
+    }
+    
+    .delete-btn:hover {
+        background: #fee;
+        border-color: #e74c3c;
+        color: #e74c3c;
+    }
+    
+    .title-input:focus,
+    .value-input:focus,
+    .description-input:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 2px rgba(74, 85, 104, 0.1);
     }
     
     /* Preview Section */
@@ -418,6 +702,31 @@
         cursor: pointer;
     }
     
+    /* Attribute Editor Modal */
+    .attribute-modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        padding: 1rem;
+    }
+    
+    .attribute-modal {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        max-width: 500px;
+        width: 100%;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+    
     /* Responsive */
     @media (max-width: 768px) {
         .dialog-content {
@@ -435,6 +744,11 @@
         
         .preview-wrapper {
             height: 200px;
+        }
+        
+        .attribute-modal {
+            margin: 0.5rem;
+            max-width: none;
         }
     }
 </style>

@@ -270,15 +270,92 @@ class NextDatabase {
     private async saveDeck(deck: Deck): Promise<Deck> {
         const db = await this.ensureInit();
         
+        // Clean deck to remove non-cloneable properties before saving
+        const cleanDeck = this.sanitizeDeckForStorage(deck);
+        
         return new Promise((resolve, reject) => {
             const transaction = db.transaction([this.deckStore], 'readwrite');
             const store = transaction.objectStore(this.deckStore);
             
-            const request = store.put(deck);
+            const request = store.put(cleanDeck);
             
-            request.onsuccess = () => resolve(deck);
-            request.onerror = () => reject(new DatabaseError('Failed to save deck', 'DECK_SAVE_ERROR'));
+            request.onsuccess = () => resolve(deck); // Return original deck, not cleaned
+            request.onerror = (event) => {
+                console.error('IndexedDB put error:', event);
+                console.error('Failed to save deck:', cleanDeck);
+                reject(new DatabaseError('Failed to save deck', 'DECK_SAVE_ERROR'));
+            };
         });
+    }
+    
+    /**
+     * Sanitize deck data for IndexedDB storage
+     * Removes non-cloneable properties like Proxy objects and Blobs
+     */
+    private sanitizeDeckForStorage(deck: Deck): Deck {
+        // Use JSON parse/stringify to strip Proxy wrappers and create plain objects
+        // This is the most reliable way to remove Svelte's reactive Proxy objects
+        const jsonString = JSON.stringify(deck, (key, value) => {
+            // Filter out non-serializable properties during JSON.stringify
+            if (key === 'imageBlob') return undefined; // Remove Blob objects
+            if (typeof value === 'function') return undefined; // Remove functions
+            return value;
+        });
+        
+        const plainDeck: Deck = JSON.parse(jsonString);
+        
+        // Ensure data integrity after JSON round-trip
+        return {
+            ...plainDeck,
+            cards: plainDeck.cards.map(card => ({
+                id: card.id || crypto.randomUUID(),
+                title: card.title || '',
+                subtitle: card.subtitle || '',
+                description: card.description || '',
+                image: card.image || null,
+                stats: (card.stats || []).map(stat => ({
+                    title: stat.title || '',
+                    isPublic: stat.isPublic ?? true,
+                    value: typeof stat.value === 'number' ? stat.value : 0,
+                    tracked: stat.tracked ?? false,
+                    description: stat.description || ''
+                })),
+                traits: (card.traits || []).map(trait => ({
+                    title: trait.title || '',
+                    isPublic: trait.isPublic ?? true,
+                    description: trait.description || ''
+                }))
+            }))
+        };
+    }
+    
+    /**
+     * Debug helper to detect non-cloneable objects
+     */
+    private debugCloneableCheck(obj: any, path: string = 'deck'): void {
+        try {
+            // Try to clone the object to see if it would fail
+            structuredClone(obj);
+        } catch (error) {
+            console.error(`Non-cloneable object detected at ${path}:`, error);
+            console.error('Object causing issues:', obj);
+            
+            // Check for common non-cloneable properties
+            if (typeof obj === 'object' && obj !== null) {
+                for (const [key, value] of Object.entries(obj)) {
+                    if (value instanceof Blob) {
+                        console.warn(`Found Blob at ${path}.${key}`); 
+                    } else if (typeof value === 'function') {
+                        console.warn(`Found function at ${path}.${key}`);
+                    } else if (value && typeof value === 'object') {
+                        // Recursively check nested objects (but avoid infinite loops)
+                        if (!path.includes('.cards.') || key !== 'cards') {
+                            this.debugCloneableCheck(value, `${path}.${key}`);
+                        }
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -292,13 +369,13 @@ class NextDatabase {
             description: 'A mysterious figure from the shadows.',
             image: null,
             traits: [
-                { label: 'Race', value: 'Human', isPublic: true },
-                { label: 'Class', value: 'Rogue', isPublic: true }
+                { title: 'Race', isPublic: true, description: 'Human heritage with adaptable nature' },
+                { title: 'Class', isPublic: true, description: 'Skilled in stealth and precision' }
             ],
             stats: [
-                { label: 'Health', value: 20, tracked: true, isPublic: true },
-                { label: 'Defense', value: 15, tracked: false, isPublic: true },
-                { label: 'Notes', value: 'Favors stealth over direct confrontation.', tracked: false, isPublic: false }
+                { title: 'Health', isPublic: true, value: 20, tracked: true, description: 'Physical condition and endurance' },
+                { title: 'Defense', isPublic: true, value: 15, tracked: false, description: 'Ability to avoid or reduce damage' },
+                { title: 'Luck', isPublic: false, value: 12, tracked: true }
             ]
         };
     }

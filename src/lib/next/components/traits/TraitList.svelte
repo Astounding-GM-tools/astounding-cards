@@ -8,8 +8,8 @@
 
 <dl class="trait-list">
 	{#each traits as trait}
-		<dt class="trait-label">{trait.label}</dt>
-		<dd class="trait-value">{trait.value}</dd>
+		<dt class="trait-label">{trait.title}</dt>
+		<dd class="trait-value">{trait.description}</dd>
 	{/each}
 </dl>
 

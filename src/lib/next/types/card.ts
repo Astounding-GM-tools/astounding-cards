@@ -1,15 +1,14 @@
-export interface Trait {
-    label: string;
-    value: string;
+interface AttributeBase {
+    title: string;
     isPublic: boolean;
 }
-
-export interface Stat {
-    label: string;
-    value: number | string;
-    description?: string;
+export interface Trait extends AttributeBase {
+    description: string;
+}
+export interface Stat extends AttributeBase {
+    value: number;
     tracked: boolean;
-    isPublic: boolean;
+    description?: string;
 }
 
 export interface Card {

@@ -27,7 +27,7 @@
         <div class="stat-item">
             <header class="stat-item-header">
                 <span class="stat-item-label-and-value">
-                    {stat.label}: {stat.value}
+                    {stat.title}: {stat.value}
                 </span>
                 
                 {#if stat.tracked && typeof stat.value === 'number'}

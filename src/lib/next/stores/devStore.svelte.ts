@@ -103,17 +103,17 @@ function createNextDevStore() {
                     subtitle: 'Archaeologist',
                     description: 'A brilliant scholar with a dangerous curiosity about forbidden knowledge.',
                     traits: [
-                        { label: 'Profession', value: 'University Professor', isPublic: true },
-                        { label: 'Expertise', value: 'Ancient Civilizations', isPublic: true },
-                        { label: 'Secret', value: 'Member of the Hermetic Order', isPublic: false },
-                        { label: 'Fear', value: 'Enclosed spaces (mild claustrophobia)', isPublic: false }
+                        { title: 'Profession', description: 'University Professor', isPublic: true },
+                        { title: 'Expertise', description: 'Ancient Civilizations', isPublic: true },
+                        { title: 'Secret', description: 'Member of the Hermetic Order', isPublic: false },
+                        { title: 'Fear', description: 'Enclosed spaces (mild claustrophobia)', isPublic: false }
                     ],
                     stats: [
-                        { label: 'Health', value: 18, tracked: true, isPublic: true },
-                        { label: 'Sanity', value: 65, tracked: true, isPublic: false, description: 'Mental stability - decreases with exposure to the supernatural' },
-                        { label: 'Defense', value: 12, tracked: false, isPublic: true },
-                        { label: 'Investigation', value: 85, tracked: false, isPublic: true },
-                        { label: 'Connections', value: 70, tracked: false, isPublic: false, description: 'Academic and social network influence' }
+                        { title: 'Health', value: 18, tracked: true, isPublic: true },
+                        { title: 'Sanity', value: 65, tracked: true, isPublic: false, description: 'Mental stability - decreases with exposure to the supernatural' },
+                        { title: 'Defense', value: 12, tracked: false, isPublic: true },
+                        { title: 'Investigation', value: 85, tracked: false, isPublic: true },
+                        { title: 'Connections', value: 70, tracked: false, isPublic: false, description: 'Academic and social network influence' }
                     ]
                 },
                 {
@@ -121,17 +121,17 @@ function createNextDevStore() {
                     subtitle: 'Mystical Device',
                     description: 'An ornate brass compass that points not to magnetic north, but to supernatural phenomena.',
                     traits: [
-                        { label: 'Material', value: 'Brass and silver', isPublic: true },
-                        { label: 'Condition', value: 'Always warm to the touch', isPublic: true },
-                        { label: 'Origin', value: 'Victorian era, unknown craftsman', isPublic: false },
-                        { label: 'Curse', value: 'Slowly drains user\'s life force', isPublic: false }
+                        { title: 'Material', description: 'Brass and silver', isPublic: true },
+                        { title: 'Condition', description: 'Always warm to the touch', isPublic: true },
+                        { title: 'Origin', description: 'Victorian era, unknown craftsman', isPublic: false },
+                        { title: 'Curse', description: 'Slowly drains user\'s life force', isPublic: false }
                     ],
                     stats: [
-                        { label: 'Value', value: '£1,200', tracked: false, isPublic: false },
-                        { label: 'Rarity', value: 'Legendary', tracked: false, isPublic: false },
-                        { label: 'Durability', value: 8, tracked: true, isPublic: true, description: 'Physical condition - can be damaged' },
-                        { label: 'Charges', value: 15, tracked: true, isPublic: false, description: 'Mystical energy remaining' },
-                        { label: 'Detection Range', value: '5 miles', tracked: false, isPublic: true }
+                        { title: 'Value', value: 1200, tracked: false, isPublic: false },
+                        { title: 'Rarity', value: 9, tracked: false, isPublic: false, description: 'Legendary (9/10 scale)' },
+                        { title: 'Durability', value: 8, tracked: true, isPublic: true, description: 'Physical condition - can be damaged' },
+                        { title: 'Charges', value: 15, tracked: true, isPublic: false, description: 'Mystical energy remaining' },
+                        { title: 'Detection Range', value: 5, tracked: false, isPublic: true, description: '5 miles detection range' }
                     ]
                 },
                 {
@@ -139,17 +139,17 @@ function createNextDevStore() {
                     subtitle: 'Haunted Location',
                     description: 'A fog-shrouded valley where time moves differently and the dead do not rest.',
                     traits: [
-                        { label: 'Climate', value: 'Perpetually foggy', isPublic: true },
-                        { label: 'Terrain', value: 'Rolling hills and ancient stones', isPublic: true },
-                        { label: 'History', value: 'Site of a medieval massacre', isPublic: false },
-                        { label: 'Phenomena', value: 'Time distortion and spectral manifestations', isPublic: false }
+                        { title: 'Climate', description: 'Perpetually foggy', isPublic: true },
+                        { title: 'Terrain', description: 'Rolling hills and ancient stones', isPublic: true },
+                        { title: 'History', description: 'Site of a medieval massacre', isPublic: false },
+                        { title: 'Phenomena', description: 'Time distortion and spectral manifestations', isPublic: false }
                     ],
                     stats: [
-                        { label: 'Danger Level', value: 'Extreme', tracked: false, isPublic: true },
-                        { label: 'Visibility', value: '10 feet', tracked: false, isPublic: true },
-                        { label: 'Spectral Activity', value: 12, tracked: true, isPublic: false, description: 'Current level of supernatural manifestations' },
-                        { label: 'Escape Difficulty', value: 90, tracked: false, isPublic: false },
-                        { label: 'Area', value: '3 square miles', tracked: false, isPublic: true }
+                        { title: 'Danger Level', value: 9, tracked: false, isPublic: true, description: 'Extreme danger (9/10 scale)' },
+                        { title: 'Visibility', value: 10, tracked: false, isPublic: true, description: '10 feet visibility range' },
+                        { title: 'Spectral Activity', value: 12, tracked: true, isPublic: false, description: 'Current level of supernatural manifestations' },
+                        { title: 'Escape Difficulty', value: 90, tracked: false, isPublic: false },
+                        { title: 'Area', value: 3, tracked: false, isPublic: true, description: '3 square miles coverage' }
                     ]
                 }
             ];

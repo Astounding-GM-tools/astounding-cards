@@ -9,7 +9,7 @@
 <section class="stat-focus">
     {#each stats.filter((stat: Stat) => stat.isPublic) as stat}
         <article class="stat-item">
-            <div class="stat-item-label">{stat.label}</div>
+            <div class="stat-item-label">{stat.title}</div>
             <div class="stat-item-value">{stat.value}</div>
         </article>
     {/each}
