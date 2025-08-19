@@ -7,6 +7,7 @@
     import StatFocus from '$lib/next/components/stats/StatFocus.svelte';
     import StatBlock from '$lib/next/components/stats/StatBlock.svelte';
     import TraitList from '$lib/next/components/traits/TraitList.svelte';
+    import CardImage from '$lib/next/components/image/CardImage.svelte';
     import Dialog from '$lib/next/components/dialog/Dialog.svelte';
 
     import { nextDeckStore } from '$lib/next/stores/deckStore.svelte.js';
@@ -108,6 +109,7 @@
                         onclick={() => openCardEditor(card)}
                         title="Click to edit {card.title}"
                     >
+                        <CardImage {card} />
                         <Header 
                             title={card.title} 
                             subtitle={card.subtitle} 

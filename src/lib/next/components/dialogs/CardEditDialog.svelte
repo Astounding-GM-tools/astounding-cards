@@ -21,8 +21,11 @@
     import StatFocus from '../stats/StatFocus.svelte';
     import StatBlock from '../stats/StatBlock.svelte';
     import TraitList from '../traits/TraitList.svelte';
+    import CardImage from '../image/CardImage.svelte';
+    import ImageSelector from '$lib/components/ui/ImageSelector.svelte';
     
     import type { Trait, Stat } from '$lib/next/types/card.js';
+    import { ImageUrlManager } from '$lib/utils/image-handler.js';
     
     // Props passed when dialog opens
     const { cardId }: { cardId: string } = $props();
@@ -36,8 +39,33 @@
         subtitle: '',
         description: '',
         stats: [] as Stat[],
-        traits: [] as Trait[]
+        traits: [] as Trait[],
+        imageBlob: null as Blob | null,
+        imageUrl: null as string | null
     });
+    
+    // Image selector state
+    let showImageSelector = $state(false);
+    let imageUrlManager = $state(new ImageUrlManager());
+    
+    // Current image preview URL - show image state when blob OR url exists
+    let currentImageUrl = $derived(imageUrlManager.url || formData.imageUrl);
+    let hasImage = $derived(!!(formData.imageBlob || formData.imageUrl));
+    
+    // Image status information for better UX
+    let imageStatus = $derived(
+        formData.imageBlob ? (
+            (() => {
+                const blob = formData.imageBlob!;
+                const sizeKB = Math.round(blob.size / 1024);
+                return `Uploaded file (${blob.type || 'unknown'}, ${sizeKB}KB)`;
+            })()
+        ) : formData.imageUrl ? (
+            `Image URL: ${formData.imageUrl}`
+        ) : (
+            'No image selected'
+        )
+    );
     
     // Create preview card with live form data
     let previewCard = $derived(card ? {
@@ -46,7 +74,9 @@
         subtitle: formData.subtitle,
         description: formData.description,
         stats: formData.stats,
-        traits: formData.traits
+        traits: formData.traits,
+        imageBlob: formData.imageBlob,
+        image: formData.imageUrl
     } : null);
     
     
@@ -58,7 +88,44 @@
             formData.description = card.description;
             formData.stats = card.stats || [];
             formData.traits = card.traits || [];
+            formData.imageBlob = card.imageBlob || null;
+            formData.imageUrl = card.image || null;
+            
+            // Update image manager
+            imageUrlManager.updateBlob(card.imageBlob);
         }
+    });
+    
+    // Image handling functions
+    function openImageSelector() {
+        showImageSelector = true;
+    }
+    
+    function closeImageSelector() {
+        showImageSelector = false;
+    }
+    
+    async function handleImageSave(blob: Blob | null, sourceUrl?: string) {
+        formData.imageBlob = blob;
+        formData.imageUrl = sourceUrl || null;
+        
+        // Update image manager
+        imageUrlManager.updateBlob(blob);
+        
+        closeImageSelector();
+    }
+    
+    function removeImage() {
+        formData.imageBlob = null;
+        formData.imageUrl = null;
+        imageUrlManager.updateBlob(null);
+    }
+    
+    // Cleanup on destroy
+    $effect(() => {
+        return () => {
+            imageUrlManager.destroy();
+        };
     });
     
     let isSaving = $state(false);
@@ -72,7 +139,9 @@
                 formData.subtitle !== card.subtitle ||
                 formData.description !== card.description ||
                 JSON.stringify(formData.stats) !== JSON.stringify(card.stats) ||
-                JSON.stringify(formData.traits) !== JSON.stringify(card.traits);
+                JSON.stringify(formData.traits) !== JSON.stringify(card.traits) ||
+                formData.imageBlob !== (card.imageBlob || null) ||
+                formData.imageUrl !== (card.image || null);
         }
     });
     
@@ -85,7 +154,9 @@
             subtitle: formData.subtitle,
             description: formData.description,
             stats: formData.stats,
-            traits: formData.traits
+            traits: formData.traits,
+            image: formData.imageUrl,
+            imageBlob: formData.imageBlob
         }, 'Saving card changes...');
         
         if (success) {
@@ -132,6 +203,51 @@
                         rows="2"
                         maxlength="500"
                     ></textarea>
+                </fieldset>
+                
+                <!-- Image Section -->
+                <fieldset class="form-fieldset">
+                    <legend>Image</legend>
+                    <div class="image-section">
+                        <div class="image-status">
+                            <small>{imageStatus}</small>
+                        </div>
+                        {#if hasImage && currentImageUrl}
+                            <div class="current-image">
+                                <img src={currentImageUrl} alt="Card image" />
+                                <div class="image-actions">
+                                    <button 
+                                        type="button"
+                                        class="change-image-btn"
+                                        onclick={openImageSelector}
+                                    >
+                                        Change Image
+                                    </button>
+                                    <button 
+                                        type="button"
+                                        class="remove-image-btn"
+                                        onclick={removeImage}
+                                    >
+                                        Remove
+                                    </button>
+                                </div>
+                            </div>
+                        {:else}
+                            <div class="no-image">
+                                <div class="no-image-placeholder">
+                                    <span>📷</span>
+                                    <p>No image selected</p>
+                                </div>
+                                <button 
+                                    type="button"
+                                    class="add-image-btn"
+                                    onclick={openImageSelector}
+                                >
+                                    Add Image
+                                </button>
+                            </div>
+                        {/if}
+                    </div>
                 </fieldset>
                 
                 <!-- Stats Section -->
@@ -251,6 +367,7 @@
                         <!-- Front Card Preview -->
                         <div class="preview-wrapper">
                             <CardComponent>
+                                <CardImage card={previewCard} />
                                 <Header 
                                     title={previewCard.title} 
                                     subtitle={previewCard.subtitle} 
@@ -317,6 +434,15 @@
     </div>
 {/if}
 
+<!-- Image Selector Modal -->
+{#if showImageSelector}
+    <ImageSelector 
+        cardSize="tarot"
+        hasExistingImage={hasImage}
+        onSave={handleImageSave}
+        onClose={closeImageSelector}
+    />
+{/if}
 
 <style>
     .card-edit-dialog {
@@ -700,6 +826,105 @@
         padding: 0.75rem 1.5rem;
         border-radius: 4px;
         cursor: pointer;
+    }
+    
+    /* Image Section Styles */
+    .image-section {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .image-status {
+        padding: 0.25rem 0.5rem;
+        background: #f8f9fa;
+        border-radius: 3px;
+        border: 1px solid #e9ecef;
+        font-size: 0.75rem;
+        color: #666;
+        text-align: center;
+    }
+    
+    .current-image {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        align-items: center;
+    }
+    
+    .current-image img {
+        width: 120px;
+        height: 168px; /* 5:7 aspect ratio */
+        object-fit: cover;
+        border-radius: 4px;
+        border: 1px solid #ddd;
+    }
+    
+    .image-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .change-image-btn,
+    .remove-image-btn,
+    .add-image-btn {
+        padding: 0.375rem 0.75rem;
+        border: 1px solid #ddd;
+        border-radius: 3px;
+        background: white;
+        cursor: pointer;
+        font-family: var(--font-body);
+        font-size: 0.8rem;
+        transition: all 0.2s ease;
+    }
+    
+    .change-image-btn:hover,
+    .add-image-btn:hover {
+        background: var(--accent);
+        color: white;
+        border-color: var(--accent);
+    }
+    
+    .remove-image-btn {
+        background: #fee;
+        border-color: #fcc;
+        color: #c53030;
+    }
+    
+    .remove-image-btn:hover {
+        background: #fed7d7;
+        border-color: #fc8181;
+    }
+    
+    .no-image {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .no-image-placeholder {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        width: 120px;
+        height: 168px;
+        border: 2px dashed #ccc;
+        border-radius: 4px;
+        background: #fafafa;
+        color: #999;
+    }
+    
+    .no-image-placeholder span {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .no-image-placeholder p {
+        margin: 0;
+        font-size: 0.8rem;
+        text-align: center;
     }
     
     /* Attribute Editor Modal */

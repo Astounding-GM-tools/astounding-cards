@@ -121,6 +121,7 @@ function createNextDeckStore() {
             try {
                 const updatedDeck = await nextDb.updateCard(currentDeck.id, cardId, updates);
                 currentDeck = updatedDeck; // Canon Update: UI reflects persisted state
+                
                 return true;
             } catch (err) {
                 this.handleError(err, 'Failed to update card');

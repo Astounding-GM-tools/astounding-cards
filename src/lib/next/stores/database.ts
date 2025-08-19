@@ -293,26 +293,17 @@ class NextDatabase {
      * Removes non-cloneable properties like Proxy objects and Blobs
      */
     private sanitizeDeckForStorage(deck: Deck): Deck {
-        // Use JSON parse/stringify to strip Proxy wrappers and create plain objects
-        // This is the most reliable way to remove Svelte's reactive Proxy objects
-        const jsonString = JSON.stringify(deck, (key, value) => {
-            // Filter out non-serializable properties during JSON.stringify
-            if (key === 'imageBlob') return undefined; // Remove Blob objects
-            if (typeof value === 'function') return undefined; // Remove functions
-            return value;
-        });
-        
-        const plainDeck: Deck = JSON.parse(jsonString);
-        
-        // Ensure data integrity after JSON round-trip
-        return {
-            ...plainDeck,
-            cards: plainDeck.cards.map(card => ({
+        // Prepare deck for storage by ensuring all data is cloneable
+        // Keep imageBlob like the old system - blobs ARE storable in IndexedDB
+        const storableDeck = {
+            ...deck,
+            cards: deck.cards.map(card => ({
                 id: card.id || crypto.randomUUID(),
                 title: card.title || '',
                 subtitle: card.subtitle || '',
                 description: card.description || '',
                 image: card.image || null,
+                imageBlob: (card as any).imageBlob || null, // Keep blob for storage like old system
                 stats: (card.stats || []).map(stat => ({
                     title: stat.title || '',
                     isPublic: stat.isPublic ?? true,
@@ -327,6 +318,8 @@ class NextDatabase {
                 }))
             }))
         };
+        
+        return storableDeck;
     }
     
     /**
