@@ -211,7 +211,7 @@
         {:else if existingImageInfo?.status === 'add-image'}
           <div class="status encouraging">💡 Ready to add</div>
         {:else if existingImageInfo?.status === 'ready-to-save'}
-          <div class="status warning">⚠️ Ready to save</div>
+          <div class="status warning">⚠️ Remember to save!</div>
         {:else if existingImageInfo?.status === 'ok'}
           <div class="status success">✅ Image OK</div>
         {:else if existingImageInfo?.status === 'ready'}

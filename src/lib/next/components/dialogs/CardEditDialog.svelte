@@ -174,7 +174,16 @@
         // Check both saved card data and current form changes
         const hasCardImageData = !!(card?.imageBlob || card?.image);
         const hasFormImageData = !!(formData.imageBlob || formData.imageUrl);
-        const hasImageChanges = formData.imageBlob !== (card?.imageBlob || null) || formData.imageUrl !== (card?.image || null);
+        
+        // More robust change detection - handle null vs undefined properly
+        const cardImageBlob = card?.imageBlob || null;
+        const cardImageUrl = card?.image || null;
+        const cardImageMetadata = card?.imageMetadata || null;
+        
+        const hasImageChanges = 
+            formData.imageBlob !== cardImageBlob ||
+            formData.imageUrl !== cardImageUrl ||
+            JSON.stringify(formData.imageMetadata) !== JSON.stringify(cardImageMetadata);
         
         // No image case
         if (!hasCardImageData && !hasFormImageData) {
