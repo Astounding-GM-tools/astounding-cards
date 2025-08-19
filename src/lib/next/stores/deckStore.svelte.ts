@@ -209,6 +209,31 @@ function createNextDeckStore() {
         },
 
         /**
+         * Load the most recent deck from database
+         */
+        async loadMostRecent(): Promise<boolean> {
+            this.setLoading(true, 'Loading most recent deck...', 'load-recent');
+            this.clearError();
+
+            try {
+                const decks = await nextDb.getAllDecks();
+                if (decks.length === 0) {
+                    return false; // No decks found
+                }
+
+                // Get the most recent deck (getAllDecks returns sorted by lastEdited desc)
+                const mostRecentDeck = decks[0];
+                currentDeck = mostRecentDeck;
+                return true;
+            } catch (err) {
+                this.handleError(err, 'Failed to load recent deck');
+                return false;
+            } finally {
+                this.setLoading(false);
+            }
+        },
+
+        /**
          * Clear current deck (for navigation)
          */
         clearDeck(): void {

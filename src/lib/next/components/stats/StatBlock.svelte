@@ -60,7 +60,6 @@
     }
 
     .stat-item-label-and-value {
-        white-space: nowrap;
         margin-right: 0.5em;
     }
 

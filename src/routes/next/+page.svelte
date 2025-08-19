@@ -49,10 +49,15 @@
                 return;
             }
             
-            // Try to load sample data if no deck exists
-            const success = await loadSampleData();
-            if (!success) {
-                console.warn('Failed to load sample data, but continuing...');
+            // First, try to load the most recent deck from database
+            const hasExistingDeck = await nextDeckStore.loadMostRecent();
+            
+            // If no existing deck, create sample data
+            if (!hasExistingDeck) {
+                const success = await loadSampleData();
+                if (!success) {
+                    console.warn('Failed to load sample data, but continuing...');
+                }
             }
             
         } catch (error) {
