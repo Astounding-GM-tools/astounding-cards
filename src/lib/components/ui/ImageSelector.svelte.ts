@@ -9,6 +9,9 @@ export interface ImageSelectorState {
   loading: boolean;
   lastProcessedBlob: Blob | undefined;
   previewUrl: string | null;
+  originalFileName?: string;
+  uploadTime?: Date;
+  isFromUrl?: boolean;
 }
 
 interface ImageProcessingResult {
@@ -180,7 +183,13 @@ export async function handleFileChange(
   if (result.error) {
     return setErrorState(newState, result.error);
   } else if (result.blob && result.previewUrl) {
-    return setSuccessState(newState, result.blob, result.previewUrl);
+    const successState = setSuccessState(newState, result.blob, result.previewUrl);
+    // Add original file information
+    return updateImageSelectorState(successState, {
+      originalFileName: file.name,
+      uploadTime: new Date(),
+      isFromUrl: false
+    });
   } else {
     return setErrorState(newState, 'Failed to process image');
   }
@@ -205,7 +214,15 @@ export async function handleUrlLoad(
   if (result.error) {
     return setErrorState(newState, result.error);
   } else if (result.blob && result.previewUrl) {
-    return setSuccessState(newState, result.blob, result.previewUrl);
+    const successState = setSuccessState(newState, result.blob, result.previewUrl);
+    // Add URL metadata
+    const urlParts = state.urlValue.split('/');
+    const fileName = urlParts[urlParts.length - 1] || 'image';
+    return updateImageSelectorState(successState, {
+      originalFileName: fileName,
+      uploadTime: new Date(),
+      isFromUrl: true
+    });
   } else {
     return setErrorState(newState, 'Failed to process image');
   }

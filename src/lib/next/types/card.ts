@@ -18,6 +18,12 @@ export interface Card {
     description: string;
     image: string | null;
     imageBlob?: Blob;
+    imageMetadata?: {
+        originalName?: string;
+        addedAt?: number; // timestamp when image was added
+        source?: 'upload' | 'url'; // how the image was added
+        size?: number; // file size in bytes
+    };
     traits: Trait[];
     stats: Stat[];
 }

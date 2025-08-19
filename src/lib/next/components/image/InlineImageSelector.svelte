@@ -21,9 +21,10 @@
 
   const props = $props();
   const cardSize = (props.cardSize ?? 'tarot') as CardSize;
-  const onImageChange = props.onImageChange as ((blob: Blob | null, sourceUrl?: string) => void) | undefined;
+  const onImageChange = props.onImageChange as ((blob: Blob | null, sourceUrl?: string, originalFileName?: string) => void) | undefined;
   const onRemoveImage = props.onRemoveImage as (() => void) | undefined;
   const hasExistingImage = props.hasExistingImage as boolean | undefined;
+  const existingImageInfo = props.existingImageInfo as { filename?: string; source?: string; timestamp?: Date | null; status?: string; message?: string | null } | undefined;
   
   let fileInput: HTMLInputElement;
   let urlInput: HTMLInputElement;
@@ -38,7 +39,7 @@
     // Auto-save when file is processed
     if (hasPreview(state) && !hasError(state) && onImageChange) {
       state = await handleSaveAction(state, { 
-        onSave: onImageChange, 
+        onSave: (blob, sourceUrl) => onImageChange(blob, sourceUrl, state.originalFileName), 
         onClose: () => {} 
       });
     }
@@ -52,7 +53,7 @@
     // Auto-save when URL is loaded
     if (hasPreview(state) && !hasError(state) && onImageChange) {
       state = await handleSaveAction(state, { 
-        onSave: onImageChange, 
+        onSave: (blob, sourceUrl) => onImageChange(blob, sourceUrl, state.originalFileName), 
         onClose: () => {} 
       });
     }
@@ -68,6 +69,55 @@
     state = initializeImageSelectorState();
   }
 
+  // Helper functions
+  function formatUploadTime(time: Date): string {
+    const now = new Date();
+    const diffMs = now.getTime() - time.getTime();
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    
+    // Format as time if today, or date if older
+    const isToday = time.toDateString() === now.toDateString();
+    if (isToday) {
+      return time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } else {
+      return time.toLocaleDateString([], { month: 'short', day: 'numeric' });
+    }
+  }
+  
+  function getErrorMessage(error: string): string {
+    // Check for common CORS-related errors
+    if (error.includes('CORS') || error.includes('Failed to fetch') || 
+        error.includes('network') || error.includes('blocked')) {
+      return 'Image blocked by website. Try downloading and uploading the file instead.';
+    }
+    
+    // Check for other common errors
+    if (error.includes('404') || error.includes('not found')) {
+      return 'Image not found at URL';
+    }
+    
+    if (error.includes('403') || error.includes('forbidden')) {
+      return 'Access denied. Try downloading and uploading the file instead.';
+    }
+    
+    // Return original error for other cases
+    return error;
+  }
+  
+  function getImageSource(): string {
+    // Check if we have a URL in formData from parent component (for existing images)
+    // or if current state has URL value, then it was downloaded
+    if (state.urlValue || state.isFromUrl) {
+      return 'downloaded';
+    }
+    return 'uploaded';
+  }
+
   // Cleanup preview URL when component is destroyed
   $effect(() => {
     return () => {
@@ -77,88 +127,127 @@
 </script>
 
 <div class="inline-image-selector">
-  <div class="input-methods">
-    <!-- File Upload -->
-    <div class="file-input method">
-      <label for="file-input">Upload File</label>
+  <!-- Line 1: Upload -->
+  <div class="input-line">
+    <span class="input-label">Upload</span>
+    <input
+      bind:this={fileInput}
+      type="file"
+      id="file-input"
+      accept="image/*"
+      onchange={handleFile}
+      disabled={isProcessing(state)}
+    />
+  </div>
+  
+  <!-- Line 2: Download -->
+  <div class="input-line">
+    <span class="input-label">Download</span>
+    <div class="url-field">
       <input
-        bind:this={fileInput}
-        type="file"
-        id="file-input"
-        accept="image/*"
-        onchange={handleFile}
+        bind:this={urlInput}
+        bind:value={state.urlValue}
+        type="url"
+        id="url-input"
+        placeholder="https://..."
+        oninput={(e) => state = updateUrlValue(state, (e.currentTarget as HTMLInputElement).value)}
         disabled={isProcessing(state)}
       />
-    </div>
-    
-    <!-- URL Input -->
-    <div class="url-input method">
-      <label for="url-input">Image URL</label>
-      <div class="url-field">
-        <input
-          bind:this={urlInput}
-          bind:value={state.urlValue}
-          type="url"
-          id="url-input"
-          placeholder="https://..."
-          oninput={(e) => state = updateUrlValue(state, (e.currentTarget as HTMLInputElement).value)}
-          disabled={isProcessing(state)}
-        />
+      <button 
+        onclick={handleUrl}
+        disabled={isProcessing(state) || !state.urlValue}
+        class="load-btn"
+        type="button"
+      >
+        {isProcessing(state) ? '...' : 'Load image'}
+      </button>
+      {#if hasExistingImage}
         <button 
-          onclick={handleUrl}
-          disabled={isProcessing(state) || !state.urlValue}
-          class="load-btn"
+          onclick={handleRemove}
+          class="unset-btn"
           type="button"
+          title="Remove current image"
         >
-          {isProcessing(state) ? '...' : 'Load'}
+          Unset
         </button>
+      {/if}
+    </div>
+  </div>
+
+  <!-- Line 3: File info + Status -->
+  {#if state.originalFileName || existingImageInfo || isProcessing(state) || hasError(state) || hasPreview(state)}
+    <div class="info-status-line" class:no-image={existingImageInfo?.status === 'add-image'}>
+      <div class="file-info">
+        {#if state.originalFileName}
+          <span class="file-name">{state.originalFileName}</span>
+          {#if state.uploadTime}
+            <span class="upload-time">
+              {getImageSource()} {formatUploadTime(state.uploadTime)}
+            </span>
+          {/if}
+        {:else if existingImageInfo}
+          <span class="file-name" class:encouraging={existingImageInfo.status === 'add-image'}>
+            {existingImageInfo.filename || 'Existing image'}
+          </span>
+          {#if existingImageInfo.timestamp}
+            <span class="upload-time">
+              {existingImageInfo.source || 'uploaded'} {formatUploadTime(existingImageInfo.timestamp)}
+            </span>
+          {:else if existingImageInfo.message}
+            <span class="encouraging-message">
+              {existingImageInfo.message}
+            </span>
+          {/if}
+        {/if}
+      </div>
+      
+      <div class="status-actions">
+        {#if isProcessing(state)}
+          <div class="status processing">⏳ Loading image...</div>
+        {:else if hasError(state)}
+          <div class="status error">❌ {getErrorMessage(state.error)}</div>
+        {:else if hasPreview(state)}
+          <div class="status success">✅ Image ready</div>
+        {:else if existingImageInfo?.status === 'add-image'}
+          <div class="status encouraging">💡 Ready to add</div>
+        {:else if existingImageInfo?.status === 'ready-to-save'}
+          <div class="status warning">⚠️ Ready to save</div>
+        {:else if existingImageInfo?.status === 'ok'}
+          <div class="status success">✅ Image OK</div>
+        {:else if existingImageInfo?.status === 'ready'}
+          <div class="status success">✅ Image ready</div>
+        {/if}
+
+        {#if hasExistingImage}
+          <button 
+            type="button"
+            class="remove-btn"
+            onclick={handleRemove}
+          >
+            Remove
+          </button>
+        {/if}
       </div>
     </div>
-  </div>
-
-  <!-- Status and Actions -->
-  <div class="status-actions">
-    {#if isProcessing(state)}
-      <div class="status processing">Loading image...</div>
-    {:else if hasError(state)}
-      <div class="status error">{state.error}</div>
-    {:else if hasPreview(state)}
-      <div class="status success">✓ Image ready</div>
-    {/if}
-
-    {#if hasExistingImage}
-      <button 
-        type="button"
-        class="remove-btn"
-        onclick={handleRemove}
-      >
-        Remove Image
-      </button>
-    {/if}
-  </div>
+  {/if}
 </div>
 
 <style>
   .inline-image-selector {
     display: flex;
     flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  /* Line 1 & 2: Input lines */
+  .input-line {
+    display: flex;
+    align-items: center;
     gap: 0.75rem;
   }
 
-  .input-methods {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-
-  .method {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-  }
-
-  .method label {
+  .input-label {
+    min-width: 5rem;
     font-size: 0.8rem;
     font-weight: 600;
     color: var(--color);
@@ -166,7 +255,8 @@
 
   .url-field {
     display: flex;
-    gap: 0.25rem;
+    gap: 0.5rem;
+    flex: 1;
   }
 
   .url-field input {
@@ -216,17 +306,92 @@
     opacity: 0.9;
   }
 
+  .unset-btn {
+    padding: 0.375rem 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    background: #f8f9fa;
+    color: #666;
+    cursor: pointer;
+    font-family: var(--font-body);
+    font-size: 0.8rem;
+    white-space: nowrap;
+  }
+
+  .unset-btn:hover {
+    background: #fee;
+    color: #c53030;
+    border-color: #fcc;
+  }
+
+  /* Line 3: Info and status line */
+  .info-status-line {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.5rem 0.75rem;
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 3px;
+    min-height: 2.5rem;
+  }
+
+  .file-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .file-name {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--color);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .upload-time {
+    font-size: 0.75rem;
+    color: #666;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .encouraging-message {
+    font-size: 0.75rem;
+    color: #856404;
+    font-style: italic;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .file-name.encouraging {
+    color: #856404;
+    font-weight: 500;
+  }
+
+  .info-status-line.no-image {
+    background: #fff9e6;
+    border-color: #ffd700;
+  }
+
   .status-actions {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    min-height: 2rem;
+    gap: 0.75rem;
   }
 
   .status {
     font-size: 0.8rem;
     padding: 0.25rem 0.5rem;
     border-radius: 3px;
+    white-space: nowrap;
   }
 
   .status.processing {
@@ -237,6 +402,9 @@
   .status.error {
     background: #ffebee;
     color: #d32f2f;
+    max-width: 20rem;
+    white-space: normal;
+    word-break: break-word;
   }
 
   .status.success {
@@ -244,15 +412,26 @@
     color: #2e7d32;
   }
 
+  .status.encouraging {
+    background: #fff3cd;
+    color: #856404;
+  }
+
+  .status.warning {
+    background: #fff3cd;
+    color: #856404;
+  }
+
   .remove-btn {
-    padding: 0.375rem 0.75rem;
+    padding: 0.25rem 0.5rem;
     border: 1px solid #fcc;
     border-radius: 3px;
     background: #fee;
     color: #c53030;
     cursor: pointer;
     font-family: var(--font-body);
-    font-size: 0.8rem;
+    font-size: 0.75rem;
+    white-space: nowrap;
   }
 
   .remove-btn:hover {
@@ -261,15 +440,31 @@
   }
 
   /* Responsive */
-  @media (max-width: 480px) {
-    .input-methods {
+  @media (max-width: 640px) {
+    .input-line {
       flex-direction: column;
+      align-items: stretch;
+      gap: 0.5rem;
+    }
+    
+    .input-label {
+      min-width: auto;
+    }
+    
+    .info-status-line {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0.5rem;
     }
     
     .status-actions {
       flex-direction: column;
       gap: 0.5rem;
       align-items: stretch;
+    }
+    
+    .status.error {
+      max-width: none;
     }
   }
 </style>

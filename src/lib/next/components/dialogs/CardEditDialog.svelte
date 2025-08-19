@@ -41,7 +41,8 @@
         stats: [] as Stat[],
         traits: [] as Trait[],
         imageBlob: null as Blob | null,
-        imageUrl: null as string | null
+        imageUrl: null as string | null,
+        imageMetadata: null as Card['imageMetadata'] | null
     });
     
     // Image URL manager for blob handling
@@ -51,20 +52,6 @@
     let currentImageUrl = $derived(imageUrlManager.url || formData.imageUrl);
     let hasImage = $derived(!!(formData.imageBlob || formData.imageUrl));
     
-    // Image status information for better UX
-    let imageStatus = $derived(
-        formData.imageBlob ? (
-            (() => {
-                const blob = formData.imageBlob!;
-                const sizeKB = Math.round(blob.size / 1024);
-                return `Uploaded file (${blob.type || 'unknown'}, ${sizeKB}KB)`;
-            })()
-        ) : formData.imageUrl ? (
-            `Image URL: ${formData.imageUrl}`
-        ) : (
-            'No image selected'
-        )
-    );
     
     // Create preview card with live form data
     let previewCard = $derived(card ? {
@@ -89,6 +76,7 @@
             formData.traits = card.traits || [];
             formData.imageBlob = card.imageBlob || null;
             formData.imageUrl = card.image || null;
+            formData.imageMetadata = card.imageMetadata || null;
             
             // Update image manager
             imageUrlManager.updateBlob(card.imageBlob);
@@ -96,9 +84,21 @@
     });
     
     // Image handling functions
-    async function handleImageChange(blob: Blob | null, sourceUrl?: string) {
+    async function handleImageChange(blob: Blob | null, sourceUrl?: string, originalFileName?: string) {
         formData.imageBlob = blob;
         formData.imageUrl = sourceUrl || null;
+        
+        // Update metadata when new image is added
+        if (blob || sourceUrl) {
+            formData.imageMetadata = {
+                originalName: originalFileName || getFilenameFromUrl(sourceUrl) || 'image',
+                addedAt: Date.now(),
+                source: sourceUrl ? 'url' : 'upload',
+                size: blob?.size
+            };
+        } else {
+            formData.imageMetadata = null;
+        }
         
         // Update image manager
         imageUrlManager.updateBlob(blob);
@@ -107,6 +107,7 @@
     function removeImage() {
         formData.imageBlob = null;
         formData.imageUrl = null;
+        formData.imageMetadata = null;
         imageUrlManager.updateBlob(null);
     }
     
@@ -130,7 +131,8 @@
                 JSON.stringify(formData.stats) !== JSON.stringify(card.stats) ||
                 JSON.stringify(formData.traits) !== JSON.stringify(card.traits) ||
                 formData.imageBlob !== (card.imageBlob || null) ||
-                formData.imageUrl !== (card.image || null);
+                formData.imageUrl !== (card.image || null) ||
+                JSON.stringify(formData.imageMetadata) !== JSON.stringify(card.imageMetadata || null);
         }
     });
     
@@ -145,7 +147,8 @@
             stats: formData.stats,
             traits: formData.traits,
             image: formData.imageUrl,
-            imageBlob: formData.imageBlob
+            imageBlob: formData.imageBlob,
+            imageMetadata: formData.imageMetadata
         }, 'Saving card changes...');
         
         if (success) {
@@ -163,6 +166,75 @@
             formData.title = card.title;
             formData.subtitle = card.subtitle;
             formData.description = card.description;
+        }
+    }
+    
+    // Helper functions for image info
+    function getImageDisplayInfo() {
+        // Check both saved card data and current form changes
+        const hasCardImageData = !!(card?.imageBlob || card?.image);
+        const hasFormImageData = !!(formData.imageBlob || formData.imageUrl);
+        const hasImageChanges = formData.imageBlob !== (card?.imageBlob || null) || formData.imageUrl !== (card?.image || null);
+        
+        // No image case
+        if (!hasCardImageData && !hasFormImageData) {
+            return {
+                filename: 'No image added',
+                source: '',
+                timestamp: null,
+                status: 'add-image',
+                message: 'Add an image to enhance your card! 📸'
+            };
+        }
+        
+        // Has image - determine status based on whether changes are saved
+        let filename = '';
+        let source = '';
+        let timestamp = null;
+        let status = hasImageChanges ? 'ready-to-save' : 'ok';
+        
+        // Use form data if we have changes, otherwise use card data
+        const imageMetadata = hasImageChanges ? formData.imageMetadata : card?.imageMetadata;
+        const imageUrl = hasImageChanges ? formData.imageUrl : card?.image;
+        const imageBlob = hasImageChanges ? formData.imageBlob : card?.imageBlob;
+        
+        // Use metadata if available (new images with proper metadata)
+        if (imageMetadata?.originalName) {
+            filename = imageMetadata.originalName;
+            source = imageMetadata.source === 'url' ? 'downloaded' : 'uploaded';
+            timestamp = new Date(imageMetadata.addedAt!);
+        }
+        // URL reference available (downloaded images)
+        else if (imageUrl) {
+            const urlFilename = getFilenameFromUrl(imageUrl);
+            filename = urlFilename || imageUrl.substring(0, 40) + '...';
+            source = `Using: ${imageUrl}`;
+            timestamp = null;
+        }
+        // Local blob only (uploaded images without metadata)
+        else if (imageBlob) {
+            filename = 'Uploaded file';
+            source = 'Using: local file';
+            timestamp = null;
+        }
+        
+        return {
+            filename,
+            source,
+            timestamp,
+            status,
+            message: null
+        };
+    }
+    
+    function getFilenameFromUrl(url?: string | null): string | null {
+        if (!url) return null;
+        try {
+            const urlObj = new URL(url);
+            const filename = urlObj.pathname.split('/').pop() || '';
+            return filename.includes('.') ? filename : null;
+        } catch {
+            return null;
         }
     }
 </script>
@@ -197,12 +269,19 @@
                 <!-- Image Section -->
                 <fieldset class="form-fieldset">
                     <legend>Image</legend>
-                    <div class="image-status">
-                        <small>{imageStatus}</small>
-                    </div>
                     <InlineImageSelector
                         cardSize="tarot"
                         hasExistingImage={hasImage}
+                        existingImageInfo={(() => {
+                            const info = getImageDisplayInfo();
+                            return {
+                                filename: info.filename,
+                                source: info.source,
+                                timestamp: info.timestamp,
+                                status: info.status,
+                                message: info.message
+                            };
+                        })()}
                         onImageChange={handleImageChange}
                         onRemoveImage={removeImage}
                     />
