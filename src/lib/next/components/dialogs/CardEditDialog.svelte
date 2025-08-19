@@ -45,6 +45,9 @@
         imageMetadata: null as Card['imageMetadata'] | null
     });
     
+    // Track if form has been initialized to prevent false change detection
+    let isFormInitialized = $state(false);
+    
     // Image URL manager for blob handling
     let imageUrlManager = $state(new ImageUrlManager());
     
@@ -80,6 +83,11 @@
             
             // Update image manager
             imageUrlManager.updateBlob(card.imageBlob);
+            
+            // Mark form as initialized after a microtask to ensure all updates are applied
+            Promise.resolve().then(() => {
+                isFormInitialized = true;
+            });
         }
     });
     
@@ -180,10 +188,12 @@
         const cardImageUrl = card?.image || null;
         const cardImageMetadata = card?.imageMetadata || null;
         
-        const hasImageChanges = 
+        // Don't show changes until form is fully initialized
+        const hasImageChanges = isFormInitialized && (
             formData.imageBlob !== cardImageBlob ||
             formData.imageUrl !== cardImageUrl ||
-            JSON.stringify(formData.imageMetadata) !== JSON.stringify(cardImageMetadata);
+            JSON.stringify(formData.imageMetadata) !== JSON.stringify(cardImageMetadata)
+        );
         
         // No image case
         if (!hasCardImageData && !hasFormImageData) {
