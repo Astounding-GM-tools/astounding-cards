@@ -22,7 +22,7 @@
     import StatBlock from '../stats/StatBlock.svelte';
     import TraitList from '../traits/TraitList.svelte';
     import CardImage from '../image/CardImage.svelte';
-    import ImageSelector from '$lib/components/ui/ImageSelector.svelte';
+    import InlineImageSelector from '../image/InlineImageSelector.svelte';
     
     import type { Trait, Stat } from '$lib/next/types/card.js';
     import { ImageUrlManager } from '$lib/utils/image-handler.js';
@@ -44,8 +44,7 @@
         imageUrl: null as string | null
     });
     
-    // Image selector state
-    let showImageSelector = $state(false);
+    // Image URL manager for blob handling
     let imageUrlManager = $state(new ImageUrlManager());
     
     // Current image preview URL - show image state when blob OR url exists
@@ -97,22 +96,12 @@
     });
     
     // Image handling functions
-    function openImageSelector() {
-        showImageSelector = true;
-    }
-    
-    function closeImageSelector() {
-        showImageSelector = false;
-    }
-    
-    async function handleImageSave(blob: Blob | null, sourceUrl?: string) {
+    async function handleImageChange(blob: Blob | null, sourceUrl?: string) {
         formData.imageBlob = blob;
         formData.imageUrl = sourceUrl || null;
         
         // Update image manager
         imageUrlManager.updateBlob(blob);
-        
-        closeImageSelector();
     }
     
     function removeImage() {
@@ -208,46 +197,15 @@
                 <!-- Image Section -->
                 <fieldset class="form-fieldset">
                     <legend>Image</legend>
-                    <div class="image-section">
-                        <div class="image-status">
-                            <small>{imageStatus}</small>
-                        </div>
-                        {#if hasImage && currentImageUrl}
-                            <div class="current-image">
-                                <img src={currentImageUrl} alt="Card image" />
-                                <div class="image-actions">
-                                    <button 
-                                        type="button"
-                                        class="change-image-btn"
-                                        onclick={openImageSelector}
-                                    >
-                                        Change Image
-                                    </button>
-                                    <button 
-                                        type="button"
-                                        class="remove-image-btn"
-                                        onclick={removeImage}
-                                    >
-                                        Remove
-                                    </button>
-                                </div>
-                            </div>
-                        {:else}
-                            <div class="no-image">
-                                <div class="no-image-placeholder">
-                                    <span>📷</span>
-                                    <p>No image selected</p>
-                                </div>
-                                <button 
-                                    type="button"
-                                    class="add-image-btn"
-                                    onclick={openImageSelector}
-                                >
-                                    Add Image
-                                </button>
-                            </div>
-                        {/if}
+                    <div class="image-status">
+                        <small>{imageStatus}</small>
                     </div>
+                    <InlineImageSelector
+                        cardSize="tarot"
+                        hasExistingImage={hasImage}
+                        onImageChange={handleImageChange}
+                        onRemoveImage={removeImage}
+                    />
                 </fieldset>
                 
                 <!-- Stats Section -->
@@ -432,16 +390,6 @@
             <button onclick={cancelChanges}>Close</button>
         </div>
     </div>
-{/if}
-
-<!-- Image Selector Modal -->
-{#if showImageSelector}
-    <ImageSelector 
-        cardSize="tarot"
-        hasExistingImage={hasImage}
-        onSave={handleImageSave}
-        onClose={closeImageSelector}
-    />
 {/if}
 
 <style>
