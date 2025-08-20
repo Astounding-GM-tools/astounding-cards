@@ -334,8 +334,8 @@
                                     class="value-input"
                                     min="0"
                                     max="999"
-                                    oninput={(e) => {
-                                        const num = parseInt(e.target.value) || 0;
+                                    oninput={(e:Event) => {
+                                        const num = parseInt((e.target as HTMLInputElement).value) || 0;
                                         stat.value = Math.max(0, Math.min(999, num));
                                     }}
                                 />
@@ -553,93 +553,7 @@
         box-shadow: 0 0 0 2px rgba(74, 85, 104, 0.1);
     }
     
-    .coming-soon {
-        background: #f8f9fa;
-        border: 1px solid #e9ecef;
-        border-radius: 4px;
-        padding: 0.5rem;
-        font-size: 0.8rem;
-    }
-    
-    .coming-soon p {
-        margin: 0 0 0.25rem 0;
-        color: var(--accent);
-    }
-    
-    .coming-soon ul {
-        margin: 0;
-        padding-left: 1.25rem;
-    }
-    
-    .coming-soon li {
-        color: var(--color);
-        margin-bottom: 0.125rem;
-    }
-    
-    /* Attribute List Styles */
-    .attribute-list {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-    }
-    
-    .attribute-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 0.5rem;
-        border: 1px solid #eee;
-        border-radius: 3px;
-        background: #fafafa;
-    }
-    
-    .attribute-summary {
-        display: flex;
-        flex-direction: column;
-        gap: 0.25rem;
-        flex: 1;
-        min-width: 0;
-    }
-    
-    .attribute-title {
-        font-weight: 600;
-        font-size: 0.85rem;
-        color: var(--color);
-    }
-    
-    .attribute-value {
-        font-size: 0.8rem;
-        color: var(--accent);
-        font-weight: 500;
-    }
-    
-    .attribute-description {
-        font-size: 0.75rem;
-        color: #666;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-    
-    .attribute-meta {
-        font-size: 0.7rem;
-        color: #999;
-    }
-    
-    .edit-attribute-btn {
-        padding: 0.25rem 0.5rem;
-        border: 1px solid #ddd;
-        border-radius: 3px;
-        background: white;
-        cursor: pointer;
-        font-family: var(--font-body);
-        font-size: 0.75rem;
-        flex-shrink: 0;
-    }
-    
-    .edit-attribute-btn:hover {
-        background: #f5f5f5;
-    }
+    /* Removed unused CSS selectors - clean build */
     
     .add-attribute-btn {
         padding: 0.5rem;
@@ -874,129 +788,7 @@
         cursor: pointer;
     }
     
-    /* Image Section Styles */
-    .image-section {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-    }
-    
-    .image-status {
-        padding: 0.25rem 0.5rem;
-        background: #f8f9fa;
-        border-radius: 3px;
-        border: 1px solid #e9ecef;
-        font-size: 0.75rem;
-        color: #666;
-        text-align: center;
-    }
-    
-    .current-image {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-        align-items: center;
-    }
-    
-    .current-image img {
-        width: 120px;
-        height: 168px; /* 5:7 aspect ratio */
-        object-fit: cover;
-        border-radius: 4px;
-        border: 1px solid #ddd;
-    }
-    
-    .image-actions {
-        display: flex;
-        gap: 0.5rem;
-    }
-    
-    .change-image-btn,
-    .remove-image-btn,
-    .add-image-btn {
-        padding: 0.375rem 0.75rem;
-        border: 1px solid #ddd;
-        border-radius: 3px;
-        background: white;
-        cursor: pointer;
-        font-family: var(--font-body);
-        font-size: 0.8rem;
-        transition: all 0.2s ease;
-    }
-    
-    .change-image-btn:hover,
-    .add-image-btn:hover {
-        background: var(--accent);
-        color: white;
-        border-color: var(--accent);
-    }
-    
-    .remove-image-btn {
-        background: #fee;
-        border-color: #fcc;
-        color: #c53030;
-    }
-    
-    .remove-image-btn:hover {
-        background: #fed7d7;
-        border-color: #fc8181;
-    }
-    
-    .no-image {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 0.75rem;
-    }
-    
-    .no-image-placeholder {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        width: 120px;
-        height: 168px;
-        border: 2px dashed #ccc;
-        border-radius: 4px;
-        background: #fafafa;
-        color: #999;
-    }
-    
-    .no-image-placeholder span {
-        font-size: 2rem;
-        margin-bottom: 0.5rem;
-    }
-    
-    .no-image-placeholder p {
-        margin: 0;
-        font-size: 0.8rem;
-        text-align: center;
-    }
-    
-    /* Attribute Editor Modal */
-    .attribute-modal-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 0, 0, 0.5);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 1000;
-        padding: 1rem;
-    }
-    
-    .attribute-modal {
-        background: white;
-        border-radius: 8px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-        max-width: 500px;
-        width: 100%;
-        max-height: 90vh;
-        overflow-y: auto;
-    }
+    /* Unused image and modal styles removed for clean build */
     
     /* Responsive */
     @media (max-width: 768px) {
@@ -1017,9 +809,5 @@
             height: 200px;
         }
         
-        .attribute-modal {
-            margin: 0.5rem;
-            max-width: none;
-        }
     }
 </style>

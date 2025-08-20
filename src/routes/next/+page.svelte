@@ -1,5 +1,6 @@
 <script lang="ts">
-    import type { Trait } from '$lib/next/types/card';
+    import type { Card as TCard, Trait } from '$lib/next/types/card';
+    import type { PageLayout } from '$lib/next/components/page/types';
     
     import Page from '$lib/next/components/page/Page.svelte';
     import Card from '$lib/next/components/card/Card.svelte';
@@ -28,7 +29,7 @@
     // Simple card count for UI logic
     let cardCount = $derived(cards?.length || 0);
 
-    function openCardEditor(card) {
+    function openCardEditor(card: TCard) {
         selectedCardId = card.id;
         dialogStore.setContent(CardEditDialogSnippet);
     }
@@ -101,7 +102,7 @@
         <p>No cards found. <button onclick={() => nextDevStore.setupTestEnvironment()}>Load Sample Data</button></p>
     {:else}
         <!-- Card Fronts -->
-        <Page layout={layout}>
+        <Page layout={layout as PageLayout}>
             {#each cards as card}
                 <Card>
                     <button 
@@ -122,7 +123,7 @@
         </Page>
 
         <!-- Card Backs -->
-        <Page layout={layout}>
+        <Page layout={layout as PageLayout}>
             {#each cards as card}
                 <Card>
                     <button 

@@ -1,6 +1,6 @@
 // CardStatSelector.svelte.ts - Extracted logic for CardStatSelector component
 
-import type { CardStat, Portability, Card, Deck } from '$lib/types';
+import type { CardStat, Portability, Card, Deck, LegacyCardStat } from '$lib/types';
 
 // === Type Definitions ===
 
@@ -217,7 +217,10 @@ function convertLegacyStatToNew(stat: LegacyCardStat): CardStat {
     case 'item':
       return { statId: 'portability', value: stat.value };
     case 'location':
-      return { statId: 'area', value: stat.value };
+      return { statId: 'area', value: stat.value.value };
+    default:
+      // This should never happen with proper typing, but provide a fallback
+      throw new Error(`Unknown legacy stat type: ${(stat as any).type}`);
   }
 }
 

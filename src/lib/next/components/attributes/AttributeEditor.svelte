@@ -52,7 +52,7 @@
     });
     
     // Check for changes
-    let hasChanges = $derived(() => {
+    let hasChanges = $derived((() => {
         if (mode === 'trait') {
             const trait = attribute as Trait;
             return (
@@ -70,7 +70,7 @@
                 formData.description !== (stat.description || '')
             );
         }
-    });
+    })());
     
     function handleSave() {
         if (mode === 'trait') {

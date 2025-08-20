@@ -17,13 +17,13 @@ export interface Card {
     subtitle: string;
     description: string;
     image: string | null;
-    imageBlob?: Blob;
+    imageBlob?: Blob | null;
     imageMetadata?: {
         originalName?: string;
         addedAt?: number; // timestamp when image was added
         source?: 'upload' | 'url'; // how the image was added
         size?: number; // file size in bytes
-    };
+    } | null;
     traits: Trait[];
     stats: Stat[];
 }

@@ -37,7 +37,7 @@ const mockTemplate: StatblockTemplate = {
   icon: '🧪',
   mechanics: [
     { type: MechanicType.HEALTH, name: 'Health', value: '10', tracked: false },
-    { type: 'strength', name: 'Strength', value: '15', tracked: false }
+    { type: MechanicType.ATTACK, name: 'Strength', value: '15', tracked: false }
   ]
 };
 
