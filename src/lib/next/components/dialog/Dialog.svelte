@@ -38,7 +38,8 @@
     onclose={() => dialogStore.close()}
 >
     {#if dialogStore.content}
-        {@render dialogStore.content()}
+        {@const Component = dialogStore.content}
+        <Component {...dialogStore.contentProps} />
     {/if}
 </dialog>
 

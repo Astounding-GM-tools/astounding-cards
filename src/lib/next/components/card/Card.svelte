@@ -1,12 +1,21 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 
-	const { children } = $props<{
+    import CardEditDialog from '$lib/next/components/dialogs/CardEditDialog.svelte';
+    import { dialogStore } from '$lib/next/components/dialog/dialogStore.svelte.ts';
+
+	const { children, preview, cardId } = $props<{
 		children?: Snippet;
+        cardId?: string;
+		preview?: boolean;
 	}>();
+    
+    function openCardEditor() {
+        dialogStore.setContent(CardEditDialog, { cardId: cardId || '' });
+    }
 </script>
 
-<article class="card">
+<button class="card" class:preview onclick={ !preview ? openCardEditor : null } aria-label="Click to edit card">
 	<div class="crop-mark top-left"></div>
 	<div class="crop-mark top-right"></div>
 	<div class="crop-mark bottom-left"></div>
@@ -15,31 +24,69 @@
 	{#if children}
 		{@render children()}
 	{/if}
-</article>
+</button>
 
 <style>
 	.card {
+        all: unset;
+		aspect-ratio: 5/7;
+		color: var(--color);
 		display: flex;
 		flex-direction: column;
-		aspect-ratio: 5/7;
 		flex: 0 0 auto;
-		position: relative;
-		padding: 2%;
 		font-family: var(--font-body);
-		color: var(--color);
+		padding: 0;
+		position: relative;
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        transition: opacity 0.2s ease;
+        width: 100%;
 
 		container-type: inline-size;
 		container-name: card;
 	}
+        .card:hover {
+        opacity: 0.9;
+    }
+    
+    .card:active {
+        transform: scale(0.98);
+    }
 
-	.crop-mark {
-		--crop-offset: calc(-1 * var(--page-padding));
-		position: absolute;
-		width: var(--page-padding);
-		height: var(--page-padding);
-		border: 0.25mm solid #000;
-		z-index: 1;
-	}
+    .card.preview {
+        cursor: default;
+        pointer-events: none;
+    }
+    .card.preview:hover {
+        opacity: 1;
+    }
+
+    .card.preview:active {
+        transform: none;
+    }
+
+    .crop-mark {
+        display: none;
+    }
+    @media print {
+        .card {
+            page-break-inside: avoid;
+            page-break-after: auto;
+        }
+        .crop-mark {
+            --crop-offset: calc(-1 * var(--page-padding));
+            position: absolute;
+            width: var(--page-padding);
+            height: var(--page-padding);
+            border: 0.25mm solid #000;
+            z-index: 1;
+            display: block;
+        }
+    }
 
 	.crop-mark.top-left {
 		top: var(--crop-offset);

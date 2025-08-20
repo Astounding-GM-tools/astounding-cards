@@ -19,7 +19,6 @@
         }
         return boxes;
     }
-
 </script>
 
 <section class="stat-block">
@@ -47,7 +46,8 @@
 <style>
 	.stat-block {
 		font-size: var(--font-size);
-		margin-top: auto;
+        margin: auto 0.8em 0.6em 0.8em;
+        z-index: 10;
 	}
 
     .stat-item {

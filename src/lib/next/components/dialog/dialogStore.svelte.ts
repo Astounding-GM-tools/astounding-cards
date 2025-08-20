@@ -20,17 +20,21 @@
 function createDialogStore() {
     let isOpen = $state(false);
     let content = $state<any | null>(null);
+    let contentProps = $state<any>({});
 
     return {
         get isOpen() { return isOpen; },
         get content() { return content; },
+        get contentProps() { return contentProps; },
         open() { isOpen = true; },
         close() {
             isOpen = false;
-            content = null;  // Clean up content when closing
+            content = null;
+            contentProps = {};
         },
-        setContent(snippet: any) {
-            content = snippet;
+        setContent(component: any, props: any = {}) {
+            content = component;
+            contentProps = props;
             this.open();
         }
     };

@@ -1,9 +1,3 @@
-<!--
-    CardImage.svelte
-    
-    Displays card images for the Next system.
-    Handles both blob URLs and regular URLs.
--->
 <script lang="ts">
     import type { Card } from '../../types/card.js';
     import { ImageUrlManager } from '$lib/utils/image-handler.js';
@@ -37,29 +31,20 @@
 </script>
 
 {#if imageUrl()}
-    <div class="card-image">
-        <img 
-            src={imageUrl()} 
-            alt={card.title}
-            loading="lazy"
-        />
-    </div>
+    <img 
+        src={imageUrl()} 
+        alt={card.title}
+        loading="lazy"
+    />
 {/if}
 
 <style>
-    .card-image {
-        width: 100%;
-        height: auto;
-        max-height: 40%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        overflow: hidden;
-        border-radius: 4px;
-        margin-bottom: 1em;
-    }
-    
-    .card-image img {
+    img {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
         width: 100%;
         height: 100%;
         object-fit: cover;

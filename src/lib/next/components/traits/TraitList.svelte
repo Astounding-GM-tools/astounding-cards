@@ -19,7 +19,7 @@
 		font-size: var(--font-size);
 		gap: 0.2em 0.5em;
 		grid-template-columns: auto 1fr;
-		margin: 0.6em 0;
+		margin: 0.6em 0.8em;
 	}
 
 	.trait-label {

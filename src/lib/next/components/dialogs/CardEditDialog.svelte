@@ -422,21 +422,23 @@
                     <div class="preview-container" data-layout="poker">
                         <!-- Front Card Preview -->
                         <div class="preview-wrapper">
-                            <CardComponent>
+                            <CardComponent preview>
                                 <CardImage card={previewCard} />
-                                <Header 
-                                    title={previewCard.title} 
-                                    subtitle={previewCard.subtitle} 
-                                />
                                 <StatFocus stats={previewCard.stats} />
-                                <TraitList traits={previewCard.traits.filter(trait => trait.isPublic)} />
+                                
+                                <div class="card-content-front">
+                                    <Header 
+                                        title={previewCard.title} 
+                                        subtitle={previewCard.subtitle} 
+                                    />
+                                    <TraitList traits={previewCard.traits.filter(trait => trait.isPublic)} />
+                                </div>
                             </CardComponent>
-                            <div class="card-label">Front</div>
                         </div>
                         
                         <!-- Back Card Preview -->
                         <div class="preview-wrapper">
-                            <CardComponent>
+                            <CardComponent preview>
                                 <Header 
                                     back
                                     title={previewCard.title} 
@@ -445,7 +447,6 @@
                                 <StatBlock stats={previewCard.stats} />
                                 <TraitList traits={previewCard.traits.filter(trait => !trait.isPublic)} />
                             </CardComponent>
-                            <div class="card-label">Back</div>
                         </div>
                     </div>
                 {/if}
@@ -667,6 +668,9 @@
         display: flex;
         flex-direction: column;
         gap: 0.5rem;
+        overflow-y: auto;
+        overflow-x: hidden;
+        font-size: var(--font-size);
     }
     
     .preview-container {
@@ -678,8 +682,8 @@
     .preview-wrapper {
         position: relative;
         width: 100%;
-        height: 280px; /* Double the height for larger cards */
-        overflow: hidden;
+        aspect-ratio: 5 / 7;
+
     }
     
     /* Scale the actual cards to fit in preview - much larger now */
@@ -788,7 +792,15 @@
         cursor: pointer;
     }
     
-    /* Unused image and modal styles removed for clean build */
+    .card-content-front {
+        display: flex;
+        flex-direction: column;
+        margin: auto 0.2em 0.2em 0.2em;
+        background: white;
+        border-radius: 0.2em;
+        box-shadow: 0 0 0.6em 0 rgba(0, 0, 0, 0.1);
+        z-index: 10;
+    }    /* Unused image and modal styles removed for clean build */
     
     /* Responsive */
     @media (max-width: 768px) {
