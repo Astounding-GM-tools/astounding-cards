@@ -76,6 +76,11 @@
     isDialogOpen ? getStatsByCategoryForDialog(editorState.editingStats) : {}
   );
 
+  // Check if stats have changed from original
+  const hasChanges = $derived(
+    isDialogOpen ? statsChanged(currentStats, editorState.editingStats) : false
+  );
+
   function openDialog() {
     // Initialize editor state with current stats
     editorState = initializeStatsEditorState(currentStats);
@@ -358,7 +363,7 @@
         </button>
       {/if}
       <button class="secondary" onclick={closeDialog} disabled={isUpdating}>Cancel</button>
-      <button class="primary" onclick={saveStats} disabled={isUpdating}>
+      <button class="primary" onclick={saveStats} disabled={!hasChanges || isUpdating}>
         {#if isUpdating}
           Saving...
         {:else}

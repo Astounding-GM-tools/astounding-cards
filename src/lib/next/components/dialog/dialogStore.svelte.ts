@@ -35,7 +35,10 @@ function createDialogStore() {
         setContent(component: any, props: any = {}) {
             content = component;
             contentProps = props;
-            this.open();
+            // Only open if we're setting actual content
+            if (component) {
+                this.open();
+            }
         }
     };
 }

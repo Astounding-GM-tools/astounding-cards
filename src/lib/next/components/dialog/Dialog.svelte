@@ -23,19 +23,27 @@
 <script lang="ts">
     import { dialogStore } from './dialogStore.svelte';
     let dialog: HTMLDialogElement;
+    let isDialogOpen = false;
 
     $effect(() => {
-        if (dialogStore.isOpen) {
+        if (dialogStore.isOpen && !isDialogOpen) {
             dialog?.showModal();
-        } else {
+            isDialogOpen = true;
+        } else if (!dialogStore.isOpen && isDialogOpen) {
             dialog?.close();
+            isDialogOpen = false;
         }
     });
+
+    function handleClose() {
+        isDialogOpen = false;
+        dialogStore.close();
+    }
 </script>
 
 <dialog 
     bind:this={dialog}
-    onclose={() => dialogStore.close()}
+    onclose={handleClose}
 >
     {#if dialogStore.content}
         {@const Component = dialogStore.content}

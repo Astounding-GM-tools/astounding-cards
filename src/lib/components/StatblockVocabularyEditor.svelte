@@ -2,6 +2,7 @@
   import { createEventDispatcher } from 'svelte';
   import type { StatblockVocabulary } from '$lib/types';
   import { getDefaultConfig, configToSimpleVocabulary } from '$lib/statblockConfigs';
+  import { hasVocabularyChanged } from './StatblockVocabularyEditor.svelte.ts';
 
   interface Props {
     vocabulary?: StatblockVocabulary;
@@ -15,10 +16,18 @@
     cancel: void;
   }>();
 
+  // Store original vocabulary for change detection
+  const originalVocabulary = vocabulary;
+
   // Create working copy of vocabulary
   let workingVocabulary = $state<StatblockVocabulary>({
     ...vocabulary
   });
+
+  // Check if vocabulary has changed
+  const hasChanges = $derived(
+    hasVocabularyChanged(originalVocabulary, workingVocabulary)
+  );
 
   // Track custom stats (those not in default config)
   const defaultVocab = configToSimpleVocabulary(getDefaultConfig());
@@ -146,7 +155,7 @@
       <button class="secondary" onclick={handleCancel}>
         Cancel
       </button>
-      <button class="primary" onclick={handleSave}>
+      <button class="primary" onclick={handleSave} disabled={!hasChanges}>
         Save Vocabulary
       </button>
     </div>

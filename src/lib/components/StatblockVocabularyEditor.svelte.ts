@@ -181,6 +181,20 @@ export function validateVocabulary(vocabulary: StatblockVocabulary): {
 }
 
 /**
+ * Check if vocabulary has changed compared to original
+ */
+export function hasVocabularyChanged(
+  original: StatblockVocabulary,
+  current: StatblockVocabulary
+): boolean {
+  // Compare cleaned versions to handle empty custom stats properly
+  const cleanedOriginal = cleanVocabulary(original);
+  const cleanedCurrent = cleanVocabulary(current);
+  
+  return JSON.stringify(cleanedOriginal) !== JSON.stringify(cleanedCurrent);
+}
+
+/**
  * Get all stat labels from vocabulary for preview
  */
 export function getStatLabelsForPreview(vocabulary: StatblockVocabulary): string[] {

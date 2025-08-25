@@ -10,8 +10,9 @@
  * Store: "decks" (key: deck.id, value: Deck)
  */
 
-import type { Deck, Layout, Theme } from '../types/deck.js';
-import type { Card } from '../types/card.js';
+import type { Deck, Card } from '../types/deck.js';
+import type { Theme, Layout } from '../types/card.js';
+import { findNonCloneableProperties } from '$lib/utils/clone-utils.js';
 
 export class DatabaseError extends Error {
     constructor(message: string, public code: string) {
@@ -322,34 +323,6 @@ class NextDatabase {
         return storableDeck;
     }
     
-    /**
-     * Debug helper to detect non-cloneable objects
-     */
-    private debugCloneableCheck(obj: any, path: string = 'deck'): void {
-        try {
-            // Try to clone the object to see if it would fail
-            structuredClone(obj);
-        } catch (error) {
-            console.error(`Non-cloneable object detected at ${path}:`, error);
-            console.error('Object causing issues:', obj);
-            
-            // Check for common non-cloneable properties
-            if (typeof obj === 'object' && obj !== null) {
-                for (const [key, value] of Object.entries(obj)) {
-                    if (value instanceof Blob) {
-                        console.warn(`Found Blob at ${path}.${key}`); 
-                    } else if (typeof value === 'function') {
-                        console.warn(`Found function at ${path}.${key}`);
-                    } else if (value && typeof value === 'object') {
-                        // Recursively check nested objects (but avoid infinite loops)
-                        if (!path.includes('.cards.') || key !== 'cards') {
-                            this.debugCloneableCheck(value, `${path}.${key}`);
-                        }
-                    }
-                }
-            }
-        }
-    }
 
     /**
      * Create default card template

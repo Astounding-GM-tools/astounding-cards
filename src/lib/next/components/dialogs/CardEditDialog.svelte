@@ -26,6 +26,7 @@
     
     import type { Trait, Stat } from '$lib/next/types/card.js';
     import { ImageUrlManager } from '$lib/utils/image-handler.js';
+    import { safeDeepClone } from '$lib/utils/clone-utils.js';
     
     // Props passed when dialog opens
     const { cardId }: { cardId: string } = $props();
@@ -51,8 +52,7 @@
     // Image URL manager for blob handling
     let imageUrlManager = $state(new ImageUrlManager());
     
-    // Current image preview URL - show image state when blob OR url exists
-    let currentImageUrl = $derived(imageUrlManager.url || formData.imageUrl);
+    // Check if card has image for dialog display
     let hasImage = $derived(!!(formData.imageBlob || formData.imageUrl));
     
     
@@ -75,11 +75,12 @@
             formData.title = card.title;
             formData.subtitle = card.subtitle;
             formData.description = card.description;
-            formData.stats = card.stats || [];
-            formData.traits = card.traits || [];
-            formData.imageBlob = card.imageBlob || null;
+            // Create deep copies to isolate form state from deck state
+            formData.stats = safeDeepClone(card.stats || []);
+            formData.traits = safeDeepClone(card.traits || []);
+            formData.imageBlob = card.imageBlob || null; // Blob is immutable, safe to share reference
             formData.imageUrl = card.image || null;
-            formData.imageMetadata = card.imageMetadata || null;
+            formData.imageMetadata = card.imageMetadata ? safeDeepClone(card.imageMetadata) : null;
             
             // Update image manager
             imageUrlManager.updateBlob(card.imageBlob);
@@ -131,7 +132,7 @@
     
     // Check for changes
     $effect(() => {
-        if (card) {
+        if (card && isFormInitialized) {
             hasChanges = 
                 formData.title !== card.title ||
                 formData.subtitle !== card.subtitle ||
@@ -174,6 +175,15 @@
             formData.title = card.title;
             formData.subtitle = card.subtitle;
             formData.description = card.description;
+            // Reset with deep copies to maintain isolation
+            formData.stats = safeDeepClone(card.stats || []);
+            formData.traits = safeDeepClone(card.traits || []);
+            formData.imageBlob = card.imageBlob || null; // Blob is immutable, safe to share reference
+            formData.imageUrl = card.image || null;
+            formData.imageMetadata = card.imageMetadata ? safeDeepClone(card.imageMetadata) : null;
+            
+            // Update image manager
+            imageUrlManager.updateBlob(card.imageBlob);
         }
     }
     
@@ -554,7 +564,6 @@
         box-shadow: 0 0 0 2px rgba(74, 85, 104, 0.1);
     }
     
-    /* Removed unused CSS selectors - clean build */
     
     .add-attribute-btn {
         padding: 0.5rem;
