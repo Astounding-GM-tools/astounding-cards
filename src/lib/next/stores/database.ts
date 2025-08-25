@@ -12,7 +12,7 @@
 
 import type { Deck, Card } from '../types/deck.js';
 import type { Theme, Layout } from '../types/card.js';
-import { findNonCloneableProperties } from '$lib/utils/clone-utils.js';
+import { safeDeepClone } from '$lib/utils/clone-utils.js';
 
 export class DatabaseError extends Error {
     constructor(message: string, public code: string) {
@@ -291,36 +291,11 @@ class NextDatabase {
     
     /**
      * Sanitize deck data for IndexedDB storage
-     * Removes non-cloneable properties like Proxy objects and Blobs
+     * Uses safeDeepClone to handle Blobs and other special objects properly
      */
     private sanitizeDeckForStorage(deck: Deck): Deck {
-        // Prepare deck for storage by ensuring all data is cloneable
-        // Keep imageBlob like the old system - blobs ARE storable in IndexedDB
-        const storableDeck = {
-            ...deck,
-            cards: deck.cards.map(card => ({
-                id: card.id || crypto.randomUUID(),
-                title: card.title || '',
-                subtitle: card.subtitle || '',
-                description: card.description || '',
-                image: card.image || null,
-                imageBlob: (card as any).imageBlob || null, // Keep blob for storage like old system
-                stats: (card.stats || []).map(stat => ({
-                    title: stat.title || '',
-                    isPublic: stat.isPublic ?? true,
-                    value: typeof stat.value === 'number' ? stat.value : 0,
-                    tracked: stat.tracked ?? false,
-                    description: stat.description || ''
-                })),
-                traits: (card.traits || []).map(trait => ({
-                    title: trait.title || '',
-                    isPublic: trait.isPublic ?? true,
-                    description: trait.description || ''
-                }))
-            }))
-        };
-        
-        return storableDeck;
+        // Use our safe deep clone utility which handles Blobs and other special objects
+        return safeDeepClone(deck);
     }
     
 
