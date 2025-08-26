@@ -29,9 +29,17 @@
         if (dialogStore.isOpen && !isDialogOpen) {
             dialog?.showModal();
             isDialogOpen = true;
+            // Lock body scroll when dialog opens
+            if (typeof window !== 'undefined') {
+                document.body.style.overflow = 'hidden';
+            }
         } else if (!dialogStore.isOpen && isDialogOpen) {
             dialog?.close();
             isDialogOpen = false;
+            // Restore body scroll when dialog closes
+            if (typeof window !== 'undefined') {
+                document.body.style.overflow = '';
+            }
         }
     });
 
@@ -39,6 +47,15 @@
         isDialogOpen = false;
         dialogStore.close();
     }
+    
+    // Cleanup: Ensure body scroll is restored if component unmounts unexpectedly
+    $effect(() => {
+        return () => {
+            if (typeof window !== 'undefined' && isDialogOpen) {
+                document.body.style.overflow = '';
+            }
+        };
+    });
 </script>
 
 <dialog 
@@ -71,6 +88,9 @@
         /* Center it nicely */
         margin: auto;
         overflow: hidden; /* Let the dialog content handle scrolling */
+        
+        /* Modern CSS solution: Prevent scroll chaining to background */
+        overscroll-behavior: contain;
     }
 
     dialog::backdrop {
