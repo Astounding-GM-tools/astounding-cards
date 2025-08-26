@@ -27,6 +27,7 @@
     import type { Trait, Stat } from '$lib/next/types/card.js';
     import { ImageUrlManager } from '$lib/utils/image-handler.js';
     import { safeDeepClone } from '$lib/utils/clone-utils.js';
+    import { createDragState, createDragHandlers, DRAG_CLASSES } from '$lib/utils/drag-drop.svelte.js';
     
     // Props passed when dialog opens
     const { cardId }: { cardId: string } = $props();
@@ -266,6 +267,28 @@
             return null;
         }
     }
+    
+    // Drag and drop for stats
+    const statsDrag = createDragState<Stat>();
+    const statsHandlers = createDragHandlers(
+        statsDrag,
+        (newStats) => {
+            // Force Svelte to recognize this as a new array reference
+            formData.stats = [...newStats];
+        },
+        () => formData.stats
+    );
+    
+    // Drag and drop for traits
+    const traitsDrag = createDragState<Trait>();
+    const traitsHandlers = createDragHandlers(
+        traitsDrag,
+        (newTraits) => {
+            // Force Svelte to recognize this as a new array reference
+            formData.traits = [...newTraits];
+        },
+        () => formData.traits
+    );
 </script>
 
 {#if card}
@@ -317,109 +340,175 @@
                 </fieldset>
                 
                 <!-- Stats Section -->
-                <fieldset class="form-fieldset">
-                    <legend>Stats</legend>
+                <fieldset class="form-fieldset" role="group" aria-labelledby="stats-legend">
+                    <legend id="stats-legend">Stats</legend>
+                    <div role="list" aria-label="Reorderable list of stats">
                     {#each formData.stats as stat, index}
-                        <div class="inline-attribute-editor">
-                            <!-- Line 1: title + public -->
-                            <div class="attribute-row">
-                                <input 
-                                    type="text" 
-                                    bind:value={stat.title}
-                                    placeholder="Stat title"
-                                    class="title-input"
-                                />
-                                <label class="checkbox-label">
-                                    <input type="checkbox" bind:checked={stat.isPublic} />
-                                    Public
-                                </label>
+                        <div 
+                            class="inline-attribute-editor {DRAG_CLASSES.draggable}" 
+                            draggable="true"
+                            role="listitem"
+                            aria-label="Stat: {stat.title || 'Untitled'} - Drag to reorder"
+                            tabindex="0"
+                            ondragstart={(e) => statsHandlers.handleDragStart(e, index)}
+                            ondragover={statsHandlers.handleDragOver}
+                            ondrop={(e) => statsHandlers.handleDrop(e, index)}
+                            ondragend={statsHandlers.handleDragEnd}
+                            onkeydown={(e) => {
+                                // Allow keyboard navigation for accessibility
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                    e.preventDefault();
+                                    // Focus could be used to start drag mode in the future
+                                }
+                            }}
+                            data-index={index}
+                        >
+                            <!-- Drag handle -->
+                            <div class="{DRAG_CLASSES.handle}" title="Drag to reorder">
+                                ⋮⋮
                             </div>
                             
-                            <!-- Line 2: value + tracked (stat mode only) -->
-                            <div class="attribute-row">
-                                <input 
-                                    type="number" 
-                                    bind:value={stat.value}
-                                    placeholder="Value"
-                                    class="value-input"
-                                    min="0"
-                                    max="999"
-                                    oninput={(e:Event) => {
-                                        const num = parseInt((e.target as HTMLInputElement).value) || 0;
-                                        stat.value = Math.max(0, Math.min(999, num));
-                                    }}
-                                />
-                                <label class="checkbox-label">
-                                    <input type="checkbox" bind:checked={stat.tracked} />
-                                    Tracked
-                                </label>
-                            </div>
-                            
-                            <!-- Line 3: description -->
-                            <div class="attribute-row">
-                                <textarea 
-                                    bind:value={stat.description}
-                                    placeholder="Optional description"
-                                    class="description-input"
-                                    rows="1"
-                                ></textarea>
-                                <button 
-                                    class="delete-btn"
-                                    onclick={() => formData.stats.splice(index, 1)}
-                                >
-                                    🗑️
-                                </button>
+                            <div class="attribute-content">
+                                <!-- Line 1: title + public -->
+                                <div class="attribute-row">
+                                    <input 
+                                        type="text" 
+                                        bind:value={stat.title}
+                                        placeholder="Stat title"
+                                        class="title-input"
+                                    />
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" bind:checked={stat.isPublic} />
+                                        Public
+                                    </label>
+                                </div>
+                                
+                                <!-- Line 2: value + tracked (stat mode only) -->
+                                <div class="attribute-row">
+                                    <input 
+                                        type="number" 
+                                        bind:value={stat.value}
+                                        placeholder="Value"
+                                        class="value-input"
+                                        min="0"
+                                        max="999"
+                                        oninput={(e:Event) => {
+                                            const num = parseInt((e.target as HTMLInputElement).value) || 0;
+                                            stat.value = Math.max(0, Math.min(999, num));
+                                        }}
+                                    />
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" bind:checked={stat.tracked} />
+                                        Tracked
+                                    </label>
+                                </div>
+                                
+                                <!-- Line 3: description -->
+                                <div class="attribute-row">
+                                    <textarea 
+                                        bind:value={stat.description}
+                                        placeholder="Optional description"
+                                        class="description-input"
+                                        rows="1"
+                                    ></textarea>
+                                    <button 
+                                        class="delete-btn"
+                                        onclick={() => {
+                                            const newStats = [...formData.stats];
+                                            newStats.splice(index, 1);
+                                            formData.stats = newStats;
+                                        }}
+                                    >
+                                        🗑️
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     {/each}
+                    </div>
                     <button 
                         class="add-attribute-btn"
-                        onclick={() => formData.stats.push({ title: '', isPublic: true, value: 0, tracked: false, description: '' })}
+                        onclick={() => {
+                            formData.stats = [...formData.stats, { title: '', isPublic: true, value: 0, tracked: false, description: '' }];
+                        }}
                     >
                         + Add Stat
                     </button>
                 </fieldset>
                 
                 <!-- Traits Section -->
-                <fieldset class="form-fieldset">
-                    <legend>Traits</legend>
+                <fieldset class="form-fieldset" role="group" aria-labelledby="traits-legend">
+                    <legend id="traits-legend">Traits</legend>
+                    <div role="list" aria-label="Reorderable list of traits">
                     {#each formData.traits as trait, index}
-                        <div class="inline-attribute-editor">
-                            <!-- Line 1: title + public -->
-                            <div class="attribute-row">
-                                <input 
-                                    type="text" 
-                                    bind:value={trait.title}
-                                    placeholder="Trait title"
-                                    class="title-input"
-                                />
-                                <label class="checkbox-label">
-                                    <input type="checkbox" bind:checked={trait.isPublic} />
-                                    Public
-                                </label>
+                        <div 
+                            class="inline-attribute-editor {DRAG_CLASSES.draggable}" 
+                            draggable="true"
+                            role="listitem"
+                            aria-label="Trait: {trait.title || 'Untitled'} - Drag to reorder"
+                            tabindex="0"
+                            ondragstart={(e) => traitsHandlers.handleDragStart(e, index)}
+                            ondragover={traitsHandlers.handleDragOver}
+                            ondrop={(e) => traitsHandlers.handleDrop(e, index)}
+                            ondragend={traitsHandlers.handleDragEnd}
+                            onkeydown={(e) => {
+                                // Allow keyboard navigation for accessibility
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                    e.preventDefault();
+                                    // Focus could be used to start drag mode in the future
+                                }
+                            }}
+                            data-index={index}
+                        >
+                            <!-- Drag handle -->
+                            <div class="{DRAG_CLASSES.handle}" title="Drag to reorder">
+                                ⋮⋮
                             </div>
                             
-                            <!-- Line 3: description (no line 2 for traits) -->
-                            <div class="attribute-row">
-                                <textarea 
-                                    bind:value={trait.description}
-                                    placeholder="Description"
-                                    class="description-input"
-                                    rows="1"
-                                    required
-                                ></textarea>
-                                <button 
-                                    class="delete-btn"
-                                    onclick={() => formData.traits.splice(index, 1)}
-                                >
-                                    🗑️
-                                </button>
+                            <div class="attribute-content">
+                                <!-- Line 1: title + public -->
+                                <div class="attribute-row">
+                                    <input 
+                                        type="text" 
+                                        bind:value={trait.title}
+                                        placeholder="Trait title"
+                                        class="title-input"
+                                    />
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" bind:checked={trait.isPublic} />
+                                        Public
+                                    </label>
+                                </div>
+                                
+                                <!-- Line 3: description (no line 2 for traits) -->
+                                <div class="attribute-row">
+                                    <textarea 
+                                        bind:value={trait.description}
+                                        placeholder="Description"
+                                        class="description-input"
+                                        rows="1"
+                                        required
+                                    ></textarea>
+                                    <button 
+                                        class="delete-btn"
+                                        onclick={() => {
+                                            const newTraits = [...formData.traits];
+                                            newTraits.splice(index, 1);
+                                            formData.traits = newTraits;
+                                        }}
+                                    >
+                                        🗑️
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     {/each}
+                    </div>
                     <button 
                         class="add-attribute-btn"
-                        onclick={() => formData.traits.push({ title: '', isPublic: true, description: '' })}
+                        onclick={() => {
+                            formData.traits = [...formData.traits, { title: '', isPublic: true, description: '' }];
+                        }}
                     >
                         + Add Trait
                     </button>
@@ -590,6 +679,60 @@
         padding: 0.5rem;
         background: #fafafa;
         margin-bottom: 0.5rem;
+        display: flex;
+        gap: 0.5rem;
+        align-items: flex-start;
+        transition: all 0.2s ease;
+    }
+    
+    .inline-attribute-editor:hover {
+        border-color: #ddd;
+        background: #f5f5f5;
+    }
+    
+    /* Drag and drop styles */
+    .draggable-item {
+        cursor: grab;
+    }
+    
+    .draggable-item:active {
+        cursor: grabbing;
+    }
+    
+    .draggable-item.dragging {
+        opacity: 0.6;
+        transform: rotate(2deg);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+    
+    .drag-handle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 20px;
+        height: 100%;
+        color: #999;
+        cursor: grab;
+        font-size: 14px;
+        line-height: 1;
+        user-select: none;
+        flex-shrink: 0;
+        padding: 0.25rem 0;
+    }
+    
+    .drag-handle:hover {
+        color: var(--accent, #4a90e2);
+    }
+    
+    .drag-handle:active {
+        cursor: grabbing;
+    }
+    
+    .attribute-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 0.375rem;
     }
     
     .attribute-row {

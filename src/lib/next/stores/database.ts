@@ -309,14 +309,15 @@ class NextDatabase {
             subtitle: 'Character',
             description: 'A mysterious figure from the shadows.',
             image: null,
+            // Public traits first (appear on front), then private (appear on back)
             traits: [
-                { title: 'Race', isPublic: true, description: 'Human heritage with adaptable nature' },
-                { title: 'Class', isPublic: true, description: 'Skilled in stealth and precision' }
+                { title: 'Class', isPublic: true, description: 'Warrior, skilled in combat' },
+                { title: 'Secret', isPublic: false, description: 'Has a hidden agenda' }
             ],
+            // Public stats first (appear on front), then private (appear on back)
             stats: [
                 { title: 'Health', isPublic: true, value: 20, tracked: true, description: 'Physical condition and endurance' },
-                { title: 'Defense', isPublic: true, value: 15, tracked: false, description: 'Ability to avoid or reduce damage' },
-                { title: 'Luck', isPublic: false, value: 12, tracked: true }
+                { title: 'Will', isPublic: false, value: 15, tracked: true, description: 'Mental resilience and determination' }
             ]
         };
     }

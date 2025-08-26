@@ -9,6 +9,7 @@
     import StatBlock from '$lib/next/components/stats/StatBlock.svelte';
     import TraitList from '$lib/next/components/traits/TraitList.svelte';
     import CardImage from '$lib/next/components/image/CardImage.svelte';
+    import AppHeader from '$lib/next/components/nav/Header.svelte';
 
     import { nextDeckStore } from '$lib/next/stores/deckStore.svelte.js';
     import { nextDevStore } from '$lib/next/stores/devStore.svelte.js';
@@ -24,6 +25,11 @@
     
     // Simple card count for UI logic
     let cardCount = $derived(cards?.length || 0);
+    
+    // Handle layout toggle from header
+    function handleLayoutToggle(newIsPoker: boolean) {
+        isPoker = newIsPoker;
+    }
 
     async function loadSampleData() {
         try {
@@ -67,21 +73,7 @@
 </script>
 
 <section class="deck">
-    <h1>{deckTitle}</h1>
-    
-    <nav>
-        <button onclick={() => loadSampleData()}>
-            Load Sample Data
-        </button>
-        <button onclick={() => nextDevStore.clearDatabase()}>
-            Clear Database
-        </button>
-    </nav>
-    
-    <label>
-        <input type="checkbox" bind:checked={isPoker} />
-        {isPoker ? 'Poker' : 'Tarot'} size ({cards.length} cards)
-    </label>
+    <AppHeader {isPoker} onLayoutToggle={handleLayoutToggle} />
     
     {#if isInitializing}
         <p>Initializing...</p>
@@ -133,14 +125,6 @@
         padding: 0;
     }
     
-    h1 {
-        margin-bottom: 1em;
-    }
-    
-    label {
-        display: block;
-        margin-bottom: 1em;
-    }
 
     .card-content-front {
         display: flex;
