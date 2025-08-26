@@ -569,9 +569,9 @@
             <!-- Live Preview Section -->
             <section class="preview-section">
                 {#if previewCard}
-                    <div class="preview-container" data-layout="poker">
+                    <div class="preview-cards">
                         <!-- Front Card Preview -->
-                        <div class="preview-wrapper">
+                        <div class="card-preview">
                             <CardComponent preview>
                                 <CardImage card={previewCard} />
                                 <StatFocus stats={previewCard.stats} />
@@ -587,7 +587,7 @@
                         </div>
                         
                         <!-- Back Card Preview -->
-                        <div class="preview-wrapper">
+                        <div class="card-preview">
                             <CardComponent preview>
                                 <Header 
                                     back
@@ -936,49 +936,35 @@
         box-shadow: 0 0 0 2px rgba(74, 85, 104, 0.1);
     }
     
-    /* Preview Section */
+    /* Preview Section - Simplified and Clean */
     .preview-section {
         display: flex;
         flex-direction: column;
-        gap: 0.5rem;
         overflow-y: auto;
         overflow-x: hidden;
-        font-size: var(--font-size);
     }
     
-    .preview-container {
+    .preview-cards {
         display: flex;
         flex-direction: column;
         gap: 0.5rem;
+        padding: 0.5rem 1rem; /* Add side margins */
     }
     
-    .preview-wrapper {
+    .card-preview {
         position: relative;
         width: 100%;
-        aspect-ratio: 5 / 7;
-
+        /* Let the card component handle its own aspect ratio */
     }
     
-    /* Scale the actual cards to fit in preview - much larger now */
-    .preview-wrapper :global(.card) {
-        transform: scale(0.8);
-        transform-origin: top center;
-        height: 350px; /* Scaled to 0.8 gives us 280px */
-        border: 1px solid var(--accent);
-        background: white;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    /* Remove all the complex transforms and scaling - let cards be natural size but smaller */
+    .card-preview :global(.card) {
+        width: 100%;
+        max-width: 220px; /* Reduced from 280px */
         margin: 0 auto;
-    }
-    
-    .card-label {
-        position: absolute;
-        bottom: -1.25rem;
-        left: 0;
-        right: 0;
-        text-align: center;
-        font-size: 0.65rem;
-        color: var(--accent);
-        font-weight: 500;
+        border: 1px solid #ddd;
+        background: white;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
     
     /* Footer Styles - More Compact */
