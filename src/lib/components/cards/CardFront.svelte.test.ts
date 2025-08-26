@@ -85,7 +85,7 @@ describe('CardFront Logic', () => {
 
     it('returns false when nothing has changed', () => {
       const card = createBasicCard({
-        imageBlob: null,
+        imageBlob: undefined,
         image: 'same-url'
       });
       

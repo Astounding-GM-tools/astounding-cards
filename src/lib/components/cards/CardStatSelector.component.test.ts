@@ -110,7 +110,13 @@ describe('CardStatSelector Component Integration', () => {
   it('should get location cards excluding current card', () => {
     const mockDeck: Deck = {
       id: 'test-deck',
-      name: 'Test Deck', 
+      meta: {
+        name: 'Test Deck',
+        theme: 'classic',
+        cardSize: 'poker',
+        lastEdited: Date.now(),
+        createdAt: Date.now()
+      },
       cards: [
         {
           id: '1',
@@ -314,26 +320,31 @@ describe('CardStatSelector Component Integration', () => {
   });
 
   it('should sync display stat correctly', () => {
-    const currentStat = {
-      type: 'character',
+    const currentDisplayStat = {
+      statId: 'age',
       value: 'Adult'
     };
 
-    const newStat = {
-      type: 'character',
+    const newStoreStat = {
+      type: 'character' as const,
       value: 'Elder'
     };
 
+    const sameStoreStat = {
+      type: 'character' as const,
+      value: 'Adult'
+    };
+
     // Test when stats are different
-    const syncedStat = syncDisplayStat(newStat, currentStat);
+    const syncedStat = syncDisplayStat(newStoreStat, currentDisplayStat);
     expect(syncedStat).toEqual({ statId: 'age', value: 'Elder' });
 
     // Test when stats are the same
-    const sameStat = syncDisplayStat(currentStat, currentStat);
-    expect(sameStat).toEqual({ statId: 'age', value: 'Adult' });
+    const sameStat = syncDisplayStat(sameStoreStat, currentDisplayStat);
+    expect(sameStat).toEqual(currentDisplayStat);
 
     // Test with undefined values
-    const syncedUndefined = syncDisplayStat(undefined, currentStat);
+    const syncedUndefined = syncDisplayStat(undefined, currentDisplayStat);
     expect(syncedUndefined).toBeUndefined();
   });
 });

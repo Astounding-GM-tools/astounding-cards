@@ -10,8 +10,8 @@
  * Store: "decks" (key: deck.id, value: Deck)
  */
 
-import type { Deck, Card } from '../types/deck.js';
-import type { Theme, Layout } from '../types/card.js';
+import type { Deck, Theme, Layout } from '../types/deck.js';
+import type { Card } from '../types/card.js';
 import { safeDeepClone } from '$lib/utils/clone-utils.js';
 
 export class DatabaseError extends Error {

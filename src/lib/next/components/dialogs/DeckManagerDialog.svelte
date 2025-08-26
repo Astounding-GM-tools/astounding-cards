@@ -58,6 +58,19 @@
         }
     }
     
+    // Focus management for create form
+    let createFormInput = $state<HTMLInputElement>();
+    
+    function showCreateFormAndFocus() {
+        showCreateForm = true;
+        // Use setTimeout to ensure the input is rendered before focusing
+        setTimeout(() => {
+            if (createFormInput) {
+                createFormInput.focus();
+            }
+        }, 0);
+    }
+    
     // Handle deck deletion
     async function deleteDeck(deckId: string) {
         try {
@@ -118,10 +131,42 @@
 <div class="deck-manager-dialog">
     <div class="dialog-header">
         <h2>📚 Deck Management</h2>
-        <button class="close-button" onclick={() => dialogStore.close()}>×</button>
+        <div class="header-actions">
+            <button class="action-button primary" onclick={showCreateFormAndFocus}>
+                ➕ New Deck
+            </button>
+            <button class="close-button" onclick={() => dialogStore.close()}>×</button>
+        </div>
     </div>
     
     <div class="dialog-content">
+        <!-- Create new deck form (shown at top when creating) -->
+        {#if showCreateForm}
+            <div class="create-section">
+                <div class="create-form">
+                    <input
+                        bind:this={createFormInput}
+                        type="text"
+                        bind:value={newDeckName}
+                        placeholder="Enter deck name"
+                        class="new-deck-input"
+                        onkeydown={(e) => {
+                            if (e.key === 'Enter') createDeck();
+                            if (e.key === 'Escape') {
+                                showCreateForm = false;
+                                newDeckName = '';
+                            }
+                        }}
+                    />
+                    <button class="action-button create" onclick={createDeck}>Create</button>
+                    <button class="action-button cancel" onclick={() => {
+                        showCreateForm = false;
+                        newDeckName = '';
+                    }}>Cancel</button>
+                </div>
+            </div>
+        {/if}
+        
         {#if isLoading}
             <div class="loading">Loading decks...</div>
         {:else if error}
@@ -195,36 +240,6 @@
                 {/each}
             </div>
         {/if}
-        
-        <!-- Create new deck section -->
-        <div class="create-section">
-            {#if showCreateForm}
-                <div class="create-form">
-                    <input
-                        type="text"
-                        bind:value={newDeckName}
-                        placeholder="Enter deck name"
-                        class="new-deck-input"
-                        onkeydown={(e) => {
-                            if (e.key === 'Enter') createDeck();
-                            if (e.key === 'Escape') {
-                                showCreateForm = false;
-                                newDeckName = '';
-                            }
-                        }}
-                    />
-                    <button class="action-button create" onclick={createDeck}>Create</button>
-                    <button class="action-button cancel" onclick={() => {
-                        showCreateForm = false;
-                        newDeckName = '';
-                    }}>Cancel</button>
-                </div>
-            {:else}
-                <button class="action-button primary" onclick={() => showCreateForm = true}>
-                    ➕ New Deck
-                </button>
-            {/if}
-        </div>
     </div>
 </div>
 
@@ -270,6 +285,12 @@
         margin: 0;
         font-size: 1.25rem;
         font-weight: 600;
+    }
+    
+    .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
     }
     
     .close-button {
@@ -482,8 +503,11 @@
     }
     
     .create-section {
-        border-top: 1px solid var(--ui-border, #e2e8f0);
-        padding-top: 1.5rem;
+        border: 1px solid var(--button-primary-bg, #3b82f6);
+        border-radius: 6px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(59, 130, 246, 0.02) 100%);
     }
     
     .create-form {
