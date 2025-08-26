@@ -351,12 +351,18 @@
                             aria-label="Stat: {stat.title || 'Untitled'} - Drag to reorder"
                             tabindex="0"
                             ondragstart={(e) => statsHandlers.handleDragStart(e, index)}
-                            ondragover={statsHandlers.handleDragOver}
+                            ondragover={(e) => {
+                                statsHandlers.handleDragOver(e);
+                                e.currentTarget.classList.add('drag-over');
+                            }}
+                            ondragleave={(e) => {
+                                e.currentTarget.classList.remove('drag-over');
+                            }}
                             ondrop={(e) => statsHandlers.handleDrop(e, index)}
                             ondragend={statsHandlers.handleDragEnd}
                             onkeydown={(e) => {
-                                // Allow keyboard navigation for accessibility
-                                if (e.key === 'Enter' || e.key === ' ') {
+                                // Only handle keys when the draggable container itself is focused, not its children
+                                if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) {
                                     e.preventDefault();
                                     // Focus could be used to start drag mode in the future
                                 }
@@ -369,22 +375,27 @@
                             </div>
                             
                             <div class="attribute-content">
-                                <!-- Line 1: title + public -->
-                                <div class="attribute-row">
+                                <!-- Single compact row: Public + Title + Value + Tracked + Delete -->
+                                <div class="stat-compact-row">
+                                    <label class="checkbox-label">
+                                        <input 
+                                            type="checkbox" 
+                                            bind:checked={stat.isPublic}
+                                            onchange={() => {
+                                                // If making public, disable tracking (public stats aren't tracked)
+                                                if (stat.isPublic) {
+                                                    stat.tracked = false;
+                                                }
+                                            }}
+                                        />
+                                        Public
+                                    </label>
                                     <input 
                                         type="text" 
                                         bind:value={stat.title}
                                         placeholder="Stat title"
                                         class="title-input"
                                     />
-                                    <label class="checkbox-label">
-                                        <input type="checkbox" bind:checked={stat.isPublic} />
-                                        Public
-                                    </label>
-                                </div>
-                                
-                                <!-- Line 2: value + tracked (stat mode only) -->
-                                <div class="attribute-row">
                                     <input 
                                         type="number" 
                                         bind:value={stat.value}
@@ -398,19 +409,13 @@
                                         }}
                                     />
                                     <label class="checkbox-label">
-                                        <input type="checkbox" bind:checked={stat.tracked} />
-                                        Tracked
+                                        <input 
+                                            type="checkbox" 
+                                            bind:checked={stat.tracked}
+                                            disabled={stat.isPublic}
+                                        />
+                                        Track
                                     </label>
-                                </div>
-                                
-                                <!-- Line 3: description -->
-                                <div class="attribute-row">
-                                    <textarea 
-                                        bind:value={stat.description}
-                                        placeholder="Optional description"
-                                        class="description-input"
-                                        rows="1"
-                                    ></textarea>
                                     <button 
                                         class="delete-btn"
                                         onclick={() => {
@@ -422,10 +427,36 @@
                                         🗑️
                                     </button>
                                 </div>
+                                
+                                <!-- Description row (only for private stats) -->
+                                {#if !stat.isPublic}
+                                    <div class="description-row">
+                                        <textarea 
+                                            bind:value={stat.description}
+                                            placeholder="Description (private stats only)"
+                                            class="description-input stat-description"
+                                            rows="2"
+                                        ></textarea>
+                                    </div>
+                                {/if}
                             </div>
                         </div>
                     {/each}
+                    
+                    <!-- Drop zone for end of list -->
+                    <div 
+                        class="drop-zone-end"
+                        ondragover={(e) => {
+                            statsHandlers.handleDragOver(e);
+                            e.currentTarget.classList.add('drag-over');
+                        }}
+                        ondragleave={(e) => {
+                            e.currentTarget.classList.remove('drag-over');
+                        }}
+                        ondrop={(e) => statsHandlers.handleDrop(e, formData.stats.length)}
+                    ></div>
                     </div>
+                    
                     <button 
                         class="add-attribute-btn"
                         onclick={() => {
@@ -448,12 +479,18 @@
                             aria-label="Trait: {trait.title || 'Untitled'} - Drag to reorder"
                             tabindex="0"
                             ondragstart={(e) => traitsHandlers.handleDragStart(e, index)}
-                            ondragover={traitsHandlers.handleDragOver}
+                            ondragover={(e) => {
+                                traitsHandlers.handleDragOver(e);
+                                e.currentTarget.classList.add('drag-over');
+                            }}
+                            ondragleave={(e) => {
+                                e.currentTarget.classList.remove('drag-over');
+                            }}
                             ondrop={(e) => traitsHandlers.handleDrop(e, index)}
                             ondragend={traitsHandlers.handleDragEnd}
                             onkeydown={(e) => {
-                                // Allow keyboard navigation for accessibility
-                                if (e.key === 'Enter' || e.key === ' ') {
+                                // Only handle keys when the draggable container itself is focused, not its children
+                                if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) {
                                     e.preventDefault();
                                     // Focus could be used to start drag mode in the future
                                 }
@@ -466,29 +503,18 @@
                             </div>
                             
                             <div class="attribute-content">
-                                <!-- Line 1: title + public -->
-                                <div class="attribute-row">
+                                <!-- Line 1: Public checkbox + title + delete button -->
+                                <div class="trait-compact-row">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" bind:checked={trait.isPublic} />
+                                        Public
+                                    </label>
                                     <input 
                                         type="text" 
                                         bind:value={trait.title}
                                         placeholder="Trait title"
                                         class="title-input"
                                     />
-                                    <label class="checkbox-label">
-                                        <input type="checkbox" bind:checked={trait.isPublic} />
-                                        Public
-                                    </label>
-                                </div>
-                                
-                                <!-- Line 3: description (no line 2 for traits) -->
-                                <div class="attribute-row">
-                                    <textarea 
-                                        bind:value={trait.description}
-                                        placeholder="Description"
-                                        class="description-input"
-                                        rows="1"
-                                        required
-                                    ></textarea>
                                     <button 
                                         class="delete-btn"
                                         onclick={() => {
@@ -500,10 +526,35 @@
                                         🗑️
                                     </button>
                                 </div>
+                                
+                                <!-- Line 2: Full-width description -->
+                                <div class="description-row">
+                                    <textarea 
+                                        bind:value={trait.description}
+                                        placeholder="Description"
+                                        class="description-input trait-description"
+                                        rows="1"
+                                        required
+                                    ></textarea>
+                                </div>
                             </div>
                         </div>
                     {/each}
+                    
+                    <!-- Drop zone for end of list -->
+                    <div 
+                        class="drop-zone-end"
+                        ondragover={(e) => {
+                            traitsHandlers.handleDragOver(e);
+                            e.currentTarget.classList.add('drag-over');
+                        }}
+                        ondragleave={(e) => {
+                            e.currentTarget.classList.remove('drag-over');
+                        }}
+                        ondrop={(e) => traitsHandlers.handleDrop(e, formData.traits.length)}
+                    ></div>
                     </div>
+                    
                     <button 
                         class="add-attribute-btn"
                         onclick={() => {
@@ -676,18 +727,45 @@
     .inline-attribute-editor {
         border: 1px solid #eee;
         border-radius: 4px;
-        padding: 0.5rem;
+        padding: 0.375rem; /* Reduced from 0.5rem for more compact stats */
         background: #fafafa;
-        margin-bottom: 0.5rem;
+        margin-bottom: 0.375rem; /* Reduced from 0.5rem */
         display: flex;
-        gap: 0.5rem;
+        gap: 0.375rem; /* Reduced from 0.5rem */
         align-items: flex-start;
         transition: all 0.2s ease;
+        position: relative;
     }
     
     .inline-attribute-editor:hover {
         border-color: #ddd;
         background: #f5f5f5;
+    }
+    
+    /* Drop indicator */
+    .inline-attribute-editor.drag-over::before {
+        content: '';
+        position: absolute;
+        top: -2px;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: var(--accent, #4a90e2);
+        border-radius: 1.5px;
+        z-index: 10;
+    }
+    
+    /* Drop zone at end of list - minimal line */
+    .drop-zone-end {
+        height: 4px;
+        margin: 0.375rem 0;
+        background: transparent;
+        border-radius: 2px;
+        transition: background-color 0.2s ease;
+    }
+    
+    .drop-zone-end.drag-over {
+        background: var(--accent, #4a90e2);
     }
     
     /* Drag and drop styles */
@@ -732,7 +810,7 @@
         flex: 1;
         display: flex;
         flex-direction: column;
-        gap: 0.375rem;
+        gap: 0.15rem; /* Even more compact for tight stats/traits */
     }
     
     .attribute-row {
@@ -740,11 +818,47 @@
         grid-template-columns: 1fr auto;
         gap: 0.5rem;
         align-items: center;
-        margin-bottom: 0.375rem;
+        margin-bottom: 0.15rem; /* Even more compact */
     }
     
     .attribute-row:last-child {
         margin-bottom: 0;
+    }
+    
+    /* Compact single-row layout for stats */
+    .stat-compact-row {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.15rem;
+    }
+    
+    .stat-compact-row .title-input {
+        flex: 1; /* Take up remaining space */
+        min-width: 120px; /* Minimum readable width */
+    }
+    
+    /* Compact single-row layout for traits */
+    .trait-compact-row {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.15rem;
+    }
+    
+    .trait-compact-row .title-input {
+        flex: 1; /* Take up remaining space */
+        min-width: 120px; /* Minimum readable width */
+    }
+    
+    /* Full-width description row */
+    .description-row {
+        width: 100%;
+        margin-bottom: 0.15rem;
+    }
+    
+    .description-row .description-input {
+        width: 100%; /* Full width */
     }
     
     .title-input {
@@ -774,6 +888,13 @@
         font-size: 0.85rem;
         resize: vertical;
         min-height: 32px;
+    }
+    
+    /* Specific styling for stat descriptions - fixed height and tighter padding */
+    .description-input.stat-description {
+        height: 2.7em;
+        padding: 2px 4px;
+        resize: none; /* Disable resize for fixed-height stat descriptions */
     }
     
     .checkbox-label {
