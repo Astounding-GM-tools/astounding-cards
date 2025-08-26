@@ -39,7 +39,7 @@
     
     // Handle deck selection
     async function selectDeck(deckId: string) {
-        const success = await nextDeckStore.loadDeck(deckId);
+        const success = await nextDeckStore.selectDeck(deckId);
         if (success) {
             dialogStore.close();
         }

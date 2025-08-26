@@ -11,7 +11,7 @@
 import type { Deck } from '../types/deck.js';
 import type { Card } from '../types/card.js';
 import { nextDb, DatabaseError } from './database.js';
-import { safeCloneCard } from '$lib/utils/clone-utils.js';
+import { safeCloneCard } from '$lib/utils/clone-utils.ts';
 
 export interface LoadingState {
     isLoading: boolean;
@@ -58,6 +58,37 @@ function createNextDeckStore() {
                 return true;
             } catch (err) {
                 this.handleError(err, 'Failed to load deck');
+                return false;
+            } finally {
+                this.setLoading(false);
+            }
+        },
+
+        /**
+         * Select a deck and persist the selection
+         * This updates the deck's lastEdited timestamp to ensure it's remembered
+         */
+        async selectDeck(deckId: string): Promise<boolean> {
+            this.setLoading(true, 'Selecting deck...', 'select-deck');
+            this.clearError();
+
+            try {
+                // First, load the deck
+                const deck = await nextDb.getDeck(deckId);
+                if (!deck) {
+                    this.setError('Deck not found');
+                    return false;
+                }
+
+                // Update the deck's lastEdited timestamp to mark it as recently accessed
+                const updatedDeck = await nextDb.updateDeckMeta(deckId, {
+                    lastEdited: Date.now()
+                });
+
+                currentDeck = updatedDeck; // Canon Update: UI reflects persisted state
+                return true;
+            } catch (err) {
+                this.handleError(err, 'Failed to select deck');
                 return false;
             } finally {
                 this.setLoading(false);
