@@ -8,7 +8,7 @@
  * - Loading states for better UX
  */
 
-import type { Deck } from '../types/deck.js';
+import type { Deck, Layout } from '../types/deck.js';
 import type { Card } from '../types/card.js';
 import { nextDb, DatabaseError } from './database.js';
 import { safeCloneCard } from '$lib/utils/clone-utils.ts';
@@ -136,6 +136,13 @@ function createNextDeckStore() {
             } finally {
                 this.setLoading(false);
             }
+        },
+
+        /**
+         * Update deck layout (Canon Update Pattern)
+         */
+        async updateLayout(layout: Layout): Promise<boolean> {
+            return this.updateDeckMeta({ layout });
         },
 
         /**

@@ -35,16 +35,14 @@
 		flex-direction: column;
 		flex: 0 0 auto;
 		font-family: var(--font-body);
-		padding: 0;
 		position: relative;
         cursor: pointer;
-        display: flex;
-        flex-direction: column;
         height: 100%;
-        margin: 0;
-        padding: 0;
-        transition: opacity 0.2s ease;
         width: 100%;
+        transition: opacity 0.2s ease;
+        
+        /* Reset direction in case parent has RTL (for back page grid ordering) */
+        direction: ltr;
 
 		container-type: inline-size;
 		container-name: card;

@@ -17,11 +17,8 @@
     
     // Import actual card components
     import CardComponent from '../card/Card.svelte';
-    import Header from '../header/Header.svelte';
-    import StatFocus from '../stats/StatFocus.svelte';
-    import StatBlock from '../stats/StatBlock.svelte';
-    import TraitList from '../traits/TraitList.svelte';
-    import CardImage from '../image/CardImage.svelte';
+    import CardFrontContent from '../card/CardFrontContent.svelte';
+    import CardBackContent from '../card/CardBackContent.svelte';
     import InlineImageSelector from '../image/InlineImageSelector.svelte';
     
     import type { Trait, Stat } from '$lib/next/types/card.js';
@@ -573,29 +570,14 @@
                         <!-- Front Card Preview -->
                         <div class="card-preview">
                             <CardComponent preview>
-                                <CardImage card={previewCard} />
-                                <StatFocus stats={previewCard.stats} />
-                                
-                                <div class="card-content-front">
-                                    <Header 
-                                        title={previewCard.title} 
-                                        subtitle={previewCard.subtitle} 
-                                    />
-                                    <TraitList traits={previewCard.traits.filter(trait => trait.isPublic)} />
-                                </div>
+                                <CardFrontContent card={previewCard} />
                             </CardComponent>
                         </div>
                         
                         <!-- Back Card Preview -->
                         <div class="card-preview">
                             <CardComponent preview>
-                                <Header 
-                                    back
-                                    title={previewCard.title} 
-                                    subtitle={previewCard.description} 
-                                />
-                                <StatBlock stats={previewCard.stats} />
-                                <TraitList traits={previewCard.traits.filter(trait => !trait.isPublic)} />
+                                <CardBackContent card={previewCard} />
                             </CardComponent>
                         </div>
                     </div>

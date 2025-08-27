@@ -4,28 +4,20 @@
     import { dialogStore } from '../dialog/dialogStore.svelte.js';
     import DeckManagerDialog from '../dialogs/DeckManagerDialog.svelte';
     import CardEditDialog from '../dialogs/CardEditDialog.svelte';
-    
-    // Props
-    interface Props {
-        isPoker?: boolean;
-        onLayoutToggle?: (isPoker: boolean) => void;
-    }
-    
-    let { isPoker = false, onLayoutToggle }: Props = $props();
+    import BinaryToggle from '../ui/BinaryToggle.svelte';
+    import type { Layout } from '../../types/deck.js';
     
     // Derived state from store
     let deck = $derived(nextDeckStore.deck);
     let cardCount = $derived(deck?.cards?.length || 0);
     let deckTitle = $derived(deck?.meta.title || 'No Deck');
     let isLoading = $derived(nextDeckStore.isLoading);
+    let currentLayout = $derived(deck?.meta.layout || 'tarot');
     
-    // Local state
-    let showDeckManagement = $state(false);
-    
-    // Handle layout toggle
-    function handleLayoutToggle() {
-        const newIsPoker = !isPoker;
-        onLayoutToggle?.(newIsPoker);
+    // Handle layout toggle with persistence
+    async function handleLayoutToggle(isTarot: boolean) {
+        const newLayout: Layout = isTarot ? 'tarot' : 'poker';
+        await nextDeckStore.updateLayout(newLayout);
     }
     
     // Handle manage decks
@@ -74,7 +66,7 @@
             <h1 class="deck-title">{deckTitle}</h1>
             <div class="deck-info">
                 <span class="card-count">{cardCount} cards</span>
-                <span class="layout-indicator">{isPoker ? 'Poker' : 'Tarot'}</span>
+                <span class="layout-indicator">{currentLayout === 'poker' ? 'Poker' : 'Tarot'}</span>
             </div>
         </div>
         
@@ -108,19 +100,20 @@
     </div>
     
     <div class="header-controls">
-        <div class="layout-controls">
-            <label class="layout-toggle">
-                <input 
-                    type="checkbox" 
-                    checked={isPoker} 
-                    onchange={handleLayoutToggle}
+        {#if deck}
+            <div class="layout-controls">
+                <span class="control-label">Card Layout:</span>
+                <BinaryToggle
+                    checked={currentLayout === 'tarot'}
+                    onToggle={handleLayoutToggle}
+                    trueLabel="🀜 Tarot"
+                    falseLabel="🀡 Poker"
                     disabled={isLoading}
+                    name="card-layout"
+                    size="sm"
                 />
-                <span class="toggle-label">
-                    Switch to {isPoker ? 'Tarot' : 'Poker'} size
-                </span>
-            </label>
-        </div>
+            </div>
+        {/if}
         
         <!-- Dev controls - remove in production -->
         <div class="dev-controls">
@@ -249,23 +242,13 @@
     .layout-controls {
         display: flex;
         align-items: center;
+        gap: 0.75rem;
     }
     
-    .layout-toggle {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        cursor: pointer;
+    .control-label {
         font-size: 0.875rem;
-        color: var(--ui-text, #1a202c);
-    }
-    
-    .layout-toggle input[type="checkbox"] {
-        margin: 0;
-    }
-    
-    .toggle-label {
         font-weight: 500;
+        color: var(--ui-text, #1a202c);
     }
     
     .dev-controls {

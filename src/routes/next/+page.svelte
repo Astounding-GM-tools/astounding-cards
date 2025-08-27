@@ -1,35 +1,21 @@
 <script lang="ts">
-    import type { Trait } from '$lib/next/types/card';
-    import type { PageLayout } from '$lib/next/components/page/types';
-    
-    import Page from '$lib/next/components/page/Page.svelte';
-    import Card from '$lib/next/components/card/Card.svelte';
-    import Header from '$lib/next/components/header/Header.svelte';
-    import StatFocus from '$lib/next/components/stats/StatFocus.svelte';
-    import StatBlock from '$lib/next/components/stats/StatBlock.svelte';
-    import TraitList from '$lib/next/components/traits/TraitList.svelte';
-    import CardImage from '$lib/next/components/image/CardImage.svelte';
+    import PaginatedPages from '$lib/next/components/page/PaginatedPages.svelte';
     import AppHeader from '$lib/next/components/nav/Header.svelte';
 
     import { nextDeckStore } from '$lib/next/stores/deckStore.svelte.js';
     import { nextDevStore } from '$lib/next/stores/devStore.svelte.js';
     import { onMount } from 'svelte';
 
-    let isPoker = $state(false);
     let isInitializing = $state(true);
 
-    // Get layout preference from deck or default to tarot, but allow override
-    let layout = $derived(isPoker ? 'poker' : 'tarot');
-    let cards = $derived(nextDeckStore.deck?.cards || []);
-    let deckTitle = $derived(nextDeckStore.deck?.meta.title || 'Sample Deck');
+    // Get deck and derived state
+    let deck = $derived(nextDeckStore.deck);
+    let cards = $derived(deck?.cards || []);
+    let deckTitle = $derived(deck?.meta.title || 'Sample Deck');
+    let layout = $derived(deck?.meta.layout || 'tarot');
     
     // Simple card count for UI logic
     let cardCount = $derived(cards?.length || 0);
-    
-    // Handle layout toggle from header
-    function handleLayoutToggle(newIsPoker: boolean) {
-        isPoker = newIsPoker;
-    }
 
     async function loadSampleData() {
         try {
@@ -73,7 +59,7 @@
 </script>
 
 <section class="deck">
-    <AppHeader {isPoker} onLayoutToggle={handleLayoutToggle} />
+    <AppHeader />
     
     {#if isInitializing}
         <p>Initializing...</p>
@@ -84,31 +70,11 @@
     {:else if cardCount === 0}
         <p>No cards found. <button onclick={() => nextDevStore.setupTestEnvironment()}>Load Sample Data</button></p>
     {:else}
-        <!-- Card Fronts -->
-        <Page layout={layout as PageLayout}>
-            {#each cards as card}
-                <Card cardId={card.id}>
-                    <CardImage {card} />
-                    
-                    <div class="card-content-front">
-                        <Header title={card.title} subtitle={card.subtitle} />
-                        <StatFocus stats={card.stats} />
-                        <TraitList traits={card.traits.filter((trait: Trait) => trait.isPublic)} />
-                    </div>
-                </Card>
-            {/each}
-        </Page>
-
-        <!-- Card Backs -->
-        <Page layout={layout as PageLayout}>
-            {#each cards as card}
-                <Card cardId={card.id}>
-                    <Header title={card.title} subtitle={card.description} />
-                    <StatBlock stats={card.stats} />
-                    <TraitList traits={card.traits.filter((trait: Trait) => !trait.isPublic)} />
-                </Card>
-            {/each}
-        </Page>
+        <!-- Paginated print-ready cards -->
+        <PaginatedPages
+            {cards}
+            {layout}
+        />
     {/if}
 </section>
 
@@ -123,16 +89,5 @@
     :global(body) {
         margin: 0;
         padding: 0;
-    }
-    
-
-    .card-content-front {
-        display: flex;
-        flex-direction: column;
-        margin: auto 0.8em 0.8em 0.8em;
-        background: white;
-        border-radius: 0.2em;
-        box-shadow: 0 0 0.6em 0 rgba(0, 0, 0, 0.1);
-        z-index: 10;
     }
 </style>
