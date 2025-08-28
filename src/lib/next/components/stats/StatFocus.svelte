@@ -26,7 +26,7 @@
         flex-direction: column;
         justify-content: center;
         gap: 0.5em;
-        margin: 0.5em;
+        margin: 1em;
         font-size: var(--font-size);
     }
 
