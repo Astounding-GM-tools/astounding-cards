@@ -66,7 +66,20 @@
             <h1 class="deck-title">{deckTitle}</h1>
             <div class="deck-info">
                 <span class="card-count">{cardCount} cards</span>
-                <span class="layout-indicator">{currentLayout === 'poker' ? 'Poker' : 'Tarot'}</span>
+                {#if deck}
+                    <div class="layout-info">
+                        <span class="layout-label">Layout:</span>
+                        <BinaryToggle
+                            checked={currentLayout === 'tarot'}
+                            onToggle={handleLayoutToggle}
+                            trueLabel="🀜 Tarot"
+                            falseLabel="🀡 Poker"
+                            disabled={isLoading}
+                            name="card-layout"
+                            size="sm"
+                        />
+                    </div>
+                {/if}
             </div>
         </div>
         
@@ -100,21 +113,6 @@
     </div>
     
     <div class="header-controls">
-        {#if deck}
-            <div class="layout-controls">
-                <span class="control-label">Card Layout:</span>
-                <BinaryToggle
-                    checked={currentLayout === 'tarot'}
-                    onToggle={handleLayoutToggle}
-                    trueLabel="🀜 Tarot"
-                    falseLabel="🀡 Poker"
-                    disabled={isLoading}
-                    name="card-layout"
-                    size="sm"
-                />
-            </div>
-        {/if}
-        
         <!-- Dev controls - remove in production -->
         <div class="dev-controls">
             <button 
@@ -180,9 +178,15 @@
         font-weight: 500;
     }
     
-    .layout-indicator {
-        color: var(--ui-text, #1a202c);
+    .layout-info {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .layout-label {
         font-weight: 500;
+        color: var(--ui-text, #1a202c);
     }
     
     .header-right {

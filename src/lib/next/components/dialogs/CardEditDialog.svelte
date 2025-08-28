@@ -20,6 +20,7 @@
     import CardFrontContent from '../card/CardFrontContent.svelte';
     import CardBackContent from '../card/CardBackContent.svelte';
     import InlineImageSelector from '../image/InlineImageSelector.svelte';
+    import BinaryToggle from '../ui/BinaryToggle.svelte';
     
     import type { Trait, Stat } from '$lib/next/types/card.js';
     import { ImageUrlManager } from '$lib/utils/image-handler.js';
@@ -374,19 +375,20 @@
                             <div class="attribute-content">
                                 <!-- Single compact row: Public + Title + Value + Tracked + Delete -->
                                 <div class="stat-compact-row">
-                                    <label class="checkbox-label">
-                                        <input 
-                                            type="checkbox" 
-                                            bind:checked={stat.isPublic}
-                                            onchange={() => {
-                                                // If making public, disable tracking (public stats aren't tracked)
-                                                if (stat.isPublic) {
-                                                    stat.tracked = false;
-                                                }
-                                            }}
-                                        />
-                                        Public
-                                    </label>
+                                    <BinaryToggle
+                                        checked={stat.isPublic}
+                                        onToggle={(isPublic) => {
+                                            stat.isPublic = isPublic;
+                                            // If making public, disable tracking (public stats aren't tracked)
+                                            if (isPublic) {
+                                                stat.tracked = false;
+                                            }
+                                        }}
+                                        trueLabel="◉ Public"
+                                        falseLabel="○ Secret"
+                                        size="sm"
+                                        name={`stat-public-${index}`}
+                                    />
                                     <input 
                                         type="text" 
                                         bind:value={stat.title}
@@ -405,14 +407,17 @@
                                             stat.value = Math.max(0, Math.min(999, num));
                                         }}
                                     />
-                                    <label class="checkbox-label">
-                                        <input 
-                                            type="checkbox" 
-                                            bind:checked={stat.tracked}
-                                            disabled={stat.isPublic}
-                                        />
-                                        Track
-                                    </label>
+                                    <BinaryToggle
+                                        checked={stat.tracked}
+                                        onToggle={(tracked) => {
+                                            stat.tracked = tracked;
+                                        }}
+                                        trueLabel="■ Track"
+                                        falseLabel="□ Track"
+                                        size="sm"
+                                        name={`stat-track-${index}`}
+                                        disabled={stat.isPublic}
+                                    />
                                     <button 
                                         class="delete-btn"
                                         onclick={() => {
@@ -502,10 +507,16 @@
                             <div class="attribute-content">
                                 <!-- Line 1: Public checkbox + title + delete button -->
                                 <div class="trait-compact-row">
-                                    <label class="checkbox-label">
-                                        <input type="checkbox" bind:checked={trait.isPublic} />
-                                        Public
-                                    </label>
+                                    <BinaryToggle
+                                        checked={trait.isPublic}
+                                        onToggle={(isPublic) => {
+                                            trait.isPublic = isPublic;
+                                        }}
+                                        trueLabel="◉ Public"
+                                        falseLabel="○ Secret"
+                                        size="sm"
+                                        name={`trait-public-${index}`}
+                                    />
                                     <input 
                                         type="text" 
                                         bind:value={trait.title}

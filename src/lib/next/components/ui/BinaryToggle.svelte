@@ -23,6 +23,40 @@
         const target = event.target as HTMLInputElement;
         onToggle(target.checked);
     }
+    
+    // Function to split label into symbol and text parts
+    function splitLabel(label: string): string | { symbol: string; text: string } {
+        // Split on first whitespace to separate potential symbol from text
+        const spaceIndex = label.indexOf(' ');
+        
+        if (spaceIndex === -1) {
+            // No space found, return entire label as string
+            return label;
+        }
+        
+        const firstPart = label.slice(0, spaceIndex);
+        const restPart = label.slice(spaceIndex + 1);
+        
+        // Check if first part is not a regular ASCII letter (likely a symbol)
+        const isFirstPartSymbol = !/^[A-Za-z]+$/.test(firstPart);
+        
+        if (isFirstPartSymbol) {
+            return {
+                symbol: firstPart,
+                text: restPart
+            };
+        }
+        
+        // No symbol found, return entire label as string
+        return label;
+    }
+    
+    // Get split versions of both labels
+    let trueLabelSplit = $derived(splitLabel(trueLabel));
+    let falseLabelSplit = $derived(splitLabel(falseLabel));
+    let currentLabelSplit = $derived(checked ? trueLabelSplit : falseLabelSplit);
+    
+    
 </script>
 
 <label class="binary-toggle" class:disabled class:size-sm={size === 'sm'} class:size-md={size === 'md'}>
@@ -33,9 +67,13 @@
         onchange={handleChange}
         {disabled}
     />
-    <span class="toggle-label">
-        {checked ? trueLabel : falseLabel}
-    </span>
+    <div class="toggle-label">
+        {#if typeof currentLabelSplit === 'string'}
+            {currentLabelSplit}
+        {:else}
+            <span class="label-symbol">{currentLabelSplit.symbol}</span><span class="label-text">{currentLabelSplit.text}</span>
+        {/if}
+    </div>
 </label>
 
 <style>
@@ -74,6 +112,14 @@
         opacity: 0;
         width: 0;
         height: 0;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        border: none;
+        outline: none;
+        background: none;
+        margin: 0;
+        padding: 0;
     }
     
     .toggle-label {
@@ -81,17 +127,23 @@
         transition: all 0.2s;
         font-weight: 500;
         white-space: nowrap;
+        min-width: 4rem;
     }
     
-    .binary-toggle input[type="checkbox"]:checked + .toggle-label {
-        color: var(--button-primary-bg, #3b82f6);
+    .label-symbol {
+        margin-right: 0.25rem;
+        display: inline-block;
+    }
+    
+    .label-text {
+        display: inline-block;
     }
     
     .binary-toggle:hover:not(.disabled) .toggle-label {
         color: var(--ui-text, #1a202c);
     }
     
-    .binary-toggle input[type="checkbox"]:checked:hover + .toggle-label {
+    .binary-toggle input[type="checkbox"]:hover + .toggle-label {
         color: var(--button-primary-hover-bg, #2563eb);
     }
     
