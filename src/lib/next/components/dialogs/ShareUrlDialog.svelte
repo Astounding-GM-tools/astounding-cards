@@ -1,6 +1,9 @@
 <script lang="ts">
     import { dialogStore } from '../dialog/dialogStore.svelte.js';
+    import { toasts } from '$lib/stores/toast.js';
+    import { nextDb } from '$lib/next/stores/database.js';
     import type { Deck } from '$lib/next/types/deck.js';
+    import ImageMigrationDialog from './ImageMigrationDialog.svelte';
     
     interface Props {
         deck: Deck;
@@ -12,14 +15,50 @@
     let isGenerating = $state(false);
     let shareUrl = $state<string | null>(null);
     let error = $state<string | null>(null);
-    let hasBlobImages = $state(false);
+    let needsImageMigration = $state(false);
     let showImageMigration = $state(false);
     
     // Check if deck has images that need migration
+    function checkImageMigrationNeeded() {
+        needsImageMigration = deck.cards.some(card => {
+            // Skip cards with no images entirely (they're fine as-is)
+            if (!card.image && !card.imageBlob) {
+                return false; // Card has no image, no migration needed
+            }
+            
+            // If card has a valid external URL, it's already shareable - no migration needed
+            // even if it also has a blob (the URL takes precedence for sharing)
+            if (card.image && isValidExternalUrl(card.image)) {
+                return false; // Valid external URL exists, skip migration
+            }
+            
+            // Need migration if:
+            // 1. Has blob but no valid external URL
+            // 2. Has image URL that's not a valid external URL
+            return (
+                card.imageBlob || 
+                (card.image && !isValidExternalUrl(card.image))
+            );
+        });
+    }
+    
+    function isValidExternalUrl(url?: string | null): boolean {
+        if (!url) return false;
+        try {
+            const parsedUrl = new URL(url);
+            return (parsedUrl.protocol === 'http:' || parsedUrl.protocol === 'https:') && 
+                   parsedUrl.hostname !== 'localhost' && 
+                   parsedUrl.hostname !== '127.0.0.1' &&
+                   !parsedUrl.protocol.startsWith('blob:') &&
+                   !parsedUrl.protocol.startsWith('data:');
+        } catch {
+            return false;
+        }
+    }
+    
+    // Initialize check
     $effect(() => {
-        hasBlobImages = deck.cards.some(card => 
-            card.image && typeof card.image === 'object' && card.image instanceof Blob
-        );
+        checkImageMigrationNeeded();
     });
     
     async function generateShareUrl() {
@@ -37,19 +76,61 @@
         }
     }
     
-    function copyToClipboard() {
-        if (shareUrl) {
-            navigator.clipboard.writeText(shareUrl);
-            // TODO: Show toast notification
+    async function copyToClipboard() {
+        if (!shareUrl) return;
+        
+        try {
+            await navigator.clipboard.writeText(shareUrl);
+            toasts.success('Share URL copied to clipboard!');
+        } catch (err) {
+            toasts.error('Failed to copy URL to clipboard');
+            console.error('Clipboard error:', err);
         }
     }
     
     function handleImageMigration() {
         showImageMigration = true;
-        // TODO: Open ImageMigrationDialog
+    }
+    
+    async function handleMigrationComplete(migrationData: Record<string, { url: string; metadata: any }>) {
+        try {
+            // Prepare card updates for the next database system
+            const cardUpdates = Object.entries(migrationData).map(([cardId, migration]) => ({
+                cardId,
+                updates: {
+                    image: migration.url,
+                    imageBlob: null, // Remove blob since we now have URL
+                    imageMetadata: migration.metadata
+                }
+            }));
+            
+            // Use the next database system to update multiple cards atomically
+            const updatedDeck = await nextDb.updateMultipleCards(deck.id, cardUpdates);
+            
+            toasts.success('Images migrated successfully!');
+            
+            // Hide the migration dialog immediately
+            showImageMigration = false;
+            
+            // Import ShareUrlDialog component to reopen with updated deck
+            const { ShareUrlDialog } = await import('./index.js');
+            
+            // Close current dialog and reopen ShareUrlDialog with updated deck
+            dialogStore.close();
+            // Reopen the ShareUrlDialog after a brief delay to allow current dialog to close
+            setTimeout(() => {
+                dialogStore.setContent(ShareUrlDialog, { deck: updatedDeck });
+            }, 100);
+            
+        } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : 'Failed to save migrated deck';
+            toasts.error(`Migration failed: ${errorMessage}`);
+            console.error('Migration error:', err);
+        }
     }
 </script>
 
+{#if !showImageMigration}
 <div class="share-url-dialog">
     <div class="dialog-header">
         <h2>🔗 Share Deck</h2>
@@ -62,7 +143,7 @@
             <p>{deck.cards.length} cards</p>
         </div>
         
-        {#if hasBlobImages}
+        {#if needsImageMigration}
             <div class="warning-section">
                 <div class="warning">
                     <h4>⚠️ Images Need Migration</h4>
@@ -111,6 +192,14 @@
         {/if}
     </div>
 </div>
+{/if}
+
+{#if showImageMigration}
+    <ImageMigrationDialog 
+        deck={deck} 
+        onMigrationComplete={handleMigrationComplete}
+    />
+{/if}
 
 <style>
     .share-url-dialog {

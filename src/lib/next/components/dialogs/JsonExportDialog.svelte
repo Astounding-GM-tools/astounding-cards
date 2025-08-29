@@ -1,5 +1,6 @@
 <script lang="ts">
     import { dialogStore } from '../dialog/dialogStore.svelte.js';
+    import { toasts } from '$lib/stores/toast.js';
     import type { Deck } from '$lib/next/types/deck.js';
     
     interface Props {
@@ -46,21 +47,33 @@
     function downloadJson() {
         if (!exportedJson) return;
         
-        const blob = new Blob([exportedJson], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${deck.meta.title.replace(/[^a-zA-Z0-9]/g, '_')}.json`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        try {
+            const blob = new Blob([exportedJson], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${deck.meta.title.replace(/[^a-zA-Z0-9]/g, '_')}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            toasts.success('JSON file downloaded successfully!');
+        } catch (err) {
+            toasts.error('Failed to download JSON file');
+            console.error('Download error:', err);
+        }
     }
     
-    function copyToClipboard() {
-        if (exportedJson) {
-            navigator.clipboard.writeText(exportedJson);
-            // TODO: Show toast notification
+    async function copyToClipboard() {
+        if (!exportedJson) return;
+        
+        try {
+            await navigator.clipboard.writeText(exportedJson);
+            toasts.success('JSON copied to clipboard!');
+        } catch (err) {
+            toasts.error('Failed to copy JSON to clipboard');
+            console.error('Clipboard error:', err);
         }
     }
     

@@ -249,6 +249,38 @@ class NextDatabase {
     }
 
     /**
+     * Update multiple cards in the deck (Canon Update Pattern)
+     */
+    async updateMultipleCards(deckId: string, cardUpdates: Array<{ cardId: string; updates: Partial<Card> }>): Promise<Deck> {
+        const deck = await this.getDeck(deckId);
+        if (!deck) {
+            throw new DatabaseError('Deck not found', 'DECK_NOT_FOUND');
+        }
+
+        const updatedCards = deck.cards.map(card => {
+            const update = cardUpdates.find(u => u.cardId === card.id);
+            if (update) {
+                return {
+                    ...card,
+                    ...update.updates
+                };
+            }
+            return card;
+        });
+
+        const updatedDeck: Deck = {
+            ...deck,
+            cards: updatedCards,
+            meta: {
+                ...deck.meta,
+                lastEdited: Date.now()
+            }
+        };
+
+        return this.saveDeck(updatedDeck);
+    }
+
+    /**
      * Duplicate an existing deck with a new name
      */
     async duplicateDeck(deckId: string, newTitle?: string): Promise<Deck> {

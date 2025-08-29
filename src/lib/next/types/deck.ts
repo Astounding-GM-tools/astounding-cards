@@ -1,5 +1,8 @@
 import type { Card } from "./card";
 
+// Re-export Card type for convenience
+export type { Card } from "./card";
+
 export type Layout = "tarot" | "poker";
 
 export type Theme = "classic"
