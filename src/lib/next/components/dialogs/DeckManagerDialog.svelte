@@ -10,9 +10,12 @@
     let error = $state<string | null>(null);
     let showCreateForm = $state(false);
     let showDeleteConfirm = $state<string | null>(null);
+    let showDuplicateConfirm = $state<string | null>(null);
     let newDeckName = $state('');
+    let duplicateDeckName = $state('');
     let editingDeckId = $state<string | null>(null);
     let editingDeckName = $state('');
+    let isDuplicating = $state(false);
     
     // Current deck from store
     let currentDeck = $derived(nextDeckStore.deck);
@@ -126,6 +129,31 @@
     function formatDateTime(timestamp: number): string {
         return new Date(timestamp).toLocaleString();
     }
+    
+    // Handle deck duplication
+    function startDuplicating(deck: Deck) {
+        showDuplicateConfirm = deck.id;
+        duplicateDeckName = `${deck.meta.title} (Copy)`;
+    }
+    
+    async function duplicateDeck(deckId: string) {
+        if (!duplicateDeckName.trim()) return;
+        
+        isDuplicating = true;
+        try {
+            const duplicatedDeck = await nextDeckStore.duplicateDeckById(deckId, duplicateDeckName.trim());
+            
+            if (duplicatedDeck) {
+                await loadDecks(); // Refresh list
+                showDuplicateConfirm = null;
+                duplicateDeckName = '';
+            }
+        } catch (err) {
+            error = err instanceof Error ? err.message : 'Failed to duplicate deck';
+        } finally {
+            isDuplicating = false;
+        }
+    }
 </script>
 
 <div class="deck-manager-dialog">
@@ -219,6 +247,14 @@
                                     {/if}
                                     
                                     <button 
+                                        class="action-button copy" 
+                                        onclick={() => startDuplicating(deck)}
+                                        title="Copy deck"
+                                    >
+                                        📋
+                                    </button>
+                                    
+                                    <button 
                                         class="action-button edit" 
                                         onclick={() => startEditingName(deck)}
                                         title="Rename deck"
@@ -256,6 +292,63 @@
                 Delete Forever
             </button>
             <button class="action-button cancel" onclick={() => showDeleteConfirm = null}>
+                Cancel
+            </button>
+        </div>
+    </div>
+{/if}
+
+<!-- Duplicate confirmation dialog -->
+{#if showDuplicateConfirm}
+    {@const deckToDuplicate = availableDecks.find(d => d.id === showDuplicateConfirm)}
+    <div class="overlay" role="button" tabindex="0" onclick={() => {
+        showDuplicateConfirm = null;
+        duplicateDeckName = '';
+    }} onkeydown={(e) => {
+        if (e.key === 'Escape') {
+            showDuplicateConfirm = null;
+            duplicateDeckName = '';
+        }
+    }}></div>
+    <div class="confirm-dialog">
+        <h3>Copy Deck</h3>
+        <p>Create a copy of "<strong>{deckToDuplicate?.meta.title}</strong>"?</p>
+        <div class="duplicate-form">
+            <label for="duplicate-name-input">New deck name:</label>
+            <input 
+                id="duplicate-name-input"
+                type="text" 
+                bind:value={duplicateDeckName}
+                class="duplicate-name-input"
+                placeholder="Enter new deck name"
+                disabled={isDuplicating}
+                onkeydown={(e) => {
+                    if (e.key === 'Enter' && duplicateDeckName.trim()) {
+                        duplicateDeck(showDuplicateConfirm!);
+                    }
+                    if (e.key === 'Escape') {
+                        showDuplicateConfirm = null;
+                        duplicateDeckName = '';
+                    }
+                }}
+            />
+        </div>
+        <div class="confirm-actions">
+            <button 
+                class="action-button primary" 
+                onclick={() => duplicateDeck(showDuplicateConfirm!)}
+                disabled={isDuplicating || !duplicateDeckName.trim()}
+            >
+                {isDuplicating ? 'Copying...' : 'Create Copy'}
+            </button>
+            <button 
+                class="action-button cancel" 
+                onclick={() => {
+                    showDuplicateConfirm = null;
+                    duplicateDeckName = '';
+                }}
+                disabled={isDuplicating}
+            >
                 Cancel
             </button>
         </div>
@@ -568,6 +661,40 @@
         gap: 0.75rem;
         justify-content: flex-end;
         margin-top: 1.5rem;
+    }
+    
+    .duplicate-form {
+        margin: 1rem 0;
+    }
+    
+    .duplicate-form label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: var(--ui-text, #1a202c);
+        font-size: 0.875rem;
+    }
+    
+    .duplicate-name-input {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid var(--ui-border, #e2e8f0);
+        border-radius: 4px;
+        font-size: 0.875rem;
+        font-family: inherit;
+        transition: border-color 0.2s;
+    }
+    
+    .duplicate-name-input:focus {
+        outline: none;
+        border-color: var(--button-primary-bg, #3b82f6);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    
+    .duplicate-name-input:disabled {
+        background: var(--ui-hover-bg, #f8fafc);
+        cursor: not-allowed;
+        opacity: 0.7;
     }
     
     /* Responsive design */

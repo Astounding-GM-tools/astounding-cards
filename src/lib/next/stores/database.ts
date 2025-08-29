@@ -249,6 +249,47 @@ class NextDatabase {
     }
 
     /**
+     * Duplicate an existing deck with a new name
+     */
+    async duplicateDeck(deckId: string, newTitle?: string): Promise<Deck> {
+        const originalDeck = await this.getDeck(deckId);
+        if (!originalDeck) {
+            throw new DatabaseError('Deck not found', 'DECK_NOT_FOUND');
+        }
+
+        const now = Date.now();
+        const duplicateName = newTitle || `${originalDeck.meta.title} (Copy)`;
+        
+        // Create deep copy of deck with new IDs
+        const duplicatedDeck: Deck = {
+            id: crypto.randomUUID(),
+            meta: {
+                ...originalDeck.meta,
+                title: duplicateName,
+                lastEdited: now,
+                createdAt: now
+            },
+            // Clone all cards with new IDs
+            cards: originalDeck.cards.map(card => ({
+                ...safeDeepClone(card),
+                id: crypto.randomUUID()
+            }))
+        };
+
+        const db = await this.ensureInit();
+        
+        return new Promise((resolve, reject) => {
+            const transaction = db.transaction([this.deckStore], 'readwrite');
+            const store = transaction.objectStore(this.deckStore);
+            
+            const request = store.add(duplicatedDeck);
+            
+            request.onsuccess = () => resolve(duplicatedDeck);
+            request.onerror = () => reject(new DatabaseError('Failed to duplicate deck', 'DECK_DUPLICATE_ERROR'));
+        });
+    }
+
+    /**
      * Delete entire deck
      */
     async deleteDeck(deckId: string): Promise<void> {

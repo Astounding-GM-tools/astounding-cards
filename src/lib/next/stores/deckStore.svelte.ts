@@ -250,6 +250,49 @@ function createNextDeckStore() {
         },
 
         /**
+         * Duplicate current deck with optional new title
+         */
+        async duplicateDeck(newTitle?: string): Promise<boolean> {
+            if (!currentDeck) {
+                this.setError('No deck loaded');
+                return false;
+            }
+
+            this.setLoading(true, 'Duplicating deck...', 'duplicate-deck');
+            this.clearError();
+
+            try {
+                const duplicatedDeck = await nextDb.duplicateDeck(currentDeck.id, newTitle);
+                currentDeck = duplicatedDeck; // Canon Update: UI reflects persisted state
+                return true;
+            } catch (err) {
+                this.handleError(err, 'Failed to duplicate deck');
+                return false;
+            } finally {
+                this.setLoading(false);
+            }
+        },
+
+        /**
+         * Duplicate any deck by ID with optional new title
+         */
+        async duplicateDeckById(deckId: string, newTitle?: string): Promise<Deck | null> {
+            this.setLoading(true, 'Duplicating deck...', 'duplicate-deck-by-id');
+            this.clearError();
+
+            try {
+                const duplicatedDeck = await nextDb.duplicateDeck(deckId, newTitle);
+                // Don't automatically switch to the duplicated deck, just return it
+                return duplicatedDeck;
+            } catch (err) {
+                this.handleError(err, 'Failed to duplicate deck');
+                return null;
+            } finally {
+                this.setLoading(false);
+            }
+        },
+
+        /**
          * Load the most recent deck from database
          */
         async loadMostRecent(): Promise<boolean> {
