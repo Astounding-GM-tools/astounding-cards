@@ -2,8 +2,13 @@
     import { nextDeckStore } from '$lib/next/stores/deckStore.svelte.js';
     import { nextDevStore } from '$lib/next/stores/devStore.svelte.js';
     import { dialogStore } from '../dialog/dialogStore.svelte.js';
-    import DeckManagerDialog from '../dialogs/DeckManagerDialog.svelte';
-    import CardEditDialog from '../dialogs/CardEditDialog.svelte';
+    import { 
+        DeckManagerDialog,
+        CardEditDialog,
+        ShareUrlDialog,
+        JsonExportDialog,
+        JsonImportDialog
+    } from '../dialogs/index.js';
     import BinaryToggle from '../ui/BinaryToggle.svelte';
     import type { Layout } from '../../types/deck.js';
     
@@ -38,8 +43,19 @@
     
     // Handle share deck
     function handleShareDeck() {
-        // TODO: This will create a shareable URL
-        console.log('Sharing deck...');
+        if (!deck) return;
+        dialogStore.setContent(ShareUrlDialog, { deck });
+    }
+    
+    // Handle export deck
+    function handleExportDeck() {
+        if (!deck) return;
+        dialogStore.setContent(JsonExportDialog, { deck });
+    }
+    
+    // Handle import deck
+    function handleImportDeck() {
+        dialogStore.setContent(JsonImportDialog);
     }
     
     // Dev functions (temporary)

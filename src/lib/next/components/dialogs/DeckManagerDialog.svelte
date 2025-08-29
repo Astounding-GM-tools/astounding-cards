@@ -2,6 +2,7 @@
     import { nextDeckStore } from '$lib/next/stores/deckStore.svelte.js';
     import { nextDb } from '$lib/next/stores/database.js';
     import { dialogStore } from '../dialog/dialogStore.svelte.js';
+    import { JsonExportDialog, JsonImportDialog } from './index.js';
     import type { Deck } from '$lib/next/types/deck.js';
     
     // Local state
@@ -160,6 +161,22 @@
     <div class="dialog-header">
         <h2>📚 Deck Management</h2>
         <div class="header-actions">
+            <button 
+                class="action-button" 
+                onclick={() => dialogStore.setContent(JsonImportDialog)}
+                title="Import deck from JSON"
+            >
+                📥 Import
+            </button>
+            {#if currentDeck}
+                <button 
+                    class="action-button" 
+                    onclick={() => dialogStore.setContent(JsonExportDialog, { deck: currentDeck })}
+                    title="Export current deck to JSON"
+                >
+                    📤 Export
+                </button>
+            {/if}
             <button class="action-button primary" onclick={showCreateFormAndFocus}>
                 ➕ New Deck
             </button>
