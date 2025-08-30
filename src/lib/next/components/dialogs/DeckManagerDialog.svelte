@@ -2,7 +2,10 @@
     import { nextDeckStore } from '$lib/next/stores/deckStore.svelte.js';
     import { nextDb } from '$lib/next/stores/database.js';
     import { dialogStore } from '../dialog/dialogStore.svelte.js';
-    import { JsonExportDialog, JsonImportDialog } from './index.js';
+    import { JsonImportDialog } from './index.js';
+    import { downloadDeckAsJson } from '$lib/next/utils/jsonExporter.js';
+    import { toasts } from '$lib/stores/toast.js';
+    import BinaryToggle from '../ui/BinaryToggle.svelte';
     import type { Deck } from '$lib/next/types/deck.js';
     
     // Local state
@@ -17,6 +20,7 @@
     let editingDeckId = $state<string | null>(null);
     let editingDeckName = $state('');
     let isDuplicating = $state(false);
+    let exportComplete = $state(false); // false = Light, true = Complete
     
     // Current deck from store
     let currentDeck = $derived(nextDeckStore.deck);
@@ -169,13 +173,35 @@
                 📥 Import
             </button>
             {#if currentDeck}
-                <button 
-                    class="action-button" 
-                    onclick={() => dialogStore.setContent(JsonExportDialog, { deck: currentDeck })}
-                    title="Export current deck to JSON"
-                >
-                    📤 Export
-                </button>
+                <div class="export-section">
+                    <BinaryToggle
+                        checked={exportComplete}
+                        onToggle={(isComplete) => { exportComplete = isComplete; }}
+                        falseLabel="○ Light"
+                        trueLabel="● Complete"
+                        name="export-type"
+                        size="sm"
+                        title={exportComplete 
+                            ? "Complete export includes all images embedded (larger file, works offline)"
+                            : "Light export includes only image URLs (smaller file, requires internet)"}
+                    />
+                    <button 
+                        class="action-button export"
+                        onclick={async () => {
+                            try {
+                                await downloadDeckAsJson(currentDeck, exportComplete);
+                                const type = exportComplete ? 'Complete' : 'Light';
+                                toasts.success(`${type} deck export completed!`);
+                            } catch (error) {
+                                console.error('Export failed:', error);
+                                toasts.error('Failed to export deck');
+                            }
+                        }}
+                        title={`Export current deck to JSON (${exportComplete ? 'complete with images' : 'light with URLs only'})`}
+                    >
+                        📤 Export
+                    </button>
+                </div>
             {/if}
             <button class="action-button primary" onclick={showCreateFormAndFocus}>
                 ➕ New Deck
@@ -712,6 +738,23 @@
         background: var(--ui-hover-bg, #f8fafc);
         cursor: not-allowed;
         opacity: 0.7;
+    }
+    
+    /* Export section styling */
+    .export-section {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-top: -16px;
+    }
+
+    .export-section :global(.binary-toggle) {
+        font-size: 11px;
+    }
+    
+    .action-button.export {
+        padding: 0.4rem 0.6rem;
+        font-size: 0.8125rem;
     }
     
     /* Responsive design */

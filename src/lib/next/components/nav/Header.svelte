@@ -6,7 +6,6 @@
         DeckManagerDialog,
         CardEditDialog,
         ImageMigrationDialog,
-        JsonExportDialog,
         JsonImportDialog
     } from '../dialogs/index.js';
     import { generateShareUrl } from '$lib/next/utils/shareUrlUtils.js';
@@ -115,12 +114,6 @@
             console.error('Post-migration share error:', error);
             toasts.error('Migration complete, but failed to generate share URL');
         }
-    }
-    
-    // Handle export deck
-    function handleExportDeck() {
-        if (!deck) return;
-        dialogStore.setContent(JsonExportDialog, { deck });
     }
     
     // Handle import deck
