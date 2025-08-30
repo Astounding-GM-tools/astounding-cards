@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { Card, Deck } from '$lib/types';
+  import type { Card, Deck } from '$lib/next/types/deck.js';
   import { fade } from 'svelte/transition';
   import ImageMigrationDialog from './ImageMigrationDialog.svelte';
   import { canonUpdateCard } from '$lib/stores/canonUpdate';
@@ -52,7 +52,7 @@
 >
   <div class="dialog-content">
     <div class="dialog-header">
-      <h2>Share Deck: {deck.meta.name}</h2>
+      <h2>Share Deck: {deck.meta.title}</h2>
       <button 
         class="close-button" 
         onclick={handleClose}

@@ -1,6 +1,6 @@
 // Logic for ShareDialog component
-import type { Card, Deck } from '$lib/types';
-import { deckToUrl } from '$lib/stores/deck';
+import type { Card, Deck } from '$lib/next/types/deck.js';
+import { generateShareUrl, toShareable } from '$lib/next/utils/shareUrlUtils.js';
 import { toasts } from '$lib/stores/toast';
 
 export interface ShareDialogState {
@@ -45,7 +45,8 @@ export function initializeShareDialogState(): ShareDialogState {
  * Calculate URL size and image statistics for a deck
  */
 export function calculateDeckStats(deck: Deck): Pick<ShareDialogState, 'urlSize' | 'blobCount' | 'missingImageCount' | 'migrationNeeded'> {
-  const urlSize = new TextEncoder().encode(deckToUrl(deck)).length;
+  const shareUrl = generateShareUrl(deck);
+  const urlSize = new TextEncoder().encode(shareUrl).length;
   
   // Count cards with no images
   const missingImageCount = deck.cards.filter((card: Card) => !card.image).length;
@@ -92,7 +93,7 @@ export function getUrlSizeStatus(size: number): 'success' | 'warning' | 'error' 
  */
 export async function shareAsUrl(deck: Deck): Promise<void> {
   try {
-    const shareUrl = deckToUrl(deck);
+    const shareUrl = generateShareUrl(deck);
     await navigator.clipboard.writeText(shareUrl);
     toasts.success('Share URL copied! Send this URL to share your deck.');
   } catch (err) {
@@ -110,7 +111,7 @@ export async function shareAsJson(deck: Deck): Promise<void> {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    const filename = `${deck.meta.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.json`;
+    const filename = `${deck.meta.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.json`;
     // Set property; set attribute only if available (for simple mocks)
     (a as HTMLAnchorElement).download = filename;
     if (typeof (a as any).setAttribute === 'function') {

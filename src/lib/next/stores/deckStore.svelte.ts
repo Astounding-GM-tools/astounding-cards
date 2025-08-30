@@ -293,6 +293,29 @@ function createNextDeckStore() {
         },
 
         /**
+         * Import a deck from share URL data and save it to database
+         * This follows the Canon Update Pattern by persisting first, then updating UI
+         */
+        async importDeck(deck: Deck): Promise<boolean> {
+            this.setLoading(true, `Importing deck "${deck.meta.title}"...`, 'import-deck');
+            this.clearError();
+
+            try {
+                // Save the imported deck to database first (Canon Update Pattern)
+                const savedDeck = await nextDb.saveDeck(deck);
+                
+                // Now set it as current deck
+                currentDeck = savedDeck;
+                return true;
+            } catch (err) {
+                this.handleError(err, 'Failed to import deck');
+                return false;
+            } finally {
+                this.setLoading(false);
+            }
+        },
+
+        /**
          * Load the most recent deck from database
          */
         async loadMostRecent(): Promise<boolean> {

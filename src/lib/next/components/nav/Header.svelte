@@ -5,10 +5,12 @@
     import { 
         DeckManagerDialog,
         CardEditDialog,
-        ShareUrlDialog,
+        ImageMigrationDialog,
         JsonExportDialog,
         JsonImportDialog
     } from '../dialogs/index.js';
+    import { generateShareUrl } from '$lib/next/utils/shareUrlUtils.js';
+    import { toasts } from '$lib/stores/toast.js';
     import BinaryToggle from '../ui/BinaryToggle.svelte';
     import type { Layout } from '../../types/deck.js';
     
@@ -41,10 +43,78 @@
         }
     }
     
-    // Handle share deck
-    function handleShareDeck() {
+    // Zero-faff share deck: BOOM to clipboard or directly to migration
+    async function handleShareDeck() {
         if (!deck) return;
-        dialogStore.setContent(ShareUrlDialog, { deck });
+        
+        try {
+            // Check if images need migration
+            const needsMigration = checkImageMigrationNeeded(deck);
+            
+            if (!needsMigration) {
+                // BOOM! Generate URL, copy to clipboard, show toast, done!
+                const shareUrl = generateShareUrl(deck);
+                await navigator.clipboard.writeText(shareUrl);
+                toasts.success('🔗 Share URL copied to clipboard!');
+            } else {
+                // Open ImageMigrationDialog directly - skip the intermediate dialog
+                dialogStore.setContent(ImageMigrationDialog, { 
+                    deck,
+                    onMigrationComplete: handleMigrationComplete
+                });
+            }
+        } catch (error) {
+            console.error('Share error:', error);
+            toasts.error('Failed to share deck');
+        }
+    }
+    
+    // Check if deck has images that need migration
+    function checkImageMigrationNeeded(deck: typeof deck): boolean {
+        return deck.cards.some(card => {
+            // Skip cards with no images entirely (they're fine as-is)
+            if (!card.image && !card.imageBlob) {
+                return false;
+            }
+            
+            // If card has a valid external URL, it's already shareable
+            if (card.image && isValidExternalUrl(card.image)) {
+                return false;
+            }
+            
+            // Need migration if: has blob or invalid external URL
+            return card.imageBlob || (card.image && !isValidExternalUrl(card.image));
+        });
+    }
+    
+    function isValidExternalUrl(url?: string | null): boolean {
+        if (!url) return false;
+        try {
+            const parsedUrl = new URL(url);
+            return (parsedUrl.protocol === 'http:' || parsedUrl.protocol === 'https:') && 
+                   parsedUrl.hostname !== 'localhost' && 
+                   parsedUrl.hostname !== '127.0.0.1' &&
+                   !parsedUrl.protocol.startsWith('blob:') &&
+                   !parsedUrl.protocol.startsWith('data:');
+        } catch {
+            return false;
+        }
+    }
+    
+    // Handle completion of image migration - BOOM to clipboard!
+    async function handleMigrationComplete() {
+        try {
+            // Migration complete - generate URL and copy to clipboard
+            const shareUrl = generateShareUrl(deck!);
+            await navigator.clipboard.writeText(shareUrl);
+            toasts.success('🎉 Images migrated and share URL copied to clipboard!');
+            
+            // Close the migration dialog
+            dialogStore.close();
+        } catch (error) {
+            console.error('Post-migration share error:', error);
+            toasts.error('Migration complete, but failed to generate share URL');
+        }
     }
     
     // Handle export deck
