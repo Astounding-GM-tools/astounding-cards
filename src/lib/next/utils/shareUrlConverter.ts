@@ -28,17 +28,19 @@ import {
  * Convert a full deck to shareable format for URL encoding
  */
 export function toShareable(deck: Deck): ShareableDeck {
+    // Start with human-readable content first
     const shareable: ShareableDeck = {
-        id: deck.id,
         title: deck.meta.title,
+        id: deck.id,
         cards: deck.cards.map(toShareableCard)
     };
     
-    // Only include non-default values
+    // Add description right after title if present
     if (deck.meta.description) {
         shareable.description = deck.meta.description;
     }
     
+    // Add technical settings after human content
     if (deck.meta.theme !== DEFAULTS.THEME) {
         shareable.theme = deck.meta.theme;
     }
