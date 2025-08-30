@@ -339,6 +339,13 @@ class NextDatabase {
     }
 
     /**
+     * Upsert a deck (public). Saves new or existing deck.
+     */
+    async upsertDeck(deck: Deck): Promise<Deck> {
+        return this.saveDeck(deck);
+    }
+
+    /**
      * Save deck (internal helper)
      */
     private async saveDeck(deck: Deck): Promise<Deck> {

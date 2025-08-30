@@ -302,7 +302,7 @@ function createNextDeckStore() {
 
             try {
                 // Save the imported deck to database first (Canon Update Pattern)
-                const savedDeck = await nextDb.saveDeck(deck);
+                const savedDeck = await nextDb.upsertDeck(deck);
                 
                 // Now set it as current deck
                 currentDeck = savedDeck;

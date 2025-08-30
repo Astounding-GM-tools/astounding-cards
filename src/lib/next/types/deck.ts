@@ -1,7 +1,7 @@
-import type { Card } from "./card";
+import type { Card, Trait, Stat } from "./card";
 
-// Re-export Card type for convenience
-export type { Card } from "./card";
+// Re-export types for convenience
+export type { Card, Trait, Stat } from "./card";
 
 export type Layout = "tarot" | "poker";
 

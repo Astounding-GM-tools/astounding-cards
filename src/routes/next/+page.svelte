@@ -36,9 +36,10 @@
                 await nextDeckStore.loadDeck(importedDeck);
                 toasts.success(`🎉 Deck "${importedDeck.meta.title}" imported from URL!`);
                 // Clear the URL hash to prevent re-importing
-                if (typeof window !== 'undefined') {
-                    window.history.replaceState({}, '', window.location.pathname);
-                }
+                // Commented out to preserve URL during merge workflow
+                // if (typeof window !== 'undefined') {
+                //     window.history.replaceState({}, '', window.location.pathname);
+                // }
                 isInitializing = false;
                 return;
             }
