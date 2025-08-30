@@ -3,6 +3,7 @@
     import { nextDevStore } from '$lib/next/stores/devStore.svelte.js';
     import { dialogStore } from '../dialog/dialogStore.svelte.js';
     import { 
+        AiPromptDialog,
         DeckManagerDialog,
         CardEditDialog,
         ImageMigrationDialog,
@@ -121,6 +122,11 @@
         dialogStore.setContent(JsonImportDialog);
     }
     
+    // Handle AI prompt generator
+    function handleAiPrompt() {
+        dialogStore.setContent(AiPromptDialog);
+    }
+    
     // Dev functions (temporary)
     async function handleLoadSample() {
         try {
@@ -192,6 +198,24 @@
     </div>
     
     <div class="header-controls">
+        <!-- Import and AI controls -->
+        <div class="import-controls">
+            <button 
+                class="import-button ai"
+                onclick={handleAiPrompt}
+                disabled={isLoading}
+            >
+                🤖 AI Generator
+            </button>
+            <button 
+                class="import-button"
+                onclick={handleImportDeck}
+                disabled={isLoading}
+            >
+                📥 Import JSON
+            </button>
+        </div>
+        
         <!-- Dev controls - remove in production -->
         <div class="dev-controls">
             <button 
@@ -334,6 +358,53 @@
         color: var(--ui-text, #1a202c);
     }
     
+    .import-controls {
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+    }
+    
+    .import-button {
+        padding: 0.5rem 0.875rem;
+        border: 1px solid var(--ui-border, #e2e8f0);
+        border-radius: 6px;
+        background: var(--ui-bg, #ffffff);
+        color: var(--ui-text, #1a202c);
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        white-space: nowrap;
+    }
+    
+    .import-button:hover:not(:disabled) {
+        background: var(--ui-hover-bg, #f8fafc);
+        border-color: var(--button-primary-bg, #3b82f6);
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .import-button.ai {
+        background: linear-gradient(135deg, rgba(147, 51, 234, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%);
+        border-color: rgba(147, 51, 234, 0.3);
+        color: #7c3aed;
+        font-weight: 600;
+    }
+    
+    .import-button.ai:hover:not(:disabled) {
+        background: linear-gradient(135deg, rgba(147, 51, 234, 0.2) 0%, rgba(59, 130, 246, 0.2) 100%);
+        border-color: #7c3aed;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(124, 58, 237, 0.2);
+    }
+    
+    .import-button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+    }
+    
     .dev-controls {
         display: flex;
         gap: 0.5rem;
@@ -388,7 +459,7 @@
             gap: 0.75rem;
         }
         
-        .layout-controls, .dev-controls {
+        .import-controls, .layout-controls, .dev-controls {
             justify-content: center;
         }
     }
