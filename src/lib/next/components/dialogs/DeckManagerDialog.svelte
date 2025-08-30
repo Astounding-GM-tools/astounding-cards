@@ -173,7 +173,12 @@
                 📥 Import
             </button>
             {#if currentDeck}
-                <div class="export-section">
+                <div class="export-section"
+                    title={exportComplete 
+                            ? "Complete export includes all images embedded (larger file, works offline)"
+                            : "Light export includes only image URLs (smaller file, requires internet)"}
+
+                >
                     <BinaryToggle
                         checked={exportComplete}
                         onToggle={(isComplete) => { exportComplete = isComplete; }}
@@ -181,9 +186,6 @@
                         trueLabel="● Complete"
                         name="export-type"
                         size="sm"
-                        title={exportComplete 
-                            ? "Complete export includes all images embedded (larger file, works offline)"
-                            : "Light export includes only image URLs (smaller file, requires internet)"}
                     />
                     <button 
                         class="action-button export"

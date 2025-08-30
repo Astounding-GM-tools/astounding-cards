@@ -414,7 +414,7 @@ Requirements:
 - Each character needs: unique id, title, subtitle, rich description
 - Add 2-4 meaningful traits per character (mix public/private)
 - Add 2-4 stats per character with values 1-20 (mix tracked/untracked)  
-- Use kebab-case for IDs: "character-name"
+- **IMPORTANT**: Use random UUIDs for all IDs (both deck and card IDs)
 - Make descriptions detailed and flavorful
 - Set isPublic: true for traits/stats visible to other players
 - Set tracked: true for stats that change during gameplay

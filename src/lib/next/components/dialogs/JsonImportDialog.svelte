@@ -1,15 +1,21 @@
 <script lang="ts">
     import { dialogStore } from '../dialog/dialogStore.svelte.js';
+    import { nextDeckStore } from '$lib/next/stores/deckStore.svelte.js';
+    import { nextDb } from '$lib/next/stores/database.js';
+    import { MergeToolDialog } from './index.js';
+    import { importDeckFromFile, importDeckFromJson, generateUniqueDeckId, estimateImportSize } from '$lib/next/utils/jsonImporter.js';
+    import { toasts } from '$lib/stores/toast.js';
     import type { Deck } from '$lib/next/types/deck.js';
     
     // Local state
     let isImporting = $state(false);
     let error = $state<string | null>(null);
+    let warnings = $state<string[]>([]);
     let importedDeck = $state<Deck | null>(null);
-    let importMethod = $state<'file' | 'text'>('file');
-    let jsonText = $state('');
+    // Removed importMethod and jsonText - file import only
     let fileInput = $state<HTMLInputElement>();
     let needsMerge = $state(false);
+    let existingDeckIds = $state<string[]>([]);
     
     async function handleFileImport(event: Event) {
         const target = event.target as HTMLInputElement;
@@ -18,10 +24,22 @@
         
         isImporting = true;
         error = null;
+        warnings = [];
         
         try {
-            const text = await file.text();
-            await parseJsonContent(text);
+            const result = await importDeckFromFile(file);
+            
+            if (!result.success) {
+                error = result.error || 'Failed to import deck';
+                return;
+            }
+            
+            if (result.warnings) {
+                warnings = result.warnings;
+            }
+            
+            await processImportedDeck(result.deck!);
+            
         } catch (err) {
             error = err instanceof Error ? err.message : 'Failed to read file';
         } finally {
@@ -29,66 +47,86 @@
         }
     }
     
-    async function handleTextImport() {
-        if (!jsonText.trim()) {
-            error = 'Please enter JSON content';
-            return;
-        }
-        
-        isImporting = true;
-        error = null;
-        
+    
+    async function processImportedDeck(deck: Deck) {
+        // Load existing deck IDs to check for conflicts
         try {
-            await parseJsonContent(jsonText);
+            const existingDecks = await nextDb.getAllDecks();
+            existingDeckIds = existingDecks.map(d => d.id);
+            
+            // Check if deck ID already exists
+            needsMerge = existingDeckIds.includes(deck.id);
+            importedDeck = deck;
+            
         } catch (err) {
-            error = err instanceof Error ? err.message : 'Failed to parse JSON';
-        } finally {
-            isImporting = false;
+            console.error('Failed to load existing decks:', err);
+            // Assume no conflicts if we can't load existing decks
+            needsMerge = false;
+            importedDeck = deck;
         }
     }
     
-    async function parseJsonContent(jsonContent: string) {
-        try {
-            const parsed = JSON.parse(jsonContent);
-            
-            // TODO: Implement proper JSON validation
-            // Validate structure, version compatibility, etc.
-            if (!parsed.deck) {
-                throw new Error('Invalid deck format: missing deck data');
-            }
-            
-            importedDeck = parsed.deck;
-            
-            // TODO: Check if deck ID already exists
-            // If it does, set needsMerge = true
-            needsMerge = false; // For now, assume no conflicts
-            
-        } catch (err) {
-            if (err instanceof SyntaxError) {
-                throw new Error('Invalid JSON format');
-            }
-            throw err;
-        }
-    }
-    
-    function proceedWithImport() {
+    async function proceedWithImport() {
         if (!importedDeck) return;
         
         if (needsMerge) {
-            // TODO: Open MergeToolDialog
-            console.log('Opening merge tool...');
+            // Open merge tool with imported deck
+            const existingDeck = await nextDb.getDeck(importedDeck.id);
+            if (existingDeck) {
+                dialogStore.setContent(MergeToolDialog, {
+                    incomingDeck: importedDeck,
+                    existingDeck: existingDeck,
+                    onMergeComplete: () => {
+                        // Merge completed successfully - the merge tool handles:
+                        // - Saving the merged deck
+                        // - Updating the deck store
+                        // - Showing success toast
+                        // So we just close this dialog
+                        dialogStore.close();
+                    }
+                });
+            } else {
+                // Deck no longer exists, import directly
+                await importDirectly();
+            }
         } else {
-            // TODO: Import deck directly
-            console.log('Importing deck directly...');
-            // dialogStore.close();
+            await importDirectly();
+        }
+    }
+    
+    async function importDirectly() {
+        if (!importedDeck) return;
+        
+        try {
+            // Ensure unique ID
+            if (existingDeckIds.includes(importedDeck.id)) {
+                const uniqueId = generateUniqueDeckId(importedDeck.id, existingDeckIds);
+                importedDeck = { ...importedDeck, id: uniqueId };
+            }
+            
+            // Import the deck
+            await nextDb.saveDeck(importedDeck);
+            
+            // Set as current deck
+            await nextDeckStore.selectDeck(importedDeck.id);
+            
+            // Show success message
+            toasts.success(`Deck "${importedDeck.meta.title}" imported successfully!`);
+            
+            // Close dialog
+            dialogStore.close();
+            
+        } catch (err) {
+            error = `Failed to import deck: ${err instanceof Error ? err.message : 'Unknown error'}`;
         }
     }
     
     function clearImport() {
         importedDeck = null;
-        jsonText = '';
         error = null;
+        warnings = [];
         needsMerge = false;
+        existingDeckIds = [];
         if (fileInput) {
             fileInput.value = '';
         }
@@ -103,64 +141,25 @@
     
     <div class="dialog-content">
         {#if !importedDeck}
-            <div class="import-methods">
-                <h3>Import Method</h3>
-                <div class="method-tabs">
-                    <button 
-                        class="method-tab" 
-                        class:active={importMethod === 'file'}
-                        onclick={() => importMethod = 'file'}
-                    >
-                        📁 From File
-                    </button>
-                    <button 
-                        class="method-tab" 
-                        class:active={importMethod === 'text'}
-                        onclick={() => importMethod = 'text'}
-                    >
-                        📝 From Text
-                    </button>
+            <div class="file-import">
+                <div class="file-drop-zone">
+                    <input 
+                        bind:this={fileInput}
+                        type="file" 
+                        accept=".json,application/json"
+                        onchange={handleFileImport}
+                        class="file-input"
+                        id="json-file-input"
+                    />
+                    <label for="json-file-input" class="file-drop-label">
+                        <div class="file-drop-content">
+                            <div class="file-drop-icon">📄</div>
+                            <p>Click to select JSON file</p>
+                            <p class="file-drop-hint">Supports both light and complete exports</p>
+                        </div>
+                    </label>
                 </div>
             </div>
-            
-            {#if importMethod === 'file'}
-                <div class="file-import">
-                    <div class="file-drop-zone">
-                        <input 
-                            bind:this={fileInput}
-                            type="file" 
-                            accept=".json,application/json"
-                            onchange={handleFileImport}
-                            class="file-input"
-                            id="json-file-input"
-                        />
-                        <label for="json-file-input" class="file-drop-label">
-                            <div class="file-drop-content">
-                                <div class="file-drop-icon">📄</div>
-                                <p>Click to select JSON file</p>
-                                <p class="file-drop-hint">or drag and drop here</p>
-                            </div>
-                        </label>
-                    </div>
-                </div>
-            {:else}
-                <div class="text-import">
-                    <label for="json-text-input">Paste JSON content:</label>
-                    <textarea 
-                        id="json-text-input"
-                        bind:value={jsonText}
-                        placeholder="Paste your JSON deck data here..."
-                        class="json-input-textarea"
-                    ></textarea>
-                    <button 
-                        class="action-button primary"
-                        onclick={handleTextImport}
-                        disabled={isImporting || !jsonText.trim()}
-                    >
-                        {isImporting ? 'Parsing...' : 'Import from Text'}
-                    </button>
-                </div>
-            {/if}
         {:else}
             <div class="import-preview">
                 <h3>✅ Deck Loaded</h3>
@@ -199,7 +198,7 @@
         {/if}
         
         <div class="import-info">
-            <p><strong>Supported formats:</strong> JSON files exported from this application or compatible deck formats.</p>
+            <p><strong>Supported formats:</strong> JSON files exported from this application, AI-generated decks, or compatible deck formats.</p>
         </div>
     </div>
 </div>

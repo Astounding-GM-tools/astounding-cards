@@ -1,13 +1,68 @@
 <script lang="ts">
     import { dialogStore } from '../dialog/dialogStore.svelte.js';
+    import { nextDb } from '$lib/next/stores/database.js';
+    import { nextDeckStore } from '$lib/next/stores/deckStore.svelte.js';
+    import { toasts } from '$lib/stores/toast.js';
     import type { Deck, Card } from '$lib/next/types/deck.js';
     
     interface Props {
         existingDeck: Deck;
         incomingDeck: Deck;
+        onMergeComplete?: () => void;
     }
     
-    const { existingDeck, incomingDeck }: Props = $props();
+    const { existingDeck, incomingDeck, onMergeComplete }: Props = $props();
+    
+    // Utility function to check if two cards have conflicts
+    function hasCardConflicts(incomingCard: Card, existingCard: Card | undefined): boolean {
+        if (!existingCard) {
+            // New card, no conflict
+            return false;
+        }
+        
+        // Check for differences in main fields
+        return (
+            incomingCard.title !== existingCard.title ||
+            incomingCard.subtitle !== existingCard.subtitle ||
+            incomingCard.description !== existingCard.description ||
+            JSON.stringify(incomingCard.traits) !== JSON.stringify(existingCard.traits) ||
+            JSON.stringify(incomingCard.stats) !== JSON.stringify(existingCard.stats) ||
+            // Image comparison - check if both have images but they're different
+            (incomingCard.image && existingCard.image && 
+                incomingCard.image.url !== existingCard.image.url)
+        );
+    }
+    
+    // Get list of cards that actually have conflicts
+    let conflictedCards = $derived(
+        incomingDeck.cards.filter(incomingCard => {
+            const existingCard = existingDeck.cards.find(c => c.id === incomingCard.id);
+            return hasCardConflicts(incomingCard, existingCard);
+        })
+    );
+    
+    // Get list of new cards (no conflicts, but need user decision)
+    let newCards = $derived(
+        incomingDeck.cards.filter(incomingCard => {
+            const existingCard = existingDeck.cards.find(c => c.id === incomingCard.id);
+            return !existingCard;
+        })
+    );
+    
+    // Cards that need user input (conflicted + new)
+    let cardsNeedingDecision = $derived([...conflictedCards, ...newCards]);
+    
+    // Auto-handle cards that are identical
+    $effect(() => {
+        for (const incomingCard of incomingDeck.cards) {
+            const existingCard = existingDeck.cards.find(c => c.id === incomingCard.id);
+            
+            // If card exists and has no conflicts, auto-keep existing
+            if (existingCard && !hasCardConflicts(incomingCard, existingCard)) {
+                cardMergeDecisions[incomingCard.id] = 'keep';
+            }
+        }
+    });
     
     // Local state
     let isMerging = $state(false);
@@ -22,12 +77,12 @@
         layout: 'keep' as 'keep' | 'replace'
     });
     
-    // Computed values
-    let totalCards = $derived(incomingDeck.cards.length);
-    let currentCard = $derived(incomingDeck.cards[currentCardIndex]);
+    // Computed values - only show cards that need decisions
+    let totalCards = $derived(cardsNeedingDecision.length);
+    let currentCard = $derived(cardsNeedingDecision[currentCardIndex]);
     let existingCard = $derived(existingDeck.cards.find(c => c.id === currentCard?.id));
     let mergeProgress = $derived(Object.keys(cardMergeDecisions).length);
-    let canFinishMerge = $derived(mergeProgress === totalCards);
+    let canFinishMerge = $derived(mergeProgress === incomingDeck.cards.length); // Still need all cards decided
     
     // Conflict detection
     let hasMetaConflicts = $derived(
@@ -63,6 +118,7 @@
         if (fastImportChoice === 'accept') {
             // Accept all changes
             for (const card of incomingDeck.cards) {
+                const existingCard = existingDeck.cards.find(c => c.id === card.id);
                 cardMergeDecisions[card.id] = existingCard ? 'replace' : 'keep';
             }
             deckMetaMergeDecisions.title = 'replace';
@@ -84,19 +140,74 @@
         error = null;
         
         try {
-            // TODO: Implement merge logic
-            // Apply all the decisions made by the user
-            console.log('Merge decisions:', {
-                cardMergeDecisions,
-                deckMetaMergeDecisions,
-                fastImportChoice: mergeMode === 'fast' ? fastImportChoice : null
+            // Build the merged deck based on decisions
+            const mergedDeck: Deck = {
+                id: existingDeck.id, // Keep existing deck ID
+                meta: {
+                    title: deckMetaMergeDecisions.title === 'replace' ? incomingDeck.meta.title : existingDeck.meta.title,
+                    theme: deckMetaMergeDecisions.theme === 'replace' ? incomingDeck.meta.theme : existingDeck.meta.theme,
+                    layout: deckMetaMergeDecisions.layout === 'replace' ? incomingDeck.meta.layout : existingDeck.meta.layout,
+                    lastEdited: Date.now(), // Update timestamp
+                    createdAt: existingDeck.meta.createdAt // Keep original creation date
+                },
+                cards: [] // Will be populated below
+            };
+            
+            // Start with existing cards
+            const cardsMap = new Map<string, Card>();
+            existingDeck.cards.forEach(card => {
+                cardsMap.set(card.id, card);
             });
             
-            // For now, just log the merge
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            // Apply card merge decisions
+            for (const incomingCard of incomingDeck.cards) {
+                const decision = cardMergeDecisions[incomingCard.id];
+                
+                switch (decision) {
+                    case 'keep':
+                        // For new cards, add them; for existing cards, keep the existing version
+                        if (!cardsMap.has(incomingCard.id)) {
+                            cardsMap.set(incomingCard.id, incomingCard);
+                        }
+                        break;
+                        
+                    case 'replace':
+                        // Replace existing card with incoming version
+                        cardsMap.set(incomingCard.id, incomingCard);
+                        break;
+                        
+                    case 'skip':
+                        // Skip this card - if it doesn't exist, don't add it;
+                        // if it exists, keep the existing version (no change needed)
+                        break;
+                        
+                    default:
+                        console.warn(`No decision made for card ${incomingCard.id}, keeping existing or skipping`);
+                }
+            }
             
+            // Convert map back to array
+            mergedDeck.cards = Array.from(cardsMap.values());
+            
+            // Save the merged deck to database
+            await nextDb.upsertDeck(mergedDeck);
+            
+            // Update the deck store to reflect the changes
+            await nextDeckStore.selectDeck(mergedDeck.id);
+            
+            // Show success message
+            toasts.success(`Deck "${mergedDeck.meta.title}" merged successfully!`);
+            
+            // Call completion callback if provided
+            if (onMergeComplete) {
+                onMergeComplete();
+            }
+            
+            // Close dialog
             dialogStore.close();
+            
         } catch (err) {
+            console.error('Merge failed:', err);
             error = err instanceof Error ? err.message : 'Failed to merge decks';
         } finally {
             isMerging = false;
@@ -141,10 +252,15 @@
                 <div class="progress-bar">
                     <div 
                         class="progress-fill" 
-                        style="width: {canFinishMerge ? 100 : (mergeProgress / totalCards) * 100}%"
+                        style="width: {canFinishMerge ? 100 : (mergeProgress / incomingDeck.cards.length) * 100}%"
                     ></div>
                 </div>
-                <p>Progress: {mergeProgress} / {totalCards} cards resolved</p>
+                <p>Progress: {mergeProgress} / {incomingDeck.cards.length} cards resolved</p>
+                {#if totalCards > 0}
+                    <p class="conflict-summary">{conflictedCards.length} conflicts, {newCards.length} new cards</p>
+                {:else}
+                    <p class="no-conflicts">✅ No conflicts - all cards are identical</p>
+                {/if}
             </div>
         </div>
         
@@ -231,7 +347,12 @@
                     </div>
                 {/if}
                 
-                {#if currentCard}
+                {#if totalCards === 0}
+                    <div class="no-card-conflicts">
+                        <h4>✅ No Card Conflicts</h4>
+                        <p>All cards in the import are identical to existing cards or have been auto-resolved.</p>
+                    </div>
+                {:else if currentCard}
                     <div class="card-merge">
                         <div class="card-merge-header">
                             <h4>Card {currentCardIndex + 1} of {totalCards}</h4>
@@ -446,6 +567,36 @@
         margin: 0;
         font-size: 0.875rem;
         text-align: center;
+    }
+    
+    .conflict-summary {
+        color: var(--ui-muted, #64748b) !important;
+        font-size: 0.75rem !important;
+    }
+    
+    .no-conflicts {
+        color: var(--ui-success, #059669) !important;
+        font-weight: 500 !important;
+    }
+    
+    .no-card-conflicts {
+        background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(34, 197, 94, 0.05) 100%);
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        border-radius: 6px;
+        padding: 1rem;
+        text-align: center;
+    }
+    
+    .no-card-conflicts h4 {
+        margin: 0 0 0.5rem 0;
+        color: var(--ui-success, #059669);
+        font-size: 1rem;
+    }
+    
+    .no-card-conflicts p {
+        margin: 0;
+        font-size: 0.875rem;
+        color: var(--ui-muted, #64748b);
     }
     
     .merge-mode h3 {
