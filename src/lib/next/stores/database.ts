@@ -13,6 +13,7 @@
 import type { Deck, Theme, Layout } from '../types/deck.js';
 import type { Card } from '../types/card.js';
 import { safeDeepClone } from '$lib/utils/clone-utils.js';
+import { generateId, generateKey } from '../utils/idUtils.js';
 
 export class DatabaseError extends Error {
     constructor(message: string, public code: string) {
@@ -86,7 +87,7 @@ class NextDatabase {
         const now = Date.now();
         
         const deck: Deck = {
-            id: crypto.randomUUID(),
+            id: generateId(),
             meta: {
                 title,
                 theme,
@@ -294,7 +295,7 @@ class NextDatabase {
         
         // Create deep copy of deck with new IDs
         const duplicatedDeck: Deck = {
-            id: crypto.randomUUID(),
+            id: generateId(),
             meta: {
                 ...originalDeck.meta,
                 title: duplicateName,
@@ -304,7 +305,7 @@ class NextDatabase {
             // Clone all cards with new IDs
             cards: originalDeck.cards.map(card => ({
                 ...safeDeepClone(card),
-                id: crypto.randomUUID()
+                id: generateKey()
             }))
         };
 
@@ -384,7 +385,7 @@ class NextDatabase {
      */
     private createDefaultCard(): Card {
         return {
-            id: crypto.randomUUID(),
+            id: generateKey(),
             title: 'New Card',
             subtitle: 'Character',
             description: 'A mysterious figure from the shadows.',

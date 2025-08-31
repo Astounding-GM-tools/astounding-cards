@@ -12,6 +12,7 @@ import type { Deck, Layout } from '../types/deck.js';
 import type { Card } from '../types/card.js';
 import { nextDb, DatabaseError } from './database.js';
 import { safeCloneCard } from '$lib/utils/clone-utils.ts';
+import { generateKey } from '../utils/idUtils.js';
 
 export interface LoadingState {
     isLoading: boolean;
@@ -242,7 +243,7 @@ function createNextDeckStore() {
             const clonedCard = safeCloneCard(card);
             const newCard = {
                 ...clonedCard,
-                id: crypto.randomUUID(), // Ensure new ID
+                id: generateKey(), // Ensure new ID
                 title: `${clonedCard.title} (Copy)`
             };
 

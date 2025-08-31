@@ -7,6 +7,7 @@
 
 import type { Deck, Card } from '../types/deck.js';
 import type { JsonExport, BlobData } from './jsonExporter.js';
+import { generateId, generateKey } from './idUtils.js';
 
 // =============================================================================
 // IMPORT TYPES
@@ -237,11 +238,11 @@ function dataUrlToBlob(dataUrl: string): Blob {
  */
 function ensureAllIdsPresent(deck: Deck): Deck {
     // Generate deck ID if missing
-    const deckId = deck.id || crypto.randomUUID();
+    const deckId = deck.id || generateId();
     
     // Process cards and ensure they all have IDs
     const cardsWithIds = deck.cards.map((card) => {
-        const cardId = card.id || crypto.randomUUID();
+        const cardId = card.id || generateKey();
         return {
             ...card,
             id: cardId

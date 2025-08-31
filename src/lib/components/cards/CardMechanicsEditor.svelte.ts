@@ -5,6 +5,7 @@
 
 import type { Card, CardMechanic, MechanicType } from '../../types';
 import { MechanicType as MechanicTypes } from '../../types';
+import { generateKey } from '$lib/next/utils/idUtils.js';
 
 /**
  * Create a new mechanic with default values
@@ -12,7 +13,7 @@ import { MechanicType as MechanicTypes } from '../../types';
  */
 export function createNewMechanic(): CardMechanic {
   return {
-    id: crypto.randomUUID(),
+    id: generateKey(),
     name: 'New Mechanic',
     value: 0,
     description: '',
