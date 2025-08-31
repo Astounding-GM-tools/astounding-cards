@@ -3,6 +3,7 @@
     import { nextDb } from '$lib/next/stores/database.js';
     import { nextDeckStore } from '$lib/next/stores/deckStore.svelte.js';
     import { toasts } from '$lib/stores/toast.js';
+    import { formatTime } from '$lib/next/utils/dateUtils.js';
     import type { Deck, Card } from '$lib/next/types/deck.js';
     
     interface Props {
@@ -214,9 +215,6 @@
         }
     }
     
-    function formatDate(timestamp: number): string {
-        return new Date(timestamp).toLocaleString();
-    }
 </script>
 
 <div class="merge-tool-dialog">
@@ -235,7 +233,7 @@
                     <div class="deck-info">
                         <p><strong>{existingDeck.meta.title}</strong></p>
                         <p>{existingDeck.cards.length} cards</p>
-                        <p>Modified {formatDate(existingDeck.meta.lastEdited)}</p>
+                        <p>Modified {formatTime(existingDeck.meta.lastEdited)}</p>
                     </div>
                 </div>
                 <div class="deck-side">
@@ -243,7 +241,7 @@
                     <div class="deck-info">
                         <p><strong>{incomingDeck.meta.title}</strong></p>
                         <p>{incomingDeck.cards.length} cards</p>
-                        <p>Created {formatDate(incomingDeck.meta.createdAt)}</p>
+                        <p>Created {formatTime(incomingDeck.meta.createdAt)}</p>
                     </div>
                 </div>
             </div>

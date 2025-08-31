@@ -1,6 +1,7 @@
 <script lang="ts">
     import type { CardConflict } from '$lib/next/utils/deckMerging.js';
     import { CARD_RESOLUTION, CARD_CONFLICT_TYPE } from '$lib/next/utils/mergeConstants.js';
+    import { formatTime } from '$lib/next/utils/dateUtils.js';
     
     interface Props {
         cardConflicts: CardConflict[];
@@ -71,7 +72,7 @@
     function formatFieldValue(field: string, value: any): string {
         if (value === null || value === undefined) return '(empty)';
         if (field === 'lastEdited' && typeof value === 'number') {
-            return new Date(value).toLocaleString();
+            return formatTime(value);
         }
         if (field === 'isPublic' && typeof value === 'boolean') {
             return value ? 'Public' : 'Private';

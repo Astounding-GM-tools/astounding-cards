@@ -6,6 +6,7 @@
         hasUnresolvedConflicts, 
         getConflictSummary 
     } from '$lib/next/utils/deckMerging.js';
+    import { formatTime } from '$lib/next/utils/dateUtils.js';
     import ConflictSummary from './ConflictSummary.svelte';
     import MetaConflicts from './MetaConflicts.svelte';
     import CardConflicts from './CardConflicts.svelte';
@@ -38,10 +39,6 @@
         conflict = updatedConflict;
     }
     
-    // Format dates for display
-    function formatDate(timestamp: number): string {
-        return new Date(timestamp).toLocaleString();
-    }
 </script>
 
 <div class="merge-tool">
@@ -55,13 +52,13 @@
             <div class="deck-version">
                 <h4>📁 Your Current Version</h4>
                 <p>{conflict.existingDeck.meta.title}</p>
-                <p class="timestamp">Last edited: {formatDate(conflict.existingDeck.meta.lastEdited)}</p>
+                <p class="timestamp">Last edited: {formatTime(conflict.existingDeck.meta.lastEdited)}</p>
             </div>
             
             <div class="deck-version">
                 <h4>📥 Imported Version</h4>
                 <p>{conflict.importedDeck.meta.title}</p>
-                <p class="timestamp">Last edited: {formatDate(conflict.importedDeck.meta.lastEdited)}</p>
+                <p class="timestamp">Last edited: {formatTime(conflict.importedDeck.meta.lastEdited)}</p>
             </div>
         </div>
     </div>

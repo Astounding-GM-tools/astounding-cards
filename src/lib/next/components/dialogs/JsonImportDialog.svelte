@@ -5,6 +5,7 @@
     import { MergeToolDialog } from './index.js';
     import { importDeckFromFile, importDeckFromJson, generateUniqueDeckId, estimateImportSize } from '$lib/next/utils/jsonImporter.js';
     import { toasts } from '$lib/stores/toast.js';
+    import { formatTime } from '$lib/next/utils/dateUtils.js';
     import type { Deck } from '$lib/next/types/deck.js';
     
     // Local state
@@ -167,7 +168,7 @@
                     <h4>{importedDeck.meta.title}</h4>
                     <div class="deck-meta">
                         <span>{importedDeck.cards.length} cards</span>
-                        <span>Created {new Date(importedDeck.meta.createdAt).toLocaleDateString()}</span>
+                        <span>Created {formatTime(importedDeck.meta.createdAt, 'date')}</span>
                     </div>
                 </div>
                 

@@ -18,6 +18,7 @@
     cleanupPreviewUrl,
     type ImageSelectorState
   } from '$lib/components/ui/ImageSelector.svelte.ts';
+  import { formatTime } from '$lib/next/utils/dateUtils.js';
 
   const props = $props();
   const cardSize = (props.cardSize ?? 'tarot') as CardSize;
@@ -71,22 +72,7 @@
 
   // Helper functions
   function formatUploadTime(time: Date): string {
-    const now = new Date();
-    const diffMs = now.getTime() - time.getTime();
-    const diffMins = Math.floor(diffMs / (1000 * 60));
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
-    
-    // Format as time if today, or date if older
-    const isToday = time.toDateString() === now.toDateString();
-    if (isToday) {
-      return time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    } else {
-      return time.toLocaleDateString([], { month: 'short', day: 'numeric' });
-    }
+    return formatTime(time.getTime(), 'timeAgo', { compact: true });
   }
   
   function getErrorMessage(error: string): string {

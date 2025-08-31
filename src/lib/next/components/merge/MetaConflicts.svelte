@@ -1,6 +1,7 @@
 <script lang="ts">
     import type { MetaConflict, Deck } from '$lib/next/utils/deckMerging.js';
     import { METADATA_RESOLUTION } from '$lib/next/utils/mergeConstants.js';
+    import { formatTime } from '$lib/next/utils/dateUtils.js';
     
     interface Props {
         metaConflicts: MetaConflict[];
@@ -45,7 +46,7 @@
     
     function formatValue(field: string, value: any): string {
         if (field === 'lastEdited' && typeof value === 'number') {
-            return new Date(value).toLocaleString();
+            return formatTime(value);
         }
         return getDisplayValue(value);
     }

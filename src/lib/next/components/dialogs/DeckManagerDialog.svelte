@@ -1,11 +1,12 @@
 <script lang="ts">
+    import { dialogStore } from '../dialog/dialogStore.svelte.js';
     import { nextDeckStore } from '$lib/next/stores/deckStore.svelte.js';
     import { nextDb } from '$lib/next/stores/database.js';
-    import { dialogStore } from '../dialog/dialogStore.svelte.js';
     import { JsonImportDialog } from './index.js';
     import { downloadDeckAsJson } from '$lib/next/utils/jsonExporter.js';
     import { toasts } from '$lib/stores/toast.js';
     import BinaryToggle from '../ui/BinaryToggle.svelte';
+    import { formatTime } from '$lib/next/utils/dateUtils.js';
     import type { Deck } from '$lib/next/types/deck.js';
     
     // Local state
@@ -126,14 +127,6 @@
         editingDeckName = '';
     }
     
-    // Format date for display
-    function formatDate(timestamp: number): string {
-        return new Date(timestamp).toLocaleDateString();
-    }
-    
-    function formatDateTime(timestamp: number): string {
-        return new Date(timestamp).toLocaleString();
-    }
     
     // Handle deck duplication
     function startDuplicating(deck: Deck) {
@@ -272,9 +265,9 @@
                                     <h3 class="deck-title">{deck.meta.title}</h3>
                                     <div class="deck-meta">
                                         <span class="card-count">{deck.cards.length} cards</span>
-                                        <span class="deck-date">Created {formatDate(deck.meta.createdAt)}</span>
+                                        <span class="deck-date">Created {formatTime(deck.meta.createdAt, 'date')}</span>
                                         {#if deck.meta.lastEdited !== deck.meta.createdAt}
-                                            <span class="deck-date">Modified {formatDateTime(deck.meta.lastEdited)}</span>
+                                            <span class="deck-date">Modified {formatTime(deck.meta.lastEdited)}</span>
                                         {/if}
                                     </div>
                                 </div>
