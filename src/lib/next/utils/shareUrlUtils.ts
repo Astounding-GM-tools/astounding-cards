@@ -9,8 +9,9 @@
  */
 
 import type { Deck } from '../types/deck.js';
-import type { ShareableDeck } from '../types/shareUrl.js';
+import type { ShareableDeck } from '../types/shareable.js';
 import { toShareable, fromShareable } from './shareUrlConverter.js';
+import { createSlug } from './slugUtils.js';
 
 // Re-export for convenience
 export { toShareable } from './shareUrlConverter.js';
@@ -39,7 +40,7 @@ export function generateShareUrl(deck: Deck, baseUrl?: string): string {
     const finalBaseUrl = baseUrl || (typeof window !== 'undefined' ? window.location.origin : 'https://example.com');
     
     // Create human-readable slug from deck title
-    const slug = createUrlSlug(deck.meta.title);
+    const slug = createSlug(deck.meta.title);
     
     // Use hash format with human-readable slug path
     return `${finalBaseUrl}/${slug}#${SHARE_URL_HASH_PREFIX}${base64Data}`;
@@ -122,42 +123,6 @@ export function importFromCurrentUrl(): Deck | null {
 // =============================================================================
 // HELPER FUNCTIONS
 // =============================================================================
-
-/**
- * Create a URL-friendly slug from a deck title
- * Supports international characters better than standard ASCII-only slugs
- * Examples:
- *   "Heroes of the Realm" → "heroes-of-the-realm"
- *   "Verdens Største Pære" → "verdens-største-pære"
- *   "魔法の冒険" → "魔法の冒険"
- *   "Café München" → "café-münchen"
- *   "Heroes & Dragons 🐉" → "heroes-dragons"
- */
-function createUrlSlug(title: string): string {
-    let slug = title
-        .toLowerCase()
-        .trim();
-    
-    // Handle common symbols and punctuation that should become separators
-    slug = slug
-        .replace(/[&+]/g, '')  // Remove ampersands and plus signs
-        .replace(/[\s_.,:;!?()\[\]{}"\'`~@#$%^*=|\\/<>]/g, '-')  // Convert punctuation to hyphens
-        .replace(/[\u2013\u2014\u2015\u2212]/g, '-')  // Convert various dash types to hyphens
-        .replace(/[\u201C\u201D\u2018\u2019]/g, '')  // Remove curly quotes
-        .replace(/\u2026/g, '')  // Remove ellipsis
-        .replace(/[\uFE0F\u200D]/g, '');  // Remove emoji modifiers and zero-width joiners
-    
-    // Remove emoji characters (but keep other Unicode like letters, numbers)
-    // This regex matches most emoji ranges while preserving international text
-    slug = slug.replace(/[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu, '');
-    
-    // Clean up hyphens
-    slug = slug
-        .replace(/-+/g, '-')  // Replace multiple hyphens with single
-        .replace(/^-+|-+$/g, '');  // Remove leading/trailing hyphens
-    
-    return slug;
-}
 
 /**
  * Extract the slug from a share URL

@@ -31,6 +31,7 @@
         all: unset;
 		aspect-ratio: 5/7;
 		color: var(--color);
+        background: white;
 		display: flex;
 		flex-direction: column;
 		flex: 0 0 auto;
@@ -40,9 +41,8 @@
         height: 100%;
         width: 100%;
         transition: opacity 0.2s ease;
-        
-        /* Reset direction in case parent has RTL (for back page grid ordering) */
         direction: ltr;
+        z-index: 2;
 
 		container-type: inline-size;
 		container-name: card;
@@ -68,22 +68,14 @@
     }
 
     .crop-mark {
+        --crop-offset: calc(-1 * var(--page-padding));
+        position: absolute;
+        width: var(--page-padding);
+        height: var(--page-padding);
+        border: 0.25mm solid #000;
+        z-index: 1;
+        /* Hidden by default, selectively shown only on page edges */
         display: none;
-    }
-    @media print {
-        .card {
-            page-break-inside: avoid;
-            page-break-after: auto;
-        }
-        .crop-mark {
-            --crop-offset: calc(-1 * var(--page-padding));
-            position: absolute;
-            width: var(--page-padding);
-            height: var(--page-padding);
-            border: 0.25mm solid #000;
-            z-index: 1;
-            display: block;
-        }
     }
 
 	.crop-mark.top-left {
@@ -113,4 +105,12 @@
 		border-right-style: none;
 		border-bottom-style: none;
 	}
+
+    @media print {
+        .card {
+            page-break-inside: avoid;
+            page-break-after: auto;
+        }
+        /* Crop marks are selectively enabled by Page.svelte rules */
+    }
 </style>

@@ -107,4 +107,15 @@
         margin: 0;
         padding: 0;
     }
+    
+    /* Print styles - hide header when printing */
+    @media print {
+        :global(.app-header) {
+            display: none !important;
+        }
+        
+        .deck {
+            margin: 0;
+        }
+    }
 </style>
