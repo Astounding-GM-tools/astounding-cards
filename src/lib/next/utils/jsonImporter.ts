@@ -51,7 +51,7 @@ export async function importDeckFromJson(jsonContent: string): Promise<ImportRes
         // Resolve blobs and convert to standard deck format
         let deck = await resolveBlobsAndConvert(parsed as JsonExport);
         
-        // Generate missing IDs for AI-generated decks
+        // Generate missing IDs and add default values for AI-generated decks
         deck = ensureAllIdsPresent(deck);
         
         return {
@@ -234,11 +234,22 @@ function dataUrlToBlob(dataUrl: string): Blob {
 }
 
 /**
- * Ensure all required IDs are present, generating them if missing
+ * Ensure all required IDs and defaults are present, generating them if missing
  */
 function ensureAllIdsPresent(deck: Deck): Deck {
     // Generate deck ID if missing
     const deckId = deck.id || generateId();
+    const now = Date.now();
+    
+    // Ensure meta has all required fields with defaults
+    const completeMeta = {
+        title: deck.meta.title, // Required - should already be validated
+        description: deck.meta.description || '', // Optional with default
+        theme: deck.meta.theme || 'classic', // Default theme
+        layout: deck.meta.layout || 'tarot', // Default layout
+        lastEdited: deck.meta.lastEdited || now, // Default timestamp
+        createdAt: deck.meta.createdAt || now, // Default timestamp
+    };
     
     // Process cards and ensure they all have IDs
     const cardsWithIds = deck.cards.map((card) => {
@@ -252,6 +263,7 @@ function ensureAllIdsPresent(deck: Deck): Deck {
     return {
         ...deck,
         id: deckId,
+        meta: completeMeta,
         cards: cardsWithIds
     };
 }

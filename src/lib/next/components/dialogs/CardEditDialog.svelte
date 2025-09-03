@@ -21,6 +21,7 @@
     import CardBackContent from '../card/CardBackContent.svelte';
     import InlineImageSelector from '../image/InlineImageSelector.svelte';
     import BinaryToggle from '../ui/BinaryToggle.svelte';
+    import AiImagePromptDialog from './AiImagePromptDialog.svelte';
     
     import type { Trait, Stat } from '$lib/next/types/card.js';
     import { ImageUrlManager } from '$lib/utils/image-handler.js';
@@ -287,6 +288,29 @@
         },
         () => formData.traits
     );
+    
+    // AI Image Prompt function
+    function openAiImagePromptDialog() {
+        if (!card) return;
+        
+        // Create a card with current form data (including unsaved changes) for AI prompt generation
+        const currentCardData: Card = {
+            ...card,
+            title: formData.title,
+            subtitle: formData.subtitle,
+            description: formData.description,
+            stats: formData.stats,
+            traits: formData.traits
+        };
+        
+        // Get the deck theme, default to 'classic' if no deck or theme
+        const deckTheme = nextDeckStore.deck?.meta?.theme || 'classic';
+        
+        dialogStore.setContent(AiImagePromptDialog, {
+            card: currentCardData,
+            deckTheme: deckTheme
+        });
+    }
 </script>
 
 {#if card}
@@ -335,6 +359,15 @@
                         onImageChange={handleImageChange}
                         onRemoveImage={removeImage}
                     />
+                    
+                    <!-- AI Image Prompt Button -->
+                    <button 
+                        class="ai-image-prompt-btn"
+                        onclick={openAiImagePromptDialog}
+                        title="Generate an AI image prompt for this card based on its content"
+                    >
+                        🤖 Generate Image Prompt
+                    </button>
                 </fieldset>
                 
                 <!-- Stats Section -->
@@ -714,6 +747,37 @@
         background: #f9f9f9;
         border-color: var(--accent);
         color: var(--accent);
+    }
+    
+    /* AI Image Prompt Button Styles */
+    .ai-image-prompt-btn {
+        padding: 0.5rem 0.75rem;
+        border: 1px solid #22c55e; /* Green border for AI feature */
+        border-radius: 3px;
+        background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%);
+        cursor: pointer;
+        font-family: var(--font-body);
+        font-size: 0.8rem;
+        color: #059669; /* Green text */
+        text-align: center;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.25rem;
+    }
+    
+    .ai-image-prompt-btn:hover {
+        background: linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(16, 185, 129, 0.2) 100%);
+        border-color: #16a34a;
+        color: #047857;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(34, 197, 94, 0.2);
+    }
+    
+    .ai-image-prompt-btn:active {
+        transform: translateY(0);
+        box-shadow: none;
     }
     
     /* Inline Attribute Editor Styles */

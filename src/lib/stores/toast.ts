@@ -16,6 +16,13 @@ function createToastStore() {
     const id = crypto.randomUUID();
     update(toasts => [...toasts, { id, type, message }]);
 
+    // Log errors and warnings to console for debugging
+    if (type === 'error') {
+      console.error('Toast Error:', message);
+    } else if (type === 'warning') {
+      console.warn('Toast Warning:', message);
+    }
+
     if (timeout) {
       setTimeout(() => {
         removeToast(id);

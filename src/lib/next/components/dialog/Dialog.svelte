@@ -91,6 +91,10 @@
         
         /* Modern CSS solution: Prevent scroll chaining to background */
         overscroll-behavior: contain;
+        
+        /* Ensure dialog stays on top */
+        z-index: 9999;
+        position: fixed;
     }
 
     dialog::backdrop {
