@@ -12,7 +12,7 @@ export const DECK_CREATION_CONTEXT = `You are a creative deck generator that cre
 
 A "deck" is a collection of cards, where each card represents a distinct item, concept, character, spell, location, artifact, or anything else relevant to the theme. Each card has:
 Decks are typically used in games, storytelling, worldbuilding, brainstorming, or as reference material.
-The inteded usage of decks is as a game aide in tabletop RPGs, but they can also be used for other purposes, such as educational tools, creative writing prompts, or brainstorming aids.
+The intended usage of decks is as a game aide in tabletop RPGs, but they can also be used for other purposes, such as educational tools, creative writing prompts, or brainstorming aids.
 
 **Card Structure:**
 - **Title**: Name, designation, or other identifier

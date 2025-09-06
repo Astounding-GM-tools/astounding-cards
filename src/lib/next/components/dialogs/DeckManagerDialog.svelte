@@ -7,6 +7,7 @@
     import { toasts } from '$lib/stores/toast.js';
     import BinaryToggle from '../ui/BinaryToggle.svelte';
     import { formatTime } from '$lib/next/utils/dateUtils.js';
+    import { AiPromptDialog } from './index.js';
     import type { Deck } from '$lib/next/types/deck.js';
     
     // Local state
@@ -152,6 +153,11 @@
             isDuplicating = false;
         }
     }
+    
+    // Handle AI Generator
+    function handleAiGenerator() {
+        dialogStore.setContent(AiPromptDialog);
+    }
 </script>
 
 <div class="deck-manager-dialog">
@@ -232,6 +238,18 @@
                 </div>
             </div>
         {/if}
+        
+        <!-- Prominent AI Generator Button -->
+        <div class="ai-generator-section">
+            <button class="ai-generator-button" onclick={handleAiGenerator}>
+                <div class="ai-button-icon">🤖</div>
+                <div class="ai-button-content">
+                    <div class="ai-button-title">AI Deck Generator</div>
+                    <div class="ai-button-description">Create an entire deck instantly using AI - just describe your theme!</div>
+                </div>
+                <div class="ai-button-arrow">→</div>
+            </button>
+        </div>
         
         {#if isLoading}
             <div class="loading">Loading decks...</div>
@@ -750,6 +768,98 @@
     .action-button.export {
         padding: 0.4rem 0.6rem;
         font-size: 0.8125rem;
+    }
+    
+    /* AI Generator Button Styling */
+    .ai-generator-section {
+        margin-bottom: 1rem;
+    }
+    
+    .ai-generator-button {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        padding: 1.25rem;
+        border: 2px solid transparent;
+        border-radius: 12px;
+        background: linear-gradient(135deg, rgba(147, 51, 234, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        gap: 1rem;
+        text-align: left;
+        font-family: inherit;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .ai-generator-button::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+        transition: left 0.5s ease;
+    }
+    
+    .ai-generator-button:hover {
+        background: linear-gradient(135deg, rgba(147, 51, 234, 0.15) 0%, rgba(59, 130, 246, 0.15) 100%);
+        border-color: rgba(147, 51, 234, 0.3);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(147, 51, 234, 0.2);
+    }
+    
+    .ai-generator-button:hover::before {
+        left: 100%;
+    }
+    
+    .ai-generator-button:active {
+        transform: translateY(0);
+        box-shadow: 0 4px 15px rgba(147, 51, 234, 0.15);
+    }
+    
+    .ai-button-icon {
+        font-size: 2rem;
+        flex-shrink: 0;
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+    }
+    
+    .ai-button-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+    
+    .ai-button-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: #7c3aed;
+        margin: 0;
+    }
+    
+    .ai-button-description {
+        font-size: 0.875rem;
+        color: var(--ui-muted, #64748b);
+        line-height: 1.4;
+        margin: 0;
+    }
+    
+    .ai-button-arrow {
+        font-size: 1.5rem;
+        color: #7c3aed;
+        flex-shrink: 0;
+        transition: transform 0.3s ease;
+    }
+    
+    .ai-generator-button:hover .ai-button-arrow {
+        transform: translateX(4px);
     }
     
     /* Responsive design */

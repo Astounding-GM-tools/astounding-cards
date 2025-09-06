@@ -122,10 +122,6 @@
         dialogStore.setContent(JsonImportDialog);
     }
     
-    // Handle AI prompt generator
-    function handleAiPrompt() {
-        dialogStore.setContent(AiPromptDialog);
-    }
     
     // Dev functions (temporary)
     async function handleLoadSample() {
@@ -198,15 +194,8 @@
     </div>
     
     <div class="header-controls">
-        <!-- Import and AI controls -->
+        <!-- Import controls -->
         <div class="import-controls">
-            <button 
-                class="import-button ai"
-                onclick={handleAiPrompt}
-                disabled={isLoading}
-            >
-                🤖 AI Generator
-            </button>
             <button 
                 class="import-button"
                 onclick={handleImportDeck}
@@ -384,19 +373,6 @@
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
     
-    .import-button.ai {
-        background: linear-gradient(135deg, rgba(147, 51, 234, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%);
-        border-color: rgba(147, 51, 234, 0.3);
-        color: #7c3aed;
-        font-weight: 600;
-    }
-    
-    .import-button.ai:hover:not(:disabled) {
-        background: linear-gradient(135deg, rgba(147, 51, 234, 0.2) 0%, rgba(59, 130, 246, 0.2) 100%);
-        border-color: #7c3aed;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(124, 58, 237, 0.2);
-    }
     
     .import-button:disabled {
         opacity: 0.5;

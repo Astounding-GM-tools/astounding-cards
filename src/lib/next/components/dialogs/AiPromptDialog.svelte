@@ -1,112 +1,66 @@
 <script lang="ts">
     import { dialogStore } from '../dialog/dialogStore.svelte.js';
-    import { generateAiPrompt, copyAiPromptToClipboard } from '$lib/next/utils/jsonExporter.js';
     import { toasts } from '$lib/stores/toast.js';
     import { browser } from '$app/environment';
     
     // Local state
     let theme = $state('');
     let cardCount = $state(8);
-    let prompt = $state('');
-    let processedPrompt = $state('');
     let isGenerating = $state(false);
-    let isProcessing = $state(false);
-    let showPrompt = $state(false);
+    let showApiKeyRow = $state(false);
     let apiKey = $state('');
-    let showApiKeySection = $state(false);
     let apiKeyValid = $state(false);
+    let showGeneratingOverlay = $state(false);
     
-    // Example themes for inspiration
-    const exampleThemes = [
-        'Hamlet Characters',
-        'Greek Mythology Heroes',
-        'Star Wars Original Trilogy',
-        'Lord of the Rings Fellowship',
-        'Marvel Superheroes',
-        'DC Comics Villains',
-        'Studio Ghibli Characters',
-        'Classic Horror Monsters',
-        'Sherlock Holmes Stories',
-        'Pirates of the Caribbean'
+    // Quirky random prompt components
+    const subjects = [
+        'Dinner recipes', 'Campfire stories', 'List of recommended movies', 'Household cleaning products', 
+        'Office supplies', 'Exotic vacation destinations', 'Breakfast cereals', 'Medieval torture devices',
+        'Self-help books', 'Smartphone apps', 'Board game pieces', 'Yoga poses', 'Weather phenomena',
+        'Pizza toppings', 'Extinct animals', 'Space missions', 'Dance moves', 'Kitchen appliances'
     ];
     
-    function generatePrompt() {
+    const basedOn = [
+        'Disney Princesses', 'Steampunk gadgets', 'Wildlife documentaries', 'Norse mythology', 
+        'Failed startup ideas', 'Retro video games', 'Conspiracy theories', 'Ancient philosophers',
+        'Social media influencers', 'Zombie apocalypse survivors', 'Victorian inventors', 'Alien species',
+        'Fairy tale villains', 'Time travel paradoxes', 'Underground rock bands', 'Haunted antiques'
+    ];
+    
+    const characteristics = [
+        'traits and stats suitable for IKEA furniture', 'odd references to tropical birds',
+        'extensive rhyming in all text content', 'mysterious connections to cheese varieties',
+        'stats based on likelihood to survive a zombie apocalypse', 'descriptions written like Shakespearean sonnets',
+        'traits that would make them excellent dance partners', 'stats measuring their compatibility with houseplants',
+        'abilities related to competitive sandwich making', 'mysterious powers involving forgotten board games',
+        'stats for navigating corporate office politics', 'traits based on their favorite extinct animals',
+        'powers related to predicting weather using only socks', 'abilities involving interpretive dance battles'
+    ];
+    
+    function generateRandomPrompt() {
+        const subject = subjects[Math.floor(Math.random() * subjects.length)];
+        const basedOnItem = basedOn[Math.floor(Math.random() * basedOn.length)];
+        const characteristic = characteristics[Math.floor(Math.random() * characteristics.length)];
+        
+        return `${subject} based on ${basedOnItem}, with ${characteristic}`;
+    }
+    
+    function proceedToApiKey() {
         if (!theme.trim()) {
             toasts.error('Please enter a theme for your deck');
             return;
         }
         
-        isGenerating = true;
-        
-        // Small delay for UX
-        setTimeout(() => {
-            prompt = generateAiPrompt(theme.trim(), cardCount);
-            showPrompt = true;
-            isGenerating = false;
-        }, 300);
+        // Show API key input row
+        showApiKeyRow = true;
     }
     
-    async function copyPrompt() {
-        try {
-            const success = await copyAiPromptToClipboard(theme.trim(), cardCount);
-            if (success) {
-                toasts.success('✅ Prompt copied! Paste it into ChatGPT, Claude, or your favorite AI');
-            } else {
-                // Fallback for browsers without clipboard API
-                await navigator.clipboard.writeText(prompt);
-                toasts.success('✅ Prompt copied! Paste it into ChatGPT, Claude, or your favorite AI');
-            }
-        } catch (err) {
-            // Manual copy fallback
-            const textArea = document.createElement('textarea');
-            textArea.value = prompt;
-            document.body.appendChild(textArea);
-            textArea.select();
-            document.execCommand('copy');
-            document.body.removeChild(textArea);
-            toasts.success('✅ Prompt copied! Paste it into ChatGPT, Claude, or your favorite AI');
-        }
+    // This function is no longer used in the simplified flow
+    
+    function insertRandomPrompt() {
+        theme = generateRandomPrompt();
     }
     
-    function useExampleTheme(exampleTheme: string) {
-        theme = exampleTheme;
-        showPrompt = false; // Reset to allow regeneration
-    }
-    
-    async function processPromptWithGemini() {
-        if (!browser) {
-            toasts.error('This feature is only available in the browser');
-            return;
-        }
-        
-        if (!apiKey.trim()) {
-            toasts.error('Please enter your Google AI Studio API key first');
-            return;
-        }
-        
-        isProcessing = true;
-        
-        try {
-            // Dynamically import the Gemini processing function only in browser
-            const { processPromptForContentFiltering } = await import('$lib/ai/index.js');
-            const result = await processPromptForContentFiltering(apiKey, prompt);
-            
-            if (result.success && result.result) {
-                processedPrompt = result.result;
-                toasts.success('🎯 Prompt processed successfully! This version should work better with AI services.');
-            } else {
-                toasts.error(`Failed to process prompt: ${result.error}`);
-                if (result.error?.includes('API_KEY')) {
-                    apiKeyValid = false;
-                }
-            }
-        } catch (error) {
-            toasts.error('Error processing prompt. Please check your API key.');
-            console.error('Prompt processing error:', error);
-        } finally {
-            isProcessing = false;
-        }
-    }
     
     // Generate a deck via Gemini and auto-import it
     async function generateDeckWithGemini() {
@@ -123,7 +77,9 @@
             return;
         }
 
-        isProcessing = true;
+        isGenerating = true;
+        showGeneratingOverlay = true;
+        
         try {
             const { generateDeckFromPrompt } = await import('$lib/ai/index.js');
             const topic = `${theme.trim()}`; // keep it concise to avoid meta-instructions
@@ -131,6 +87,7 @@
 
             if (!result.success || !result.deck) {
                 toasts.error(`Deck generation failed: ${result.error || 'Unknown error'}`);
+                showGeneratingOverlay = false;
                 return;
             }
 
@@ -139,12 +96,13 @@
             const importResult = await importDeckFromJson(JSON.stringify(result.deck));
             if (!importResult.success || !importResult.deck) {
                 toasts.error(`Generated JSON didn't validate: ${importResult.error || 'Unknown error'}`);
+                showGeneratingOverlay = false;
                 return;
             }
 
             const { nextDeckStore } = await import('$lib/next/stores/deckStore.svelte.js');
             const { nextDb } = await import('$lib/next/stores/database.js');
-            await nextDb.saveDeck(importResult.deck);
+            await nextDb.upsertDeck(importResult.deck);
             await nextDeckStore.selectDeck(importResult.deck.id);
 
             toasts.success(`✅ Generated and imported deck: "${importResult.deck.meta.title}"`);
@@ -152,8 +110,9 @@
         } catch (error) {
             console.error('Deck generation error:', error);
             toasts.error('Error generating deck. Please check your API key.');
+            showGeneratingOverlay = false;
         } finally {
-            isProcessing = false;
+            isGenerating = false;
         }
     }
     
@@ -163,219 +122,130 @@
         apiKeyValid = trimmedKey.length > 20 && (trimmedKey.startsWith('AIza') || trimmedKey.includes('-'));
     }
     
-    function handleApiKeyInput(e: InputEvent) {
-        validateApiKey();
-        e.stopPropagation();
-    }
-    
-    function handleApiKeyKeydown(e: KeyboardEvent) {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            e.stopPropagation();
-            return false;
-        }
-    }
     
     function reset() {
         theme = '';
         cardCount = 8;
-        prompt = '';
-        processedPrompt = '';
-        showPrompt = false;
-        showApiKeySection = false;
+        isGenerating = false;
+        showApiKeyRow = false;
+        apiKey = '';
+        apiKeyValid = false;
+        showGeneratingOverlay = false;
     }
 </script>
 
 <div class="ai-prompt-dialog">
     <div class="dialog-header">
         <h2>🤖 AI Deck Generator</h2>
-        <button class="close-button" onclick={() => dialogStore.close()}>×</button>
+        <button type="button" class="close-button" onclick={() => dialogStore.close()}>×</button>
     </div>
     
     <div class="dialog-content">
-        {#if !showPrompt}
-            <!-- Configuration Phase -->
-            <div class="config-section">
-                <h3>Create a Custom Character Deck</h3>
-                <p class="description">
-                    Generate a prompt to create character decks with AI tools like ChatGPT, Claude, or others.
-                    The AI will create a complete deck with detailed characters, traits, and stats.
-                </p>
+        <!-- Main configuration section -->
+        <div class="config-section">
+            <h3>Create a full deck with AI</h3>
+            <p class="description">
+                Describe the deck you want and the AI will create a complete deck with detailed cards, traits, and stats.
+            </p>
+            
+            <!-- First row - always visible -->
+            <div class="compact-form" class:disabled={showApiKeyRow}>
+                <textarea 
+                    bind:value={theme}
+                    placeholder="Describe the deck you want - be creative! The AI can handle it!"
+                    class="theme-textarea"
+                    rows="2"
+                    disabled={showApiKeyRow}
+                ></textarea>
                 
-                <div class="form-group">
-                    <label for="theme-input">Theme or Topic:</label>
-                    <input 
-                        id="theme-input"
-                        type="text" 
-                        bind:value={theme}
-                        placeholder="e.g., Hamlet Characters, Greek Mythology, Star Wars..."
-                        class="theme-input"
-                    />
-                </div>
+                <button 
+                    type="button"
+                    class="random-button"
+                    onclick={insertRandomPrompt}
+                    title="Generate a fun random prompt to show the AI's versatility"
+                    disabled={showApiKeyRow}
+                >
+                    🎲 Random!
+                </button>
                 
-                <div class="form-group">
-                    <label for="count-input">Number of Characters:</label>
+                <div class="count-wrapper">
+                    <label for="count-input" class="count-label">at least</label>
                     <input 
                         id="count-input"
                         type="number" 
                         bind:value={cardCount}
                         min="3"
                         max="20"
-                        class="count-input"
+                        class="count-input-compact"
+                        disabled={showApiKeyRow}
                     />
-                    <span class="input-hint">3-20 cards recommended</span>
+                    <span class="count-label-below">cards</span>
                 </div>
                 
-                <div class="examples-section">
-                    <h4>💡 Example Themes:</h4>
-                    <div class="example-grid">
-                        {#each exampleThemes as exampleTheme}
-                            <button 
-                                class="example-button"
-                                onclick={() => useExampleTheme(exampleTheme)}
-                            >
-                                {exampleTheme}
-                            </button>
-                        {/each}
-                    </div>
-                </div>
-                
-                <div class="generate-section">
-                    <button 
-                        class="generate-button primary"
-                        onclick={generatePrompt}
-                        disabled={!theme.trim() || isGenerating}
-                    >
-                        {isGenerating ? 'Generating...' : 'Generate AI Prompt'}
-                    </button>
-                </div>
+                <button 
+                    type="button"
+                    class="generate-button-compact primary"
+                    onclick={proceedToApiKey}
+                    disabled={!theme.trim() || showApiKeyRow}
+                >
+                    {showApiKeyRow ? '✅ OK' : '🚀 GO!'}
+                </button>
             </div>
-        {:else}
-            <!-- Prompt Display Phase -->
-            <div class="prompt-section">
-                <h3>🎯 Your AI Prompt is Ready!</h3>
-                <p class="instructions">
-                    Copy this prompt and paste it into ChatGPT, Claude, or your favorite AI assistant:
-                </p>
-                
-                <!-- Smart Processing Section -->
-                <div class="api-key-section">
-                    <div class="section-header">
-                        <h4>🤖 Optional: Use Your Own Gemini API</h4>
+            
+            <div class="example-hint">
+                💡 Try clicking "Random!" to see how versatile the AI can be with quirky prompts!
+            </div>
+            
+            <!-- Second row - API key input (revealed after first Generate! click) -->
+            {#if showApiKeyRow}
+                <div class="api-key-input-group">
+                    <input 
+                        type="password"
+                        bind:value={apiKey}
+                        oninput={() => validateApiKey()}
+                        placeholder="Paste your Google AI Studio API key here"
+                        class="api-key-input"
+                        class:valid={apiKeyValid}
+                        autocomplete="current-password"
+                    />
+                    {#if apiKeyValid}
                         <button 
-                            class="toggle-button"
-                            onclick={() => showApiKeySection = !showApiKeySection}
+                            type="button"
+                            class="process-button-compact"
+                            onclick={generateDeckWithGemini}
+                            disabled={isGenerating}
                         >
-                            {showApiKeySection ? 'Hide' : 'Show'} Smart Processing
+                            {isGenerating ? '🚀 Generating…' : '🚀 Generate Deck'}
                         </button>
-                    </div>
-                    
-                    {#if showApiKeySection}
-                        <div class="api-key-content">
-                            <p class="api-key-description">
-                                Instead of copying the prompt manually, use <strong>your own</strong> Google AI Studio API key 
-                                to run the prompt directly through Gemini and get instant results!
-                            </p>
-                            
-                            <div class="api-key-input-group">
-                                <input 
-                                    type="password"
-                                    bind:value={apiKey}
-                                    oninput={handleApiKeyInput}
-                                    onkeydown={handleApiKeyKeydown}
-                                    onclick={(e) => e.stopPropagation()}
-                                    onmousedown={(e) => e.stopPropagation()}
-                                    onmouseup={(e) => e.stopPropagation()}
-                                    onfocus={(e) => e.stopPropagation()}
-                                    placeholder="Paste your Google AI Studio API key here"
-                                    class="api-key-input"
-                                    class:valid={apiKeyValid}
-                                />
-                                <a 
-                                    href="https://aistudio.google.com/apikey" 
-                                    target="_blank" 
-                                    class="get-key-link"
-                                >
-                                    Get API Key →
-                                </a>
-                            </div>
-                            
-{#if apiKeyValid}
-                                <div class="smart-actions">
-                                    <button 
-                                        class="process-button"
-                                        onclick={generateDeckWithGemini}
-                                        disabled={isProcessing}
-                                    >
-                                        {isProcessing ? '🚀 Generating Deck…' : '🚀 Generate Deck Now'}
-                                    </button>
-                                </div>
-                            {/if}
-                            
-                            <div class="security-note">
-                                🔒 <strong>Your privacy:</strong> API key stays in your browser. 
-                                All requests go directly to Google - we never see your key.
-                            </div>
-                        </div>
-                    {/if}
-                </div>
-                
-                <div class="prompt-display">
-                    {#if isProcessing}
-                        <div class="processing-state">
-                            <div class="spinner"></div>
-                            <p>Generating your deck with Gemini AI...</p>
-                        </div>
-                    {:else if processedPrompt}
-                        <div class="result-header">
-                            <h4>✨ Gemini Generated Result:</h4>
-                            <button 
-                                class="show-original-button"
-                                onclick={() => processedPrompt = ''}
-                            >
-                                Show Original Prompt
-                            </button>
-                        </div>
-                        <pre class="prompt-text">{processedPrompt}</pre>
                     {:else}
-                        <pre class="prompt-text">{prompt}</pre>
+                        <a 
+                            href="https://aistudio.google.com/apikey" 
+                            target="_blank" 
+                            class="get-key-link"
+                        >
+                            Get API Key →
+                        </a>
                     {/if}
                 </div>
                 
-                <div class="prompt-actions">
-                    <button 
-                        class="copy-button primary"
-                        onclick={copyPrompt}
-                    >
-                        📋 Copy {processedPrompt ? 'Result' : 'Prompt'}
-                    </button>
-                    <button 
-                        class="back-button"
-                        onclick={() => showPrompt = false}
-                    >
-                        ← Edit Settings
-                    </button>
+                <div class="api-key-info">
+                    <p class="security-note-simple">
+                        🔒 According to Google's ToS, you shouldnt share API keys, and that is sensible so we <em>promise</em> we won't copy yours! 
+                        We will send the request directly to Google AI Studio. We're working on a paid feature so you won't need 
+                        to enter your key like this - check back later some time if you don't trust us (we're astoundingly trustworthy, but we get it). 
+                        <a href="https://aistudio.google.com/apikey" target="_blank" class="inline-link">Get your Google API key →</a>
+                    </p>
                 </div>
-                
-                <div class="next-steps">
-                    <h4>📝 Next Steps:</h4>
-                    <ol>
-                        <li>Copy the prompt above</li>
-                        <li>Paste it into ChatGPT, Claude, or similar AI tool</li>
-                        <li>Wait for the AI to generate your deck JSON</li>
-                        <li>Copy the generated JSON</li>
-                        <li>Use "Import JSON" to add it to your collection</li>
-                    </ol>
-                </div>
-                
-                <div class="tips-section">
-                    <h4>💡 Pro Tips:</h4>
-                    <ul>
-                        <li>Ask the AI to "include image URLs from Wikipedia or public sources"</li>
-                        <li>Request "detailed character descriptions with personality traits"</li>
-                        <li>If the response is cut off, ask "please continue" or "show the rest"</li>
-                        <li>For Hamlet specifically: "Include portraits from classical paintings or productions"</li>
-                    </ul>
+            {/if}
+        </div>
+        
+        <!-- Generating overlay -->
+        {#if showGeneratingOverlay}
+            <div class="generating-overlay">
+                <div class="overlay-content">
+                    <div class="spinner-large"></div>
+                    <h3>Your deck with the prompt "{theme}" is being generated</h3>
+                    <p>You can close this dialog.</p>
                 </div>
             </div>
         {/if}
@@ -383,12 +253,14 @@
     
     <div class="dialog-footer">
         <button 
+            type="button"
             class="footer-button secondary"
             onclick={reset}
         >
             🔄 Start Over
         </button>
         <button 
+            type="button"
             class="footer-button secondary"
             onclick={() => dialogStore.close()}
         >
@@ -461,211 +333,6 @@
         line-height: 1.5;
     }
     
-    .form-group {
-        margin-bottom: 1.5rem;
-    }
-    
-    .form-group label {
-        display: block;
-        margin-bottom: 0.5rem;
-        font-weight: 500;
-        color: var(--ui-text, #1a202c);
-    }
-    
-    .theme-input {
-        width: 100%;
-        padding: 0.75rem;
-        border: 1px solid var(--ui-border, #e2e8f0);
-        border-radius: 4px;
-        font-size: 1rem;
-    }
-    
-    .theme-input:focus {
-        outline: none;
-        border-color: var(--button-primary-bg, #3b82f6);
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-    }
-    
-    .count-input {
-        width: 100px;
-        padding: 0.75rem;
-        border: 1px solid var(--ui-border, #e2e8f0);
-        border-radius: 4px;
-        font-size: 1rem;
-        margin-right: 0.75rem;
-    }
-    
-    .count-input:focus {
-        outline: none;
-        border-color: var(--button-primary-bg, #3b82f6);
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-    }
-    
-    .input-hint {
-        color: var(--ui-muted, #64748b);
-        font-size: 0.875rem;
-    }
-    
-    .examples-section {
-        margin-bottom: 2rem;
-    }
-    
-    .examples-section h4 {
-        margin: 0 0 0.75rem 0;
-        font-size: 1rem;
-        font-weight: 500;
-    }
-    
-    .example-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-        gap: 0.5rem;
-    }
-    
-    .example-button {
-        padding: 0.5rem 0.75rem;
-        border: 1px solid var(--ui-border, #e2e8f0);
-        border-radius: 4px;
-        background: var(--ui-bg, #ffffff);
-        color: var(--ui-text, #1a202c);
-        font-size: 0.875rem;
-        cursor: pointer;
-        transition: all 0.2s;
-        text-align: left;
-    }
-    
-    .example-button:hover {
-        background: var(--ui-hover-bg, #f8fafc);
-        border-color: var(--button-primary-bg, #3b82f6);
-    }
-    
-    .generate-section {
-        text-align: center;
-    }
-    
-    .generate-button {
-        padding: 0.75rem 2rem;
-        border: none;
-        border-radius: 6px;
-        font-size: 1rem;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.2s;
-    }
-    
-    .generate-button.primary {
-        background: var(--button-primary-bg, #3b82f6);
-        color: white;
-    }
-    
-    .generate-button.primary:hover:not(:disabled) {
-        background: var(--button-primary-hover-bg, #2563eb);
-    }
-    
-    .generate-button:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-    }
-    
-    .prompt-section h3 {
-        margin: 0 0 0.5rem 0;
-        font-size: 1.125rem;
-        font-weight: 600;
-        color: var(--ui-success, #059669);
-    }
-    
-    .instructions {
-        color: var(--ui-muted, #64748b);
-        margin-bottom: 1rem;
-        line-height: 1.5;
-    }
-    
-    .prompt-display {
-        background: var(--ui-hover-bg, #f8fafc);
-        border: 1px solid var(--ui-border, #e2e8f0);
-        border-radius: 6px;
-        margin-bottom: 1rem;
-        max-height: 300px;
-        overflow-y: auto;
-    }
-    
-    .prompt-text {
-        padding: 1rem;
-        margin: 0;
-        font-size: 0.75rem;
-        line-height: 1.4;
-        white-space: pre-wrap;
-        font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-    }
-    
-    .prompt-actions {
-        display: flex;
-        gap: 0.75rem;
-        margin-bottom: 1.5rem;
-        justify-content: center;
-    }
-    
-    .copy-button {
-        padding: 0.75rem 1.5rem;
-        border: none;
-        border-radius: 6px;
-        font-size: 1rem;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.2s;
-        background: var(--ui-success, #059669);
-        color: white;
-    }
-    
-    .copy-button:hover {
-        background: #047857;
-    }
-    
-    .back-button {
-        padding: 0.75rem 1rem;
-        border: 1px solid var(--ui-border, #e2e8f0);
-        border-radius: 6px;
-        background: var(--ui-bg, #ffffff);
-        color: var(--ui-text, #1a202c);
-        font-size: 0.875rem;
-        cursor: pointer;
-        transition: all 0.2s;
-    }
-    
-    .back-button:hover {
-        background: var(--ui-hover-bg, #f8fafc);
-    }
-    
-    .next-steps,
-    .tips-section {
-        background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(59, 130, 246, 0.05) 100%);
-        border: 1px solid rgba(59, 130, 246, 0.2);
-        border-radius: 6px;
-        padding: 1rem;
-        margin-bottom: 1rem;
-    }
-    
-    .next-steps h4,
-    .tips-section h4 {
-        margin: 0 0 0.75rem 0;
-        font-size: 0.875rem;
-        font-weight: 600;
-        color: var(--button-primary-bg, #3b82f6);
-    }
-    
-    .next-steps ol,
-    .tips-section ul {
-        margin: 0;
-        padding-left: 1.25rem;
-        font-size: 0.875rem;
-        line-height: 1.5;
-    }
-    
-    .next-steps li,
-    .tips-section li {
-        margin-bottom: 0.25rem;
-    }
-    
     .dialog-footer {
         padding: 1rem 1.5rem;
         border-top: 1px solid var(--ui-border, #e2e8f0);
@@ -689,57 +356,146 @@
         background: var(--ui-hover-bg, #f8fafc);
     }
     
-    /* API Key Section Styles */
-    .api-key-section {
-        background: linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, rgba(139, 92, 246, 0.05) 100%);
-        border: 1px solid rgba(168, 85, 247, 0.2);
-        border-radius: 6px;
-        margin-bottom: 1.5rem;
-        overflow: hidden;
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
     }
     
-    .section-header {
+    /* Compact Form Styles */
+    .compact-form {
         display: flex;
-        justify-content: space-between;
-        align-items: center;
+        gap: 0.75rem;
+        align-items: stretch;
+        margin-bottom: 1rem;
+    }
+    
+    .theme-textarea {
+        flex: 1;
+        padding: 2px 4px;
+        border: 2px solid var(--ui-border, #e2e8f0);
+        border-radius: 6px;
+        font-size: 1rem;
+        font-family: inherit;
+        resize: vertical;
+        min-height: 64px;
+        transition: border-color 0.2s;
+        height: fit-content;
+    }
+    
+    .theme-textarea:focus {
+        outline: none;
+        border-color: var(--button-primary-bg, #3b82f6);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    
+    .random-button {
         padding: 0.75rem 1rem;
-        border-bottom: 1px solid rgba(168, 85, 247, 0.2);
-    }
-    
-    .section-header h4 {
-        margin: 0;
+        border: 2px solid rgba(251, 191, 36, 0.3);
+        border-radius: 6px;
+        background: linear-gradient(135deg, rgba(251, 191, 36, 0.1) 0%, rgba(245, 158, 11, 0.1) 100%);
+        color: #d97706;
         font-size: 0.875rem;
-        font-weight: 600;
-        color: var(--ui-purple, #7c3aed);
-    }
-    
-    .toggle-button {
-        padding: 0.375rem 0.75rem;
-        border: 1px solid rgba(168, 85, 247, 0.3);
-        border-radius: 4px;
-        background: rgba(168, 85, 247, 0.1);
-        color: var(--ui-purple, #7c3aed);
-        font-size: 0.75rem;
+        font-weight: 500;
         cursor: pointer;
         transition: all 0.2s;
+        white-space: nowrap;
+        min-height: 60px;
+        display: flex;
+        align-items: center;
     }
     
-    .toggle-button:hover {
-        background: rgba(168, 85, 247, 0.2);
-        border-color: rgba(168, 85, 247, 0.4);
+    .random-button:hover {
+        background: linear-gradient(135deg, rgba(251, 191, 36, 0.2) 0%, rgba(245, 158, 11, 0.2) 100%);
+        border-color: rgba(251, 191, 36, 0.5);
+        transform: translateY(-1px);
     }
     
-    .api-key-content {
-        padding: 1rem;
+    .count-wrapper {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.25rem;
+        min-width: 80px;
     }
     
-    .api-key-description {
-        margin: 0 0 1rem 0;
+    .count-label {
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: var(--ui-muted, #64748b);
+        margin: 0;
+        text-align: center;
+    }
+    
+    .count-label-below {
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: var(--ui-muted, #64748b);
+        margin: 0;
+        text-align: center;
+    }
+    
+    .count-input-compact {
+        width: 60px;
+        padding: 0.5rem;
+        border: 1px solid var(--ui-border, #e2e8f0);
+        border-radius: 4px;
         font-size: 0.875rem;
-        line-height: 1.5;
-        color: var(--ui-text, #1a202c);
+        text-align: center;
+        margin: 0;
     }
     
+    .count-input-compact:focus {
+        outline: none;
+        border-color: var(--button-primary-bg, #3b82f6);
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+    }
+    
+    .generate-button-compact {
+        padding: 0.75rem 1.25rem;
+        border: none;
+        border-radius: 6px;
+        font-size: 1rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+        white-space: nowrap;
+        min-height: 60px;
+        display: flex;
+        align-items: center;
+        background: var(--button-primary-bg, #3b82f6);
+        color: white;
+    }
+    
+    .generate-button-compact:hover:not(:disabled) {
+        background: var(--button-primary-hover-bg, #2563eb);
+        transform: translateY(-1px);
+    }
+    
+    .generate-button-compact:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+    }
+    
+    .example-hint {
+        text-align: center;
+        color: var(--ui-muted, #64748b);
+        font-size: 0.875rem;
+        font-style: italic;
+    }
+    
+    /* Disabled state for compact form */
+    .compact-form.disabled {
+        opacity: 0.6;
+    }
+    
+    .compact-form.disabled .theme-textarea,
+    .compact-form.disabled .random-button,
+    .compact-form.disabled .count-input-compact {
+        cursor: not-allowed;
+    }
+    
+    /* API Key Input Group Styles */
     .api-key-input-group {
         display: flex;
         gap: 0.75rem;
@@ -760,6 +516,7 @@
     .api-key-input:focus {
         outline: none;
         border-color: var(--ui-purple, #7c3aed);
+        box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
     }
     
     .api-key-input.valid {
@@ -782,6 +539,31 @@
     .get-key-link:hover {
         background: #6d28d9;
         transform: translateY(-1px);
+    }
+    
+    .process-button-compact {
+        padding: 0.75rem 1rem;
+        border: 1px solid rgba(168, 85, 247, 0.3);
+        border-radius: 6px;
+        background: linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+        color: var(--ui-purple, #7c3aed);
+        font-size: 0.875rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-weight: 500;
+        white-space: nowrap;
+    }
+    
+    .process-button-compact:hover:not(:disabled) {
+        background: linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(139, 92, 246, 0.2) 100%);
+        border-color: rgba(168, 85, 247, 0.5);
+        transform: translateY(-1px);
+    }
+    
+    .process-button-compact:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
     }
     
     .smart-actions {
@@ -813,81 +595,116 @@
         transform: none;
     }
     
-    .security-note {
-        font-size: 0.75rem;
-        color: var(--ui-muted, #64748b);
-        background: rgba(168, 85, 247, 0.05);
-        padding: 0.5rem;
-        border-radius: 4px;
-        border: 1px solid rgba(168, 85, 247, 0.15);
-    }
-    
-    .processing-state {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 1rem;
-        padding: 2rem;
-        color: var(--ui-muted, #64748b);
-    }
-    
-    .spinner {
-        width: 24px;
-        height: 24px;
-        border: 2px solid var(--ui-border, #e2e8f0);
-        border-top: 2px solid var(--ui-purple, #7c3aed);
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-    }
-    
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
-    
-    .result-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 0.5rem 1rem;
-        background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%);
-        border-bottom: 1px solid rgba(34, 197, 94, 0.2);
-        margin: 0;
-    }
-    
-    .result-header h4 {
-        margin: 0;
-        font-size: 0.875rem;
-        color: var(--ui-success, #059669);
-    }
-    
-    .show-original-button {
-        padding: 0.25rem 0.5rem;
-        border: 1px solid rgba(34, 197, 94, 0.3);
-        border-radius: 4px;
-        background: rgba(34, 197, 94, 0.1);
-        color: var(--ui-success, #059669);
-        font-size: 0.75rem;
+    .generate-deck-button {
+        padding: 0.75rem 1.25rem;
+        border: none;
+        border-radius: 6px;
+        font-size: 1rem;
+        font-weight: 500;
         cursor: pointer;
         transition: all 0.2s;
+        white-space: nowrap;
+        display: flex;
+        align-items: center;
+        background: var(--button-primary-bg, #3b82f6);
+        color: white;
     }
     
-    .show-original-button:hover {
-        background: rgba(34, 197, 94, 0.2);
-        border-color: rgba(34, 197, 94, 0.4);
+    .generate-deck-button:hover:not(:disabled) {
+        background: var(--button-primary-hover-bg, #2563eb);
+        transform: translateY(-1px);
+    }
+    
+    .generate-deck-button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+    }
+    
+    .api-key-info {
+        margin-top: 0.75rem;
+    }
+    
+    .security-note-simple {
+        font-size: 0.875rem;
+        color: var(--ui-muted, #64748b);
+        line-height: 1.4;
+        margin: 0;
+    }
+    
+    .inline-link {
+        color: var(--button-primary-bg, #3b82f6);
+        text-decoration: underline;
+        font-weight: 500;
+    }
+    
+    .inline-link:hover {
+        color: var(--button-primary-hover-bg, #2563eb);
+    }
+    
+    /* Generating Overlay Styles */
+    .generating-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 255, 255, 0.95);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10;
+    }
+    
+    .overlay-content {
+        text-align: center;
+        padding: 2rem;
+    }
+    
+    .overlay-content h3 {
+        margin: 0 0 0.5rem 0;
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--ui-text, #1a202c);
+    }
+    
+    .overlay-content p {
+        margin: 0;
+        color: var(--ui-muted, #64748b);
+        font-size: 0.875rem;
+    }
+    
+    .spinner-large {
+        width: 48px;
+        height: 48px;
+        border: 4px solid var(--ui-border, #e2e8f0);
+        border-top: 4px solid var(--button-primary-bg, #3b82f6);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 1.5rem auto;
     }
     
     @media (max-width: 768px) {
-        .example-grid {
-            grid-template-columns: 1fr;
+        
+        /* Mobile responsive for compact form */
+        .compact-form {
+            flex-direction: column;
+            gap: 0.75rem;
         }
         
-        .prompt-actions {
-            flex-direction: column;
+        .theme-textarea {
+            min-height: 80px;
         }
         
-        .dialog-footer {
-            flex-direction: column;
+        .count-wrapper {
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+        
+        .count-input-compact {
+            width: 80px;
         }
         
         .api-key-input-group {
@@ -897,12 +714,6 @@
         
         .get-key-link {
             text-align: center;
-        }
-        
-        .result-header {
-            flex-direction: column;
-            gap: 0.5rem;
-            align-items: flex-start;
         }
     }
 </style>

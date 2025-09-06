@@ -2,11 +2,15 @@
 	import type { Snippet } from 'svelte';
 
     import CardEditDialog from '$lib/next/components/dialogs/CardEditDialog.svelte';
-    import { dialogStore } from '$lib/next/components/dialog/dialogStore.svelte.ts';
+    import { dialogStore } from '$lib/next/components/dialog/dialogStore.svelte.js';
 
-	const { children, preview, cardId } = $props<{
+	const {
+		children,
+		preview,
+		cardId
+	} = $props<{
 		children?: Snippet;
-        cardId?: string;
+		cardId?: string;
 		preview?: boolean;
 	}>();
     
