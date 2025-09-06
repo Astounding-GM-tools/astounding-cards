@@ -117,9 +117,11 @@ function parseResponseText(responseText: string, cardCount: number): DeckGenerat
     };
   }
   
-  // Validate card count matches request
-  if (deckData.deck.cards.length !== cardCount) {
-    console.warn(`Requested ${cardCount} cards but got ${deckData.deck.cards.length}`);
+  // Validate card count meets minimum requirement
+  if (deckData.deck.cards.length < cardCount) {
+    console.warn(`Requested at least ${cardCount} cards but got only ${deckData.deck.cards.length}`);
+  } else if (deckData.deck.cards.length > cardCount) {
+    console.log(`✨ Generated ${deckData.deck.cards.length} cards (requested minimum: ${cardCount})`);
   }
   
   return {
@@ -151,9 +153,12 @@ export async function generateDeckFromPrompt(
       temperature: AI_CONFIGS.DECK_GENERATION.temperature,
     }, null, 2));
     
+    // Create user prompt with flexible card count
+    const userPrompt = `Create a deck of at least ${cardCount} cards (up to 20 if the topic supports more interesting cards) themed around: ${theme}`;
+    
     const response = await ai.models.generateContent({
       model: AI_CONFIGS.DECK_GENERATION.model,
-      contents: theme,
+      contents: userPrompt,
       config: {
         systemInstruction: DECK_CREATION_CONTEXT,
         responseMimeType: 'application/json',
