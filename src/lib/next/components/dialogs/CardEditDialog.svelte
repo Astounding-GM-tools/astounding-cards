@@ -21,7 +21,8 @@
     import CardBackContent from '../card/CardBackContent.svelte';
     import InlineImageSelector from '../image/InlineImageSelector.svelte';
     import BinaryToggle from '../ui/BinaryToggle.svelte';
-    import AiImagePromptDialog from './AiImagePromptDialog.svelte';
+    import { toasts } from '$lib/stores/toast.js';
+    import { AiImageGenerator } from '$lib/utils/ai-image-generator.js';
     
     import type { Trait, Stat } from '$lib/next/types/card.js';
     import { ImageUrlManager } from '$lib/utils/image-handler.js';
@@ -289,27 +290,63 @@
         () => formData.traits
     );
     
-    // AI Image Prompt function
-    function openAiImagePromptDialog() {
+    // AI Image Generation state
+    let showApiKeyInput = $state(false);
+    let apiKey = $state('');
+    let isGeneratingImage = $state(false);
+    
+    // AI Image Generation function
+    async function generateAiImage() {
         if (!card) return;
         
-        // Create a card with current form data (including unsaved changes) for AI prompt generation
-        const currentCardData: Card = {
-            ...card,
-            title: formData.title,
-            subtitle: formData.subtitle,
-            description: formData.description,
-            stats: formData.stats,
-            traits: formData.traits
-        };
+        if (!showApiKeyInput && !apiKey) {
+            showApiKeyInput = true;
+            return;
+        }
         
-        // Get the deck theme, default to 'classic' if no deck or theme
-        const deckTheme = nextDeckStore.deck?.meta?.theme || 'classic';
+        if (!apiKey.trim()) {
+            toasts.error('Please enter your Google AI Studio API key');
+            return;
+        }
         
-        dialogStore.setContent(AiImagePromptDialog, {
-            card: currentCardData,
-            deckTheme: deckTheme
-        });
+        isGeneratingImage = true;
+        const toastId = toasts.loading('Generating AI image...');
+        
+        try {
+            // Create a card with current form data (including unsaved changes) for AI prompt generation
+            const currentCardData: Card = {
+                ...card,
+                title: formData.title,
+                subtitle: formData.subtitle,
+                description: formData.description,
+                stats: formData.stats,
+                traits: formData.traits
+            };
+            
+            // Get the deck theme, default to 'classic' if no deck or theme
+            const deckTheme = nextDeckStore.deck?.meta?.theme || 'classic';
+            
+            const generator = new AiImageGenerator();
+            const result = await generator.generateCardImage(currentCardData, deckTheme, apiKey.trim());
+            
+            if (result.success && result.imageBlob) {
+                // Update the card image with the generated result
+                await handleImageChange(result.imageBlob, result.sourceUrl, result.filename);
+                toasts.remove(toastId);
+                toasts.success('AI image generated successfully! 🎨');
+                
+                // Hide API key input after successful generation
+                showApiKeyInput = false;
+            } else {
+                toasts.remove(toastId);
+                toasts.error(result.error || 'Failed to generate image');
+            }
+        } catch (error) {
+            toasts.remove(toastId);
+            toasts.error(`Error generating image: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        } finally {
+            isGeneratingImage = false;
+        }
     }
 </script>
 
@@ -360,14 +397,44 @@
                         onRemoveImage={removeImage}
                     />
                     
-                    <!-- AI Image Prompt Button -->
-                    <button 
-                        class="ai-image-prompt-btn"
-                        onclick={openAiImagePromptDialog}
-                        title="Generate an AI image prompt for this card based on its content"
-                    >
-                        🤖 Generate Image Prompt
-                    </button>
+                    <!-- AI Image Generation -->
+                    <div class="ai-image-generation">
+                        {#if showApiKeyInput}
+                            <div class="api-key-input-section">
+                                <input 
+                                    type="password" 
+                                    bind:value={apiKey}
+                                    placeholder="Enter Google AI Studio API key"
+                                    disabled={isGeneratingImage}
+                                    class="api-key-input"
+                                />
+                                <div class="api-key-actions">
+                                    <button 
+                                        class="cancel-btn"
+                                        onclick={() => showApiKeyInput = false}
+                                        disabled={isGeneratingImage}
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
+                            </div>
+                        {/if}
+                        
+                        <button 
+                            class="ai-image-generate-btn {isGeneratingImage ? 'generating' : ''}"
+                            onclick={generateAiImage}
+                            disabled={isGeneratingImage || (showApiKeyInput && !apiKey.trim())}
+                            title="Generate an AI image for this card based on its content"
+                        >
+                            {#if isGeneratingImage}
+                                ⏳ Generating...
+                            {:else if showApiKeyInput && apiKey.trim()}
+                                🎨 Generate Image
+                            {:else}
+                                🤖 Generate AI Image
+                            {/if}
+                        </button>
+                    </div>
                 </fieldset>
                 
                 <!-- Stats Section -->
@@ -737,16 +804,65 @@
         color: var(--accent);
     }
     
-    /* AI Image Prompt Button Styles */
-    .ai-image-prompt-btn {
+    /* AI Image Generation Styles */
+    .ai-image-generation {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .api-key-input-section {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        padding: 0.75rem;
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+    }
+    
+    .api-key-input {
+        padding: 0.5rem;
+        border: 1px solid #ced4da;
+        border-radius: 3px;
+        font-family: var(--font-body);
+        font-size: 0.85rem;
+    }
+    
+    .api-key-input:focus {
+        outline: none;
+        border-color: #22c55e;
+        box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.1);
+    }
+    
+    .api-key-actions {
+        display: flex;
+        justify-content: flex-end;
+    }
+    
+    .cancel-btn {
+        padding: 0.25rem 0.5rem;
+        border: 1px solid #6c757d;
+        border-radius: 3px;
+        background: white;
+        color: #6c757d;
+        cursor: pointer;
+        font-size: 0.75rem;
+    }
+    
+    .cancel-btn:hover {
+        background: #f8f9fa;
+    }
+    
+    .ai-image-generate-btn {
         padding: 0.5rem 0.75rem;
-        border: 1px solid #22c55e; /* Green border for AI feature */
+        border: 1px solid #22c55e;
         border-radius: 3px;
         background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%);
         cursor: pointer;
         font-family: var(--font-body);
         font-size: 0.8rem;
-        color: #059669; /* Green text */
+        color: #059669;
         text-align: center;
         transition: all 0.2s ease;
         display: flex;
@@ -755,7 +871,7 @@
         gap: 0.25rem;
     }
     
-    .ai-image-prompt-btn:hover {
+    .ai-image-generate-btn:hover:not(:disabled) {
         background: linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(16, 185, 129, 0.2) 100%);
         border-color: #16a34a;
         color: #047857;
@@ -763,9 +879,22 @@
         box-shadow: 0 2px 4px rgba(34, 197, 94, 0.2);
     }
     
-    .ai-image-prompt-btn:active {
+    .ai-image-generate-btn:active {
         transform: translateY(0);
         box-shadow: none;
+    }
+    
+    .ai-image-generate-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+    }
+    
+    .ai-image-generate-btn.generating {
+        background: linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, rgba(255, 152, 0, 0.1) 100%);
+        border-color: #ffc107;
+        color: #ff8f00;
     }
     
     /* Inline Attribute Editor Styles */

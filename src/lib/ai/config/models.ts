@@ -7,6 +7,7 @@
 export const AI_MODELS = {
   GEMINI_FLASH: 'gemini-2.0-flash-001',
   GEMINI_PRO: 'gemini-1.5-pro',
+  GEMINI_FLASH_IMAGE: 'gemini-2.0-flash-001', // For image generation
 } as const;
 
 export const AI_CONFIGS = {
@@ -14,6 +15,14 @@ export const AI_CONFIGS = {
     model: AI_MODELS.GEMINI_FLASH,
     temperature: 0.1,
     responseMimeType: 'application/json' as const,
+  },
+  IMAGE_GENERATION: {
+    model: AI_MODELS.GEMINI_FLASH_IMAGE,
+    temperature: 0.7, // More creative for image generation
+    outputFormat: 'image/webp' as const,
+    quality: 0.6, // Good quality for WebP
+    aspectRatio: '5:7' as const,
+    resolution: '1024x1434' as const,
   },
   CONTENT_FILTERING: {
     model: AI_MODELS.GEMINI_FLASH,
