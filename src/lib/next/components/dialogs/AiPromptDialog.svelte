@@ -242,10 +242,28 @@
         <!-- Generating overlay -->
         {#if showGeneratingOverlay}
             <div class="generating-overlay">
+                <button 
+                    type="button" 
+                    class="overlay-close-button" 
+                    onclick={() => dialogStore.close()}
+                    title="Close dialog (generation continues in background)"
+                >
+                    ×
+                </button>
                 <div class="overlay-content">
                     <div class="spinner-large"></div>
                     <h3>Your deck with the prompt "{theme}" is being generated</h3>
-                    <p>You can close this dialog.</p>
+                    <p>
+                        You can now 
+                        <button 
+                            type="button" 
+                            class="close-text-button"
+                            onclick={() => dialogStore.close()}
+                        >
+                            close this dialog
+                        </button>
+                        and continue using the app.
+                    </p>
                 </div>
             </div>
         {/if}
@@ -656,6 +674,30 @@
         z-index: 10;
     }
     
+    .overlay-close-button {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid var(--ui-border, #e2e8f0);
+        border-radius: 50%;
+        width: 2rem;
+        height: 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 1.2rem;
+        color: var(--ui-muted, #64748b);
+        transition: all 0.2s;
+    }
+    
+    .overlay-close-button:hover {
+        background: white;
+        color: var(--ui-text, #1a202c);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
     .overlay-content {
         text-align: center;
         padding: 2rem;
@@ -672,6 +714,23 @@
         margin: 0;
         color: var(--ui-muted, #64748b);
         font-size: 0.875rem;
+    }
+    
+    .close-text-button {
+        background: none;
+        border: none;
+        color: var(--button-primary-bg, #3b82f6);
+        text-decoration: underline;
+        font-size: inherit;
+        font-weight: 500;
+        cursor: pointer;
+        padding: 0;
+        margin: 0;
+        transition: color 0.2s;
+    }
+    
+    .close-text-button:hover {
+        color: var(--button-primary-hover-bg, #2563eb);
     }
     
     .spinner-large {
