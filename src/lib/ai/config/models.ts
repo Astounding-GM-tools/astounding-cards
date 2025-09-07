@@ -7,7 +7,7 @@
 export const AI_MODELS = {
   GEMINI_FLASH: 'gemini-2.0-flash-001',
   GEMINI_PRO: 'gemini-1.5-pro',
-  GEMINI_FLASH_IMAGE: 'gemini-2.0-flash-001', // For image generation
+  GEMINI_FLASH_IMAGE: 'gemini-2.5-flash-image-preview', // Gemini's native image generation
 } as const;
 
 export const AI_CONFIGS = {
@@ -25,6 +25,10 @@ export const AI_CONFIGS = {
     resolution: '1024x1434' as const,
   },
   CONTENT_FILTERING: {
+    model: AI_MODELS.GEMINI_FLASH,
+    temperature: 0.3,
+  },
+  TEXT_GENERATION: {
     model: AI_MODELS.GEMINI_FLASH,
     temperature: 0.3,
   },

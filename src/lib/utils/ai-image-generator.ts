@@ -5,52 +5,115 @@
 
 import { GoogleGenAI } from '@google/genai';
 import type { Card } from '$lib/next/types/card.js';
+import { AI_CONFIGS } from '$lib/ai/config/models.js';
+import { IMAGE_GENERATION_CONTEXT, PROMPT_OPTIMIZATION_CONTEXT, ART_STYLES, createPromptOptimizationRequest } from '$lib/ai/prompts/image-generation.js';
+import { createCardLayoutReference, getUserCardImage } from '$lib/utils/canvas-capture.js';
 
 export interface AiImageResult {
     success: boolean;
     imageBlob?: Blob;
     sourceUrl?: string;
     filename?: string;
-    prompt?: string; // The prompt used for generation
+    originalPrompt?: string; // The original card-based prompt
+    optimizedPrompt?: string; // The AI-optimized visual prompt
     error?: string;
 }
 
 export class AiImageGenerator {
-    private readonly IMAGE_MODEL = 'models/gemini-2.5-flash-image-preview';
+    // Use the centralized config instead of hardcoded model
     
     /**
-     * Generate an AI image for a card based on its content and theme
+     * Generate an AI image for a card using two-step optimization + generation process
      */
     async generateCardImage(card: Card, deckTheme: string, apiKey: string): Promise<AiImageResult> {
         try {
-            // Create a prompt based on the card content and theme
-            const prompt = this.createPrompt(card, deckTheme);
-            
-            console.log(`🎨 Generating image with Gemini: "${prompt.substring(0, 100)}..."`);
+            console.log(`🎨 Starting two-step image generation for: ${card.title}`);
             
             // Initialize Gemini AI
             const ai = new GoogleGenAI({ apiKey });
             
-            // Call Gemini 2.5 Flash Image Generation
-            const response = await ai.models.generateContent({
-                model: this.IMAGE_MODEL,
-                contents: [
-                    {
-                        role: 'user',
-                        parts: [{ text: prompt }]
-                    }
-                ],
+            // Step 1: Optimize the card content into a visual prompt
+            const originalPrompt = createPromptOptimizationRequest(
+                card.title || 'Untitled',
+                card.subtitle || '',
+                card.description || '',
+                deckTheme,
+                card.traits || [],
+                card.stats || []
+            );
+            
+            console.log(`📝 Step 1: Optimizing prompt...`);
+            const optimizationResponse = await ai.models.generateContent({
+                model: AI_CONFIGS.TEXT_GENERATION.model,
+                contents: originalPrompt,
                 config: {
-                    temperature: 0.7, // Slightly higher for creative image generation
-                    candidateCount: 1
+                    systemInstruction: PROMPT_OPTIMIZATION_CONTEXT,
+                    temperature: AI_CONFIGS.TEXT_GENERATION.temperature
+                }
+            });
+            
+            const optimizedPrompt = optimizationResponse.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+            if (!optimizedPrompt) {
+                throw new Error('Failed to optimize prompt - no response from Gemini');
+            }
+            
+            console.log(`✅ Optimized prompt: "${optimizedPrompt.substring(0, 100)}..."`);
+            
+            // Step 2: Generate the image with multi-part request
+            console.log(`🎨 Step 2: Generating image with visual context...`);
+            
+            // Prepare multi-part content with explicit art style instructions
+            // Select art style based on theme, defaulting to classic
+            const selectedArtStyle = ART_STYLES[deckTheme as keyof typeof ART_STYLES] || ART_STYLES.classic;
+            
+            const artStyleInstructions = `${IMAGE_GENERATION_CONTEXT}
+
+Art style: ${selectedArtStyle}
+
+Visual prompt: ${optimizedPrompt}`;
+            
+            const contentParts: any[] = [
+                { text: artStyleInstructions }
+            ];
+            
+            // Add user's existing card image if available (for style reference)
+            const userImage = await getUserCardImage(card);
+            if (userImage) {
+                console.log(`📷 Adding user's existing image for style reference`);
+                contentParts.push({
+                    inlineData: {
+                        mimeType: userImage.mimeType,
+                        data: userImage.base64Data
+                    }
+                });
+            }
+            
+            // Add card layout reference (always included)
+            const layoutReference = createCardLayoutReference();
+            const layoutBase64 = layoutReference.split(',')[1]; // Remove data:image/png;base64, prefix
+            contentParts.push({
+                inlineData: {
+                    mimeType: 'image/png',
+                    data: layoutBase64
+                }
+            });
+            
+            console.log(`📐 Added layout reference for composition guidance`);
+            
+            // Generate the image with multi-part context
+            const imageResponse = await ai.models.generateContent({
+                model: AI_CONFIGS.IMAGE_GENERATION.model,
+                contents: contentParts,
+                config: {
+                    temperature: AI_CONFIGS.IMAGE_GENERATION.temperature
                 }
             });
             
             // Extract image data from response
-            // For image generation models, the response should contain the generated image
-            const imageData = response.candidates?.[0]?.content?.parts?.find(part => part.inlineData);
+            const imageData = imageResponse.candidates?.[0]?.content?.parts?.find(part => part.inlineData);
             if (!imageData?.inlineData?.data) {
-                throw new Error('No image data received from Gemini - response may be text only');
+                console.warn('No image data in response. Received:', imageResponse);
+                throw new Error('No image data received from Gemini - generation failed');
             }
             
             // Convert base64 data to blob
@@ -65,19 +128,23 @@ export class AiImageGenerator {
             }
             
             const imageBlob = new Blob([bytes], { type: mimeType });
-            const filename = `ai-generated-${card.title.toLowerCase().replace(/[^a-z0-9]/g, '-')}.png`;
+            const filename = `ai-generated-${card.title?.toLowerCase().replace(/[^a-z0-9]/g, '-') || 'untitled'}.png`;
             
             console.log(`✅ Image generated successfully (${imageBlob.size} bytes)`);
             
             // Create a temporary URL for the generated image
             const sourceUrl = URL.createObjectURL(imageBlob);
             
+            // Automatically download the full-resolution image to the downloads folder
+            this.downloadImage(imageBlob, filename);
+            
             return {
                 success: true,
                 imageBlob,
                 sourceUrl,
                 filename,
-                prompt
+                originalPrompt,
+                optimizedPrompt
             };
             
         } catch (error) {
@@ -90,69 +157,34 @@ export class AiImageGenerator {
     }
     
     /**
-     * Create a detailed prompt for Gemini image generation based on card content and theme
+     * Download image blob to the browser's downloads folder
      */
-    private createPrompt(card: Card, deckTheme: string): string {
-        const parts: string[] = [];
-        
-        // Base instruction
-        parts.push('Create a detailed, atmospheric artwork for a tabletop RPG character card.');
-        
-        // Theme-specific styling
-        const themeDescriptions = {
-            'classic': 'medieval fantasy style with rich colors and traditional RPG aesthetics',
-            'modern': 'contemporary urban fantasy style with clean lines and modern elements',
-            'cyberpunk': 'futuristic cyberpunk style with neon colors and high-tech elements',
-            'steampunk': 'Victorian steampunk style with brass, gears, and steam-powered machinery',
-            'horror': 'dark horror style with ominous shadows and eerie atmosphere',
-            'space': 'science fiction style with cosmic themes and space elements'
-        };
-        
-        const themeDesc = themeDescriptions[deckTheme as keyof typeof themeDescriptions] || themeDescriptions.classic;
-        parts.push(`Art style: ${themeDesc}.`);
-        
-        // Character/item name and subtitle
-        if (card.title) {
-            parts.push(`Subject: ${card.title}.`);
+    private downloadImage(imageBlob: Blob, filename: string): void {
+        try {
+            // Create a temporary URL for the blob
+            const url = URL.createObjectURL(imageBlob);
+            
+            // Create a temporary download link
+            const downloadLink = document.createElement('a');
+            downloadLink.href = url;
+            downloadLink.download = filename;
+            downloadLink.style.display = 'none';
+            
+            // Append to document, click, and clean up
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+            
+            // Clean up the object URL after a short delay
+            setTimeout(() => {
+                URL.revokeObjectURL(url);
+            }, 1000);
+            
+            console.log(`📥 Image downloaded: ${filename}`);
+        } catch (error) {
+            console.warn('Failed to download image:', error);
+            // Don't throw - this is a nice-to-have feature, not critical
         }
-        
-        if (card.subtitle) {
-            parts.push(`Type: ${card.subtitle}.`);
-        }
-        
-        // Description
-        if (card.description) {
-            parts.push(`Description: ${card.description}.`);
-        }
-        
-        // Stats for visual elements
-        if (card.stats && card.stats.length > 0) {
-            const publicStats = card.stats.filter(stat => stat.isPublic);
-            if (publicStats.length > 0) {
-                const statDescriptions = publicStats
-                    .map(stat => `${stat.title}: ${stat.value}`)
-                    .join(', ');
-                parts.push(`Key attributes: ${statDescriptions}.`);
-            }
-        }
-        
-        // Traits for character details
-        if (card.traits && card.traits.length > 0) {
-            const publicTraits = card.traits.filter(trait => trait.isPublic);
-            if (publicTraits.length > 0) {
-                const traitDescriptions = publicTraits
-                    .map(trait => `${trait.title}: ${trait.description}`)
-                    .slice(0, 3) // Limit to avoid overly long prompts
-                    .join('; ');
-                parts.push(`Notable traits: ${traitDescriptions}.`);
-            }
-        }
-        
-        // Technical requirements for card images
-        parts.push('Format: Portrait orientation suitable for a character card.');
-        parts.push('Composition: Focus on the main subject with clear details and good contrast.');
-        parts.push('Quality: High detail, professional artwork quality.');
-        
-        return parts.join(' ');
     }
+    
 }

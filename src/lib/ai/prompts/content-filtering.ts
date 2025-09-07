@@ -8,7 +8,7 @@
  * Generate a content filtering prompt for image generation
  */
 export function createContentFilteringPrompt(originalPrompt: string): string {
-  return `Please rephrase this AI image generation prompt to be more suitable for content filters while preserving the artistic intent and visual details. Make personality traits less direct and more visually descriptive:
+  return `Please rephrase this AI image generation prompt to be more suitable for content filters while preserving the artistic intent and visual details. Integrate information found in traits as visual cues. Do not assume that the prompt is for a person, it could also be an abstract concept, an item or a location.
 
 Original prompt: ${originalPrompt}
 

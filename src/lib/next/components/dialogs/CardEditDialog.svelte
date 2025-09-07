@@ -333,7 +333,7 @@
                 // Update the card image with the generated result
                 await handleImageChange(result.imageBlob, result.sourceUrl, result.filename);
                 toasts.remove(toastId);
-                toasts.success('AI image generated successfully! 🎨');
+                toasts.success('AI image generated successfully! 🎨 Full resolution saved to Downloads');
                 
                 // Hide API key input after successful generation
                 showApiKeyInput = false;
