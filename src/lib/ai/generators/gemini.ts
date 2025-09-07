@@ -144,14 +144,7 @@ export async function generateDeckFromPrompt(
     
     const schema = createDeckGenerationSchema(cardCount);
     
-    console.log('🚀 Making Gemini API call with config...');
-    console.log('📋 Theme:', theme);
-    console.log('📋 Card count:', cardCount);
-    console.log('📋 Config:', JSON.stringify({
-      responseMimeType: 'application/json',
-      responseSchema: schema,
-      temperature: AI_CONFIGS.DECK_GENERATION.temperature,
-    }, null, 2));
+    console.log(`🚀 Generating deck: "${theme}" (${cardCount}+ cards)`);
     
     // Create user prompt with flexible card count
     const userPrompt = `Create a deck of at least ${cardCount} cards (up to 20 if the topic supports more interesting cards) themed around: ${theme}`;
@@ -167,14 +160,11 @@ export async function generateDeckFromPrompt(
       }
     });
     
-    console.log('✅ Response received, parsing...');
-    
     // Handle response text
     const rawText = response.text;
     const responseText = (rawText || '').trim();
     
-    console.log('📝 Raw response length:', responseText.length);
-    console.log('📝 First 200 chars:', responseText.substring(0, 200));
+    console.log(`✅ Response received (${responseText.length} chars)`);
     
     return parseResponseText(responseText, cardCount);
   } catch (error) {
