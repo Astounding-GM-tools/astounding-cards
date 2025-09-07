@@ -371,7 +371,7 @@
                 </fieldset>
                 
                 <!-- Stats Section -->
-                <fieldset class="form-fieldset" role="group" aria-labelledby="stats-legend">
+                <fieldset class="form-fieldset" aria-labelledby="stats-legend">
                     <legend id="stats-legend">Stats</legend>
                     <div role="list" aria-label="Reorderable list of stats">
                     {#each formData.stats as stat, index}
@@ -380,7 +380,6 @@
                             draggable="true"
                             role="listitem"
                             aria-label="Stat: {stat.title || 'Untitled'} - Drag to reorder"
-                            tabindex="0"
                             ondragstart={(e) => statsHandlers.handleDragStart(e, index)}
                             ondragover={(e) => {
                                 statsHandlers.handleDragOver(e);
@@ -391,13 +390,6 @@
                             }}
                             ondrop={(e) => statsHandlers.handleDrop(e, index)}
                             ondragend={statsHandlers.handleDragEnd}
-                            onkeydown={(e) => {
-                                // Only handle keys when the draggable container itself is focused, not its children
-                                if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) {
-                                    e.preventDefault();
-                                    // Focus could be used to start drag mode in the future
-                                }
-                            }}
                             data-index={index}
                         >
                             <!-- Drag handle -->
@@ -481,6 +473,8 @@
                     <!-- Drop zone for end of list -->
                     <div 
                         class="drop-zone-end"
+                        role="region"
+                        aria-label="Drop zone for stats"
                         ondragover={(e) => {
                             statsHandlers.handleDragOver(e);
                             e.currentTarget.classList.add('drag-over');
@@ -503,7 +497,7 @@
                 </fieldset>
                 
                 <!-- Traits Section -->
-                <fieldset class="form-fieldset" role="group" aria-labelledby="traits-legend">
+                <fieldset class="form-fieldset" aria-labelledby="traits-legend">
                     <legend id="traits-legend">Traits</legend>
                     <div role="list" aria-label="Reorderable list of traits">
                     {#each formData.traits as trait, index}
@@ -512,7 +506,6 @@
                             draggable="true"
                             role="listitem"
                             aria-label="Trait: {trait.title || 'Untitled'} - Drag to reorder"
-                            tabindex="0"
                             ondragstart={(e) => traitsHandlers.handleDragStart(e, index)}
                             ondragover={(e) => {
                                 traitsHandlers.handleDragOver(e);
@@ -523,13 +516,6 @@
                             }}
                             ondrop={(e) => traitsHandlers.handleDrop(e, index)}
                             ondragend={traitsHandlers.handleDragEnd}
-                            onkeydown={(e) => {
-                                // Only handle keys when the draggable container itself is focused, not its children
-                                if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) {
-                                    e.preventDefault();
-                                    // Focus could be used to start drag mode in the future
-                                }
-                            }}
                             data-index={index}
                         >
                             <!-- Drag handle -->
@@ -585,6 +571,8 @@
                     <!-- Drop zone for end of list -->
                     <div 
                         class="drop-zone-end"
+                        role="region"
+                        aria-label="Drop zone for traits"
                         ondragover={(e) => {
                             traitsHandlers.handleDragOver(e);
                             e.currentTarget.classList.add('drag-over');

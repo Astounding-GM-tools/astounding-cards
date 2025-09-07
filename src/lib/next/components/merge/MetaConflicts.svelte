@@ -83,12 +83,13 @@
                     <div class="value-option" class:selected={conflict.resolution === METADATA_RESOLUTION.KEEP_EXISTING}>
                         <div class="option-header">
                             <input
+                                id="keep-current-{index}"
                                 type="radio"
                                 name="conflict-{index}"
                                 checked={conflict.resolution === METADATA_RESOLUTION.KEEP_EXISTING}
                                 onchange={() => updateConflict(index, METADATA_RESOLUTION.KEEP_EXISTING)}
                             />
-                            <label>📁 Keep Current</label>
+                            <label for="keep-current-{index}">📁 Keep Current</label>
                         </div>
                         <div class="value-display existing">
                             {formatValue(conflict.field, conflict.existingValue)}
@@ -99,12 +100,13 @@
                     <div class="value-option" class:selected={conflict.resolution === METADATA_RESOLUTION.USE_IMPORTED}>
                         <div class="option-header">
                             <input
+                                id="use-imported-{index}"
                                 type="radio"
                                 name="conflict-{index}"
                                 checked={conflict.resolution === METADATA_RESOLUTION.USE_IMPORTED}
                                 onchange={() => updateConflict(index, METADATA_RESOLUTION.USE_IMPORTED)}
                             />
-                            <label>📥 Use Imported</label>
+                            <label for="use-imported-{index}">📥 Use Imported</label>
                         </div>
                         <div class="value-display imported">
                             {formatValue(conflict.field, conflict.importedValue)}
@@ -116,12 +118,13 @@
                 <div class="custom-option">
                     <div class="option-header">
                         <input
+                            id="custom-value-{index}"
                             type="radio"
                             name="conflict-{index}"
                             checked={conflict.resolution === METADATA_RESOLUTION.CUSTOM}
                             onchange={() => updateConflict(index, METADATA_RESOLUTION.CUSTOM, conflict.customValue || conflict.existingValue)}
                         />
-                        <label>✏️ Enter Custom Value</label>
+                        <label for="custom-value-{index}">✏️ Enter Custom Value</label>
                     </div>
                     
                     {#if conflict.resolution === METADATA_RESOLUTION.CUSTOM}
