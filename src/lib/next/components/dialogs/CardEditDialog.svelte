@@ -21,6 +21,7 @@
     import CardBackContent from '../card/CardBackContent.svelte';
     import InlineImageSelector from '../image/InlineImageSelector.svelte';
     import BinaryToggle from '../ui/BinaryToggle.svelte';
+    import ApiKeyInput from '../ui/ApiKeyInput.svelte';
     import { toasts } from '$lib/stores/toast.js';
     import { AiImageGenerator } from '$lib/utils/ai-image-generator.js';
     
@@ -291,18 +292,12 @@
     );
     
     // AI Image Generation state
-    let showApiKeyInput = $state(false);
     let apiKey = $state('');
     let isGeneratingImage = $state(false);
     
     // AI Image Generation function
     async function generateAiImage() {
         if (!card) return;
-        
-        if (!showApiKeyInput && !apiKey) {
-            showApiKeyInput = true;
-            return;
-        }
         
         if (!apiKey.trim()) {
             toasts.error('Please enter your Google AI Studio API key');
@@ -334,9 +329,6 @@
                 await handleImageChange(result.imageBlob, result.sourceUrl, result.filename);
                 toasts.remove(toastId);
                 toasts.success('AI image generated successfully! 🎨 Full resolution saved to Downloads');
-                
-                // Hide API key input after successful generation
-                showApiKeyInput = false;
             } else {
                 toasts.remove(toastId);
                 toasts.error(result.error || 'Failed to generate image');
@@ -399,41 +391,15 @@
                     
                     <!-- AI Image Generation -->
                     <div class="ai-image-generation">
-                        {#if showApiKeyInput}
-                            <div class="api-key-input-section">
-                                <input 
-                                    type="password" 
-                                    bind:value={apiKey}
-                                    placeholder="Enter Google AI Studio API key"
-                                    disabled={isGeneratingImage}
-                                    class="api-key-input"
-                                />
-                                <div class="api-key-actions">
-                                    <button 
-                                        class="cancel-btn"
-                                        onclick={() => showApiKeyInput = false}
-                                        disabled={isGeneratingImage}
-                                    >
-                                        Cancel
-                                    </button>
-                                </div>
-                            </div>
-                        {/if}
-                        
-                        <button 
-                            class="ai-image-generate-btn {isGeneratingImage ? 'generating' : ''}"
-                            onclick={generateAiImage}
-                            disabled={isGeneratingImage || (showApiKeyInput && !apiKey.trim())}
-                            title="Generate an AI image for this card based on its content"
-                        >
-                            {#if isGeneratingImage}
-                                ⏳ Generating...
-                            {:else if showApiKeyInput && apiKey.trim()}
-                                🎨 Generate Image
-                            {:else}
-                                🤖 Generate AI Image
-                            {/if}
-                        </button>
+                        <ApiKeyInput 
+                            {apiKey}
+                            onApiKeyChange={(key: string) => apiKey = key}
+                            onSubmit={generateAiImage}
+                            isProcessing={isGeneratingImage}
+                            submitButtonText="🎨 Generate Image"
+                            processingButtonText="🎨 Generating..."
+                            placeholder="Google AI Studio API key"
+                        />
                     </div>
                 </fieldset>
                 

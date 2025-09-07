@@ -3,6 +3,7 @@
     import { toasts } from '$lib/stores/toast.js';
     import { browser } from '$app/environment';
     import ApiKeyInput from '../ui/ApiKeyInput.svelte';
+    import { importDeckFromJson } from '$lib/next/utils/jsonImporter.js';
     
     // Local state
     let theme = $state('');
@@ -92,7 +93,6 @@
             }
 
             // Validate and import via importer for consistency
-            const { importDeckFromJson } = await import('$lib/next/utils/jsonImporter.js');
             const importResult = await importDeckFromJson(JSON.stringify(result.deck));
             if (!importResult.success || !importResult.deck) {
                 toasts.error(`Generated JSON didn't validate: ${importResult.error || 'Unknown error'}`);
@@ -481,88 +481,8 @@
         color: var(--button-primary-hover-bg, #2563eb);
     }
     
-    /* Generating Overlay Styles */
-    .generating-overlay {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(255, 255, 255, 0.95);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 10;
-    }
-    
-    .overlay-close-button {
-        position: absolute;
-        top: 1rem;
-        right: 1rem;
-        background: rgba(255, 255, 255, 0.9);
-        border: 1px solid var(--ui-border, #e2e8f0);
-        border-radius: 50%;
-        width: 2rem;
-        height: 2rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        font-size: 1.2rem;
-        color: var(--ui-muted, #64748b);
-        transition: all 0.2s;
-    }
-    
-    .overlay-close-button:hover {
-        background: white;
-        color: var(--ui-text, #1a202c);
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-    
-    .overlay-content {
-        text-align: center;
-        padding: 2rem;
-    }
-    
-    .overlay-content h3 {
-        margin: 0 0 0.5rem 0;
-        font-size: 1.25rem;
-        font-weight: 600;
-        color: var(--ui-text, #1a202c);
-    }
-    
-    .overlay-content p {
-        margin: 0;
-        color: var(--ui-muted, #64748b);
-        font-size: 0.875rem;
-    }
-    
-    .close-text-button {
-        background: none;
-        border: none;
-        color: var(--button-primary-bg, #3b82f6);
-        text-decoration: underline;
-        font-size: inherit;
-        font-weight: 500;
-        cursor: pointer;
-        padding: 0;
-        margin: 0;
-        transition: color 0.2s;
-    }
-    
-    .close-text-button:hover {
-        color: var(--button-primary-hover-bg, #2563eb);
-    }
-    
-    .spinner-large {
-        width: 48px;
-        height: 48px;
-        border: 4px solid var(--ui-border, #e2e8f0);
-        border-top: 4px solid var(--button-primary-bg, #3b82f6);
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-        margin: 0 auto 1.5rem auto;
-    }
+    /* Note: Previous overlay styles have been removed as they are no longer used.
+       The dialog now closes immediately on generation and uses toast notifications instead. */
     
     @media (max-width: 768px) {
         
