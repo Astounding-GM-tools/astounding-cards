@@ -2,6 +2,7 @@
     import { dialogStore } from '../dialog/dialogStore.svelte.js';
     import { toasts } from '$lib/stores/toast.js';
     import { browser } from '$app/environment';
+    import ApiKeyInput from '../ui/ApiKeyInput.svelte';
     
     // Local state
     let theme = $state('');
@@ -9,7 +10,6 @@
     let isGenerating = $state(false);
     let showApiKeyRow = $state(false);
     let apiKey = $state('');
-    let apiKeyValid = $state(false);
     let showGeneratingOverlay = $state(false);
     
     // Quirky random prompt components
@@ -116,11 +116,6 @@
         }
     }
     
-    function validateApiKey() {
-        // Basic validation - check if it looks like a Google API key
-        const trimmedKey = apiKey.trim();
-        apiKeyValid = trimmedKey.length > 20 && (trimmedKey.startsWith('AIza') || trimmedKey.includes('-'));
-    }
     
     
     function reset() {
@@ -129,7 +124,6 @@
         isGenerating = false;
         showApiKeyRow = false;
         apiKey = '';
-        apiKeyValid = false;
         showGeneratingOverlay = false;
     }
 </script>
@@ -198,34 +192,16 @@
             
             <!-- Second row - API key input (revealed after first Generate! click) -->
             {#if showApiKeyRow}
-                <div class="api-key-input-group">
-                    <input 
-                        type="password"
-                        bind:value={apiKey}
-                        oninput={() => validateApiKey()}
+                <div style="margin-bottom: 1rem;">
+                    <ApiKeyInput 
+                        {apiKey}
+                        onApiKeyChange={(key) => apiKey = key}
+                        onSubmit={generateDeckWithGemini}
+                        isProcessing={isGenerating}
+                        submitButtonText="🚀 Generate Deck"
+                        processingButtonText="🚀 Generating…"
                         placeholder="Paste your Google AI Studio API key here"
-                        class="api-key-input"
-                        class:valid={apiKeyValid}
-                        autocomplete="current-password"
                     />
-                    {#if apiKeyValid}
-                        <button 
-                            type="button"
-                            class="process-button-compact"
-                            onclick={generateDeckWithGemini}
-                            disabled={isGenerating}
-                        >
-                            {isGenerating ? '🚀 Generating…' : '🚀 Generate Deck'}
-                        </button>
-                    {:else}
-                        <a 
-                            href="https://aistudio.google.com/apikey" 
-                            target="_blank" 
-                            class="get-key-link"
-                        >
-                            Get API Key →
-                        </a>
-                    {/if}
                 </div>
                 
                 <div class="api-key-info">
@@ -513,131 +489,7 @@
         cursor: not-allowed;
     }
     
-    /* API Key Input Group Styles */
-    .api-key-input-group {
-        display: flex;
-        gap: 0.75rem;
-        margin-bottom: 1rem;
-        align-items: center;
-    }
     
-    .api-key-input {
-        flex: 1;
-        padding: 0.75rem;
-        border: 2px solid var(--ui-border, #e2e8f0);
-        border-radius: 6px;
-        font-size: 0.875rem;
-        font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-        transition: border-color 0.2s;
-    }
-    
-    .api-key-input:focus {
-        outline: none;
-        border-color: var(--ui-purple, #7c3aed);
-        box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
-    }
-    
-    .api-key-input.valid {
-        border-color: var(--ui-success, #059669);
-        background-color: rgba(34, 197, 94, 0.05);
-    }
-    
-    .get-key-link {
-        padding: 0.75rem 1rem;
-        background: var(--ui-purple, #7c3aed);
-        color: white;
-        text-decoration: none;
-        border-radius: 6px;
-        font-size: 0.875rem;
-        font-weight: 500;
-        transition: all 0.2s;
-        white-space: nowrap;
-    }
-    
-    .get-key-link:hover {
-        background: #6d28d9;
-        transform: translateY(-1px);
-    }
-    
-    .process-button-compact {
-        padding: 0.75rem 1rem;
-        border: 1px solid rgba(168, 85, 247, 0.3);
-        border-radius: 6px;
-        background: linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
-        color: var(--ui-purple, #7c3aed);
-        font-size: 0.875rem;
-        cursor: pointer;
-        transition: all 0.2s;
-        font-weight: 500;
-        white-space: nowrap;
-    }
-    
-    .process-button-compact:hover:not(:disabled) {
-        background: linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(139, 92, 246, 0.2) 100%);
-        border-color: rgba(168, 85, 247, 0.5);
-        transform: translateY(-1px);
-    }
-    
-    .process-button-compact:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-        transform: none;
-    }
-    
-    .smart-actions {
-        margin-bottom: 0.75rem;
-        text-align: center;
-    }
-    
-    .process-button {
-        padding: 0.75rem 1.5rem;
-        border: 1px solid rgba(168, 85, 247, 0.3);
-        border-radius: 6px;
-        background: linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
-        color: var(--ui-purple, #7c3aed);
-        font-size: 1rem;
-        cursor: pointer;
-        transition: all 0.2s;
-        font-weight: 500;
-    }
-    
-    .process-button:hover:not(:disabled) {
-        background: linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(139, 92, 246, 0.2) 100%);
-        border-color: rgba(168, 85, 247, 0.5);
-        transform: translateY(-1px);
-    }
-    
-    .process-button:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-        transform: none;
-    }
-    
-    .generate-deck-button {
-        padding: 0.75rem 1.25rem;
-        border: none;
-        border-radius: 6px;
-        font-size: 1rem;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.2s;
-        white-space: nowrap;
-        display: flex;
-        align-items: center;
-        background: var(--button-primary-bg, #3b82f6);
-        color: white;
-    }
-    
-    .generate-deck-button:hover:not(:disabled) {
-        background: var(--button-primary-hover-bg, #2563eb);
-        transform: translateY(-1px);
-    }
-    
-    .generate-deck-button:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-        transform: none;
-    }
     
     .api-key-info {
         margin-top: 0.75rem;
@@ -766,13 +618,5 @@
             width: 80px;
         }
         
-        .api-key-input-group {
-            flex-direction: column;
-            align-items: stretch;
-        }
-        
-        .get-key-link {
-            text-align: center;
-        }
     }
 </style>

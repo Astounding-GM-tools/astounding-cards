@@ -964,9 +964,6 @@
         white-space: nowrap;
     }
     
-    .checkbox-label input[type="checkbox"] {
-        margin: 0;
-    }
     
     .delete-btn {
         padding: 0.25rem 0.375rem;

@@ -258,38 +258,6 @@
         gap: 1.5rem;
     }
     
-    .import-methods h3 {
-        margin: 0 0 1rem 0;
-        font-size: 1.125rem;
-        font-weight: 600;
-    }
-    
-    .method-tabs {
-        display: flex;
-        gap: 0.25rem;
-        border-bottom: 1px solid var(--ui-border, #e2e8f0);
-    }
-    
-    .method-tab {
-        padding: 0.75rem 1rem;
-        border: none;
-        background: none;
-        cursor: pointer;
-        font-size: 0.875rem;
-        color: var(--ui-muted, #64748b);
-        border-bottom: 2px solid transparent;
-        transition: all 0.2s;
-    }
-    
-    .method-tab:hover {
-        color: var(--ui-text, #1a202c);
-        background: var(--ui-hover-bg, #f8fafc);
-    }
-    
-    .method-tab.active {
-        color: var(--button-primary-bg, #3b82f6);
-        border-bottom-color: var(--button-primary-bg, #3b82f6);
-    }
     
     .file-drop-zone {
         position: relative;
@@ -336,32 +304,6 @@
         font-size: 0.875rem !important;
     }
     
-    .text-import label {
-        display: block;
-        margin-bottom: 0.5rem;
-        font-weight: 500;
-        color: var(--ui-text, #1a202c);
-        font-size: 0.875rem;
-    }
-    
-    .json-input-textarea {
-        width: 100%;
-        min-height: 200px;
-        padding: 0.75rem;
-        border: 1px solid var(--ui-border, #e2e8f0);
-        border-radius: 4px;
-        font-size: 0.75rem;
-        font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-        resize: vertical;
-        line-height: 1.4;
-        margin-bottom: 1rem;
-    }
-    
-    .json-input-textarea:focus {
-        outline: none;
-        border-color: var(--button-primary-bg, #3b82f6);
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-    }
     
     .import-preview h3 {
         margin: 0 0 1rem 0;

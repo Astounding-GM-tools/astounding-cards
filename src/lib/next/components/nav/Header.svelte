@@ -335,17 +335,6 @@
         border-top: 1px solid var(--ui-border, #e2e8f0);
     }
     
-    .layout-controls {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-    }
-    
-    .control-label {
-        font-size: 0.875rem;
-        font-weight: 500;
-        color: var(--ui-text, #1a202c);
-    }
     
     .import-controls {
         display: flex;
@@ -435,7 +424,7 @@
             gap: 0.75rem;
         }
         
-        .import-controls, .layout-controls, .dev-controls {
+        .import-controls, .dev-controls {
             justify-content: center;
         }
     }
