@@ -10,7 +10,6 @@
     let isGenerating = $state(false);
     let showApiKeyRow = $state(false);
     let apiKey = $state('');
-    let showGeneratingOverlay = $state(false);
     
     // Quirky random prompt components
     const subjects = [
@@ -62,7 +61,7 @@
     }
     
     
-    // Generate a deck via Gemini and auto-import it
+    // Generate a deck via Gemini and auto-import it with spinner toast
     async function generateDeckWithGemini() {
         if (!browser) {
             toasts.error('This feature is only available in the browser');
@@ -78,16 +77,17 @@
         }
 
         isGenerating = true;
-        showGeneratingOverlay = true;
+        
+        // Close dialog immediately - spinner toast will handle feedback
+        dialogStore.close();
         
         try {
-            const { generateDeckFromPrompt } = await import('$lib/ai/index.js');
+            const { generateDeckWithToasts } = await import('$lib/ai/index.js');
             const topic = `${theme.trim()}`; // keep it concise to avoid meta-instructions
-            const result = await generateDeckFromPrompt(apiKey, topic, cardCount);
+            const result = await generateDeckWithToasts(apiKey, topic, cardCount);
 
             if (!result.success || !result.deck) {
-                toasts.error(`Deck generation failed: ${result.error || 'Unknown error'}`);
-                showGeneratingOverlay = false;
+                // Error already handled by generateDeckWithToasts via toast
                 return;
             }
 
@@ -96,7 +96,6 @@
             const importResult = await importDeckFromJson(JSON.stringify(result.deck));
             if (!importResult.success || !importResult.deck) {
                 toasts.error(`Generated JSON didn't validate: ${importResult.error || 'Unknown error'}`);
-                showGeneratingOverlay = false;
                 return;
             }
 
@@ -105,12 +104,12 @@
             await nextDb.upsertDeck(importResult.deck);
             await nextDeckStore.selectDeck(importResult.deck.id);
 
-            toasts.success(`✅ Generated and imported deck: "${importResult.deck.meta.title}"`);
-            dialogStore.close();
+            // Success toast already handled by generateDeckWithToasts
+            // Just show import success (dialog already closed)
+            toasts.success(`📥 Deck imported and ready to use!`);
         } catch (error) {
             console.error('Deck generation error:', error);
             toasts.error('Error generating deck. Please check your API key.');
-            showGeneratingOverlay = false;
         } finally {
             isGenerating = false;
         }
@@ -124,7 +123,6 @@
         isGenerating = false;
         showApiKeyRow = false;
         apiKey = '';
-        showGeneratingOverlay = false;
     }
 </script>
 
@@ -214,35 +212,6 @@
                 </div>
             {/if}
         </div>
-        
-        <!-- Generating overlay -->
-        {#if showGeneratingOverlay}
-            <div class="generating-overlay">
-                <button 
-                    type="button" 
-                    class="overlay-close-button" 
-                    onclick={() => dialogStore.close()}
-                    title="Close dialog (generation continues in background)"
-                >
-                    ×
-                </button>
-                <div class="overlay-content">
-                    <div class="spinner-large"></div>
-                    <h3>Your deck with the prompt "{theme}" is being generated</h3>
-                    <p>
-                        You can now 
-                        <button 
-                            type="button" 
-                            class="close-text-button"
-                            onclick={() => dialogStore.close()}
-                        >
-                            close this dialog
-                        </button>
-                        and continue using the app.
-                    </p>
-                </div>
-            </div>
-        {/if}
     </div>
     
     <div class="dialog-footer">
