@@ -195,7 +195,7 @@
                 <div style="margin-bottom: 1rem;">
                     <ApiKeyInput 
                         {apiKey}
-                        onApiKeyChange={(key) => apiKey = key}
+                        onApiKeyChange={(key:string) => apiKey = key}
                         onSubmit={generateDeckWithGemini}
                         isProcessing={isGenerating}
                         submitButtonText="🚀 Generate Deck"

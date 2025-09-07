@@ -56,6 +56,13 @@
         onApiKeyChange(target.value);
         validateApiKey();
     }
+    
+    function handleSubmit(e: Event) {
+        e.preventDefault();
+        if (apiKeyValid && !isProcessing) {
+            onSubmit();
+        }
+    }
 
     // Validate whenever apiKey prop changes
     $effect(() => {
@@ -63,7 +70,7 @@
     });
 </script>
 
-<div class="api-key-input-group">
+<form class="api-key-input-group" onsubmit={handleSubmit}>
     <input 
         type="password"
         value={apiKey}
@@ -72,12 +79,12 @@
         class="api-key-input"
         class:valid={apiKeyValid}
         autocomplete="current-password"
+        name="apikey"
     />
     {#if apiKeyValid}
         <button 
-            type="button"
+            type="submit"
             class="submit-button-compact"
-            onclick={onSubmit}
             disabled={isProcessing}
         >
             {isProcessing ? processingButtonText : submitButtonText}
@@ -91,7 +98,7 @@
             {getKeyText}
         </a>
     {/if}
-</div>
+</form>
 
 <style>
     .api-key-input-group {
