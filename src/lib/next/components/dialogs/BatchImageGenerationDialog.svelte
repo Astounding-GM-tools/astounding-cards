@@ -6,6 +6,7 @@
     
     // Local state
     let apiKey = $state('');
+    let selectedArtStyle = $state('classic');
     let isGenerating = $state(false);
     
     // Get current deck from store
@@ -31,7 +32,7 @@
             const imagePromises = currentDeck!.cards.map(async (card, index) => {
                 try {
                     // Generate image for this card (with batch flag to skip auto-downloads)
-                    const result = await generator.generateCardImage(card, currentDeck!.meta.theme || 'classic', apiKey, true);
+                    const result = await generator.generateCardImage(card, selectedArtStyle, apiKey, true);
                     
                     if (result.success && result.imageBlob) {
                         // Update the card with the new image using the deck store
@@ -109,8 +110,20 @@
             </div>
         </div>
         
+        <div class="art-style-section">
+            <label for="art-style-select" class="art-style-label">Art Style:</label>
+            <select 
+                id="art-style-select"
+                bind:value={selectedArtStyle}
+                class="art-style-select"
+            >
+                <option value="classic">Classic (pencil sketch with color details)</option>
+                <option value="modern">Modern (clean digital photography)</option>
+            </select>
+        </div>
+        
         <div class="api-section">
-            <ApiKeyInput 
+            <ApiKeyInput
                 {apiKey}
                 onApiKeyChange={(key: string) => apiKey = key}
                 onSubmit={generateAllImages}
@@ -247,6 +260,40 @@
         color: #d97706;
         font-size: 0.875rem;
         line-height: 1.4;
+    }
+    
+    .art-style-section {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .art-style-label {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--ui-text, #1a202c);
+    }
+    
+    .art-style-select {
+        padding: 0.75rem;
+        border: 1px solid var(--ui-border, #e2e8f0);
+        border-radius: 6px;
+        background: var(--ui-bg, #ffffff);
+        color: var(--ui-text, #1a202c);
+        font-size: 0.875rem;
+        font-family: inherit;
+        cursor: pointer;
+        transition: border-color 0.2s;
+    }
+    
+    .art-style-select:focus {
+        outline: none;
+        border-color: var(--button-primary-bg, #3b82f6);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    
+    .art-style-select:hover {
+        border-color: var(--button-primary-bg, #3b82f6);
     }
     
     .api-key-info {
