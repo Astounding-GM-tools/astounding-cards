@@ -4,6 +4,7 @@
     import { dialogStore } from '../dialog/dialogStore.svelte.js';
     import { 
         AiPromptDialog,
+        BatchImageGenerationDialog,
         DeckManagerDialog,
         CardEditDialog,
         ImageMigrationDialog,
@@ -122,6 +123,11 @@
         dialogStore.setContent(JsonImportDialog);
     }
     
+    // Handle batch image generation
+    function handleBatchImageGeneration() {
+        dialogStore.setContent(BatchImageGenerationDialog);
+    }
+    
     
     // Dev functions (temporary)
     async function handleLoadSample() {
@@ -188,6 +194,14 @@
                     disabled={isLoading}
                 >
                     🔗 Share
+                </button>
+                
+                <button 
+                    class="action-button"
+                    onclick={handleBatchImageGeneration}
+                    disabled={isLoading}
+                >
+                    🖼️ Generate Images
                 </button>
             {/if}
         </div>

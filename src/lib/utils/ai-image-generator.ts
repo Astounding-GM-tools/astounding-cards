@@ -25,7 +25,7 @@ export class AiImageGenerator {
     /**
      * Generate an AI image for a card using two-step optimization + generation process
      */
-    async generateCardImage(card: Card, deckTheme: string, apiKey: string): Promise<AiImageResult> {
+    async generateCardImage(card: Card, deckTheme: string, apiKey: string, isBatchOperation: boolean = false): Promise<AiImageResult> {
         try {
             console.log(`🎨 Starting two-step image generation for: ${card.title}`);
             
@@ -113,7 +113,18 @@ Visual prompt: ${optimizedPrompt}`;
             const imageData = imageResponse.candidates?.[0]?.content?.parts?.find(part => part.inlineData);
             if (!imageData?.inlineData?.data) {
                 console.warn('No image data in response. Received:', imageResponse);
-                throw new Error('No image data received from Gemini - generation failed');
+                
+                // Check if this looks like a content filter issue
+                const hasCandidate = imageResponse.candidates?.length > 0;
+                const hasContent = imageResponse.candidates?.[0]?.content;
+                
+                if (hasCandidate && !hasContent) {
+                    throw new Error('Content filtered - try adjusting the prompt to avoid copyrighted characters or sensitive content');
+                } else if (hasCandidate && hasContent && !imageData) {
+                    throw new Error('Generation completed but no image data returned - possibly content filtered');
+                } else {
+                    throw new Error('No image data received from Gemini - generation failed');
+                }
             }
             
             // Convert base64 data to blob
@@ -135,8 +146,10 @@ Visual prompt: ${optimizedPrompt}`;
             // Create a temporary URL for the generated image
             const sourceUrl = URL.createObjectURL(imageBlob);
             
-            // Automatically download the full-resolution image to the downloads folder
-            this.downloadImage(imageBlob, filename);
+            // Automatically download the full-resolution image to the downloads folder (skip for batch operations)
+            if (!isBatchOperation) {
+                this.downloadImage(imageBlob, filename);
+            }
             
             return {
                 success: true,
