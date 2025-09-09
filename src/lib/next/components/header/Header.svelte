@@ -15,7 +15,7 @@
         flex-direction: column;
         max-width: 100cqw;
         font-size: var(--font-size);
-        margin: 0.6em 0.8em;
+        margin: 0.6em 0.8em 0;
     }
     .header-title {
         font-family: var(--font-title);

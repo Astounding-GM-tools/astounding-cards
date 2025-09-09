@@ -80,14 +80,18 @@
     
     {#if isInitializing}
         <p>Initializing...</p>
-    {:else if nextDeckStore.isLoading}
-        <p>⏳ {nextDeckStore.loadingMessage}</p>
     {:else if nextDeckStore.error}
         <p style="color: red;">❌ {nextDeckStore.error}</p>
+    {:else if !deck && nextDeckStore.isLoading}
+        <p>⏳ {nextDeckStore.loadingMessage}</p>
     {:else if cardCount === 0}
         <p>No cards found. <button onclick={() => nextDevStore.setupTestEnvironment()}>Load Sample Data</button></p>
-    {:else}
+    {:else if deck}
         <!-- Paginated print-ready cards -->
+        <!-- Show loading indicator but keep content visible during updates -->
+        {#if nextDeckStore.isLoading}
+            <div class="loading-overlay">⏳ {nextDeckStore.loadingMessage}</div>
+        {/if}
         <PaginatedPages
             {cards}
             {layout}
@@ -98,6 +102,19 @@
 <style>
     .deck {
         margin: 20px auto;
+        position: relative;
+    }
+    
+    .loading-overlay {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 4px;
+        z-index: 1000;
+        font-size: 14px;
     }
     :global(.page), :global(.page *) {
         box-sizing: border-box;

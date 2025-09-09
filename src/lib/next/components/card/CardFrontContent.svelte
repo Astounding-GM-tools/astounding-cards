@@ -16,8 +16,8 @@
 
 <div class="card-content-front">
     <Header title={card.title} subtitle={card.subtitle} />
-    <StatFocus stats={card.stats} />
     <TraitList traits={card.traits.filter((trait) => trait.isPublic)} />
+    <StatFocus stats={card.stats} />
 </div>
 
 <style>
