@@ -3,6 +3,7 @@
     import { nextDeckStore } from '$lib/next/stores/deckStore.svelte.js';
     import { toasts } from '$lib/stores/toast.js';
     import ApiKeyInput from '../ui/ApiKeyInput.svelte';
+    import { ART_STYLES } from '$lib/ai/prompts/image-generation.js';
     
     // Local state
     let apiKey = $state('');
@@ -117,8 +118,11 @@
                 bind:value={selectedArtStyle}
                 class="art-style-select"
             >
-                <option value="classic">Classic (pencil sketch with color details)</option>
-                <option value="modern">Modern (clean digital photography)</option>
+                {#each Object.entries(ART_STYLES) as [key, description]}
+                    <option value={key}>
+                        {key.charAt(0).toUpperCase() + key.slice(1)} ({description.split(':')[0].replace(/^.*?:/, '').trim()})
+                    </option>
+                {/each}
             </select>
         </div>
         

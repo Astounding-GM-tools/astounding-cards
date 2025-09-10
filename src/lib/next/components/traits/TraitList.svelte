@@ -26,6 +26,7 @@
 		font-size: 0.8em;
 		font-weight: bold;
 		grid-column: 1;
+        width: min-content;
 	}
 
 	.trait-value {

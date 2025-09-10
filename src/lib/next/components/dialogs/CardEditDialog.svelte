@@ -442,8 +442,8 @@
                                                 stat.tracked = false;
                                             }
                                         }}
-                                        trueLabel="◉ Public"
-                                        falseLabel="○ Secret"
+                                        trueLabel="◉ Front"
+                                        falseLabel="○ Back"
                                         size="sm"
                                         name={`stat-public-${index}`}
                                     />

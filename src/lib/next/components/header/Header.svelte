@@ -26,5 +26,6 @@
 
     .header-subtitle {
         margin: 0;
+        font-size: 0.8em;
     }
 </style>

@@ -51,7 +51,7 @@ FORBIDDEN:
 - No borders, frames, or margins around the artwork`;
 
 export const ART_STYLES = {
-    classic: `Hybrid pencil sketch with fully coloured in details:
+    classic: `Pencil sketch with coloured details:
 - Similar to a partially completed, highly detailed masterful watercolor painting
 - Important elements include faces, hands, fabrics, metals and object of special significance
 - Important elements are in full color and highly detailed, bold and colorful
@@ -66,6 +66,15 @@ export const ART_STYLES = {
 - Emphasize clarity and stark, modern aesthetics
 - Balanced composition with focus on main subject
 - Soft, almost imperceptible lighting, creating only the subtlest shadows`,
+    inked: `Bold ink drawing with high contrast:
+- Strong, confident black ink lines defining shapes and details
+- High contrast between light and dark areas
+- Minimal shading, relying on line work to convey depth and texture
+- Ink-effective cross-hatching and stippling for shading
+- Dynamic and expressive line work, conveying energy and movement
+- Simple or neutral backgrounds, keeping focus on the main subject
+- Dynamic composition with a sense of movement and energy
+- Emphasize dramatic lighting and shadow play`,
 };
 
 
