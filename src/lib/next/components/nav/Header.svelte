@@ -14,6 +14,11 @@
     import { toasts } from '$lib/stores/toast.js';
     import BinaryToggle from '../ui/BinaryToggle.svelte';
     import type { Layout } from '../../types/deck.js';
+    import { createEventDispatcher } from 'svelte';
+    
+    const dispatch = createEventDispatcher<{
+        cardBacksToggle: boolean;
+    }>();
     
     // Derived state from store
     let deck = $derived(nextDeckStore.deck);
@@ -22,10 +27,19 @@
     let isLoading = $derived(nextDeckStore.isLoading);
     let currentLayout = $derived(deck?.meta.layout || 'tarot');
     
+    // Card backs visibility state
+    let showCardBacks = $state(true);
+    
     // Handle layout toggle with persistence
     async function handleLayoutToggle(isTarot: boolean) {
         const newLayout: Layout = isTarot ? 'tarot' : 'poker';
         await nextDeckStore.updateLayout(newLayout);
+    }
+    
+    // Handle card backs visibility toggle
+    function handleCardBacksToggle(show: boolean) {
+        showCardBacks = show;
+        dispatch('cardBacksToggle', show);
     }
     
     // Handle manage decks
@@ -166,6 +180,18 @@
                             size="sm"
                         />
                     </div>
+                    <div class="backs-info">
+                        <span class="backs-label">Card Backs:</span>
+                        <BinaryToggle
+                            checked={showCardBacks}
+                            onToggle={handleCardBacksToggle}
+                            trueLabel="👁️ Show"
+                            falseLabel="🙈 Hide"
+                            disabled={isLoading}
+                            name="card-backs"
+                            size="sm"
+                        />
+                    </div>
                 {/if}
             </div>
         </div>
@@ -284,13 +310,13 @@
         font-weight: 500;
     }
     
-    .layout-info {
+    .layout-info, .backs-info {
         display: flex;
         align-items: center;
         gap: 0.5rem;
     }
     
-    .layout-label {
+    .layout-label, .backs-label {
         font-weight: 500;
         color: var(--ui-text, #1a202c);
     }

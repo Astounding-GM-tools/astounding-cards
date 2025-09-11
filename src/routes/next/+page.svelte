@@ -9,6 +9,7 @@
     import { onMount } from 'svelte';
 
     let isInitializing = $state(true);
+    let showCardBacks = $state(true);
 
     // Get deck and derived state
     let deck = $derived(nextDeckStore.deck);
@@ -18,6 +19,11 @@
     
     // Simple card count for UI logic
     let cardCount = $derived(cards?.length || 0);
+    
+    // Handle card backs visibility toggle from header
+    function handleCardBacksToggle(event: CustomEvent<boolean>) {
+        showCardBacks = event.detail;
+    }
 
     async function loadSampleData() {
         try {
@@ -76,7 +82,7 @@
 </script>
 
 <section class="deck">
-    <AppHeader />
+    <AppHeader on:cardBacksToggle={handleCardBacksToggle} />
     
     {#if isInitializing}
         <p>Initializing...</p>
@@ -95,6 +101,7 @@
         <PaginatedPages
             {cards}
             {layout}
+            {showCardBacks}
         />
     {/if}
 </section>
