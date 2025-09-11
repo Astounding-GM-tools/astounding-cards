@@ -1,0 +1,35 @@
+{
+  "name": "Astounding Cards",
+  "short_name": "Astounding",
+  "description": "Create printable character cards for tabletop RPGs. Runs entirely in your browser with no server dependencies.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3b82f6",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ],
+  "categories": ["games", "productivity", "utilities"],
+  "lang": "en",
+  "prefer_related_applications": false,
+  "display_override": ["standalone", "minimal-ui"],
+  "shortcuts": [
+    {
+      "name": "Create New Deck",
+      "description": "Start creating a new card deck", 
+      "url": "/",
+      "icons": [
+        {
+          "src": "/favicon.svg",
+          "sizes": "any"
+        }
+      ]
+    }
+  ]
+}
