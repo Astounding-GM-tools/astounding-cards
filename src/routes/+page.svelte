@@ -1,6 +1,7 @@
 <script lang="ts">
     import PaginatedPages from '$lib/next/components/page/PaginatedPages.svelte';
     import AppHeader from '$lib/next/components/nav/Header.svelte';
+    import Dialog from '$lib/next/components/dialog/Dialog.svelte';
 
     import { nextDeckStore } from '$lib/next/stores/deckStore.svelte.js';
     import { nextDevStore } from '$lib/next/stores/devStore.svelte.js';
@@ -105,6 +106,9 @@
         />
     {/if}
 </section>
+
+<!-- Dialog system for editing cards -->
+<Dialog />
 
 <style>
     .deck {

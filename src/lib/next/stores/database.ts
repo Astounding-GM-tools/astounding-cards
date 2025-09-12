@@ -387,18 +387,18 @@ class NextDatabase {
         return {
             id: generateKey(),
             title: 'New Card',
-            subtitle: 'Character',
-            description: 'A mysterious figure from the shadows.',
+            subtitle: 'Click to Edit',
+            description: 'This is where you can add a description for your card. Click anywhere on this card to start editing!',
             image: null,
             // Public traits first (appear on front), then private (appear on back)
             traits: [
-                { title: 'Class', isPublic: true, description: 'Warrior, skilled in combat' },
-                { title: 'Secret', isPublic: false, description: 'Has a hidden agenda' }
+                { title: 'Trait Name', isPublic: true, description: 'This trait appears on the front of the card' },
+                { title: 'Private Note', isPublic: false, description: 'This appears only on the back of the card' }
             ],
             // Public stats first (appear on front), then private (appear on back)
             stats: [
-                { title: 'Health', isPublic: true, value: 20, tracked: true, description: 'Physical condition and endurance' },
-                { title: 'Will', isPublic: false, value: 15, tracked: true, description: 'Mental resilience and determination' }
+                { title: 'Example Stat', isPublic: true, value: 10, tracked: true, description: 'This stat appears on the front with tracking boxes' },
+                { title: 'Hidden Stat', isPublic: false, value: 5, tracked: false, description: 'This stat appears only on the back' }
             ]
         };
     }

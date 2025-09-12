@@ -55,7 +55,7 @@ function createNextDevStore() {
          */
         async createSampleDeck(): Promise<Deck | null> {
             try {
-                const deck = await nextDb.createDeck('Sample Deck', 'classic', 'tarot');
+                const deck = await nextDb.createDeck('Welcome to Astounding Cards!', 'classic', 'tarot');
                 
                 // Add sample cards
                 const sampleCards = this.getSampleCards();
@@ -99,57 +99,67 @@ function createNextDevStore() {
         getSampleCards(): Partial<Card>[] {
             return [
                 {
-                    title: 'Dr. Evelyn Blackwood',
-                    subtitle: 'Archaeologist',
-                    description: 'A brilliant scholar with a dangerous curiosity about forbidden knowledge.',
+                    title: 'Welcome to Astounding Cards!',
+                    subtitle: 'Your RPG Card Creator',
+                    description: 'Create beautiful, printable character cards for tabletop RPGs. This app works entirely offline after loading - no server needed!',
                     traits: [
-                        { title: 'Profession', description: 'University Professor', isPublic: true },
-                        { title: 'Expertise', description: 'Ancient Civilizations', isPublic: true },
-                        { title: 'Secret', description: 'Member of the Hermetic Order', isPublic: false },
-                        { title: 'Fear', description: 'Enclosed spaces (mild claustrophobia)', isPublic: false }
+                        { title: 'Fully Offline', description: 'Works without internet after first load', isPublic: true },
+                        { title: 'Print Ready', description: 'Perfect A4 layouts for home printing', isPublic: true },
+                        { title: 'Cross Platform', description: 'Works on phones, tablets, and desktop', isPublic: true },
+                        { title: 'Install as App', description: 'Can be installed like a native app', isPublic: false }
                     ],
                     stats: [
-                        { title: 'Health', value: 18, tracked: true, isPublic: true },
-                        { title: 'Sanity', value: 65, tracked: true, isPublic: false, description: 'Mental stability - decreases with exposure to the supernatural' },
-                        { title: 'Defense', value: 12, tracked: false, isPublic: true },
-                        { title: 'Investigation', value: 85, tracked: false, isPublic: true },
-                        { title: 'Connections', value: 70, tracked: false, isPublic: false, description: 'Academic and social network influence' }
+                        { title: 'Tutorial Step', value: 1, tracked: false, isPublic: true, description: 'First card in the tutorial series' },
+                        { title: 'Cards in Tutorial', value: 4, tracked: false, isPublic: true },
+                        { title: 'Getting Started', value: 100, tracked: false, isPublic: true, description: 'You\'re ready to begin!' }
                     ]
                 },
                 {
-                    title: 'The Ethereal Compass',
-                    subtitle: 'Mystical Device',
-                    description: 'An ornate brass compass that points not to magnetic north, but to supernatural phenomena.',
+                    title: 'Creating & Editing Cards',
+                    subtitle: 'Basic Usage Guide',
+                    description: 'Click any card to edit it! Add characters, items, locations, or anything else. Use the header controls to add new cards and manage your decks.',
                     traits: [
-                        { title: 'Material', description: 'Brass and silver', isPublic: true },
-                        { title: 'Condition', description: 'Always warm to the touch', isPublic: true },
-                        { title: 'Origin', description: 'Victorian era, unknown craftsman', isPublic: false },
-                        { title: 'Curse', description: 'Slowly drains user\'s life force', isPublic: false }
+                        { title: 'Click to Edit', description: 'Click any card to open the editor', isPublic: true },
+                        { title: 'Add Cards', description: 'Use "+" button in header to add new cards', isPublic: true },
+                        { title: 'Manage Decks', description: 'Use "Manage Decks" to create/organize decks', isPublic: true },
+                        { title: 'Hide Backs', description: 'Toggle card backs visibility for overview', isPublic: false }
                     ],
                     stats: [
-                        { title: 'Value', value: 1200, tracked: false, isPublic: false },
-                        { title: 'Rarity', value: 9, tracked: false, isPublic: false, description: 'Legendary (9/10 scale)' },
-                        { title: 'Durability', value: 8, tracked: true, isPublic: true, description: 'Physical condition - can be damaged' },
-                        { title: 'Charges', value: 15, tracked: true, isPublic: false, description: 'Mystical energy remaining' },
-                        { title: 'Detection Range', value: 5, tracked: false, isPublic: true, description: '5 miles detection range' }
+                        { title: 'Tutorial Step', value: 2, tracked: false, isPublic: true },
+                        { title: 'Cards Per Page', value: 4, tracked: false, isPublic: true, description: 'Tarot layout: 4 cards per page' },
+                        { title: 'Cards Per Page (Poker)', value: 9, tracked: false, isPublic: false, description: 'Poker layout: 9 cards per page' }
                     ]
                 },
                 {
-                    title: 'The Misty Vale',
-                    subtitle: 'Haunted Location',
-                    description: 'A fog-shrouded valley where time moves differently and the dead do not rest.',
+                    title: 'AI-Powered Features',
+                    subtitle: 'Generate Content & Images',
+                    description: 'Use AI to generate entire decks, individual cards, or card images. Provide your Google AI Studio API key for powerful AI assistance.',
                     traits: [
-                        { title: 'Climate', description: 'Perpetually foggy', isPublic: true },
-                        { title: 'Terrain', description: 'Rolling hills and ancient stones', isPublic: true },
-                        { title: 'History', description: 'Site of a medieval massacre', isPublic: false },
-                        { title: 'Phenomena', description: 'Time distortion and spectral manifestations', isPublic: false }
+                        { title: 'AI Deck Generator', description: 'Create complete decks from a theme description', isPublic: true },
+                        { title: 'Batch Image Generation', description: 'Generate images for all cards at once', isPublic: true },
+                        { title: 'Multiple Art Styles', description: 'Classic, Modern, and Inked art styles available', isPublic: true },
+                        { title: 'Your API Key', description: 'Uses your own Google AI key - private & secure', isPublic: false }
                     ],
                     stats: [
-                        { title: 'Danger Level', value: 9, tracked: false, isPublic: true, description: 'Extreme danger (9/10 scale)' },
-                        { title: 'Visibility', value: 10, tracked: false, isPublic: true, description: '10 feet visibility range' },
-                        { title: 'Spectral Activity', value: 12, tracked: true, isPublic: false, description: 'Current level of supernatural manifestations' },
-                        { title: 'Escape Difficulty', value: 90, tracked: false, isPublic: false },
-                        { title: 'Area', value: 3, tracked: false, isPublic: true, description: '3 square miles coverage' }
+                        { title: 'Tutorial Step', value: 3, tracked: false, isPublic: true },
+                        { title: 'Art Styles', value: 3, tracked: false, isPublic: true, description: 'Classic, Modern, and Inked styles' },
+                        { title: 'AI Power Level', value: 95, tracked: false, isPublic: true, description: 'Gemini 2.5 Flash - very capable!' }
+                    ]
+                },
+                {
+                    title: 'Deck Management & Sharing',
+                    subtitle: 'Organize & Share Your Work',
+                    description: 'Manage multiple decks, share via URLs, and export/import JSON files. When ready, delete this tutorial deck from Deck Management!',
+                    traits: [
+                        { title: 'Multiple Decks', description: 'Create and switch between different decks', isPublic: true },
+                        { title: 'Share URLs', description: 'Generate shareable links for your decks', isPublic: true },
+                        { title: 'Export/Import', description: 'JSON export with optional image embedding', isPublic: true },
+                        { title: 'Delete This Deck', description: 'Remove tutorial via Deck Management when ready', isPublic: false }
+                    ],
+                    stats: [
+                        { title: 'Tutorial Complete!', value: 4, tracked: false, isPublic: true, description: 'You\'ve reached the final tutorial card' },
+                        { title: 'Ready to Create', value: 100, tracked: false, isPublic: true },
+                        { title: 'Have Fun!', value: 999, tracked: false, isPublic: true, description: 'Time to make some astounding cards!' }
                     ]
                 }
             ];
