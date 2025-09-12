@@ -386,19 +386,22 @@ class NextDatabase {
     private createDefaultCard(): Card {
         return {
             id: generateKey(),
-            title: 'New Card',
-            subtitle: 'Click to Edit',
-            description: 'This is where you can add a description for your card. Click anywhere on this card to start editing!',
+            title: '👋 Welcome! Click This Card!',
+            subtitle: 'Your First Tutorial Step',
+            description: 'This is Astounding Cards - create beautiful, printable cards for any purpose! Click anywhere on this card RIGHT NOW to see the magic editor. No signup, fully offline!',
             image: null,
             // Public traits first (appear on front), then private (appear on back)
             traits: [
-                { title: 'Trait Name', isPublic: true, description: 'This trait appears on the front of the card' },
-                { title: 'Private Note', isPublic: false, description: 'This appears only on the back of the card' }
+                { title: '1. Click This Card', isPublic: true, description: 'Click anywhere on this card to open the editor' },
+                { title: '2. Try Editing', isPublic: true, description: 'Change the title, add traits, upload images' },
+                { title: '3. Add New Cards', isPublic: true, description: 'Use the "+ Add Card" button in the header' },
+                { title: 'Secret Mission', isPublic: false, description: 'Find this text by flipping to the card back!' }
             ],
             // Public stats first (appear on front), then private (appear on back)
             stats: [
-                { title: 'Example Stat', isPublic: true, value: 10, tracked: true, description: 'This stat appears on the front with tracking boxes' },
-                { title: 'Hidden Stat', isPublic: false, value: 5, tracked: false, description: 'This stat appears only on the back' }
+                { title: 'Tutorial Progress', isPublic: true, value: 1, tracked: true, description: 'Step 1 of 4: Click this card!' },
+                { title: 'Cards to Explore', isPublic: true, value: 4, tracked: false },
+                { title: 'Fun Level', isPublic: true, value: 100, tracked: false, description: 'Maximum learning ahead!' }
             ]
         };
     }

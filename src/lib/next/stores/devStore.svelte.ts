@@ -99,67 +99,67 @@ function createNextDevStore() {
         getSampleCards(): Partial<Card>[] {
             return [
                 {
-                    title: 'Welcome to Astounding Cards!',
-                    subtitle: 'Your RPG Card Creator',
-                    description: 'Create beautiful, printable character cards for tabletop RPGs. This app works entirely offline after loading - no server needed!',
+                    title: '👋 Welcome! Click This Card!',
+                    subtitle: 'Your First Tutorial Step',
+                    description: 'This is Astounding Cards - create beautiful, printable cards for any purpose! Click anywhere on this card RIGHT NOW to see the magic editor. No signup, fully offline!',
                     traits: [
-                        { title: 'Fully Offline', description: 'Works without internet after first load', isPublic: true },
-                        { title: 'Print Ready', description: 'Perfect A4 layouts for home printing', isPublic: true },
-                        { title: 'Cross Platform', description: 'Works on phones, tablets, and desktop', isPublic: true },
-                        { title: 'Install as App', description: 'Can be installed like a native app', isPublic: false }
+                        { title: '1. Click This Card', description: 'Click anywhere on this card to open the editor', isPublic: true },
+                        { title: '2. Try Editing', description: 'Change the title, add traits, upload images', isPublic: true },
+                        { title: '3. Add New Cards', description: 'Use the "+ Add Card" button in the header', isPublic: true },
+                        { title: 'Secret Mission', description: 'Find this text by flipping to the card back!', isPublic: false }
                     ],
                     stats: [
-                        { title: 'Tutorial Step', value: 1, tracked: false, isPublic: true, description: 'First card in the tutorial series' },
-                        { title: 'Cards in Tutorial', value: 4, tracked: false, isPublic: true },
-                        { title: 'Getting Started', value: 100, tracked: false, isPublic: true, description: 'You\'re ready to begin!' }
+                        { title: 'Tutorial Progress', value: 1, tracked: true, isPublic: true, description: 'Step 1 of 4: Click this card!' },
+                        { title: 'Cards to Explore', value: 4, tracked: false, isPublic: true },
+                        { title: 'Fun Level', value: 100, tracked: false, isPublic: true, description: 'Maximum learning ahead!' }
                     ]
                 },
                 {
-                    title: 'Creating & Editing Cards',
-                    subtitle: 'Basic Usage Guide',
-                    description: 'Click any card to edit it! Add characters, items, locations, or anything else. Use the header controls to add new cards and manage your decks.',
+                    title: 'Card Editor Deep Dive',
+                    subtitle: 'Traits, Stats, and Images',
+                    description: '🎨 In the editor: Add traits (appear on front/back), stats with values, and images. Drag to reorder items. Toggle "Front/Back" to control visibility.',
                     traits: [
-                        { title: 'Click to Edit', description: 'Click any card to open the editor', isPublic: true },
-                        { title: 'Add Cards', description: 'Use "+" button in header to add new cards', isPublic: true },
-                        { title: 'Manage Decks', description: 'Use "Manage Decks" to create/organize decks', isPublic: true },
-                        { title: 'Hide Backs', description: 'Toggle card backs visibility for overview', isPublic: false }
+                        { title: 'Public Traits', description: 'These appear on the front of the card', isPublic: true },
+                        { title: 'Stats with Values', description: 'Numbers that can be tracked or just displayed', isPublic: true },
+                        { title: 'Drag to Reorder', description: 'Drag the ⋮⋮ handles to rearrange items', isPublic: true },
+                        { title: 'Private Traits', description: 'This trait only appears on the back!', isPublic: false }
                     ],
                     stats: [
                         { title: 'Tutorial Step', value: 2, tracked: false, isPublic: true },
-                        { title: 'Cards Per Page', value: 4, tracked: false, isPublic: true, description: 'Tarot layout: 4 cards per page' },
-                        { title: 'Cards Per Page (Poker)', value: 9, tracked: false, isPublic: false, description: 'Poker layout: 9 cards per page' }
+                        { title: 'Front Stat', value: 42, tracked: false, isPublic: true, description: 'This stat is visible on the front' },
+                        { title: 'Back Stat', value: 88, tracked: true, isPublic: false, description: 'Back stats can have tracking boxes' }
                     ]
                 },
                 {
-                    title: 'AI-Powered Features',
-                    subtitle: 'Generate Content & Images',
-                    description: 'Use AI to generate entire decks, individual cards, or card images. Provide your Google AI Studio API key for powerful AI assistance.',
+                    title: 'AI Magic (Optional)',
+                    subtitle: 'Images & Content Generation',
+                    description: '🤖 Want AI help? In any card editor, add your Google AI Studio API key to generate images and content. Try "Generate Images" button in the header!',
                     traits: [
-                        { title: 'AI Deck Generator', description: 'Create complete decks from a theme description', isPublic: true },
-                        { title: 'Batch Image Generation', description: 'Generate images for all cards at once', isPublic: true },
-                        { title: 'Multiple Art Styles', description: 'Classic, Modern, and Inked art styles available', isPublic: true },
-                        { title: 'Your API Key', description: 'Uses your own Google AI key - private & secure', isPublic: false }
+                        { title: 'AI Images', description: 'Generate card images from descriptions', isPublic: true },
+                        { title: 'Batch Generation', description: 'Use "Generate Images" to do all cards at once', isPublic: true },
+                        { title: 'Multiple Styles', description: 'Classic, Modern, and Inked art styles', isPublic: true },
+                        { title: 'Your API Key', description: 'Get free key from aistudio.google.com', isPublic: false }
                     ],
                     stats: [
                         { title: 'Tutorial Step', value: 3, tracked: false, isPublic: true },
-                        { title: 'Art Styles', value: 3, tracked: false, isPublic: true, description: 'Classic, Modern, and Inked styles' },
-                        { title: 'AI Power Level', value: 95, tracked: false, isPublic: true, description: 'Gemini 2.5 Flash - very capable!' }
+                        { title: 'Art Styles', value: 3, tracked: false, isPublic: true, description: 'Classic, Modern, and Inked' },
+                        { title: 'Optional Feature', value: 100, tracked: false, isPublic: true, description: 'Works great without AI too!' }
                     ]
                 },
                 {
-                    title: 'Deck Management & Sharing',
-                    subtitle: 'Organize & Share Your Work',
-                    description: 'Manage multiple decks, share via URLs, and export/import JSON files. When ready, delete this tutorial deck from Deck Management!',
+                    title: 'You\'re Ready to Create!',
+                    subtitle: 'Print, Share, and Manage',
+                    description: '🎉 Tutorial complete! Use "Manage Decks" to create new decks, "Share" for URLs, and print when ready. Delete this tutorial deck when you\'re comfortable!',
                     traits: [
-                        { title: 'Multiple Decks', description: 'Create and switch between different decks', isPublic: true },
-                        { title: 'Share URLs', description: 'Generate shareable links for your decks', isPublic: true },
-                        { title: 'Export/Import', description: 'JSON export with optional image embedding', isPublic: true },
-                        { title: 'Delete This Deck', description: 'Remove tutorial via Deck Management when ready', isPublic: false }
+                        { title: 'Create New Decks', description: 'Use "Manage Decks" → "Create New Deck"', isPublic: true },
+                        { title: 'Share Your Work', description: 'Use "Share" button to create shareable URLs', isPublic: true },
+                        { title: 'Print Ready', description: 'Just Ctrl+P (or ⌘+P) for perfect layouts', isPublic: true },
+                        { title: 'Delete Tutorial', description: 'Remove this deck when you\'re ready to go solo!', isPublic: false }
                     ],
                     stats: [
-                        { title: 'Tutorial Complete!', value: 4, tracked: false, isPublic: true, description: 'You\'ve reached the final tutorial card' },
-                        { title: 'Ready to Create', value: 100, tracked: false, isPublic: true },
-                        { title: 'Have Fun!', value: 999, tracked: false, isPublic: true, description: 'Time to make some astounding cards!' }
+                        { title: 'Tutorial Complete', value: 100, tracked: false, isPublic: true, description: 'You know everything you need!' },
+                        { title: 'Cards Created', value: 0, tracked: true, isPublic: true, description: 'Time to start creating!' },
+                        { title: 'Fun Level', value: 999, tracked: false, isPublic: true, description: 'Maximum fun achieved!' }
                     ]
                 }
             ];
