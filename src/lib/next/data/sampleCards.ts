@@ -14,12 +14,13 @@ export function getSampleCards(): Partial<Card>[] {
     return [
         {
             title: 'Create Astounding Cards!',
-            subtitle: 'The Astounding Tutorial',
-            description: 'Make beautiful, printable cards for any purpose! Free, no signup, works offline. Click anywhere on this card to start.',
+            subtitle: 'This is an Astounding Tutorial',
+            description: 'Free to use (and there is no "premium plan"), no signup, no ads, works offline. All data is stored locally in your browser, so you can keep your cards close to your chest. We don\'t even track you, use cookies or particularly want to know your email.',
+            image: '/portraits/astounding.jpg',
             traits: [
                 { title: 'Click me', description: 'Click anywhere to open the editor', isPublic: true },
-                { title: 'Start simple', description: 'Just try clicking this card first', isPublic: true },
-                { title: 'Add more later', description: 'Use "+Add Card" in header', isPublic: true }
+                { title: 'Do it!', description: 'Just try clicking this card first', isPublic: true },
+                { title: 'Add more', description: 'Click "+ Add Card" in header too', isPublic: true }
             ],
             stats: [
                 { title: 'Step', value: 1, tracked: false, isPublic: true }
@@ -28,12 +29,13 @@ export function getSampleCards(): Partial<Card>[] {
         {
             title: 'Change everything!',
             subtitle: 'Use Edit View to change title, subtitle, description, image, traits and stats.',
-            description: 'In the editor: Add traits (appear on front/back), stats with values, and images. Drag to reorder items. Toggle "Front/Back" to control visibility.',
+            description: 'Make your cards your own! We made Astounding Cards for roleplaying game props: for keeping track of characters, locations and plot items. But you can make cards for anything. Flashcards, recipes, educational tools, weird playing cards or exceptionally limited trading cards - go for it!',
+            image: null,
             traits: [
-                { title: 'Traits', description: 'These appear on the front of the card', isPublic: true },
-                { title: 'Stats', description: 'Numeric values can be tracked on the back of the card', isPublic: true },
-                { title: 'Drag and drop', description: 'Drag by the ⋮⋮ handles to rearrange traits and stats', isPublic: false },
-                { title: 'Flipside', description: 'Try putting this trait on the front of the card!', isPublic: false }
+                { title: 'Traits', description: 'Great for descriptive properties', isPublic: true },
+                { title: 'Stats', description: 'If it\'s a number, it can be a stat!', isPublic: true },
+                { title: 'Reorder', description: 'Drag by the ⋮⋮ handles to rearrange traits and stats', isPublic: false },
+                { title: 'Flipside', description: 'Try putting this trait on the front', isPublic: false }
 
             ],
             stats: [
@@ -45,13 +47,14 @@ export function getSampleCards(): Partial<Card>[] {
         {
             title: 'AI features',
             subtitle: 'Yes, AI slop is terrible, but...',
-            description: 'You can generate whole decks from a simple description, and even generate AI images for each card.',
+            description: 'Generate whole decks from a simple description, and images from the information already in the card. Or not: using the provided AI tools is entirely up to you. Your cards will probably be even more Astounding if you dont use AI at all!',
+            image: null,
             traits: [
-                { title: 'AI Images', description: 'Generate card images from descriptions', isPublic: true },
-                { title: 'Generate cards', description: 'Use "Generate Images" to do all cards at once', isPublic: true },
-                { title: 'Multiple Styles', description: 'Classic, Modern, and Inked art styles', isPublic: false },
-                { title: 'Use your own key', description: 'Get a free key from aistudio.google.com and use it to generate cards and images', isPublic: false },
-                { title: 'Or not', description: 'Actually, you shouldn\'t give out your API key to strange websites. But if you can\'t trust Astounding Cards, then who can you trust?', isPublic: true }
+                { title: 'So fast!', description: 'Enter description, get a full deck', isPublic: true },
+                { title: 'AI "art"', description: 'Create or change illustrations', isPublic: true },
+                { title: 'Styles', description: 'Classic, Modern, and Inked', isPublic: true },
+                { title: 'Your key', description: 'Get a key from aistudio.google.com and use it for the AI features', isPublic: false },
+                { title: 'Or not', description: 'Actually, you shouldn\'t paste in your API key on strange websites. But if you can\'t trust Astounding Cards, then who can you trust?', isPublic: false }
             ],
             stats: [
                 { title: 'Step', value: 3, tracked: false, isPublic: true },
@@ -61,14 +64,14 @@ export function getSampleCards(): Partial<Card>[] {
         },
         {
             title: 'Share Your Deck!',
-            subtitle: 'We know you love sharing decks on the internet!',
+            subtitle: 'Display your deck on the internet.',
             description: 'Astounding Cards is made for printing, but you can also share decks using the "Share" button in the header. Shareable decks are public and can be viewed by anyone with the link.',
+            image: null,
             traits: [
-                { title: 'Unlimited Decks', description: 'Use "Manage Decks" → "Create New Deck"', isPublic: true },
-                { title: 'Share Your Deck', description: 'Use "Share" button to create shareable URLs', isPublic: true },
-                { title: 'Share Backup', description: "Save a full backup of a deck (including images), and share it if you like. We won't judge!", isPublic: true },
-                { title: 'Print Ready', description: 'Just Ctrl+P (or ⌘+P) for print-ready layouts', isPublic: true },
-                { title: 'Delete Tutorial', description: 'Remove this deck when you\'re ready to go solo!', isPublic: false }
+                { title: 'Share', description: 'Click "Share" for shareable URL', isPublic: true },
+                { title: 'Backup', description: "Backups can including images", isPublic: true },
+                { title: 'Print', description: 'Print-ready layout', isPublic: true },
+                { title: 'Delete', description: 'Remove this deck when you\'re ready to go solo!', isPublic: false }
             ],
             stats: [
                 { title: 'Step', value: 4, tracked: false, isPublic: true },
