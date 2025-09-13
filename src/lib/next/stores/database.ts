@@ -14,6 +14,7 @@ import type { Deck, Theme, Layout } from '../types/deck.js';
 import type { Card } from '../types/card.js';
 import { safeDeepClone } from '$lib/utils/clone-utils.js';
 import { generateId, generateKey } from '../utils/idUtils.js';
+import { getSampleCards } from '../data/sampleCards.js';
 
 export class DatabaseError extends Error {
     constructor(message: string, public code: string) {
@@ -382,27 +383,20 @@ class NextDatabase {
 
     /**
      * Create default card template
+     * Uses the first sample card as the single source of truth
      */
     private createDefaultCard(): Card {
+        const sampleCards = getSampleCards();
+        const firstCard = sampleCards[0];
+        
         return {
             id: generateKey(),
-            title: '👋 Welcome! Click This Card!',
-            subtitle: 'Your First Tutorial Step',
-            description: 'This is Astounding Cards - create beautiful, printable cards for any purpose! Click anywhere on this card RIGHT NOW to see the magic editor. No signup, fully offline!',
-            image: null,
-            // Public traits first (appear on front), then private (appear on back)
-            traits: [
-                { title: '1. Click This Card', isPublic: true, description: 'Click anywhere on this card to open the editor' },
-                { title: '2. Try Editing', isPublic: true, description: 'Change the title, add traits, upload images' },
-                { title: '3. Add New Cards', isPublic: true, description: 'Use the "+ Add Card" button in the header' },
-                { title: 'Secret Mission', isPublic: false, description: 'Find this text by flipping to the card back!' }
-            ],
-            // Public stats first (appear on front), then private (appear on back)
-            stats: [
-                { title: 'Tutorial Progress', isPublic: true, value: 1, tracked: true, description: 'Step 1 of 4: Click this card!' },
-                { title: 'Cards to Explore', isPublic: true, value: 4, tracked: false },
-                { title: 'Fun Level', isPublic: true, value: 100, tracked: false, description: 'Maximum learning ahead!' }
-            ]
+            title: firstCard.title || 'New Card',
+            subtitle: firstCard.subtitle || '',
+            description: firstCard.description || '',
+            image: firstCard.image || null,
+            traits: firstCard.traits || [],
+            stats: firstCard.stats || []
         };
     }
 
