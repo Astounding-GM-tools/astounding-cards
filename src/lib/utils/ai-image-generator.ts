@@ -146,10 +146,9 @@ Visual prompt: ${optimizedPrompt}`;
             // Create a temporary URL for the generated image
             const sourceUrl = URL.createObjectURL(imageBlob);
             
-            // Automatically download the full-resolution image to the downloads folder (skip for batch operations)
-            if (!isBatchOperation) {
-                this.downloadImage(imageBlob, filename);
-            }
+            // Automatically download the full-resolution image to the downloads folder
+            // Now safe for batch operations since they are staggered (2s apart)
+            this.downloadImage(imageBlob, filename);
             
             return {
                 success: true,

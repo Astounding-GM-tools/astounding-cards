@@ -14,7 +14,24 @@
     let currentDeck = $derived(nextDeckStore.deck);
     let totalCards = $derived(currentDeck?.cards.length || 0);
     
-    // Generate images for all cards in parallel
+    // Helper function to parse API error messages
+    function parseApiError(error: any, cardTitle: string): string {
+        const errorMessage = error?.message || error?.toString() || 'Unknown error';
+        
+        if (errorMessage.includes('429') || errorMessage.includes('rate limit') || errorMessage.includes('quota')) {
+            return `Rate limited for "${cardTitle}" - you may be out of free tokens. Try waiting a few minutes.`;
+        } else if (errorMessage.includes('403') || errorMessage.includes('permission')) {
+            return `Permission denied for "${cardTitle}" - check your API key.`;
+        } else if (errorMessage.includes('400') || errorMessage.includes('invalid')) {
+            return `Invalid request for "${cardTitle}" - the card data may have issues.`;
+        } else if (errorMessage.includes('network') || errorMessage.includes('timeout')) {
+            return `Network error for "${cardTitle}" - check your connection.`;
+        }
+        
+        return `Failed to generate image for "${cardTitle}": ${errorMessage}`;
+    }
+    
+    // Generate images for all cards with staggered timing
     async function generateAllImages() {
         isGenerating = true;
         
@@ -27,11 +44,20 @@
             const generator = new AiImageGenerator();
             
             // Show initial toast
-            toasts.success(`🚀 Starting batch image generation for ${totalCards} cards!`);
+            toasts.info(`🚀 Starting staggered batch generation for ${totalCards} cards...`);
             
-            // Fire off all requests in parallel - let Google handle it!
-            const imagePromises = currentDeck!.cards.map(async (card, index) => {
+            let successful = 0;
+            let failed = 0;
+            const STAGGER_DELAY = 2000; // 2 seconds between requests
+            
+            // Process cards one by one with staggered timing
+            for (let index = 0; index < currentDeck!.cards.length; index++) {
+                const card = currentDeck!.cards[index];
+                
                 try {
+                    // Show "starting" toast for this card
+                    toasts.info(`⏳ Generating image ${index + 1}/${totalCards}: "${card.title}"...`);
+                    
                     // Generate image for this card (with batch flag to skip auto-downloads)
                     const result = await generator.generateCardImage(card, selectedArtStyle, apiKey, true);
                     
@@ -48,38 +74,39 @@
                             }
                         });
                         
-                        toasts.success(`✨ Generated image for "${card.title}" (${index + 1}/${totalCards})`);
+                        successful++;
+                        toasts.success(`✅ Generated image for "${card.title}" (${successful}/${totalCards} complete)`);
                     } else {
-                        toasts.error(`❌ Failed to generate image for "${card.title}": ${result.error || 'Unknown error'}`);
+                        failed++;
+                        const errorMsg = parseApiError(result.error, card.title);
+                        toasts.error(`❌ ${errorMsg}`);
                     }
                     
-                    return { cardId: card.id, success: result.success };
                 } catch (error) {
+                    failed++;
                     console.error(`Error generating image for card ${card.title}:`, error);
-                    toasts.error(`❌ Error generating image for "${card.title}"`);
-                    return { cardId: card.id, success: false };
+                    const errorMsg = parseApiError(error, card.title);
+                    toasts.error(`❌ ${errorMsg}`);
                 }
-            });
-            
-            // Wait for all promises to settle (not fail-fast)
-            const results = await Promise.allSettled(imagePromises);
-            
-            // Count successes and failures
-            const successful = results.filter(result => 
-                result.status === 'fulfilled' && result.value.success
-            ).length;
-            const failed = totalCards - successful;
+                
+                // Stagger the next request (except for the last one)
+                if (index < currentDeck!.cards.length - 1) {
+                    await new Promise(resolve => setTimeout(resolve, STAGGER_DELAY));
+                }
+            }
             
             // Show final summary
             if (failed === 0) {
                 toasts.success(`🎉 Batch generation complete! Generated ${successful} images successfully!`);
+            } else if (successful === 0) {
+                toasts.error(`😞 Batch generation failed: ${failed} errors. Check your API key and try again.`);
             } else {
                 toasts.warning(`⚠️ Batch generation complete: ${successful} successful, ${failed} failed`);
             }
             
         } catch (error) {
             console.error('Batch image generation error:', error);
-            toasts.error('Error during batch image generation. Please check your API key.');
+            toasts.error('Error during batch image generation. Please check your API key and connection.');
         } finally {
             isGenerating = false;
         }
@@ -96,7 +123,7 @@
         <div class="info-section">
             <h3>Batch AI Image Generation</h3>
             <p class="description">
-                Generate AI images for all cards in your deck simultaneously. This will fire all requests in parallel for maximum speed!
+                Generate AI images for all cards in your deck with staggered timing (2 seconds apart). This prevents overwhelming the API, provides clear progress updates for each card, and automatically downloads high-resolution images to your Downloads folder.
             </p>
             
             <div class="deck-stats">
@@ -107,7 +134,7 @@
             </div>
             
             <div class="warning-note">
-                <p><strong>Note:</strong> This will replace ALL existing images in the deck. The dialog will close immediately and you'll see progress via toasts and real-time card updates.</p>
+                <p><strong>Note:</strong> This will replace ALL existing images in the deck. Each card will be processed 2 seconds apart to avoid rate limiting. The dialog closes immediately and you'll see detailed progress updates via toast notifications.</p>
             </div>
         </div>
         
