@@ -14,6 +14,10 @@
     } from '$lib/next/utils/deckMerging.js';
     import MergeTool from '$lib/next/components/merge/MergeTool.svelte';
     import type { Deck } from '$lib/next/types/deck.js';
+    import type { PageData } from './$types';
+    
+    // Server-side data (includes analytics tracking)
+    let { data }: { data: PageData } = $props();
     
     let importing = $state(true);
     let error = $state<string | null>(null);
