@@ -18,8 +18,8 @@ export function toggleDevMode() {
   return `Dev mode ${!storedDevMode ? 'enabled' : 'disabled'}`;
 }
 
-// Console shortcuts for E2E testing
-if (browser) {
+// Console shortcuts for E2E testing (localhost only)
+if (browser && window.location.hostname.includes('localhost')) {
   // Basic dev mode toggle
   (window as any).toggleDevMode = toggleDevMode;
   
