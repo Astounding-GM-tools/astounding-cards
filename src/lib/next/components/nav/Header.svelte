@@ -185,8 +185,8 @@
                         <BinaryToggle
                             checked={showCardBacks}
                             onToggle={handleCardBacksToggle}
-                            trueLabel="👁️ Show"
-                            falseLabel="🙈 Hide"
+                            trueLabel="👁️ Visible"
+                            falseLabel="🙈 Hidden"
                             disabled={isLoading}
                             name="card-backs"
                             size="sm"
