@@ -1,3 +1,2 @@
-// Disable SSR for the import route since it needs browser APIs
-export const ssr = false;
+// Enable SSR for analytics tracking, but disable prerender since URLs are dynamic
 export const prerender = false;
