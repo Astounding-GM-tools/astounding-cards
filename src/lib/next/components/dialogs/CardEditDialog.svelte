@@ -1079,14 +1079,28 @@
         flex-direction: column;
         overflow-y: auto;
         overflow-x: hidden;
+        min-height: fit-content;
+        padding-bottom: 1rem;
+
+        container-type: inline-size;
+        container-name: preview-section;
     }
     
     .preview-cards {
         display: flex;
-        flex-direction: column;
+        flex-direction: row;
         gap: 0.5rem;
         padding: 0.5rem 1rem; /* Add side margins */
     }
+
+    @container preview-section (width < 400px) {
+        .preview-cards {
+            flex-direction: column;
+            align-items: center;
+        }
+    }
+
+
     
     .card-preview {
         position: relative;
