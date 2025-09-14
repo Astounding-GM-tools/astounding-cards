@@ -136,7 +136,7 @@ function createNextDevStore() {
 export const nextDevStore = createNextDevStore();
 
 // Make available globally for console access (development only)
-if (typeof window !== 'undefined') {
+if (typeof window !== 'undefined' && window.location.hostname.includes('localhost')) {
     (window as any).nextDevTools = {
         enableDevMode: () => nextDevStore.enableDevMode(),
         disableDevMode: () => nextDevStore.disableDevMode(),
@@ -147,4 +147,5 @@ if (typeof window !== 'undefined') {
         exportDeck: () => nextDevStore.exportCurrentDeck(),
         store: nextDeckStore
     };
+    console.log('🛠️ Dev tools available in console as window.nextDevTools');
 }
