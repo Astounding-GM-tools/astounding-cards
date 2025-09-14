@@ -15,7 +15,7 @@ export function getSampleCards(): Partial<Card>[] {
         {
             title: 'Create Astounding Cards!',
             subtitle: 'This is an Astounding Tutorial',
-            description: 'Free to use (and there is no "premium plan"), no signup, no ads, works offline. All data is stored locally in your browser, so you can keep your cards close to your chest. We don\'t even track you, use cookies or particularly want to know your email.',
+            description: 'Free to use (and there is no "premium plan"), no signup, no ads, works offline. All data is stored locally in your browser, so you can keep your cards close to your chest. We DO track shared deck urls (to see which decks are popular) but dont see the contents of shared decks. Also, we don\'t use cookies or want to know your email.',
             image: '/portraits/astounding.jpg',
             traits: [
                 { title: 'Click me', description: 'Click anywhere to open the editor', isPublic: true },
