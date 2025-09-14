@@ -14,6 +14,7 @@ import type { Deck, Theme, Layout } from '../types/deck.js';
 import type { Card } from '../types/card.js';
 import { safeDeepClone } from '$lib/utils/clone-utils.js';
 import { generateId, generateKey } from '../utils/idUtils.js';
+import { getSampleCards } from '../data/sampleCards.js';
 
 export class DatabaseError extends Error {
     constructor(message: string, public code: string) {
@@ -382,24 +383,20 @@ class NextDatabase {
 
     /**
      * Create default card template
+     * Uses the first sample card as the single source of truth
      */
     private createDefaultCard(): Card {
+        const sampleCards = getSampleCards();
+        const firstCard = sampleCards[0];
+        
         return {
             id: generateKey(),
-            title: 'New Card',
-            subtitle: 'Character',
-            description: 'A mysterious figure from the shadows.',
-            image: null,
-            // Public traits first (appear on front), then private (appear on back)
-            traits: [
-                { title: 'Class', isPublic: true, description: 'Warrior, skilled in combat' },
-                { title: 'Secret', isPublic: false, description: 'Has a hidden agenda' }
-            ],
-            // Public stats first (appear on front), then private (appear on back)
-            stats: [
-                { title: 'Health', isPublic: true, value: 20, tracked: true, description: 'Physical condition and endurance' },
-                { title: 'Will', isPublic: false, value: 15, tracked: true, description: 'Mental resilience and determination' }
-            ]
+            title: firstCard.title || 'New Card',
+            subtitle: firstCard.subtitle || '',
+            description: firstCard.description || '',
+            image: firstCard.image || null,
+            traits: firstCard.traits || [],
+            stats: firstCard.stats || []
         };
     }
 

@@ -1,322 +1,149 @@
 <script lang="ts">
-  import { onMount, untrack } from 'svelte';
-  import { currentDeck, currentDeckId, deckFromUrl, addCard, deckToUrl } from '$lib/stores/deck';
-  import { getDeck, getAllDecks } from '$lib/db';
-  import type { Card } from '$lib/types';
-  import CardFront from '$lib/components/cards/CardFront.svelte';
-  import CardBack from '$lib/components/cards/CardBack.svelte';
-  import DeckSelector from '$lib/components/deck/DeckSelector.svelte';
-  import DeckList from '$lib/components/deck/DeckList.svelte';
-  import Toasts from '$lib/components/ui/Toasts.svelte';
-  import { toasts } from '$lib/stores/toast';
-  import PagedCards from '$lib/components/ui/PagedCards.svelte';
-  import PrintInstructions from '$lib/components/ui/PrintInstructions.svelte';
-  import { devMode } from '$lib/stores/dev';
-  import ShareDialog from '$lib/components/dialogs/ShareDialog.svelte';
+    import PaginatedPages from '$lib/next/components/page/PaginatedPages.svelte';
+    import AppHeader from '$lib/next/components/nav/Header.svelte';
+    import Dialog from '$lib/next/components/dialog/Dialog.svelte';
 
-  // State
-  let showPrintInstructions = $state(false);
-  let showShareDialog = $state(false);
-  let showImageMigrationDialog = $state(false);
+    import { nextDeckStore } from '$lib/next/stores/deckStore.svelte.js';
+    import { nextDevStore } from '$lib/next/stores/devStore.svelte.js';
+    import { importFromCurrentUrl } from '$lib/next/utils/shareUrlUtils.js';
+    import { toasts } from '$lib/stores/toast.js';
+    import { onMount } from 'svelte';
 
-  let loading = $state(true);  // Start with loading true
-  let error = $state<string | null>(null);
-  let deckDialog = $state<HTMLDialogElement | null>(null) as unknown as HTMLDialogElement;
-  let printDialog = $state<HTMLDialogElement | null>(null) as unknown as HTMLDialogElement;
-  let scrollContainer = $state<HTMLElement | null>(null);
-  let shareDialog = $state(false);
-  let deckListRef: any;
+    let isInitializing = $state(true);
+    let showCardBacks = $state(true);
 
-  function handleDeckChange(event: CustomEvent<{ action: string, deckId: string }>) {
-    // Forward the event to DeckList if it exists
-    if (deckListRef && deckListRef.handleDeckChange) {
-      deckListRef.handleDeckChange(event);
-    }
-  }
-
-  // Store scroll position before update
-  let lastScrollPosition = 0;
-
-  // Restore scroll position after update
-  $effect(() => {
-    if ($currentDeck && scrollContainer && lastScrollPosition > 0) {
-      scrollContainer.scrollTop = lastScrollPosition;
-      untrack(() => {
-        lastScrollPosition = 0;
-      });
-    }
-  });
-
-  // Subscribe to deck changes to show URL reset notification
-  $effect(() => {
-    if ($currentDeck) {
-      const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.has('deck')) {
-        history.replaceState(null, '', window.location.pathname);
-        toasts.info('URL was reset. Create a new share URL to share your changes.');
-      }
-    }
-  });
-
-  async function copyShareUrl() {
-    if (!$currentDeck) return;
+    // Get deck and derived state
+    let deck = $derived(nextDeckStore.deck);
+    let cards = $derived(deck?.cards || []);
+    let deckTitle = $derived(deck?.meta.title || 'Sample Deck');
+    let layout = $derived(deck?.meta.layout || 'tarot');
     
-    try {
-      const shareUrl = deckToUrl($currentDeck);
-      await navigator.clipboard.writeText(shareUrl);
-      toasts.success('Share URL copied! Send this URL to share your deck.');
-    } catch (err) {
-      console.error('Failed to copy URL:', err);
-      toasts.error('Failed to copy URL to clipboard');
-    }
-  }
-
-  // Load deck when currentDeckId changes
-  // Use non-reactive variables to track loading state to avoid circular dependencies
-  let loadingDeckId: string | null = null;
-  let currentLoadedDeckId: string | null = null;
-  
-  $effect(() => {
-    const id = $currentDeckId;
+    // Simple card count for UI logic
+    let cardCount = $derived(cards?.length || 0);
     
-    // Prevent infinite loops by tracking what we're loading and what's loaded using non-reactive variables
-    if (id && id !== loadingDeckId && id !== currentLoadedDeckId) {
-      loadingDeckId = id;
-      
-      getDeck(id).then(deck => {
-        // Only update if this is still the deck we want to load
-        if (untrack(() => $currentDeckId) === id) {
-          if (deck) {
-            // Use untrack to prevent reactive loops when setting the deck
-            untrack(() => {
-              currentDeck.set(deck);
-            });
-            currentLoadedDeckId = id;
-          } else {
-            // Deck not found, clear the ID
-            untrack(() => {
-              currentDeck.set(null);
-            });
-            currentLoadedDeckId = null;
-            toasts.error('Deck not found');
-          }
+    // Handle card backs visibility toggle from header
+    function handleCardBacksToggle(event: CustomEvent<boolean>) {
+        showCardBacks = event.detail;
+    }
+
+    async function loadSampleData() {
+        try {
+            return await nextDevStore.setupTestEnvironment();
+        } catch (error) {
+            console.error('Error loading sample data:', error);
+            return false;
         }
-        loadingDeckId = null;
-      }).catch(err => {
-        console.error('Error loading deck:', err);
-        if (untrack(() => $currentDeckId) === id) {
-          untrack(() => {
-            currentDeck.set(null);
-          });
-          currentLoadedDeckId = null;
-          toasts.error('Failed to load deck: ' + err.message);
+    }
+
+    async function initializePage() {
+        try {
+            // First priority: Check if there's a share URL to import
+            const importedDeck = importFromCurrentUrl();
+            if (importedDeck) {
+                await nextDeckStore.loadDeck(importedDeck);
+                toasts.success(`🎉 Deck "${importedDeck.meta.title}" imported from URL!`);
+                // Clear the URL hash to prevent re-importing
+                // Commented out to preserve URL during merge workflow
+                // if (typeof window !== 'undefined') {
+                //     window.history.replaceState({}, '', window.location.pathname);
+                // }
+                isInitializing = false;
+                return;
+            }
+            
+            // Check if we already have a deck loaded
+            if (nextDeckStore.deck) {
+                isInitializing = false;
+                return;
+            }
+            
+            // Second priority: Load the most recent deck from database
+            const hasExistingDeck = await nextDeckStore.loadMostRecent();
+            
+            // Last resort: Create sample data if no existing deck
+            if (!hasExistingDeck) {
+                const success = await loadSampleData();
+                if (!success) {
+                    console.warn('Failed to load sample data, but continuing...');
+                }
+            }
+            
+        } catch (error) {
+            console.error('Error during page initialization:', error);
+            toasts.error('Failed to initialize page');
+        } finally {
+            // Always set initializing to false, regardless of success/failure
+            isInitializing = false;
         }
-        loadingDeckId = null;
-      });
-    } else if (!id) {
-      untrack(() => {
-        currentDeck.set(null);
-      });
-      currentLoadedDeckId = null;
-      loadingDeckId = null;
     }
-  });
-  
-  onMount(() => {
-    // Check for URL deck data first
-    const url = new URL(window.location.href);
-    const urlDeck = deckFromUrl(url);
-    
-    if (urlDeck) {
-      // Load deck from URL directly - use untrack to prevent reactive loops
-      untrack(() => {
-        loading = true;
-        currentDeck.set(urlDeck);
-        currentDeckId.set(urlDeck.id);
-        loading = false;
-      });
-      return;
-    }
-    
-    // Otherwise, load from database as usual - wrap in untrack to prevent reactive issues
-    untrack(() => {
-      loading = true;
+
+    onMount(() => {
+        initializePage();
     });
-    
-    getAllDecks()
-      .then(allDecks => {
-        if (allDecks.length > 0) {
-          // Sort by lastEdited and get most recent
-          const sortedDecks = allDecks.sort((a, b) => b.meta.lastEdited - a.meta.lastEdited);
-          const mostRecent = sortedDecks[0];
-          currentDeckId.set(mostRecent.id);
-        } else {
-          currentDeckId.set(null);
-        }
-      })
-      .catch(err => {
-        untrack(() => {
-          error = err instanceof Error ? err.message : String(err);
-        });
-      })
-      .finally(() => {
-        untrack(() => {
-          loading = false;
-        });
-      });
-  });
-
-  // Function to get the corresponding back position for a card
-  function getBackPosition(frontPosition: number, totalCards: number): number {
-    // Calculate the number of complete rows and the cards in the last row
-    const completeRows = Math.floor((totalCards - 1) / 3);
-    const cardsInLastRow = totalCards - (completeRows * 3);
-    
-    // Get the row and column of the front position
-    const row = Math.floor((frontPosition - 1) / 3);
-    const col = (frontPosition - 1) % 3;
-    
-    if (row === completeRows) {
-      // Last (incomplete) row - adjust position based on number of cards
-      return (row * 3) + (cardsInLastRow - col);
-    } else {
-      // Complete rows - reverse column position within row
-      return (row * 3) + (2 - col) + 1;
-    }
-  }
 </script>
 
-<!-- Root container -->
-<div class="print-container" class:dev-mode={$devMode}>
-  <Toasts />
-  
-  <!-- Print settings -->
-  <div class="settings no-print">
-    <div class="settings-row">
-      <button 
-        class="action-button"
-        data-testid="manage-decks-button"
-        onclick={() => deckDialog?.showModal()}
-      >
-        📚 Manage Decks
-      </button>
-      {#if $currentDeck}
-        <button 
-          class="action-button"
-          onclick={() => shareDialog = true}
-        >
-          🔗 Share Deck
-        </button>
-        <button 
-          class="action-button"
-          onclick={addCard}
-        >
-          ➕ Add Card
-        </button>
-        <div class="right-controls">
-          <button 
-            class="action-button info"
-            onclick={() => printDialog?.showModal()}
-          >
-            🖨️ Print Instructions
-          </button>
-        </div>
-      {/if}
-    </div>
-  </div>
-
-  {#if shareDialog && $currentDeck}
-    <ShareDialog 
-      deck={$currentDeck}
-      onClose={() => shareDialog = false}
-    />
-  {/if}
-
-  <!-- Deck management dialog -->
-  <dialog 
-    bind:this={deckDialog as HTMLDialogElement}
-    class="deck-dialog"
-  >
-    <div class="dialog-header">
-      <h2>📚 Deck Management</h2>
-      <button 
-        class="close-button"
-        onclick={() => deckDialog?.close()}
-      >
-        ×
-      </button>
-    </div>
-    <div class="dialog-content">
-      <DeckSelector on:deckchange={handleDeckChange} />
-      <DeckList bind:this={deckListRef} />
-    </div>
-  </dialog>
-
-  <PrintInstructions dialog={printDialog} />
-
-  <!-- Main content -->
-   <h1>{$currentDeck?.meta.name || "Astounding Game Cards" }</h1>
-  <div class="cards-scroll-container" bind:this={scrollContainer}>
-    {#if loading}
-      <div class="message">Loading...</div>
-    {:else if error}
-      <div class="message error">{error}</div>
-    {:else if !$currentDeck}
-      <div class="message">No decks found. Click "Manage Decks" to create your first deck.</div>
-    {:else if $currentDeck.cards.length === 0}
-      <div class="message">No cards in deck</div>
-    {:else}
-      <PagedCards />
+<section class="deck">
+    <AppHeader on:cardBacksToggle={handleCardBacksToggle} />
+    
+    {#if isInitializing}
+        <p>Initializing...</p>
+    {:else if nextDeckStore.error}
+        <p style="color: red;">❌ {nextDeckStore.error}</p>
+    {:else if !deck && nextDeckStore.isLoading}
+        <p>⏳ {nextDeckStore.loadingMessage}</p>
+    {:else if cardCount === 0}
+        <p>No cards found. <button onclick={() => nextDevStore.setupTestEnvironment()}>Load Sample Data</button></p>
+    {:else if deck}
+        <!-- Paginated print-ready cards -->
+        <!-- Show loading indicator but keep content visible during updates -->
+        {#if nextDeckStore.isLoading}
+            <div class="loading-overlay">⏳ {nextDeckStore.loadingMessage}</div>
+        {/if}
+        <PaginatedPages
+            {cards}
+            {layout}
+            {showCardBacks}
+        />
     {/if}
-  </div>
-</div>
+</section>
+
+<!-- Dialog system for editing cards -->
+<Dialog />
 
 <style>
-  /* Print container */
-  .print-container {
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-    background: var(--ui-bg);
-    color: var(--ui-text);
-  }
-
-  .cards-scroll-container {
-    flex: 1;
-    overflow-y: auto;
-    position: relative;
-  }
-
-  /* Settings section */
-  .settings {
-    padding: var(--content-gap);
-    border-bottom: 1px solid var(--ui-border);
-    margin-bottom: var(--content-gap);
-    background: var(--ui-bg);
-  }
-
-  .settings-row {
-    display: flex;
-    gap: 0.75rem;
-    align-items: center;
-    flex-wrap: wrap;
-  }
-
-  /* Page-specific overrides for action buttons */
-  .right-controls {
-    margin-left: auto;
-  }
-
-  /* Print styles */
-  @media print {
-    .no-print {
-      display: none;
+    .deck {
+        margin: 20px auto;
+        position: relative;
+    }
+    
+    .loading-overlay {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 4px;
+        z-index: 1000;
+        font-size: 14px;
+    }
+    :global(.page), :global(.page *) {
+        box-sizing: border-box;
     }
 
-    .print-container {
-      background: none;
+    :global(body) {
+        margin: 0;
+        padding: 0;
     }
-  }
+    
+    /* Print styles - hide header when printing */
+    @media print {
+        :global(.app-header) {
+            display: none !important;
+        }
+        
+        .deck {
+            margin: 0;
+        }
+    }
 </style>

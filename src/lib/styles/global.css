@@ -1,5 +1,6 @@
 @import './variables.css';
 @import '../themes/styles/index.css';
+@import '../next/styles/properties.css';
 @import './ui.css';
 @import './dialog.css';
 @import './forms.css';

@@ -11,6 +11,7 @@ import { nextDb } from './database.js';
 import { nextDeckStore } from './deckStore.svelte.js';
 import type { Deck, Theme, Layout } from '../types/deck.js';
 import type { Card } from '../types/card.js';
+import { getSampleCards as getSharedSampleCards } from '../data/sampleCards.js';
 
 /**
  * Create dev tools store
@@ -55,13 +56,15 @@ function createNextDevStore() {
          */
         async createSampleDeck(): Promise<Deck | null> {
             try {
-                const deck = await nextDb.createDeck('Sample Deck', 'classic', 'tarot');
+                const deck = await nextDb.createDeck('Welcome to Astounding Cards!', 'classic', 'tarot');
                 
-                // Add sample cards
+                // Add sample cards (skip first one since createDeck already adds the default card)
                 const sampleCards = this.getSampleCards();
                 
-                for (const cardData of sampleCards) {
-                    await nextDb.addCard(deck.id, cardData);
+                // Skip the first card since createDeck() already adds the default card
+                // and we want the default card to match the first tutorial card
+                for (let i = 1; i < sampleCards.length; i++) {
+                    await nextDb.addCard(deck.id, sampleCards[i]);
                 }
 
                 // Get updated deck with all cards
@@ -97,62 +100,7 @@ function createNextDevStore() {
          * Get sample cards for testing
          */
         getSampleCards(): Partial<Card>[] {
-            return [
-                {
-                    title: 'Dr. Evelyn Blackwood',
-                    subtitle: 'Archaeologist',
-                    description: 'A brilliant scholar with a dangerous curiosity about forbidden knowledge.',
-                    traits: [
-                        { title: 'Profession', description: 'University Professor', isPublic: true },
-                        { title: 'Expertise', description: 'Ancient Civilizations', isPublic: true },
-                        { title: 'Secret', description: 'Member of the Hermetic Order', isPublic: false },
-                        { title: 'Fear', description: 'Enclosed spaces (mild claustrophobia)', isPublic: false }
-                    ],
-                    stats: [
-                        { title: 'Health', value: 18, tracked: true, isPublic: true },
-                        { title: 'Sanity', value: 65, tracked: true, isPublic: false, description: 'Mental stability - decreases with exposure to the supernatural' },
-                        { title: 'Defense', value: 12, tracked: false, isPublic: true },
-                        { title: 'Investigation', value: 85, tracked: false, isPublic: true },
-                        { title: 'Connections', value: 70, tracked: false, isPublic: false, description: 'Academic and social network influence' }
-                    ]
-                },
-                {
-                    title: 'The Ethereal Compass',
-                    subtitle: 'Mystical Device',
-                    description: 'An ornate brass compass that points not to magnetic north, but to supernatural phenomena.',
-                    traits: [
-                        { title: 'Material', description: 'Brass and silver', isPublic: true },
-                        { title: 'Condition', description: 'Always warm to the touch', isPublic: true },
-                        { title: 'Origin', description: 'Victorian era, unknown craftsman', isPublic: false },
-                        { title: 'Curse', description: 'Slowly drains user\'s life force', isPublic: false }
-                    ],
-                    stats: [
-                        { title: 'Value', value: 1200, tracked: false, isPublic: false },
-                        { title: 'Rarity', value: 9, tracked: false, isPublic: false, description: 'Legendary (9/10 scale)' },
-                        { title: 'Durability', value: 8, tracked: true, isPublic: true, description: 'Physical condition - can be damaged' },
-                        { title: 'Charges', value: 15, tracked: true, isPublic: false, description: 'Mystical energy remaining' },
-                        { title: 'Detection Range', value: 5, tracked: false, isPublic: true, description: '5 miles detection range' }
-                    ]
-                },
-                {
-                    title: 'The Misty Vale',
-                    subtitle: 'Haunted Location',
-                    description: 'A fog-shrouded valley where time moves differently and the dead do not rest.',
-                    traits: [
-                        { title: 'Climate', description: 'Perpetually foggy', isPublic: true },
-                        { title: 'Terrain', description: 'Rolling hills and ancient stones', isPublic: true },
-                        { title: 'History', description: 'Site of a medieval massacre', isPublic: false },
-                        { title: 'Phenomena', description: 'Time distortion and spectral manifestations', isPublic: false }
-                    ],
-                    stats: [
-                        { title: 'Danger Level', value: 9, tracked: false, isPublic: true, description: 'Extreme danger (9/10 scale)' },
-                        { title: 'Visibility', value: 10, tracked: false, isPublic: true, description: '10 feet visibility range' },
-                        { title: 'Spectral Activity', value: 12, tracked: true, isPublic: false, description: 'Current level of supernatural manifestations' },
-                        { title: 'Escape Difficulty', value: 90, tracked: false, isPublic: false },
-                        { title: 'Area', value: 3, tracked: false, isPublic: true, description: '3 square miles coverage' }
-                    ]
-                }
-            ];
+            return getSharedSampleCards();
         },
 
         /**

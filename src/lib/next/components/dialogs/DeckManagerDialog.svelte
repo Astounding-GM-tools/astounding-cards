@@ -307,7 +307,7 @@
                                         onclick={() => startDuplicating(deck)}
                                         title="Copy deck"
                                     >
-                                        📋
+                                        ⧉
                                     </button>
                                     
                                     <button 
@@ -323,7 +323,7 @@
                                         onclick={() => showDeleteConfirm = deck.id}
                                         title="Delete deck"
                                     >
-                                        🗑️
+                                        ⌫
                                     </button>
                                 </div>
                             </div>
