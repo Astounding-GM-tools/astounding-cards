@@ -2,6 +2,7 @@
     import { onMount } from 'svelte';
     import { goto, replaceState } from '$app/navigation';
     import { page } from '$app/stores';
+    import { track } from '@vercel/analytics';
     import { importFromUrl } from '$lib/next/utils/shareUrlUtils.js';
     import { nextDeckStore } from '$lib/next/stores/deckStore.svelte.ts';
     import { nextDb } from '$lib/next/stores/database.js';
@@ -16,7 +17,7 @@
     import type { Deck } from '$lib/next/types/deck.js';
     import type { PageData } from './$types';
     
-    // Server-side data (includes analytics tracking)
+    // Server-side data
     let { data }: { data: PageData } = $props();
     
     // Debug: Log that we reached the client-side
@@ -30,6 +31,18 @@
     let importedDeck = $state<Deck | null>(null);
     
     onMount(async () => {
+        // Track shared deck access with Vercel Web Analytics
+        try {
+            track('shared_deck_accessed', {
+                slug: data.slug,
+                timestamp: new Date().toISOString(),
+                referrer: document.referrer || 'direct'
+            });
+            console.log('📊 Analytics: Tracked shared deck access for slug:', data.slug);
+        } catch (error) {
+            console.warn('Analytics tracking failed:', error);
+        }
+        
         try {
             // Ensure we're in the browser before accessing window
             if (typeof window === 'undefined') {
