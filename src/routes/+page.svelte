@@ -1,8 +1,10 @@
 <script lang="ts">
-    import PaginatedPages from '$lib/next/components/page/PaginatedPages.svelte';
     import MobileCardList from '$lib/next/components/page/MobileCardList.svelte';
     import AppHeader from '$lib/next/components/nav/Header.svelte';
     import Dialog from '$lib/next/components/dialog/Dialog.svelte';
+    import Card from '$lib/next/components/card/Card.svelte';
+    import CardFrontContent from '$lib/next/components/card/CardFrontContent.svelte';
+    import CardBackContent from '$lib/next/components/card/CardBackContent.svelte';
 
     import { nextDeckStore } from '$lib/next/stores/deckStore.svelte.js';
     import { nextDevStore } from '$lib/next/stores/devStore.svelte.js';
@@ -13,6 +15,7 @@
     let isInitializing = $state(true);
     let showCardBacks = $state(true);
     let isPrintMode = $state(false);
+    let printEventTimeout: number | null = null;
 
     // Get deck and derived state
     let deck = $derived(nextDeckStore.deck);
@@ -26,6 +29,19 @@
     // Handle card backs visibility toggle from header
     function handleCardBacksToggle(event: CustomEvent<boolean>) {
         showCardBacks = event.detail;
+    }
+    
+    
+    // Working pagination function (from old PagedCards)
+    function getPagedCards(cards: any[], layout: string) {
+        const cardsPerPage = layout === 'poker' ? 9 : 4;
+        const pages = [];
+        
+        for (let i = 0; i < cards.length; i += cardsPerPage) {
+            pages.push(cards.slice(i, i + cardsPerPage));
+        }
+        
+        return pages;
     }
 
     async function loadSampleData() {
@@ -81,22 +97,38 @@
 
     // Print event handlers for layout switching
     function handleBeforePrint() {
-        console.log('📄 Switching to print layout');
-        isPrintMode = true;
+        // Clear any pending timeout
+        if (printEventTimeout) {
+            clearTimeout(printEventTimeout);
+            printEventTimeout = null;
+        }
+        
+        if (!isPrintMode) {
+            isPrintMode = true;
+        }
     }
     
     function handleAfterPrint() {
-        console.log('📱 Switching to mobile-friendly layout');
-        isPrintMode = false;
+        // Clear any existing timeout
+        if (printEventTimeout) {
+            clearTimeout(printEventTimeout);
+        }
+        
+        // Use a longer delay to ensure print dialog is fully closed
+        printEventTimeout = setTimeout(() => {
+            isPrintMode = false;
+            printEventTimeout = null;
+        }, 200); // Increased delay
     }
     
     onMount(() => {
         initializePage();
         
-        // Set up print event listeners
+        // Set up print event listeners (no media query - it conflicts)
         if (typeof window !== 'undefined') {
             window.addEventListener('beforeprint', handleBeforePrint);
             window.addEventListener('afterprint', handleAfterPrint);
+            
             
             // Cleanup on component destroy
             return () => {
@@ -109,6 +141,7 @@
 
 <section class="deck">
     <AppHeader on:cardBacksToggle={handleCardBacksToggle} />
+    
     
     {#if isInitializing}
         <p>Initializing...</p>
@@ -126,12 +159,34 @@
         
         <!-- Conditional layout based on print mode -->
         {#if isPrintMode}
-            <!-- Print layout: paginated pages -->
-            <PaginatedPages
-                {cards}
-                {layout}
-                {showCardBacks}
-            />
+            <!-- Print layout: use working PagedCards component -->
+            <div class="print-layout">
+                {#each getPagedCards(cards, layout) as page, pageIndex}
+                    <!-- Front page -->
+                    <div class="page" data-layout={layout} class:last-page={!showCardBacks && pageIndex === getPagedCards(cards, layout).length - 1}>
+                        <div class="card-grid">
+                            {#each page as card (card.id)}
+                                <Card cardId={card.id}>
+                                    <CardFrontContent {card} />
+                                </Card>
+                            {/each}
+                        </div>
+                    </div>
+                    
+                    <!-- Back page (if enabled) -->
+                    {#if showCardBacks}
+                        <div class="page" data-layout={layout} class:last-page={pageIndex === getPagedCards(cards, layout).length - 1}>
+                            <div class="card-grid back-grid">
+                                {#each page as card (card.id)}
+                                    <Card cardId={card.id}>
+                                        <CardBackContent {card} />
+                                    </Card>
+                                {/each}
+                            </div>
+                        </div>
+                    {/if}
+                {/each}
+            </div>
         {:else}
             <!-- Default layout: mobile-friendly card list -->
             <MobileCardList
@@ -150,6 +205,72 @@
     .deck {
         margin: 20px auto;
         position: relative;
+    }
+    
+    
+    /* Working print layout CSS (from PagedCards) */
+    .print-layout .page {
+        width: 210mm;
+        height: 297mm;
+        margin: 0 auto 20mm;
+        padding: 10mm;
+        background: white;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        position: relative;
+        page-break-after: always;
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .print-layout .card-grid {
+        width: 100%;
+        height: 100%;
+        display: grid;
+        gap: 0;
+    }
+    
+    /* Tarot layout: 2x2 grid */
+    .print-layout .page[data-layout="tarot"] .card-grid {
+        grid-template-columns: repeat(2, 1fr);
+        grid-template-rows: repeat(2, 1fr);
+    }
+    
+    /* Poker layout: 3x3 grid */
+    .print-layout .page[data-layout="poker"] .card-grid {
+        grid-template-columns: repeat(3, 1fr);
+        grid-template-rows: repeat(3, 1fr);
+    }
+    
+    /* Back page - reverse for double-sided printing */
+    .print-layout .back-grid {
+        direction: rtl;
+    }
+    
+    .print-layout .back-grid :global(.card) {
+        direction: ltr;
+    }
+    
+    /* Remove page break from last page to prevent blank page */
+    .print-layout .page.last-page {
+        page-break-after: auto !important;
+        margin-bottom: 0 !important;
+    }
+    
+    @media print {
+        .print-layout .page {
+            width: auto;
+            height: auto;
+            min-height: 100vh;
+            margin: 0;
+            box-shadow: none;
+        }
+        
+        /* Ensure last page doesn't create blank page */
+        .print-layout .page.last-page {
+            page-break-after: auto !important;
+        }
     }
     
     .loading-overlay {
