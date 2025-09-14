@@ -7,14 +7,23 @@ export const load: PageServerLoad = async ({ params, request, getClientAddress }
     const clientIP = getClientAddress();
     const referer = request.headers.get('referer') || 'direct';
     
-    // Track shared deck access
-    await track('shared_deck_accessed', {
+    const trackingData = {
         slug,
         timestamp: new Date().toISOString(),
         user_agent: userAgent,
         referer,
         client_ip: clientIP
-    });
+    };
+    
+    console.log('🚀 Server-side tracking attempt:', JSON.stringify(trackingData, null, 2));
+    
+    try {
+        // Track shared deck access
+        await track('shared_deck_accessed', trackingData);
+        console.log('✅ Analytics tracking successful');
+    } catch (error) {
+        console.error('❌ Analytics tracking failed:', error);
+    }
     
     console.log(`📊 Shared deck accessed: ${slug} from ${clientIP}`);
     
