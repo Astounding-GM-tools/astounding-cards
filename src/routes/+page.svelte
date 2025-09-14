@@ -1,5 +1,6 @@
 <script lang="ts">
     import PaginatedPages from '$lib/next/components/page/PaginatedPages.svelte';
+    import MobileCardList from '$lib/next/components/page/MobileCardList.svelte';
     import AppHeader from '$lib/next/components/nav/Header.svelte';
     import Dialog from '$lib/next/components/dialog/Dialog.svelte';
 
@@ -11,6 +12,7 @@
 
     let isInitializing = $state(true);
     let showCardBacks = $state(true);
+    let isPrintMode = $state(false);
 
     // Get deck and derived state
     let deck = $derived(nextDeckStore.deck);
@@ -77,8 +79,31 @@
         }
     }
 
+    // Print event handlers for layout switching
+    function handleBeforePrint() {
+        console.log('📄 Switching to print layout');
+        isPrintMode = true;
+    }
+    
+    function handleAfterPrint() {
+        console.log('📱 Switching to mobile-friendly layout');
+        isPrintMode = false;
+    }
+    
     onMount(() => {
         initializePage();
+        
+        // Set up print event listeners
+        if (typeof window !== 'undefined') {
+            window.addEventListener('beforeprint', handleBeforePrint);
+            window.addEventListener('afterprint', handleAfterPrint);
+            
+            // Cleanup on component destroy
+            return () => {
+                window.removeEventListener('beforeprint', handleBeforePrint);
+                window.removeEventListener('afterprint', handleAfterPrint);
+            };
+        }
     });
 </script>
 
@@ -94,16 +119,27 @@
     {:else if cardCount === 0}
         <p>No cards found. <button onclick={() => nextDevStore.setupTestEnvironment()}>Load Sample Data</button></p>
     {:else if deck}
-        <!-- Paginated print-ready cards -->
         <!-- Show loading indicator but keep content visible during updates -->
         {#if nextDeckStore.isLoading}
             <div class="loading-overlay">⏳ {nextDeckStore.loadingMessage}</div>
         {/if}
-        <PaginatedPages
-            {cards}
-            {layout}
-            {showCardBacks}
-        />
+        
+        <!-- Conditional layout based on print mode -->
+        {#if isPrintMode}
+            <!-- Print layout: paginated pages -->
+            <PaginatedPages
+                {cards}
+                {layout}
+                {showCardBacks}
+            />
+        {:else}
+            <!-- Default layout: mobile-friendly card list -->
+            <MobileCardList
+                {cards}
+                {layout}
+                {showCardBacks}
+            />
+        {/if}
     {/if}
 </section>
 
