@@ -19,6 +19,9 @@
     // Server-side data (includes analytics tracking)
     let { data }: { data: PageData } = $props();
     
+    // Debug: Log that we reached the client-side
+    console.log('🎯 Client-side slug page loaded:', data.slug);
+    
     let importing = $state(true);
     let error = $state<string | null>(null);
     let imported = $state(false);
