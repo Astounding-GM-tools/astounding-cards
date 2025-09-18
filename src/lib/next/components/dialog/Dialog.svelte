@@ -36,23 +36,46 @@
         } else if (!dialogStore.isOpen && isDialogOpen) {
             dialog?.close();
             isDialogOpen = false;
-            // Restore body scroll when dialog closes
-            if (typeof window !== 'undefined') {
-                document.body.style.overflow = '';
-            }
+            // Note: Scroll unlock is handled in handleClose() to avoid race conditions
         }
     });
 
     function handleClose() {
         isDialogOpen = false;
         dialogStore.close();
+        
+        // Explicitly restore body scroll - ensure it always happens
+        if (typeof window !== 'undefined') {
+            document.body.style.overflow = '';
+        }
     }
     
-    // Cleanup: Ensure body scroll is restored if component unmounts unexpectedly
+    function handleDocumentKeyDown(e: KeyboardEvent) {
+        // Only handle Escape when dialog is open
+        if (e.key === 'Escape' && isDialogOpen) {
+            e.preventDefault();
+            e.stopPropagation();
+            handleClose();
+        }
+    }
+    
+    // Add/remove document keydown listener and cleanup on unmount
     $effect(() => {
+        if (typeof window !== 'undefined') {
+            if (isDialogOpen) {
+                document.addEventListener('keydown', handleDocumentKeyDown);
+            } else {
+                document.removeEventListener('keydown', handleDocumentKeyDown);
+            }
+        }
+        
         return () => {
-            if (typeof window !== 'undefined' && isDialogOpen) {
-                document.body.style.overflow = '';
+            // Cleanup listener and scroll lock on unmount
+            if (typeof window !== 'undefined') {
+                document.removeEventListener('keydown', handleDocumentKeyDown);
+                if (isDialogOpen) {
+                    document.body.style.overflow = '';
+                }
             }
         };
     });
