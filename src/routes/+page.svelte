@@ -258,6 +258,11 @@
         margin-bottom: 0 !important;
     }
     
+    /* Ensure crop marks use border-box sizing in print layout */
+    .print-layout :global(.crop-mark) {
+        box-sizing: border-box !important;
+    }
+    
     @media print {
         .print-layout .page {
             width: auto;
@@ -270,6 +275,58 @@
         /* Ensure last page doesn't create blank page */
         .print-layout .page.last-page {
             page-break-after: auto !important;
+        }
+        
+        /* CROP MARKS: Show all crop marks that touch page edges - ONLY WHEN PRINTING */
+        
+        /* TAROT LAYOUT (2x2 grid) */
+        /* Top edge: cards 1,2 show both top crop marks */
+        .print-layout .page[data-layout="tarot"] :global(.card:nth-child(-n+2) .crop-mark.top-left),
+        .print-layout .page[data-layout="tarot"] :global(.card:nth-child(-n+2) .crop-mark.top-right) {
+            display: block;
+        }
+        
+        /* Bottom edge: cards 3,4 show both bottom crop marks */
+        .print-layout .page[data-layout="tarot"] :global(.card:nth-child(n+3) .crop-mark.bottom-left),
+        .print-layout .page[data-layout="tarot"] :global(.card:nth-child(n+3) .crop-mark.bottom-right) {
+            display: block;
+        }
+        
+        /* Left edge: cards 1,3 show both left crop marks */
+        .print-layout .page[data-layout="tarot"] :global(.card:nth-child(odd) .crop-mark.top-left),
+        .print-layout .page[data-layout="tarot"] :global(.card:nth-child(odd) .crop-mark.bottom-left) {
+            display: block;
+        }
+        
+        /* Right edge: cards 2,4 show both right crop marks */
+        .print-layout .page[data-layout="tarot"] :global(.card:nth-child(even) .crop-mark.top-right),
+        .print-layout .page[data-layout="tarot"] :global(.card:nth-child(even) .crop-mark.bottom-right) {
+            display: block;
+        }
+        
+        /* POKER LAYOUT (3x3 grid) */
+        /* Top edge: cards 1,2,3 show both top crop marks */
+        .print-layout .page[data-layout="poker"] :global(.card:nth-child(-n+3) .crop-mark.top-left),
+        .print-layout .page[data-layout="poker"] :global(.card:nth-child(-n+3) .crop-mark.top-right) {
+            display: block;
+        }
+        
+        /* Bottom edge: cards 7,8,9 show both bottom crop marks */
+        .print-layout .page[data-layout="poker"] :global(.card:nth-child(n+7) .crop-mark.bottom-left),
+        .print-layout .page[data-layout="poker"] :global(.card:nth-child(n+7) .crop-mark.bottom-right) {
+            display: block;
+        }
+        
+        /* Left edge: cards 1,4,7 show both left crop marks */
+        .print-layout .page[data-layout="poker"] :global(.card:nth-child(3n+1) .crop-mark.top-left),
+        .print-layout .page[data-layout="poker"] :global(.card:nth-child(3n+1) .crop-mark.bottom-left) {
+            display: block;
+        }
+        
+        /* Right edge: cards 3,6,9 show both right crop marks */
+        .print-layout .page[data-layout="poker"] :global(.card:nth-child(3n) .crop-mark.top-right),
+        .print-layout .page[data-layout="poker"] :global(.card:nth-child(3n) .crop-mark.bottom-right) {
+            display: block;
         }
     }
     
