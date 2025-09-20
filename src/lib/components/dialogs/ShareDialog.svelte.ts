@@ -111,7 +111,8 @@ export async function shareAsJson(deck: Deck): Promise<void> {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    const filename = `${deck.meta.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.json`;
+    const deckName = (deck.meta as any).title || (deck.meta as any).name || 'deck';
+    const filename = `${deckName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.json`;
     // Set property; set attribute only if available (for simple mocks)
     (a as HTMLAnchorElement).download = filename;
     if (typeof (a as any).setAttribute === 'function') {

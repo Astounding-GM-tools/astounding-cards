@@ -100,7 +100,7 @@ describe('CardFront Logic', () => {
       });
       
       const result = hasImageDataChanged(card, null, null);
-      expect(result).toBe(true);
+      expect(result).toBe(false); // undefined and null should be treated as equivalent for "no value"
     });
   });
 

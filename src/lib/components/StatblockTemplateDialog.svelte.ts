@@ -145,7 +145,8 @@ export function formatStatWithVocabulary(
   mechanic: { type: string; name: string },
   vocabulary: StatblockVocabulary | null
 ): string {
-  const statName = vocabulary?.[mechanic.type] || mechanic.name;
+  const lookupKey = mechanic.name.toLowerCase();
+  const statName = vocabulary?.[lookupKey] || mechanic.name;
   return `${statName}:`;
 }
 

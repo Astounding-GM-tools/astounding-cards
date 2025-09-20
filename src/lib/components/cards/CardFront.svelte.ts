@@ -33,7 +33,13 @@ export function hasImageDataChanged(
   lastImageBlob: Blob | null,
   lastImageUrl: string | null
 ): boolean {
-  return card.imageBlob !== lastImageBlob || card.image !== lastImageUrl;
+  // Normalize undefined to null for comparison - treat them as equivalent "no value" states
+  const currentBlob = card.imageBlob || null;
+  const currentImage = card.image || null;
+  const lastBlob = lastImageBlob || null;
+  const lastImage = lastImageUrl || null;
+  
+  return currentBlob !== lastBlob || currentImage !== lastImage;
 }
 
 /**

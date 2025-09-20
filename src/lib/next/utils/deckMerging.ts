@@ -102,7 +102,7 @@ function detectMetaConflicts(existing: Deck['meta'], imported: Deck['meta']): Me
     const fieldsToCheck: Array<keyof Deck['meta']> = ['title', 'description', 'theme', 'layout'];
     
     for (const field of fieldsToCheck) {
-        if (existing[field] !== imported[field]) {
+        if (!areFieldValuesEquivalent(existing[field], imported[field])) {
             conflicts.push({
                 field,
                 existingValue: existing[field],
@@ -176,7 +176,7 @@ function detectCardFieldConflicts(existing: Card, imported: Card): FieldConflict
     ];
     
     for (const field of fieldsToCheck) {
-        if (existing[field] !== imported[field]) {
+        if (!areFieldValuesEquivalent(existing[field], imported[field])) {
             conflicts.push({
                 field,
                 existing: existing[field],
@@ -211,6 +211,28 @@ function detectCardFieldConflicts(existing: Card, imported: Card): FieldConflict
 function arraysEqual(a: any[], b: any[]): boolean {
     if (a.length !== b.length) return false;
     return JSON.stringify(a) === JSON.stringify(b);
+}
+
+/**
+ * Check if two field values are equivalent, treating empty/null/undefined as the same
+ */
+function areFieldValuesEquivalent(a: any, b: any): boolean {
+    // If both are strictly equal, they're equivalent
+    if (a === b) return true;
+    
+    // Normalize empty values (null, undefined, empty string) to null for comparison
+    const normalizeEmpty = (value: any) => {
+        if (value === null || value === undefined || value === '') {
+            return null;
+        }
+        return value;
+    };
+    
+    const normalizedA = normalizeEmpty(a);
+    const normalizedB = normalizeEmpty(b);
+    
+    // Compare normalized values
+    return normalizedA === normalizedB;
 }
 
 // =============================================================================
