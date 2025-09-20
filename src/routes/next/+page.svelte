@@ -29,7 +29,6 @@
         try {
             return await nextDevStore.setupTestEnvironment();
         } catch (error) {
-            console.error('Error loading sample data:', error);
             return false;
         }
     }
@@ -63,7 +62,6 @@
             if (!hasExistingDeck) {
                 const success = await loadSampleData();
                 if (!success) {
-                    console.warn('Failed to load sample data, but continuing...');
                 }
             }
             

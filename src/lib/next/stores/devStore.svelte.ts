@@ -147,5 +147,4 @@ if (typeof window !== 'undefined' && window.location.hostname.includes('localhos
         exportDeck: () => nextDevStore.exportCurrentDeck(),
         store: nextDeckStore
     };
-    console.log('🛠️ Dev tools available in console as window.nextDevTools');
 }

@@ -20,8 +20,6 @@
     // Server-side data
     let { data }: { data: PageData } = $props();
     
-    // Debug: Log that we reached the client-side
-    console.log('🎯 Client-side slug page loaded:', data.slug);
     
     let importing = $state(true);
     let error = $state<string | null>(null);
@@ -38,7 +36,6 @@
                 timestamp: new Date().toISOString(),
                 referrer: document.referrer || 'direct'
             });
-            console.log('📊 Analytics: Tracked shared deck access for slug:', data.slug);
         } catch (error) {
             console.warn('Analytics tracking failed:', error);
         }
