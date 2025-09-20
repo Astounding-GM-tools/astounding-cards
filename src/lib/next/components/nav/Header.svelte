@@ -2,13 +2,12 @@
     import { nextDeckStore } from '$lib/next/stores/deckStore.svelte.js';
     import { nextDevStore } from '$lib/next/stores/devStore.svelte.js';
     import { dialogStore } from '../dialog/dialogStore.svelte.js';
-    import { 
+import { 
         AiPromptDialog,
         BatchImageGenerationDialog,
         DeckManagerDialog,
         CardEditDialog,
-        ImageMigrationDialog,
-        JsonImportDialog
+        ImageMigrationDialog
     } from '../dialogs/index.js';
     import { generateShareUrl } from '$lib/next/utils/shareUrlUtils.js';
     import { toasts } from '$lib/stores/toast.js';
@@ -132,10 +131,6 @@
         }
     }
     
-    // Handle import deck
-    function handleImportDeck() {
-        dialogStore.setContent(JsonImportDialog);
-    }
     
     // Handle batch image generation
     function handleBatchImageGeneration() {
@@ -233,36 +228,27 @@
         </div>
     </div>
     
-    <div class="header-controls">
-        <!-- Import controls -->
-        <div class="import-controls">
-            <button 
-                class="import-button"
-                onclick={handleImportDeck}
-                disabled={isLoading}
-            >
-                📥 Import JSON
-            </button>
+    <!-- Dev controls - only shown when dev mode is enabled -->
+    {#if nextDevStore.isDevMode}
+        <div class="header-controls">
+            <div class="dev-controls">
+                <button 
+                    class="dev-button"
+                    onclick={handleLoadSample}
+                    disabled={isLoading}
+                >
+                    Load Sample
+                </button>
+                <button 
+                    class="dev-button danger"
+                    onclick={handleClearDatabase}
+                    disabled={isLoading}
+                >
+                    Clear DB
+                </button>
+            </div>
         </div>
-        
-        <!-- Dev controls - remove in production -->
-        <div class="dev-controls">
-            <button 
-                class="dev-button"
-                onclick={handleLoadSample}
-                disabled={isLoading}
-            >
-                Load Sample
-            </button>
-            <button 
-                class="dev-button danger"
-                onclick={handleClearDatabase}
-                disabled={isLoading}
-            >
-                Clear DB
-            </button>
-        </div>
-    </div>
+    {/if}
 </header>
 
 <style>
@@ -376,40 +362,6 @@
     }
     
     
-    .import-controls {
-        display: flex;
-        gap: 0.75rem;
-        align-items: center;
-    }
-    
-    .import-button {
-        padding: 0.5rem 0.875rem;
-        border: 1px solid var(--ui-border, #e2e8f0);
-        border-radius: 6px;
-        background: var(--ui-bg, #ffffff);
-        color: var(--ui-text, #1a202c);
-        font-size: 0.875rem;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        white-space: nowrap;
-    }
-    
-    .import-button:hover:not(:disabled) {
-        background: var(--ui-hover-bg, #f8fafc);
-        border-color: var(--button-primary-bg, #3b82f6);
-        transform: translateY(-1px);
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-    
-    
-    .import-button:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-        transform: none;
-        box-shadow: none;
-    }
-    
     .dev-controls {
         display: flex;
         gap: 0.5rem;
@@ -464,7 +416,7 @@
             gap: 0.75rem;
         }
         
-        .import-controls, .dev-controls {
+        .dev-controls {
             justify-content: center;
         }
     }
