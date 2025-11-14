@@ -1,5 +1,17 @@
 # Phase 1B: User Accounts & Deck Publishing
 
+## Progress: Week 1 Complete! 🎉
+
+**Completed:**
+- ✅ Week 1: Authentication (email/password + Google OAuth)
+
+**Next:**
+- 🔜 Week 2: Image Hosting (Vercel Blob)
+- ⏳ Week 3: Content Moderation
+- ⏳ Week 4: Publishing Flow
+
+---
+
 ## Overview
 Enable users to publish decks to Supabase with automated hosting, moderation, and classification.
 
@@ -164,12 +176,12 @@ POST /api/images/upload        - Upload image to Vercel Blob
 
 ## Implementation Checklist
 
-### Week 1: Auth & Infrastructure
-- [ ] Set up Supabase Auth
-- [ ] Add sign up / sign in UI
-- [ ] Session management
-- [ ] Update Header with auth state
-- [ ] Protected API routes
+### Week 1: Auth & Infrastructure ✅ COMPLETE
+- [x] Set up Supabase Auth
+- [x] Add sign up / sign in UI
+- [x] Session management
+- [x] Update Header with auth state
+- [ ] Protected API routes (Week 3 - needed for publishing)
 
 ### Week 2: Image Hosting
 - [ ] Set up Vercel Blob storage
