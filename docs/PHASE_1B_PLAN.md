@@ -47,26 +47,41 @@ Text-only deck:        0.01 NOK
 
 ### 4. Content Taxonomy
 
+**See:** `/docs/DECK_EXAMPLES.md` for diverse examples
+**Implementation:** `/src/lib/ai/prompts/content-moderation.ts`
+
 **Categories:**
 - RPG (D&D, Pathfinder, WFRP, generic, etc.)
-- Educational
-- Recipes
-- Flashcards
-- Worldbuilding
-- Creative/Reference
+- Educational (flashcards, study guides, reference)
+- Recipes (cooking, drinks, meal prep)
+- Humor (parody, fan-content, memes)
+- Personal (collections, tracking, journaling)
+- Business (frameworks, planning, productivity)
+- Fitness (workouts, exercises, wellness)
+- Travel (guides, planning, recommendations)
+- Entertainment (movies, music, media)
+- Collection (cataloging, organizing, tracking)
+- Worldbuilding (lore, maps, history)
+- Creative (prompts, inspiration, writing)
 
 **Themes:**
 - Fantasy, Sci-Fi, Cyberpunk, Horror
 - Historical, Modern, Post-Apocalyptic
 - Comedy, Dark, Whimsical
+- Anime, Western, Noir, Mythology
+- Nautical, Space Opera, Urban Fantasy
+- Slice-of-life, Absurd, Parody
+- Educational, Inspirational
 
 **Content Types:**
-- Characters, Locations, Items, Spells
-- Encounters, Plot Hooks, Lore, Mechanics
+- Characters, Locations, Items, Spells, Encounters
+- Concepts, Quotes, Facts, Instructions, Prompts
+- Lists, Profiles, Reviews, Comparisons, Timelines
+- Recipes, Exercises, Vocabulary, Mixed
 
 **Quality Flags:**
-- high-effort, original-art, creative, detailed
-- ai-generated, generic (for transparency)
+- high-effort, original-art, creative, detailed, comprehensive
+- ai-generated, generic, procedural (for transparency)
 
 ### 5. Moderation Policy (RPG-Friendly)
 

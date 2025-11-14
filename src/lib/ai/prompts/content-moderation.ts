@@ -10,16 +10,24 @@ import { Type } from '@google/genai';
  * Taxonomy of deck categories and tags
  */
 export const DECK_TAXONOMY = {
-  // Primary categories
+  // Primary categories (broad, inclusive)
   categories: [
     'rpg',           // Tabletop RPG content
     'educational',   // Learning materials, study aids
     'recipes',       // Food and drink recipes
-    'flashcards',    // Language learning, trivia
+    'flashcards',    // Language learning, trivia, memorization
     'worldbuilding', // Settings, locations, lore
-    'creative',      // Writing prompts, art inspiration
-    'reference',     // Quick reference materials
-    'game',          // Game mechanics, items
+    'creative',      // Writing prompts, art inspiration, brainstorming
+    'reference',     // Quick reference materials, cheat sheets
+    'game',          // Game mechanics, items, characters
+    'humor',         // Comedy, parody, satire, memes
+    'fan-content',   // Fan fiction, reimaginings, crossovers
+    'personal',      // Personal collections, journaling, tracking
+    'business',      // Productivity, planning, organization
+    'fitness',       // Workouts, exercises, routines
+    'travel',        // Destinations, itineraries, guides
+    'entertainment', // Movies, books, music, shows
+    'collection',    // Collecting, cataloging, organizing
     'other'          // Uncategorized
   ],
   
@@ -36,33 +44,59 @@ export const DECK_TAXONOMY = {
     'other-rpg'      // Other RPG systems
   ],
   
-  // Themes and genres
+  // Themes and genres (expansive)
   themes: [
-    'fantasy',       // High fantasy, medieval
-    'scifi',         // Science fiction
+    'fantasy',       // High fantasy, medieval, magic
+    'scifi',         // Science fiction, space, future
     'cyberpunk',     // Cyberpunk, near-future tech
-    'horror',        // Horror, scary themes
-    'historical',    // Real-world historical
-    'modern',        // Contemporary setting
-    'post-apocalyptic', // Post-apocalyptic
+    'horror',        // Horror, scary, creepy
+    'historical',    // Real-world historical periods
+    'modern',        // Contemporary, present day
+    'post-apocalyptic', // Post-apocalyptic, wasteland
     'steampunk',     // Steampunk, victorian tech
-    'superhero',     // Superhero genre
-    'mystery',       // Mystery, detective
-    'comedy',        // Humorous, lighthearted
-    'dark',          // Dark, grim themes
-    'whimsical',     // Lighthearted, fairy tale
+    'superhero',     // Superhero, powers, heroes
+    'mystery',       // Mystery, detective, noir
+    'comedy',        // Humorous, lighthearted, funny
+    'dark',          // Dark, grim, serious
+    'whimsical',     // Lighthearted, fairy tale, cute
+    'anime',         // Anime, manga style
+    'western',       // Wild west, cowboys
+    'noir',          // Film noir, detective
+    'mythology',     // Mythology, legends, folklore
+    'nautical',      // Naval, pirate, ocean
+    'space-opera',   // Space opera, epic sci-fi
+    'urban-fantasy', // Modern world + magic
+    'slice-of-life', // Everyday, realistic
+    'absurd',        // Surreal, nonsensical, weird
+    'parody',        // Parody, satire, homage
+    'educational',   // Teaching, informative
+    'inspirational', // Motivational, uplifting
   ],
   
-  // Content types
+  // Content types (what the cards represent)
   contentTypes: [
-    'characters',    // NPCs, PCs, monsters
-    'locations',     // Places, buildings, regions
-    'items',         // Equipment, artifacts, treasure
-    'spells',        // Magic, abilities, powers
-    'encounters',    // Combat, challenges, events
-    'plot-hooks',    // Story ideas, quests
-    'lore',          // Background, history
-    'mechanics',     // Rules, systems
+    'characters',    // People, NPCs, PCs, monsters, creatures
+    'locations',     // Places, buildings, regions, maps
+    'items',         // Objects, equipment, artifacts, treasure
+    'spells',        // Magic, abilities, powers, skills
+    'encounters',    // Combat, challenges, events, scenarios
+    'plot-hooks',    // Story ideas, quests, missions
+    'lore',          // Background, history, worldbuilding
+    'mechanics',     // Rules, systems, procedures
+    'concepts',      // Ideas, theories, philosophies
+    'quotes',        // Quotations, sayings, dialogue
+    'facts',         // Information, trivia, data
+    'instructions',  // How-to, guides, tutorials
+    'prompts',       // Writing prompts, art prompts, ideas
+    'lists',         // Checklists, inventories, catalogs
+    'profiles',      // Biographies, summaries, overviews
+    'reviews',       // Critiques, opinions, ratings
+    'comparisons',   // Contrasts, versus, alternatives
+    'timelines',     // Chronology, history, sequences
+    'recipes',       // Cooking, crafting, formulas
+    'exercises',     // Workouts, activities, drills
+    'vocabulary',    // Words, terms, definitions
+    'mixed',         // Various types in one deck
   ],
   
   // Quality indicators
@@ -82,7 +116,17 @@ export const DECK_TAXONOMY = {
 /**
  * System instruction for content moderation and analysis
  */
-export const MODERATION_CONTEXT = `You are a content moderator and classifier for a tabletop RPG card deck platform.
+export const MODERATION_CONTEXT = `You are a content moderator and classifier for a creative card deck platform.
+
+**Platform Overview:**
+This platform supports ANY type of deck content - not just RPGs! Examples include:
+- Gaming: RPG characters, Pokemon-style creatures, game items
+- Humor: Parodies, fan content ("Norwegian celebrities as Pokemon")
+- Education: Flashcards, study aids, reference guides
+- Personal: Collections, tracking, journaling
+- Creative: Writing prompts, recipes, exercises
+- Business: Frameworks, productivity tools
+- And literally anything else users imagine!
 
 **Your Task:**
 Analyze deck content for:
@@ -128,8 +172,9 @@ Analyze deck content for:
 - Coherence and usefulness
 - Visual quality (if images present)
 - Writing quality
+- **Adaptability**: Do stats/traits/structure match the theme? (e.g., Pokemon decks should use Pokemon-style stats, not fantasy RPG stats)
 
-Be permissive with RPG content. This is a platform for creative game materials.`;
+Be permissive with creative content. This platform celebrates diversity and imagination, from serious RPG materials to humorous parodies to educational flashcards.`;
 
 /**
  * Schema for moderation and classification response
