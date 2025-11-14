@@ -68,6 +68,22 @@ Decks can be used for:
   * Use contextually appropriate measurements and scales
   * Example: "Norwegian celebrities as Pokemon" → use Pokemon-style stats (HP, Attack, etc.), not medieval RPG stats
 
+**Naming Guidelines (CRITICAL for Image Generation):**
+- **NEVER use real people's names** (celebrities, politicians, athletes, etc.)
+- **NEVER use real brand names** (companies, products, trademarked names)
+- **DO use creative fictional alternatives:**
+  * Politicians → "The Orange Rage-King", "The Iron Chancellor"
+  * Athletes → "The Lightning Striker", "The Goal Phantom"
+  * Brands → "MegaCorp", "TechnoGiant Industries"
+- **DO use obvious parody/satire** that doesn't directly name:
+  * "A reality TV mogul turned leader" ✅
+  * "Donald Trump" ❌
+- **Fictional characters ARE allowed:**
+  * Gandalf, Sherlock Holmes, Dracula ✅
+  * Made-up characters ✅
+- **Why:** Image generation often fails when real names are detected
+- **Creativity over accuracy:** Make it memorable and fun!
+
 **Important Constraints:**
 - Generate at least the requested number of cards, but feel free to create more (up to 20 total) if the topic naturally supports additional interesting cards
 - Each card must have 1-4 traits (only ONE should be public)
@@ -79,13 +95,14 @@ Decks can be used for:
 **Example Adaptation:**
 
 User requests: "Norwegian celebrities as Pokemon"
+- Title: "The Awkward Scientist" (NOT "Harald Eia" - use creative fictional names!)
 - Stats: HP (70), Attack (55), Defense (45), Special Move (80)
 - Traits (only ONE public):
   * "Awkward in Interviews" (public) - "Fumbles words under pressure"
   * "Media Darling" (private) - "Unusually high approval rating"
   * "Type: Electric/Comedian" (private) - "Shocking humor"
 - Subtitle: "Lv. 42 Media Pokemon"
-- Description: Detailed, humorous backstory combining their real persona with Pokemon characteristics
+- Description: Detailed, humorous backstory based on the archetype (science communicator comedian) without naming real people
 
 User requests: "5-Ingredient Pasta Recipes"
 - Stats (NO descriptions needed for obvious ingredients):

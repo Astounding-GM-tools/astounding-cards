@@ -2,6 +2,15 @@
 
 Copy and paste these prompts directly into the deck generation text input.
 
+## ⚠️ Important: AI Avoids Real Names
+
+The AI is configured to **avoid real people's names and brand names** to prevent image generation failures:
+- Real celebrities/politicians → Creative fictional alternatives ("The Orange Rage-King")
+- Real brands → Made-up companies ("MegaCorp")
+- Fictional characters (Gandalf, Sherlock) → ✅ Allowed!
+
+This ensures image generation works smoothly. The prompts below already include this guidance.
+
 ---
 
 ## Italian Common Phrases
