@@ -23,8 +23,9 @@ Enable users to publish decks to Supabase with automated hosting, moderation, an
 - Session management
 
 ### 2. Image Hosting
-- Automatic upload to Vercel Blob on publish
-- Images stored permanently on our servers
+- Automatic upload to **Cloudflare R2** on publish
+- S3-compatible API with FREE storage (10GB) and FREE bandwidth
+- Images stored permanently with global CDN delivery
 - No more manual migration friction
 - **Critical for adoption!**
 
@@ -171,7 +172,7 @@ POST /api/deck/publish         - Publish deck (with moderation)
 POST /api/deck/moderate        - Re-check content (after edits)
 GET  /api/deck/[id]            - Fetch published deck (already exists)
 
-POST /api/images/upload        - Upload image to Vercel Blob
+POST /api/images/upload        - Upload image to Cloudflare R2
 ```
 
 ## Implementation Checklist
@@ -183,9 +184,11 @@ POST /api/images/upload        - Upload image to Vercel Blob
 - [x] Update Header with auth state
 - [ ] Protected API routes (Week 3 - needed for publishing)
 
-### Week 2: Image Hosting
-- [ ] Set up Vercel Blob storage
-- [ ] Image upload API route
+### Week 2: Image Hosting (Cloudflare R2)
+- [ ] Set up Cloudflare R2 bucket
+- [ ] Configure R2 API credentials and custom domain
+- [ ] Install @aws-sdk/client-s3 for S3-compatible uploads
+- [ ] Create image upload API route
 - [ ] Automatic upload on publish
 - [ ] Track which images are AI-generated (skip moderation)
 
