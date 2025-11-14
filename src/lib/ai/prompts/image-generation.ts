@@ -1,6 +1,6 @@
 /**
  * Image Generation Prompt Templates
- * 
+ *
  * System instructions and prompts for generating card artwork with Gemini
  */
 
@@ -65,14 +65,14 @@ FORBIDDEN:
 - No borders, frames, or margins around the artwork`;
 
 export const ART_STYLES = {
-    classic: `Pencil sketch with coloured details:
+	classic: `Pencil sketch with coloured details:
 - Similar to a partially completed, highly detailed masterful watercolor painting
 - Important elements (focal point, key features, significant details) are in full color and highly detailed, bold and colorful
 - Background and non-essential elements are sketch-like and not coloured in yet
 - Backgrounds and non-essential elements are grayscale pencil sketch/drawing style
 - Use a mix of fine detail and sketchy lines
 - High detail on the main subject, less detail on supporting elements`,
-    modern: `Contemporary clean image:
+	modern: `Contemporary clean image:
 - Neutral white or minimal background, keeping all focus on the subject
 - Crisply focused, professional presentation
 - Clean lines, vibrant colors, and smooth rendering
@@ -80,7 +80,7 @@ export const ART_STYLES = {
 - Balanced composition with focus on main subject
 - Soft, almost imperceptible lighting, creating only the subtlest shadows
 - Adapt style to content: portrait for people, product shot for objects, overhead for food, etc.`,
-    inked: `Bold tattoo-inspired artwork optimized for print:
+	inked: `Bold tattoo-inspired artwork optimized for print:
 - Strong, confident black outlines defining shapes - thick enough to be a tattoo
 - Vibrant, saturated colors within the bold lines (think flash tattoo palette)
 - Graphic, two-dimensional aesthetic - embrace flatness, not photorealism
@@ -95,49 +95,48 @@ export const ART_STYLES = {
 - Optional: minimal line work or subtle etching in background if absolutely needed for context
 - Think: clip art, tattoo flash sheets, screen printing - bold subject on blank paper
 - Every element should be strong enough to work as a standalone tattoo or printed design
-- The empty background saves ink, money, and the planet while making the art more iconic`,
+- The empty background saves ink, money, and the planet while making the art more iconic`
 };
-
 
 /**
  * Create the optimization request for card content
  */
 export function createPromptOptimizationRequest(
-    title: string,
-    subtitle: string,
-    description: string,
-    theme: string,
-    traits: Array<{title: string; description: string; isPublic: boolean}> = [],
-    stats: Array<{title: string; value: number; isPublic: boolean}> = []
+	title: string,
+	subtitle: string,
+	description: string,
+	theme: string,
+	traits: Array<{ title: string; description: string; isPublic: boolean }> = [],
+	stats: Array<{ title: string; value: number; isPublic: boolean }> = []
 ): string {
-    const parts: string[] = [];
-    
-    // Basic card info
-    parts.push(`Title: ${title}`);
-    if (subtitle) parts.push(`Type: ${subtitle}`);
-    if (description) parts.push(`Description: ${description}`);
-    parts.push(`Theme: ${theme}`);
-    
-    // Key traits (only public ones for visuals)
-    const publicTraits = traits.filter(trait => trait.isPublic);
-    if (publicTraits.length > 0) {
-        const traitDescriptions = publicTraits
-            .slice(0, 3) // Limit for focus
-            .map(trait => `${trait.title}: ${trait.description}`)
-            .join(', ');
-        parts.push(`Key traits: ${traitDescriptions}`);
-    }
-    
-    // Notable stats (if relevant for visuals)
-    const publicStats = stats.filter(stat => stat.isPublic);
-    if (publicStats.length > 0) {
-        const statDescriptions = publicStats
-            .slice(0, 2) // Very limited for optimization
-            .map(stat => `${stat.title}: ${stat.value}`)
-            .join(', ');
-        parts.push(`Notable attributes: ${statDescriptions}`);
-    }
-    
-    const cardInfo = parts.join('\n');
-    return `Transform this card into an optimal image prompt:\n\n${cardInfo}`;
+	const parts: string[] = [];
+
+	// Basic card info
+	parts.push(`Title: ${title}`);
+	if (subtitle) parts.push(`Type: ${subtitle}`);
+	if (description) parts.push(`Description: ${description}`);
+	parts.push(`Theme: ${theme}`);
+
+	// Key traits (only public ones for visuals)
+	const publicTraits = traits.filter((trait) => trait.isPublic);
+	if (publicTraits.length > 0) {
+		const traitDescriptions = publicTraits
+			.slice(0, 3) // Limit for focus
+			.map((trait) => `${trait.title}: ${trait.description}`)
+			.join(', ');
+		parts.push(`Key traits: ${traitDescriptions}`);
+	}
+
+	// Notable stats (if relevant for visuals)
+	const publicStats = stats.filter((stat) => stat.isPublic);
+	if (publicStats.length > 0) {
+		const statDescriptions = publicStats
+			.slice(0, 2) // Very limited for optimization
+			.map((stat) => `${stat.title}: ${stat.value}`)
+			.join(', ');
+		parts.push(`Notable attributes: ${statDescriptions}`);
+	}
+
+	const cardInfo = parts.join('\n');
+	return `Transform this card into an optimal image prompt:\n\n${cardInfo}`;
 }

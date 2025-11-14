@@ -43,6 +43,7 @@ npm run lint                   # Check code formatting
 The project has a sophisticated dual-testing approach:
 
 ### Unit Tests (Vitest)
+
 - **Target**: `.svelte.ts` logic files (extracted business logic)
 - **Location**: Co-located with components (e.g., `Component.svelte.test.ts`)
 - **Coverage**: High coverage requirements (90%+ thresholds)
@@ -50,6 +51,7 @@ The project has a sophisticated dual-testing approach:
 - **Environment**: jsdom for browser APIs
 
 ### E2E Tests (Playwright)
+
 - **Target**: User workflows and component integration
 - **Location**: `/e2e/` directory
 - **Pattern**: Uses DevToolsHelper class for fast test setup
@@ -64,6 +66,7 @@ The project has a sophisticated dual-testing approach:
    - Unit test the extracted logic extensively
 
 2. **E2E Dev Tools Integration**:
+
    ```typescript
    // Fast test setup using console helpers
    await devTools.setupTestEnvironment(); // Bypasses UI setup
@@ -75,23 +78,28 @@ The project has a sophisticated dual-testing approach:
 ## Key Architecture Patterns
 
 ### Canon Update Pattern
+
 The application uses a **Canon Update Pattern** for all state changes:
+
 - Database-first atomic updates
 - Granular loading states for user feedback
 - No optimistic updates - UI reflects persisted state only
 - Centralized update logic in `canonUpdate.ts`
 
 ### Component Structure
+
 ```
 src/lib/components/
 ├── cards/           # Card display and editing components
-├── deck/            # Deck management components  
+├── deck/            # Deck management components
 ├── dialogs/         # Modal dialogs
 └── ui/              # Reusable UI components
 ```
 
 ### Logic Extraction Pattern
+
 Components follow this pattern:
+
 ```
 Component.svelte          # Presentation layer only
 Component.svelte.ts       # Extracted business logic
@@ -112,23 +120,27 @@ Component.component.test.ts # Integration tests
 ## Development Guidelines
 
 ### Svelte 5 Requirements
+
 - **Always use Svelte 5 syntax** (runes mode)
 - Use `$state()`, `$derived()`, `$effect()` instead of legacy stores in components
 - Follow modern reactive patterns
 
 ### State Management
+
 - Use Canon Update Pattern for all data changes
 - Provide loading states for user feedback
 - Handle errors gracefully with toast notifications
 - Maintain scroll position during updates
 
 ### Testing Requirements
+
 - Extract business logic to `.svelte.ts` files
 - Achieve 90%+ code coverage on logic files
 - Use E2E tests for user workflows
 - Leverage DevToolsHelper for fast E2E setup
 
 ### Component Patterns
+
 - Keep components focused on presentation
 - Extract complex logic to separate files
 - Use TypeScript for all logic files
@@ -145,6 +157,7 @@ Component.component.test.ts # Integration tests
 ## Common Patterns
 
 ### Creating New Components
+
 1. Create `.svelte` file for presentation
 2. Extract logic to `.svelte.ts` file
 3. Write unit tests for logic in `.svelte.test.ts`
@@ -152,6 +165,7 @@ Component.component.test.ts # Integration tests
 5. Use `data-testid` attributes for testing
 
 ### Running Single Tests
+
 ```bash
 # Run specific unit test file
 npx vitest path/to/test.ts
@@ -161,6 +175,7 @@ npx playwright test --grep "test name"
 ```
 
 ### Database Operations (E2E Testing)
+
 ```typescript
 // Setup test environment with sample data
 await devTools.setupTestEnvironment();

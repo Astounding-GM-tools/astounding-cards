@@ -280,6 +280,7 @@ ART STYLE: Could be Modern (clean, scientific botanical/alchemical style) or Cla
 These prompts are designed to work with the AI deck generation system. Simply paste the entire prompt (including all the FRONT/BACK specifications) into the deck generation interface, adjust the card count if needed, and generate!
 
 Each prompt is optimized for:
+
 - Terse trait descriptions (5-10 words)
 - Only ONE public trait
 - Contextually appropriate stats (or no stats when not needed)

@@ -7,12 +7,14 @@ Card Deck Creator is a **client-side only** application built with SvelteKit. It
 ## Key Design Decisions
 
 ### 1. Client-Side Only
+
 - All data is stored in the browser using IndexedDB
 - No server-side API or database required
 - Sharing via URL serialization
 - Images stored as blobs in IndexedDB
 
 ### 2. Data Persistence
+
 - IndexedDB for local storage
   - `decks` object store with `id` as key path
   - Stores complete deck objects including cards and metadata
@@ -20,6 +22,7 @@ Card Deck Creator is a **client-side only** application built with SvelteKit. It
 - URL-based state sharing for deck distribution
 
 ### 3. State Management
+
 - Svelte stores for reactive state
 - **Canon Update Pattern** (see [CANON_UPDATE_PATTERN.md](./CANON_UPDATE_PATTERN.md) for detailed documentation):
   - Database-first atomic updates
@@ -30,6 +33,7 @@ Card Deck Creator is a **client-side only** application built with SvelteKit. It
 - Optimized to prevent scroll jumps and unnecessary re-renders
 
 ### 4. Component Structure
+
 - Card components (Front/Back) for display
 - Deck management components
 - Theme selection and customization
@@ -39,16 +43,19 @@ Card Deck Creator is a **client-side only** application built with SvelteKit. It
 ## Data Flow
 
 1. **Deck Creation/Loading**
+
    ```
    User Action → IndexedDB Save → Store Update → UI Update
    ```
 
 2. **Card Editing (Canon Update Pattern)**
+
    ```
    Edit Event → Loading State → IndexedDB Save → Store Update → UI Update
    ```
 
 3. **Deck Sharing**
+
    ```
    Share Action → Deck Serialization → URL Generation → Clipboard
    ```
@@ -95,6 +102,7 @@ Card Deck Creator is a **client-side only** application built with SvelteKit. It
 ## Deployment
 
 The application can be deployed to any static hosting service:
+
 - No special server requirements
 - No database setup needed
 - No environment variables required
@@ -118,4 +126,4 @@ The application can be deployed to any static hosting service:
    - Image optimization options
    - Batch operations
    - Improved caching
-   - Load time optimization 
+   - Load time optimization

@@ -1,6 +1,6 @@
 /**
  * Image Upload API Route
- * 
+ *
  * POST /api/images/upload
  * Uploads an image to Cloudflare R2 and returns the URL
  */
@@ -59,7 +59,7 @@ export const POST: RequestHandler = async ({ request }) => {
 			url: publicUrl,
 			fileName,
 			contentType: file.type,
-			size: file.size,
+			size: file.size
 		});
 	} catch (err) {
 		console.error('Upload API error:', err);

@@ -1,6 +1,6 @@
 /**
  * Environment Variables Diagnostic
- * 
+ *
  * Check if Supabase environment variables are loaded
  * (Don't expose actual values for security)
  */
@@ -27,10 +27,14 @@ export const GET: RequestHandler = async () => {
 			}
 		});
 	} catch (error) {
-		return json({
-			success: false,
-			error: error instanceof Error ? error.message : 'Unknown error',
-			message: 'Failed to load environment variables. Make sure .env.local exists and dev server was restarted.'
-		}, { status: 500 });
+		return json(
+			{
+				success: false,
+				error: error instanceof Error ? error.message : 'Unknown error',
+				message:
+					'Failed to load environment variables. Make sure .env.local exists and dev server was restarted.'
+			},
+			{ status: 500 }
+		);
 	}
 };

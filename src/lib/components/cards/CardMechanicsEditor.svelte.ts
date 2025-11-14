@@ -12,14 +12,14 @@ import { generateKey } from '$lib/next/utils/idUtils.js';
  * @returns A new CardMechanic object with default values
  */
 export function createNewMechanic(): CardMechanic {
-  return {
-    id: generateKey(),
-    name: 'New Mechanic',
-    value: 0,
-    description: '',
-    tracked: false,
-    type: MechanicTypes.ATTACK
-  };
+	return {
+		id: generateKey(),
+		name: 'New Mechanic',
+		value: 0,
+		description: '',
+		tracked: false,
+		type: MechanicTypes.ATTACK
+	};
 }
 
 /**
@@ -28,7 +28,7 @@ export function createNewMechanic(): CardMechanic {
  * @returns New array with added mechanic
  */
 export function addMechanic(mechanics: CardMechanic[]): CardMechanic[] {
-  return [...mechanics, createNewMechanic()];
+	return [...mechanics, createNewMechanic()];
 }
 
 /**
@@ -38,7 +38,7 @@ export function addMechanic(mechanics: CardMechanic[]): CardMechanic[] {
  * @returns New array with mechanic removed
  */
 export function removeMechanic(mechanics: CardMechanic[], index: number): CardMechanic[] {
-  return mechanics.filter((_, i) => i !== index);
+	return mechanics.filter((_, i) => i !== index);
 }
 
 /**
@@ -48,19 +48,23 @@ export function removeMechanic(mechanics: CardMechanic[], index: number): CardMe
  * @param totalCount - Total number of mechanics
  * @returns True if the move is valid
  */
-export function canMoveMechanic(index: number, direction: 'up' | 'down', totalCount: number): boolean {
-  // Can't move if array is empty or has only one element
-  if (totalCount <= 1) {
-    return false;
-  }
-  
-  if (direction === 'up' && index === 0) {
-    return false;
-  }
-  if (direction === 'down' && index === totalCount - 1) {
-    return false;
-  }
-  return true;
+export function canMoveMechanic(
+	index: number,
+	direction: 'up' | 'down',
+	totalCount: number
+): boolean {
+	// Can't move if array is empty or has only one element
+	if (totalCount <= 1) {
+		return false;
+	}
+
+	if (direction === 'up' && index === 0) {
+		return false;
+	}
+	if (direction === 'down' && index === totalCount - 1) {
+		return false;
+	}
+	return true;
 }
 
 /**
@@ -70,15 +74,19 @@ export function canMoveMechanic(index: number, direction: 'up' | 'down', totalCo
  * @param direction - Direction to move ('up' or 'down')
  * @returns New array with mechanic moved, or original array if move is invalid
  */
-export function moveMechanic(mechanics: CardMechanic[], index: number, direction: 'up' | 'down'): CardMechanic[] {
-  if (!canMoveMechanic(index, direction, mechanics.length)) {
-    return mechanics;
-  }
-  
-  const newIndex = direction === 'up' ? index - 1 : index + 1;
-  const newMechanics = [...mechanics];
-  [newMechanics[index], newMechanics[newIndex]] = [newMechanics[newIndex], newMechanics[index]];
-  return newMechanics;
+export function moveMechanic(
+	mechanics: CardMechanic[],
+	index: number,
+	direction: 'up' | 'down'
+): CardMechanic[] {
+	if (!canMoveMechanic(index, direction, mechanics.length)) {
+		return mechanics;
+	}
+
+	const newIndex = direction === 'up' ? index - 1 : index + 1;
+	const newMechanics = [...mechanics];
+	[newMechanics[index], newMechanics[newIndex]] = [newMechanics[newIndex], newMechanics[index]];
+	return newMechanics;
 }
 
 /**
@@ -88,10 +96,10 @@ export function moveMechanic(mechanics: CardMechanic[], index: number, direction
  * @returns Updated card object
  */
 export function createUpdatedCard(card: Card, mechanics: CardMechanic[]): Card {
-  return {
-    ...card,
-    mechanics: mechanics.length > 0 ? mechanics : undefined
-  };
+	return {
+		...card,
+		mechanics: mechanics.length > 0 ? mechanics : undefined
+	};
 }
 
 /**
@@ -100,15 +108,22 @@ export function createUpdatedCard(card: Card, mechanics: CardMechanic[]): Card {
  * @returns The corresponding emoji icon
  */
 export function getTypeIcon(type: MechanicType): string {
-  switch (type) {
-    case MechanicTypes.DEFENSE: return '🛡️';
-    case MechanicTypes.INITIATIVE: return '⚡';
-    case MechanicTypes.MOVEMENT: return '👟';
-    case MechanicTypes.ATTACK: return '⚔️';
-    case MechanicTypes.HEALTH: return '❤️';
-    case MechanicTypes.RESOURCE: return '📦';
-    default: return '📋';
-  }
+	switch (type) {
+		case MechanicTypes.DEFENSE:
+			return '🛡️';
+		case MechanicTypes.INITIATIVE:
+			return '⚡';
+		case MechanicTypes.MOVEMENT:
+			return '👟';
+		case MechanicTypes.ATTACK:
+			return '⚔️';
+		case MechanicTypes.HEALTH:
+			return '❤️';
+		case MechanicTypes.RESOURCE:
+			return '📦';
+		default:
+			return '📋';
+	}
 }
 
 /**
@@ -117,7 +132,7 @@ export function getTypeIcon(type: MechanicType): string {
  * @returns Capitalized display name
  */
 export function getTypeName(type: MechanicType): string {
-  return type.charAt(0).toUpperCase() + type.slice(1);
+	return type.charAt(0).toUpperCase() + type.slice(1);
 }
 
 /**
@@ -126,14 +141,14 @@ export function getTypeName(type: MechanicType): string {
  * @returns True if the value is numeric
  */
 export function isNumeric(value: string | number): boolean {
-  if (typeof value === 'number') {
-    return true;
-  }
-  // Handle empty string and whitespace-only strings as non-numeric
-  if (typeof value === 'string' && value.trim() === '') {
-    return false;
-  }
-  return !isNaN(Number(value));
+	if (typeof value === 'number') {
+		return true;
+	}
+	// Handle empty string and whitespace-only strings as non-numeric
+	if (typeof value === 'string' && value.trim() === '') {
+		return false;
+	}
+	return !isNaN(Number(value));
 }
 
 /**
@@ -142,9 +157,12 @@ export function isNumeric(value: string | number): boolean {
  * @param currentMechanics - Current mechanics array
  * @returns True if there are changes
  */
-export function hasChanges(originalMechanics: CardMechanic[] | undefined, currentMechanics: CardMechanic[]): boolean {
-  const original = originalMechanics || [];
-  return JSON.stringify(currentMechanics) !== JSON.stringify(original);
+export function hasChanges(
+	originalMechanics: CardMechanic[] | undefined,
+	currentMechanics: CardMechanic[]
+): boolean {
+	const original = originalMechanics || [];
+	return JSON.stringify(currentMechanics) !== JSON.stringify(original);
 }
 
 /**
@@ -154,5 +172,5 @@ export function hasChanges(originalMechanics: CardMechanic[] | undefined, curren
  * @returns True if warning should be shown
  */
 export function shouldShowTrackingWarning(mechanic: CardMechanic, threshold: number = 30): boolean {
-  return mechanic.tracked && isNumeric(mechanic.value) && Number(mechanic.value) > threshold;
+	return mechanic.tracked && isNumeric(mechanic.value) && Number(mechanic.value) > threshold;
 }

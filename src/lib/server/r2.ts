@@ -1,16 +1,16 @@
 /**
  * Cloudflare R2 Client
- * 
+ *
  * S3-compatible client for uploading images to Cloudflare R2 storage
  */
 
 import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
-import { 
-	R2_ACCOUNT_ID, 
-	R2_ACCESS_KEY_ID, 
-	R2_SECRET_ACCESS_KEY, 
+import {
+	R2_ACCOUNT_ID,
+	R2_ACCESS_KEY_ID,
+	R2_SECRET_ACCESS_KEY,
 	R2_BUCKET_NAME,
-	R2_PATH_PREFIX 
+	R2_PATH_PREFIX
 } from '$env/static/private';
 
 // Validate environment variables
@@ -26,13 +26,13 @@ const r2Client = new S3Client({
 	endpoint: R2_ENDPOINT,
 	credentials: {
 		accessKeyId: R2_ACCESS_KEY_ID,
-		secretAccessKey: R2_SECRET_ACCESS_KEY,
-	},
+		secretAccessKey: R2_SECRET_ACCESS_KEY
+	}
 });
 
 /**
  * Upload an image to R2
- * 
+ *
  * @param imageData - Image as Buffer or Uint8Array
  * @param fileName - Name for the file (e.g., "card-abc123.png")
  * @param contentType - MIME type (e.g., "image/png")
@@ -53,7 +53,7 @@ export async function uploadImage(
 				Bucket: R2_BUCKET_NAME,
 				Key: key,
 				Body: imageData,
-				ContentType: contentType,
+				ContentType: contentType
 			})
 		);
 
@@ -69,7 +69,7 @@ export async function uploadImage(
 
 /**
  * Delete an image from R2
- * 
+ *
  * @param key - The R2 key/path (e.g., "dev/cards/card-abc123.png")
  */
 export async function deleteImage(key: string): Promise<void> {
@@ -77,7 +77,7 @@ export async function deleteImage(key: string): Promise<void> {
 		await r2Client.send(
 			new DeleteObjectCommand({
 				Bucket: R2_BUCKET_NAME,
-				Key: key,
+				Key: key
 			})
 		);
 	} catch (error) {
@@ -88,7 +88,7 @@ export async function deleteImage(key: string): Promise<void> {
 
 /**
  * Generate a unique filename for an image
- * 
+ *
  * @param cardId - The card ID
  * @param extension - File extension (e.g., "png", "jpg")
  * @returns Filename string

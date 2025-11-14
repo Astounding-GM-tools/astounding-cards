@@ -36,11 +36,13 @@
 ### 4. Configure Environment Variables
 
 1. Copy `.env.example` to `.env.local`:
+
    ```bash
    cp .env.example .env.local
    ```
 
 2. Update `.env.local` with your Supabase values:
+
    ```env
    PUBLIC_SUPABASE_URL=https://your-project-id.supabase.co
    PUBLIC_SUPABASE_ANON_KEY=eyJhbGc...
@@ -52,6 +54,7 @@
 ### 5. Verify Connection
 
 Start your dev server:
+
 ```bash
 npm run dev
 ```
@@ -63,26 +66,31 @@ The app should start without errors. If you see Supabase connection errors, doub
 ### Tables
 
 **users**
+
 - Extends Supabase `auth.users`
 - Tracks credits and daily free deck usage
 
 **published_decks**
+
 - Stores both curated (admin) and user-published decks
 - Includes slug for clean URLs
 - JSONB storage for card data
 
 **generated_images**
+
 - Tracks AI-generated images
 - Links to published decks
 - Stores URLs and metadata
 
 **transactions**
+
 - Audit trail for credits
 - Tracks purchases and usage
 
 ### Row Level Security (RLS)
 
 RLS is enabled on all tables:
+
 - Users can only read/update their own data
 - Public decks are readable by anyone
 - Admins use service role key to bypass RLS
@@ -132,17 +140,18 @@ SELECT reset_daily_free_decks();
 SELECT COUNT(*) FROM published_decks WHERE visibility = 'public';
 
 -- Most viewed decks
-SELECT title, view_count FROM published_decks 
+SELECT title, view_count FROM published_decks
 ORDER BY view_count DESC LIMIT 10;
 
 -- User credit balances
-SELECT email, credits FROM users 
+SELECT email, credits FROM users
 ORDER BY credits DESC LIMIT 10;
 ```
 
 ## Migrations
 
 Future schema changes should be:
+
 1. Added to a new file: `supabase/migrations/YYYYMMDD_description.sql`
 2. Run in SQL Editor
 3. Documented here
@@ -170,20 +179,24 @@ When deploying to Vercel:
 ## Troubleshooting
 
 **"Missing Supabase environment variables"**
+
 - Check `.env.local` exists and has correct values
 - Restart dev server after changing env vars
 
 **RLS Policy Errors**
+
 - Make sure you're using the service role key for admin operations
 - Check policies in **Authentication** → **Policies**
 
 **Connection timeout**
+
 - Verify Project URL is correct
 - Check if Supabase project is paused (free tier auto-pauses after inactivity)
 
 ## Next Steps
 
 Once Supabase is set up:
+
 - [ ] Create first API route: `GET /api/deck/[id]`
 - [ ] Test fetching a published deck
 - [ ] Implement three-layer merge system

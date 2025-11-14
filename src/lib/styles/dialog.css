@@ -1,107 +1,107 @@
 /* Dialog component styles */
 
 .dialog-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 100;
+	position: fixed;
+	inset: 0;
+	background: rgba(0, 0, 0, 0.5);
+	z-index: 100;
 }
 
 .dialog {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: var(--ui-bg);
-    padding: 1.5rem;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    z-index: 101;
-    min-width: 300px;
+	position: fixed;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	background: var(--ui-bg);
+	padding: 1.5rem;
+	border-radius: 8px;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+	z-index: 101;
+	min-width: 300px;
 }
 
 .dialog-buttons {
-    display: flex;
-    justify-content: flex-end;
-    gap: 0.5rem;
-    margin-top: 1rem;
+	display: flex;
+	justify-content: flex-end;
+	gap: 0.5rem;
+	margin-top: 1rem;
 }
 
 .dialog-buttons button {
-    padding: 0.4rem 0.75rem;
-    border: 1px solid var(--button-border);
-    border-radius: 4px;
-    background: var(--button-bg);
-    color: var(--button-text);
-    font-size: var(--ui-font-size);
-    font-family: var(--ui-font-family);
-    cursor: pointer;
-    transition: all 0.2s;
+	padding: 0.4rem 0.75rem;
+	border: 1px solid var(--button-border);
+	border-radius: 4px;
+	background: var(--button-bg);
+	color: var(--button-text);
+	font-size: var(--ui-font-size);
+	font-family: var(--ui-font-family);
+	cursor: pointer;
+	transition: all 0.2s;
 }
 
 .dialog-buttons button:hover {
-    background: var(--button-hover-bg);
+	background: var(--button-hover-bg);
 }
 
 .dialog-buttons button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+	opacity: 0.5;
+	cursor: not-allowed;
 }
 
 .dialog-buttons button.primary {
-    background: var(--button-primary-bg);
-    color: var(--button-primary-text);
-    border-color: var(--button-primary-bg);
+	background: var(--button-primary-bg);
+	color: var(--button-primary-text);
+	border-color: var(--button-primary-bg);
 }
 
 .dialog-buttons button.primary:hover {
-    background: var(--button-primary-hover);
-    border-color: var(--button-primary-hover);
+	background: var(--button-primary-hover);
+	border-color: var(--button-primary-hover);
 }
 
 .dialog-buttons button.secondary {
-    background: var(--button-bg);
-    color: var(--button-text);
-    border-color: var(--button-border);
+	background: var(--button-bg);
+	color: var(--button-text);
+	border-color: var(--button-border);
 }
 
 .dialog-buttons button.danger {
-    color: var(--toast-error);
-    border-color: var(--toast-error);
+	color: var(--toast-error);
+	border-color: var(--toast-error);
 }
 
 .dialog-buttons button.danger:hover {
-    background: var(--toast-error);
-    color: white;
+	background: var(--toast-error);
+	color: white;
 }
 
 .overlay-button {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    padding: 0;
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	background: transparent;
+	border: none;
+	cursor: pointer;
+	padding: 0;
 }
 
 /* Dialog variants */
 .theme-dialog {
-    width: 90vw;
-    max-width: 1200px;
-    max-height: 90vh;
-    overflow-y: auto;
+	width: 90vw;
+	max-width: 1200px;
+	max-height: 90vh;
+	overflow-y: auto;
 }
 
 .copy-dialog {
-    max-width: 600px;
-    max-height: 80vh;
-    overflow-y: auto;
+	max-width: 600px;
+	max-height: 80vh;
+	overflow-y: auto;
 }
 
 /* Small button variant */
 button.small {
-    padding: 0.3rem 0.6rem;
-    font-size: calc(var(--ui-font-size) * 0.9);
+	padding: 0.3rem 0.6rem;
+	font-size: calc(var(--ui-font-size) * 0.9);
 }

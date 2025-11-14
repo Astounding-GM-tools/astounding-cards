@@ -1,6 +1,6 @@
 /**
  * Deck Generation Prompt Templates
- * 
+ *
  * Templates for generating complete decks with AI
  */
 
@@ -117,7 +117,6 @@ User requests: "5-Ingredient Pasta Recipes"
 
 DO NOT use generic fantasy stats (Strength, Magic, Defense) unless the theme is explicitly fantasy. Adapt everything to the requested theme!`;
 
-
 import { Type } from '@google/genai';
 
 /**
@@ -126,62 +125,62 @@ import { Type } from '@google/genai';
  * Using official Gemini Type enum
  */
 export function createDeckGenerationSchema(cardCount: number) {
-  return {
-    type: Type.OBJECT,
-    properties: {
-      deck: {
-        type: Type.OBJECT,
-        properties: {
-          meta: {
-            type: Type.OBJECT,
-            properties: {
-              title: { type: Type.STRING },
-              description: { type: Type.STRING }
-            },
-            required: ['title']
-          },
-          cards: {
-            type: Type.ARRAY,
-            items: {
-              type: Type.OBJECT,
-              properties: {
-                title: { type: Type.STRING },
-                subtitle: { type: Type.STRING },
-                description: { type: Type.STRING },
-                traits: {
-                  type: Type.ARRAY,
-                  items: {
-                    type: Type.OBJECT,
-                    properties: {
-                      title: { type: Type.STRING },
-                      description: { type: Type.STRING },
-                      isPublic: { type: Type.BOOLEAN }
-                    },
-                    required: ['title', 'description', 'isPublic']
-                  }
-                },
-                stats: {
-                  type: Type.ARRAY,
-                  items: {
-                    type: Type.OBJECT,
-                    properties: {
-                      title: { type: Type.STRING },
-                      value: { type: Type.NUMBER },
-                      isPublic: { type: Type.BOOLEAN },
-                      tracked: { type: Type.BOOLEAN },
-                      description: { type: Type.STRING }
-                    },
-                    required: ['title', 'value', 'isPublic', 'tracked']
-                  }
-                }
-              },
-              required: ['title', 'subtitle', 'description', 'traits', 'stats']
-            }
-          }
-        },
-        required: ['meta', 'cards']
-      }
-    },
-    required: ['deck']
-  };
+	return {
+		type: Type.OBJECT,
+		properties: {
+			deck: {
+				type: Type.OBJECT,
+				properties: {
+					meta: {
+						type: Type.OBJECT,
+						properties: {
+							title: { type: Type.STRING },
+							description: { type: Type.STRING }
+						},
+						required: ['title']
+					},
+					cards: {
+						type: Type.ARRAY,
+						items: {
+							type: Type.OBJECT,
+							properties: {
+								title: { type: Type.STRING },
+								subtitle: { type: Type.STRING },
+								description: { type: Type.STRING },
+								traits: {
+									type: Type.ARRAY,
+									items: {
+										type: Type.OBJECT,
+										properties: {
+											title: { type: Type.STRING },
+											description: { type: Type.STRING },
+											isPublic: { type: Type.BOOLEAN }
+										},
+										required: ['title', 'description', 'isPublic']
+									}
+								},
+								stats: {
+									type: Type.ARRAY,
+									items: {
+										type: Type.OBJECT,
+										properties: {
+											title: { type: Type.STRING },
+											value: { type: Type.NUMBER },
+											isPublic: { type: Type.BOOLEAN },
+											tracked: { type: Type.BOOLEAN },
+											description: { type: Type.STRING }
+										},
+										required: ['title', 'value', 'isPublic', 'tracked']
+									}
+								}
+							},
+							required: ['title', 'subtitle', 'description', 'traits', 'stats']
+						}
+					}
+				},
+				required: ['meta', 'cards']
+			}
+		},
+		required: ['deck']
+	};
 }

@@ -47,13 +47,13 @@ src/lib/themes/
 
 ## Core Concepts
 
-1. **Property Declarations**: 
+1. **Property Declarations**:
    - All theme variables MUST be declared in `properties.css` using `@property`
    - Never declare new variables in theme files
    - Always use existing variables or hardcode values
    - Ask before adding new variables to properties.css
 
-2. **Theme Scoping**: 
+2. **Theme Scoping**:
    - Themes are scoped using the `[data-theme="theme-name"]` selector
    - Theme variables are applied at the theme-scope div level
    - Variables inherit properly through the component tree
@@ -74,6 +74,7 @@ src/lib/themes/
 ## Theme Variables
 
 ### Core Colors
+
 - `--theme-primary`: Main theme color
 - `--theme-secondary`: Secondary theme color
 - `--theme-accent`: Accent color for highlights
@@ -81,6 +82,7 @@ src/lib/themes/
 - `--theme-text`: Main text color
 
 ### Typography
+
 - `--theme-title-font`: Font family for titles
 - `--theme-body-font`: Font family for body text
 - `--theme-title-weight`: Font weight for titles
@@ -88,18 +90,22 @@ src/lib/themes/
 - `--role-font-family`: Font for role text (inherits from body)
 
 ### Text Alignment
+
 - `--title-text-align`: Title alignment
 - `--role-text-align`: Role text alignment
 - `--desc-text-align`: Description text alignment
 
 ### Flourish System
+
 Base Variables:
+
 - `--flourish-color`: Color of all flourishes
 - `--flourish-opacity`: Base opacity for all flourishes
 - `--flourish-size`: Base size for all flourishes
 - `--flourish-aspect`: Base aspect ratio
 
 Portrait Flourishes:
+
 - `--portrait-flourish-size`: Size for portrait flourishes
 - `--portrait-flourish-opacity`: Base opacity for portrait flourishes
 - `--portrait-flourish-aspect`: Aspect ratio for portrait flourishes
@@ -109,6 +115,7 @@ Portrait Flourishes:
 - `--flourish-portrait-bottom-right-opacity`: Individual corner control
 
 Content Flourishes:
+
 - `--content-flourish-size`: Size for content flourishes
 - `--content-flourish-opacity`: Base opacity for content flourishes
 - `--content-flourish-aspect`: Aspect ratio for content flourishes
@@ -118,6 +125,7 @@ Content Flourishes:
 - `--flourish-content-bottom-right-opacity`: Individual corner control
 
 ### Content Box Style
+
 - `--content-box-bg`: Background color for content area
 - `--content-box-radius`: Border radius
 - `--content-box-border-width`: Border width
@@ -131,42 +139,42 @@ Content Flourishes:
 
 ```css
 /* Your Theme - Brief description */
-[data-theme="your-theme"] {
-  /* Theme Colors */
-  --theme-primary: #your-color;
-  --theme-secondary: #another-color;
-  --theme-accent: #accent-color;
-  --theme-text: #text-color;
-  --theme-background: #bg-color;
+[data-theme='your-theme'] {
+	/* Theme Colors */
+	--theme-primary: #your-color;
+	--theme-secondary: #another-color;
+	--theme-accent: #accent-color;
+	--theme-text: #text-color;
+	--theme-background: #bg-color;
 
-  /* Typography */
-  --theme-title-font: 'Your Font', sans-serif;
-  --theme-body-font: 'Body Font', sans-serif;
-  --theme-title-weight: 700;
-  --theme-body-weight: 400;
+	/* Typography */
+	--theme-title-font: 'Your Font', sans-serif;
+	--theme-body-font: 'Body Font', sans-serif;
+	--theme-title-weight: 700;
+	--theme-body-weight: 400;
 
-  /* Text Alignment */
-  --title-text-align: center;
-  --role-text-align: center;
-  --desc-text-align: left;
+	/* Text Alignment */
+	--title-text-align: center;
+	--role-text-align: center;
+	--desc-text-align: left;
 
-  /* Decorative Elements */
-  --show-corner-flourish: 1;
-  --show-dividers: 1;
-  --show-frame: 1;
-  --show-texture: 0;
+	/* Decorative Elements */
+	--show-corner-flourish: 1;
+	--show-dividers: 1;
+	--show-frame: 1;
+	--show-texture: 0;
 
-  /* Flourish System */
-  --flourish-color: var(--theme-primary);
-  --flourish-opacity: 0.8;
-  --flourish-size: 2.5rem;
-  --flourish-aspect: 1;
+	/* Flourish System */
+	--flourish-color: var(--theme-primary);
+	--flourish-opacity: 0.8;
+	--flourish-size: 2.5rem;
+	--flourish-aspect: 1;
 
-  /* Content Box Style */
-  --content-box-radius: 2mm;
-  --content-box-border-width: 1px;
-  --content-box-shadow: none;
-  --content-box-bg: white;
+	/* Content Box Style */
+	--content-box-radius: 2mm;
+	--content-box-border-width: 1px;
+	--content-box-shadow: none;
+	--content-box-bg: white;
 }
 ```
 
@@ -202,13 +210,14 @@ The theme system integrates with components through a theme-scope div:
 
 ```svelte
 <div class="card">
-  <div class="theme-scope" data-theme={activeTheme}>
-    <!-- Card content here -->
-  </div>
+	<div class="theme-scope" data-theme={activeTheme}>
+		<!-- Card content here -->
+	</div>
 </div>
 ```
 
 This ensures:
+
 - Theme variables are properly scoped
 - Variables inherit correctly
 - Multiple themes can coexist
@@ -232,4 +241,4 @@ This ensures:
    - Theme not applying (check scope)
    - Flourishes not visible (check opacity)
    - Font not loading (check imports)
-   - Print issues (check contrast) 
+   - Print issues (check contrast)

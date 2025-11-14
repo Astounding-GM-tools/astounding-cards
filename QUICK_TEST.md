@@ -54,6 +54,7 @@
 **All fixed! 🎉**
 
 The flow now works correctly:
+
 1. Share URL is properly generated with hash format
 2. Preview page shows deck without importing
 3. Hash stays in URL during preview
@@ -64,13 +65,16 @@ The flow now works correctly:
 ## If Issues Occur
 
 ### URL has `?data=` instead of `#data=`
+
 - This means the old query format is being used
 - Check that ShareUrlDialog is using the updated `createShareUrl` function
 
 ### Preview immediately imports (no preview screen)
+
 - Check that onMount doesn't auto-import
 - Verify `imported` state starts as `false`
 
 ### Hash disappears from URL immediately
+
 - Check that line 84-87 doesn't call `replaceState` during preview
 - Hash should only be cleared in `handleImport` after successful import

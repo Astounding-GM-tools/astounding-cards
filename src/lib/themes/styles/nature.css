@@ -1,11 +1,11 @@
 /* Nature Theme - Organic shapes and natural motifs */
-:root[data-theme="nature"] {
-  /* Core Theme Colors */
-  --theme-primary: #4B6B55;    /* Forest green */
-  --theme-secondary: #A3B5C0;  /* Misty blue */
-  --theme-accent: #E5C39C;     /* Warm sand */
-  --theme-background: #F5F9F2; /* Pale sage */
-  --theme-text: #2C3E50;       /* Deep slate */
+:root[data-theme='nature'] {
+	/* Core Theme Colors */
+	--theme-primary: #4b6b55; /* Forest green */
+	--theme-secondary: #a3b5c0; /* Misty blue */
+	--theme-accent: #e5c39c; /* Warm sand */
+	--theme-background: #f5f9f2; /* Pale sage */
+	--theme-text: #2c3e50; /* Deep slate */
 
-  /* To be implemented */
-} 
+	/* To be implemented */
+}

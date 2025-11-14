@@ -8,6 +8,7 @@
 The following E2E tests have been temporarily disabled in `playwright.config.ts`:
 
 ### Failing Tests (Implementation Details/Outdated UI)
+
 - `advanced-interactions.test.ts` - Complex workflows, outdated selectors
 - `card-mechanics-editor.spec.ts` - Implementation details testing
 - `integration-clean-state.test.ts` - Outdated UI patterns
@@ -20,27 +21,32 @@ The following E2E tests have been temporarily disabled in `playwright.config.ts`
 - `statblock-vocabulary.spec.ts` - Duplicate of working tests
 
 ### Currently Running (Working Tests)
-- ✅ `statblock-integration.spec.ts` - Statblock functionality  
+
+- ✅ `statblock-integration.spec.ts` - Statblock functionality
 - ✅ `dev-tools-working.spec.ts` - Working dev tools
 
 ### Also Disabled (Outdated DevToolsHelper Usage)
+
 - `card-workflows.test.ts` - Core workflows but using outdated selectors
 
 ## Disabled Unit Tests
 
 ### ShareDialog Test
+
 - **File**: `src/lib/components/dialogs/ShareDialog.svelte.test.ts`
 - **Test**: "should call shareAsJson when format is json"
 - **Reason**: ShareDialog refactoring incomplete - testing non-existent extracted functions
 
 ## Re-enabling Strategy
 
-**Post-MVP**: 
+**Post-MVP**:
+
 1. Complete ShareDialog refactoring using documented patterns
 2. Update failing E2E tests to use DevToolsHelper pattern from `docs/E2E_TEST_PATTERNS.md`
 3. Focus on high-priority user workflows, skip implementation details
 
-**Current Test Coverage**: 
+**Current Test Coverage**:
+
 - Unit Tests: 515/516 passing (99.8%) - 1 skipped (incomplete ShareDialog)
 - E2E Tests: 5/5 working tests running (100%)
 - Total: Strong coverage for MVP launch

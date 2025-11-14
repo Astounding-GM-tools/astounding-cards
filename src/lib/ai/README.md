@@ -5,6 +5,7 @@ This document describes the reorganized AI functionality in the Card Deck Creato
 ## Issues Addressed
 
 The original AI implementation had several problems:
+
 1. **Hardcoded prompts** scattered across files
 2. **Duplicate functions** between `gemini.ts` and other utilities
 3. **Type warnings** about `GenerateContentParameters.generationConfig`
@@ -28,18 +29,21 @@ src/lib/ai/
 ## Key Features
 
 ### Centralized Configuration (`config/models.ts`)
+
 - AI models defined in one place
 - Configuration objects for different use cases
 - Easy to update model versions
 
 ### Optimized Prompts (`prompts/`)
+
 - **Streamlined Deck Generation**: Focuses only on content that matters
-- **Content Filtering**: Helps bypass AI content filters  
+- **Content Filtering**: Helps bypass AI content filters
 - **Simplified JSON Schema**: Validates only essential fields
 - **Flexible Card Count**: Supports 1-50 cards based on user input
 - **Removed Unnecessary Fields**: No IDs, timestamps, or placeholder images
 
 ### Clean Generator Interface (`generators/gemini.ts`)
+
 - **Structured JSON Output**: Uses `responseMimeType: 'application/json'` and `responseSchema` for reliable JSON generation
 - **Proper TypeScript typing**: Uses type casting to handle SDK interface issues
 - **Consistent return types**: `AIResult<T>` and `DeckGenerationResult`
@@ -47,33 +51,37 @@ src/lib/ai/
 - **Flexible card count**: Respects user's `cardCount` input (3-50 cards)
 
 ### Simple Import (`index.ts`)
+
 ```typescript
-import { 
-  generateDeckFromPrompt, 
-  processPromptForContentFiltering,
-  testGeminiConnection 
+import {
+	generateDeckFromPrompt,
+	processPromptForContentFiltering,
+	testGeminiConnection
 } from '$lib/ai/index.js';
 ```
 
 ## Usage
 
 ### Generate a Deck
+
 ```typescript
-const result = await generateDeckFromPrompt(apiKey, "Greek Mythology", 12);
+const result = await generateDeckFromPrompt(apiKey, 'Greek Mythology', 12);
 if (result.success) {
-  // result.deck contains the generated deck
+	// result.deck contains the generated deck
 }
 ```
 
 ### Process Content for Filters
+
 ```typescript
 const result = await processPromptForContentFiltering(apiKey, originalPrompt);
 if (result.success) {
-  // result.result contains the filtered prompt
+	// result.result contains the filtered prompt
 }
 ```
 
 ### Test Connection
+
 ```typescript
 const result = await testGeminiConnection(apiKey);
 // Returns { success: boolean, result?: string, error?: string }
@@ -82,6 +90,7 @@ const result = await testGeminiConnection(apiKey);
 ## Updated Components
 
 The following components have been updated to use the new AI structure:
+
 - `AiPromptDialog.svelte` - Main deck generation dialog
 - `AiImagePromptDialog.svelte` - Image prompt generation dialog
 

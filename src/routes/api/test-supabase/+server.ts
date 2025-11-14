@@ -1,6 +1,6 @@
 /**
  * Test Supabase Connection
- * 
+ *
  * Simple endpoint to verify Supabase is configured correctly
  */
 

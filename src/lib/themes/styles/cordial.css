@@ -1,87 +1,87 @@
 /* Cordial Theme - Elegant aesthetics with flowing organic elements */
-[data-theme="cordial"] {
-  /* Core Theme Colors */
-  --theme-primary: #7D98A1;    /* Silvery blue-grey */
-  --theme-secondary: #2F4F4F;  /* Deep forest grey */
-  --theme-accent: #C0D8D8;     /* Pale silver-blue */
-  --theme-text: #2C3E50;       /* Deep blue-grey */
-  --theme-background: white;    /* White background for print */
-  --theme-text-faded: #5C6E80; /* Faded blue-grey */
+[data-theme='cordial'] {
+	/* Core Theme Colors */
+	--theme-primary: #7d98a1; /* Silvery blue-grey */
+	--theme-secondary: #2f4f4f; /* Deep forest grey */
+	--theme-accent: #c0d8d8; /* Pale silver-blue */
+	--theme-text: #2c3e50; /* Deep blue-grey */
+	--theme-background: white; /* White background for print */
+	--theme-text-faded: #5c6e80; /* Faded blue-grey */
 
-  /* Typography */
-  --theme-title-font: 'Ballet', cursive;        /* Art Nouveau elegance */
-  --theme-body-font: 'Tangerine', cursive;      /* Elegant flowing script */
-  --theme-title-weight: 400;   /* Ballet has only 400 */
-  --theme-body-weight: 700;    /* Using bold Tangerine for better readability */
-  --role-font-family: var(--theme-title-font);  /* Use Ballet for roles too */
-  
-  /* Font Sizes */
-  --title-font-size: 32px;      /* 2em - Reduced from 2.4em */
-  --role-font-size: 26px;     /* 1.6em - Also use Ballet for roles */
-  --trait-font-size: 22px;    /* 1.4em - Tangerine needs to be larger for readability */
-  --base-font-size: 21px;     /* 1.3cqw - Larger base size for Tangerine */
+	/* Typography */
+	--theme-title-font: 'Ballet', cursive; /* Art Nouveau elegance */
+	--theme-body-font: 'Tangerine', cursive; /* Elegant flowing script */
+	--theme-title-weight: 400; /* Ballet has only 400 */
+	--theme-body-weight: 700; /* Using bold Tangerine for better readability */
+	--role-font-family: var(--theme-title-font); /* Use Ballet for roles too */
 
-  /* Line Heights */
-  --title-line-height: 0.9;    /* Tighter line height for Ballet */
-  --role-line-height: 0.8;     /* Even tighter for role text */
-  --body-line-height: 1.2;     /* Slightly reduced for Tangerine */
+	/* Font Sizes */
+	--title-font-size: 32px; /* 2em - Reduced from 2.4em */
+	--role-font-size: 26px; /* 1.6em - Also use Ballet for roles */
+	--trait-font-size: 22px; /* 1.4em - Tangerine needs to be larger for readability */
+	--base-font-size: 21px; /* 1.3cqw - Larger base size for Tangerine */
 
-  /* Text Alignment */
-  --title-text-align: center;
-  --role-text-align: center;
-  --desc-text-align: left;
+	/* Line Heights */
+	--title-line-height: 0.9; /* Tighter line height for Ballet */
+	--role-line-height: 0.8; /* Even tighter for role text */
+	--body-line-height: 1.2; /* Slightly reduced for Tangerine */
 
-  /* Frame Style */
-  --frame-style: solid;
-  --frame-width: 1px;
-  --frame-opacity: 0.6;
+	/* Text Alignment */
+	--title-text-align: center;
+	--role-text-align: center;
+	--desc-text-align: left;
 
-  /* Divider Style */
-  --divider-style: solid;
-  --divider-width: 1px;
-  --divider-opacity: 0.4;
+	/* Frame Style */
+	--frame-style: solid;
+	--frame-width: 1px;
+	--frame-opacity: 0.6;
 
-  /* Content Box Style */
-  --content-box-bg: white;  /* White background for print */
-  --content-box-radius: 2px;
-  --content-box-border-width: 1px;              /* Border width for flourish alignment */
-  --content-box-shadow: none;  /* No shadow for print */
+	/* Divider Style */
+	--divider-style: solid;
+	--divider-width: 1px;
+	--divider-opacity: 0.4;
 
-  /* Flourish System */
-  --flourish-color: var(--theme-primary);
-  --flourish-opacity: 0;        /* Hide all flourishes */
-  --flourish-size: 3rem;
-  --flourish-aspect: 1;
+	/* Content Box Style */
+	--content-box-bg: white; /* White background for print */
+	--content-box-radius: 2px;
+	--content-box-border-width: 1px; /* Border width for flourish alignment */
+	--content-box-shadow: none; /* No shadow for print */
 
-  /* Portrait Flourishes */
-  --portrait-flourish-size: min(40%, 6rem);
-  --portrait-flourish-opacity: var(--flourish-opacity);
-  --portrait-flourish-aspect: 1;
+	/* Flourish System */
+	--flourish-color: var(--theme-primary);
+	--flourish-opacity: 0; /* Hide all flourishes */
+	--flourish-size: 3rem;
+	--flourish-aspect: 1;
 
-  /* Content Flourishes */
-  --content-flourish-size: 2.5rem;
-  --content-flourish-opacity: var(--flourish-opacity);
-  --content-flourish-aspect: 1;
+	/* Portrait Flourishes */
+	--portrait-flourish-size: min(40%, 6rem);
+	--portrait-flourish-opacity: var(--flourish-opacity);
+	--portrait-flourish-aspect: 1;
 
-  /* Individual Flourish Controls */
-  --flourish-content-top-left-opacity: var(--content-flourish-opacity);
-  --flourish-content-top-right-opacity: var(--content-flourish-opacity);
-  --flourish-content-bottom-left-opacity: var(--content-flourish-opacity);
-  --flourish-content-bottom-right-opacity: var(--content-flourish-opacity);
+	/* Content Flourishes */
+	--content-flourish-size: 2.5rem;
+	--content-flourish-opacity: var(--flourish-opacity);
+	--content-flourish-aspect: 1;
 
-  --flourish-portrait-top-left-opacity: var(--portrait-flourish-opacity);
-  --flourish-portrait-top-right-opacity: var(--portrait-flourish-opacity);
-  --flourish-portrait-bottom-left-opacity: var(--portrait-flourish-opacity);
-  --flourish-portrait-bottom-right-opacity: var(--portrait-flourish-opacity);
+	/* Individual Flourish Controls */
+	--flourish-content-top-left-opacity: var(--content-flourish-opacity);
+	--flourish-content-top-right-opacity: var(--content-flourish-opacity);
+	--flourish-content-bottom-left-opacity: var(--content-flourish-opacity);
+	--flourish-content-bottom-right-opacity: var(--content-flourish-opacity);
 
-  /* Show all flourishes */
-  --show-corner-flourish: 1;
-  --show-dividers: 1;
-  --show-frame: 1;
-  --show-texture: 0;
+	--flourish-portrait-top-left-opacity: var(--portrait-flourish-opacity);
+	--flourish-portrait-top-right-opacity: var(--portrait-flourish-opacity);
+	--flourish-portrait-bottom-left-opacity: var(--portrait-flourish-opacity);
+	--flourish-portrait-bottom-right-opacity: var(--portrait-flourish-opacity);
+
+	/* Show all flourishes */
+	--show-corner-flourish: 1;
+	--show-dividers: 1;
+	--show-frame: 1;
+	--show-texture: 0;
 }
 
 /* Override divider opacity for traits */
-[data-theme="cordial"] .traits {
-  opacity: unset;  /* Remove the divider-opacity from traits */
-} 
+[data-theme='cordial'] .traits {
+	opacity: unset; /* Remove the divider-opacity from traits */
+}

@@ -1,23 +1,25 @@
 @property --page-padding {
-    syntax: '<length>';
-    initial-value: 10mm;
-    inherits: false;
+	syntax: '<length>';
+	initial-value: 10mm;
+	inherits: false;
 }
 
 @property --color {
-    syntax: '<color>';
-    initial-value: #1a1a1a;
-    inherits: true;
+	syntax: '<color>';
+	initial-value: #1a1a1a;
+	inherits: true;
 }
 
 @property --accent {
-    syntax: '<color>';
-    initial-value: #4a5568;
-    inherits: true;
+	syntax: '<color>';
+	initial-value: #4a5568;
+	inherits: true;
 }
 
 :root {
-    --font-size: 5cqw;
-    --font-title: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
-    --font-body: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+	--font-size: 5cqw;
+	--font-title: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
+	--font-body:
+		system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+		sans-serif;
 }

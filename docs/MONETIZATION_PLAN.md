@@ -7,11 +7,13 @@ Transform Astounding Cards from a local-first BYOK tool into a monetized platfor
 ## Business Model
 
 ### Value Proposition
+
 - **No subscriptions** - pay only for what you create
 - **Booster pack pricing** - 10-30 NOK for custom card decks (vs 40-60 NOK for physical boosters)
 - **Viral content multiplication** - remixes generate revenue and marketing
 
 ### Revenue Streams
+
 1. **À la carte deck generation** (convenience pricing)
 2. **Token pack sales** (bulk discount, better margins)
 3. **Future: Gift cards & affiliate sales** (Phase 2)
@@ -19,6 +21,7 @@ Transform Astounding Cards from a local-first BYOK tool into a monetized platfor
 ## Pricing Model
 
 ### Astounding Token Economy
+
 - **100 tokens = 1 NOK** (simple mental model)
 - **Text generation: FREE** for first 5 decks per day (costs us ~0.01 NOK per deck - loss leader)
   - After daily limit: 100 tokens per deck (1 NOK)
@@ -26,6 +29,7 @@ Transform Astounding Cards from a local-first BYOK tool into a monetized platfor
 - **Image generation: 50 tokens per image** (0.50 NOK)
 
 ### À la carte Pricing (Convenience)
+
 ```
 8-card deck:   20 NOK  (400 tokens worth of images)
 10-card deck:  25 NOK  (500 tokens worth of images)
@@ -37,9 +41,11 @@ After Lemon Squeezy fees (5% + 5.50 NOK):
 ```
 
 ### Token Packs (Smart Buyer)
+
 **Base: 50 NOK per pack = 5,000 tokens**
 
 Volume discounts (5% per pack, max 40%):
+
 ```
 1 pack:  50 NOK   (0% off)  = 5,000 tokens   (~12 decks)
 2 packs: 95 NOK   (5% off)  = 10,000 tokens  (~25 decks)
@@ -51,6 +57,7 @@ Volume discounts (5% per pack, max 40%):
 ### User Tiers
 
 **Tier 0 - BYOK (Bring Your Own Key)**
+
 - Current functionality, remains free
 - User provides Gemini API key
 - Generates unlimited content at their cost
@@ -58,6 +65,7 @@ Volume discounts (5% per pack, max 40%):
 - **Keep this!** It's our community building tool
 
 **Tier 1 - Public (Subsidized Marketing)**
+
 - Text generation: FREE (we eat ~0.01 NOK cost)
 - Images: 50 tokens each (0.50 NOK)
 - Watermarked: "Made with Astounding.games"
@@ -66,6 +74,7 @@ Volume discounts (5% per pack, max 40%):
 - **This is our viral engine**
 
 **Tier 2 - Private (Premium - Phase 2)**
+
 - Text generation: FREE
 - Images: 400 tokens each (4.00 NOK)
 - No watermark
@@ -76,12 +85,14 @@ Volume discounts (5% per pack, max 40%):
 ## Architecture Changes
 
 ### Current State (Client-Only)
+
 - 100% local-first (IndexedDB)
 - URL-based sharing with base64 JSON
 - All data in browser
 - Zero backend costs
 
 ### Phase 1 Target (Hybrid)
+
 - **Keep local-first for backward compatibility**
 - Add optional backend for monetized features
 - Dual data model: local + remote
@@ -89,18 +100,22 @@ Volume discounts (5% per pack, max 40%):
 ### Tech Stack Additions
 
 **Backend:**
+
 - SvelteKit API routes (already available)
 - Vercel deployment (already using)
 
 **Database:**
+
 - Supabase (Postgres + Auth)
 - Free tier sufficient for MVP
 
 **Payment:**
+
 - Lemon Squeezy (5% + $0.50 per transaction)
 - Simpler than Stripe for SaaS/digital goods
 
 **Image Storage:**
+
 - Vercel Blob (simple integration, good for MVP)
 - Future: Cloudflare R2 (cheaper at scale)
 
@@ -181,6 +196,7 @@ transactions (
 ### Image Generation Flow
 
 **Public Tier:**
+
 ```
 1. User clicks "Generate Images" (à la carte or using tokens)
 2. Check credits / process payment
@@ -195,6 +211,7 @@ transactions (
 ```
 
 **BYOK (Current behavior, keep it):**
+
 ```
 1. User provides their Gemini key
 2. Client calls Gemini directly OR via API with { apiKey: userKey }
@@ -206,6 +223,7 @@ transactions (
 ## Phase 1: Core Monetization (4-6 weeks)
 
 ### Week 1: Backend Infrastructure
+
 - [ ] Set up Supabase project
 - [ ] Implement database schema
 - [ ] Add Supabase Auth (email/password)
@@ -213,6 +231,7 @@ transactions (
 - [ ] Add environment variables for API keys
 
 ### Week 2: Payment Integration
+
 - [ ] Set up Lemon Squeezy account
 - [ ] Create "Token Pack" product (50 NOK base)
 - [ ] Implement volume discount calculator
@@ -221,6 +240,7 @@ transactions (
 - [ ] Add credits balance UI (top nav bar)
 
 ### Week 3: AI Generation Backend
+
 - [ ] Move Gemini text generation to `/api/generate/text`
 - [ ] Implement `/api/generate/image` endpoint
 - [ ] Add watermarking for public tier (sharp/canvas)
@@ -229,6 +249,7 @@ transactions (
 - [ ] Keep BYOK option (optional apiKey parameter)
 
 ### Week 4: Deck Publishing & Gallery
+
 - [ ] Implement `/api/deck/publish` endpoint
 - [ ] Create gallery page (`/gallery`)
 - [ ] Add deck browsing (grid view, pagination)
@@ -237,6 +258,7 @@ transactions (
 - [ ] Support old URL format (backward compatible)
 
 ### Week 5: UI/UX Polish
+
 - [ ] À la carte checkout flow
 - [ ] Token pack purchase flow with volume discounts
 - [ ] Credits balance indicator
@@ -245,6 +267,7 @@ transactions (
 - [ ] Deck preview cards
 
 ### Week 6: Testing & Launch
+
 - [ ] Test payment flows (sandbox)
 - [ ] Test image generation (public tier)
 - [ ] Test deck publishing & gallery
@@ -256,6 +279,7 @@ transactions (
 ## Phase 2: Viral Features (Future)
 
 ### Remix System
+
 - [ ] Parent/child deck relationships
 - [ ] "Remix this deck" button
 - [ ] Automatic attribution
@@ -263,18 +287,21 @@ transactions (
 - [ ] Gallery filter: "Show remixes"
 
 ### Gift Cards & Distribution
+
 - [ ] Code redemption system
 - [ ] Lemon Squeezy license keys integration
 - [ ] Physical gift card design
 - [ ] Retail partnerships (game stores)
 
 ### Private Tier
+
 - [ ] Private deck tier (400 tokens per image)
 - [ ] No watermark
 - [ ] Keep images in IndexedDB only
 - [ ] Commercial use license
 
 ### Advanced Features
+
 - [ ] User profiles
 - [ ] Follow creators
 - [ ] Deck collections
@@ -284,12 +311,14 @@ transactions (
 ## Migration Strategy
 
 ### Backward Compatibility
+
 - **Old users with local decks:** Continue working exactly as before
 - **Old share URLs (`#data=...`):** Still functional
 - **BYOK:** Remains available and encouraged
 - **No forced accounts:** Can still use app locally without auth
 
 ### Gradual Opt-In
+
 1. User visits site → works as before (local-first)
 2. "New: Generate decks with AI for free!" banner → tries text generation
 3. Sees placeholder images → "Add images (20 NOK)" button
@@ -302,6 +331,7 @@ transactions (
 ### Per-User Costs (Public Tier)
 
 **8-card deck with images:**
+
 - Text generation: 0.01 NOK (Gemini API)
 - 8 images @ 0.40 NOK: 3.20 NOK (Gemini Imagen)
 - Storage (500KB × 8): ~0.001 NOK/month (Vercel Blob)
@@ -309,6 +339,7 @@ transactions (
 - **Total cost: ~3.22 NOK**
 
 **Revenue:**
+
 - À la carte: 20 NOK → ~13 NOK after fees → **9.78 NOK profit (75% margin)**
 - Token pack: 400 tokens = 4 NOK → **0.78 NOK profit per deck (20% margin)**
 
@@ -317,21 +348,25 @@ transactions (
 ### Hosting Costs (Estimated)
 
 **Vercel (current):**
+
 - Free tier: 100GB bandwidth, 6,000 minutes compute
 - Should handle 1,000+ users/month free
 - Pro plan ($20/month) for scaling
 
 **Supabase:**
+
 - Free tier: 500MB database, 2GB bandwidth
 - Should handle 10,000+ decks free
 - Pro plan ($25/month) for scaling
 
 **Image Storage:**
+
 - Vercel Blob: $0.15/GB/month storage + $0.10/GB bandwidth
 - 1,000 public decks @ 4MB each = 4GB = ~$0.60/month storage
 - Bandwidth costs scale with views
 
 **Scale estimates:**
+
 - 0-1,000 users: ~$0/month (all free tiers)
 - 1,000-10,000 users: ~$50/month (Vercel + Supabase Pro)
 - 10,000+ users: Consider Cloudflare R2 migration (10x cheaper storage)
@@ -339,6 +374,7 @@ transactions (
 ## Success Metrics
 
 ### Phase 1 Goals (First 3 months)
+
 - 100 paid users
 - 500 published decks in gallery
 - 5,000 NOK revenue
@@ -346,6 +382,7 @@ transactions (
 - 10% conversion to paid
 
 ### Long-term Goals (Year 1)
+
 - 1,000 paid users
 - 10,000 published decks
 - 100,000 NOK revenue
@@ -355,11 +392,13 @@ transactions (
 ## Risk Mitigation
 
 ### Payment Fraud
+
 - Lemon Squeezy handles fraud detection
 - Rate limiting on image generation (50/day per user)
 - Monitor for bulk account creation
 
 ### Content Moderation
+
 - Gemini has built-in content filters (SFW)
 - Report button on gallery decks
 - Admin review queue (Phase 2)
@@ -367,12 +406,14 @@ transactions (
 ### Text Generation Abuse Prevention
 
 **Free Tier Limits (logged-in users):**
+
 - 5 free deck generations per day
 - After limit: charge tokens (100 tokens per deck)
 - Resets at midnight UTC
 - BYOK users: unlimited (they pay their own costs)
 
 **Implementation:**
+
 ```typescript
 // Track in database
 users (
@@ -396,6 +437,7 @@ if (user.daily_free_decks_used >= 5 && !apiKey) {
 ```
 
 **User messaging:**
+
 ```
 You've used 3/5 free deck generations today
 → 2 more free decks today
@@ -404,16 +446,19 @@ You've used 3/5 free deck generations today
 ```
 
 ### Image Generation (Self-Limiting)
+
 - No rate limits needed - users pay for every image
 - Natural abuse prevention through cost
 - Optional: soft cap at 100 images/day with warning (prevent accidents)
 
 ### API Cost Runaway
+
 - Daily spend cap on Gemini API: 1,000 NOK
 - Alert if costs exceed 50% of revenue
 - Monitor for suspicious patterns (same prompt 100x)
 
 ### Refund Requests
+
 - "No refunds" policy (digital goods consumed immediately)
 - À la carte: images delivered instantly
 - Token packs: like gift cards, no expiry, no refunds
@@ -434,8 +479,9 @@ You've used 3/5 free deck generations today
 This plan has been consolidated with the Curated Decks feature (#11) into a single super-task.
 
 **Implementation Strategy:**
+
 - **Phase 1A (Weeks 1-2):** Gallery infrastructure & three-layer merge
-- **Phase 1B (Weeks 3-4):** User accounts & deck publishing  
+- **Phase 1B (Weeks 3-4):** User accounts & deck publishing
 - **Phase 1C (Weeks 5-6):** AI generation & monetization
 
 See issue #13 for detailed week-by-week checklist.

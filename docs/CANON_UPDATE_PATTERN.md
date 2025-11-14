@@ -16,10 +16,10 @@ The Canon Update pattern is a robust system for managing state changes in the Ca
 
 The Canon Update system consists of a set of exported functions that handle updates for different parts of the deck:
 
--   `canonUpdateDeck()`: Updates the deck's metadata (e.g., name, theme, card size).
--   `canonUpdateCard()`: Updates a single card's properties.
--   `canonUpdateCards()`: Updates multiple cards at once (not yet used, but available for future batch operations).
--   `canonDeleteDeck()`: Deletes a deck from the database.
+- `canonUpdateDeck()`: Updates the deck's metadata (e.g., name, theme, card size).
+- `canonUpdateCard()`: Updates a single card's properties.
+- `canonUpdateCards()`: Updates multiple cards at once (not yet used, but available for future batch operations).
+- `canonDeleteDeck()`: Deletes a deck from the database.
 
 Each of these functions follows the same core logic:
 
@@ -39,27 +39,27 @@ To use the Canon Update system in a component, simply import the desired functio
 
 ```svelte
 <script>
-  import { canonUpdateCard } from '$lib/stores/canonUpdate';
+	import { canonUpdateCard } from '$lib/stores/canonUpdate';
 
-  async function handleNameBlur(e) {
-    const newName = e.target.textContent.trim();
-    if (newName !== card.name) {
-      await canonUpdateCard(card.id, { name: newName }, ['card-name'], 'Updating name...');
-    }
-  }
+	async function handleNameBlur(e) {
+		const newName = e.target.textContent.trim();
+		if (newName !== card.name) {
+			await canonUpdateCard(card.id, { name: newName }, ['card-name'], 'Updating name...');
+		}
+	}
 </script>
 
 <h2 contenteditable onblur={handleNameBlur}>
-  {card.name}
+	{card.name}
 </h2>
 ```
 
 In this example:
 
--   `card.id`: The ID of the card to update.
--   `{ name: newName }`: An object containing the fields to update.
--   `['card-name']`: An array of loading state fields to set.
--   `'Updating name...'`: The loading message to display.
+- `card.id`: The ID of the card to update.
+- `{ name: newName }`: An object containing the fields to update.
+- `['card-name']`: An array of loading state fields to set.
+- `'Updating name...'`: The loading message to display.
 
 By following this pattern, all state updates are handled consistently and reliably, ensuring a great user experience and a maintainable codebase.
 
@@ -67,27 +67,27 @@ By following this pattern, all state updates are handled consistently and reliab
 
 ```svelte
 <script>
-  import { canonUpdateDeck, isFieldLoading } from '$lib/stores/canonUpdate';
-  
-  const isThemeUpdating = $derived(isFieldLoading('deck-theme'));
-  
-  async function handleThemeChange(newTheme) {
-    await canonUpdateDeck(
-      { theme: newTheme },
-      ['deck-theme'],
-      'Updating theme...',
-      'Theme updated successfully!'
-    );
-  }
+	import { canonUpdateDeck, isFieldLoading } from '$lib/stores/canonUpdate';
+
+	const isThemeUpdating = $derived(isFieldLoading('deck-theme'));
+
+	async function handleThemeChange(newTheme) {
+		await canonUpdateDeck(
+			{ theme: newTheme },
+			['deck-theme'],
+			'Updating theme...',
+			'Theme updated successfully!'
+		);
+	}
 </script>
 
 <select onchange={(e) => handleThemeChange(e.target.value)} disabled={isThemeUpdating}>
-  <option value="classic">Classic</option>
-  <option value="cyberdeck">Cyberdeck</option>
-  <!-- ... -->
+	<option value="classic">Classic</option>
+	<option value="cyberdeck">Cyberdeck</option>
+	<!-- ... -->
 </select>
 {#if isThemeUpdating}
-  <span>Updating theme...</span>
+	<span>Updating theme...</span>
 {/if}
 ```
 
@@ -95,21 +95,21 @@ By following this pattern, all state updates are handled consistently and reliab
 
 ```svelte
 <script>
-  import { canonUpdateCards } from '$lib/stores/canonUpdate';
-  
-  async function updateAllCardTypes(newType) {
-    const updates = cards.map(card => ({
-      cardId: card.id,
-      updates: { type: newType }
-    }));
-    
-    await canonUpdateCards(
-      updates,
-      ['bulk-update'],
-      'Updating all cards...',
-      'All cards updated successfully!'
-    );
-  }
+	import { canonUpdateCards } from '$lib/stores/canonUpdate';
+
+	async function updateAllCardTypes(newType) {
+		const updates = cards.map((card) => ({
+			cardId: card.id,
+			updates: { type: newType }
+		}));
+
+		await canonUpdateCards(
+			updates,
+			['bulk-update'],
+			'Updating all cards...',
+			'All cards updated successfully!'
+		);
+	}
 </script>
 ```
 
@@ -120,6 +120,7 @@ By following this pattern, all state updates are handled consistently and reliab
 Updates deck metadata.
 
 **Parameters:**
+
 - `updates: Partial<Deck['meta']>` - Object containing fields to update
 - `loadingFields?: string[]` - Array of loading state identifiers
 - `loadingMessage?: string` - Message to display during loading
@@ -132,6 +133,7 @@ Updates deck metadata.
 Updates a single card's properties.
 
 **Parameters:**
+
 - `cardId: string` - ID of the card to update
 - `updates: Partial<Card>` - Object containing fields to update
 - `loadingFields?: string[]` - Array of loading state identifiers
@@ -145,8 +147,9 @@ Updates a single card's properties.
 Updates multiple cards at once.
 
 **Parameters:**
+
 - `updates: Array<{cardId: string, updates: Partial<Card>}>` - Array of update objects
-- `loadingFields?: string[]` - Array of loading state identifiers  
+- `loadingFields?: string[]` - Array of loading state identifiers
 - `loadingMessage?: string` - Message to display during loading
 - `successMessage?: string` - Message to display on success
 
@@ -157,6 +160,7 @@ Updates multiple cards at once.
 Checks if a specific field is currently being updated.
 
 **Parameters:**
+
 - `field: string` - Loading state identifier to check
 
 **Returns:** `boolean` - True if the field is loading
@@ -164,6 +168,7 @@ Checks if a specific field is currently being updated.
 ## Loading State Management
 
 The Canon Update system provides granular loading states that can be used to:
+
 - Disable UI elements during updates
 - Show loading indicators
 - Display progress messages
@@ -172,7 +177,7 @@ The Canon Update system provides granular loading states that can be used to:
 ### Common Loading Field Names
 
 - `card-name` - Card name updates
-- `card-role` - Card role updates  
+- `card-role` - Card role updates
 - `card-traits` - Card traits updates
 - `card-image` - Card image updates
 - `card-description` - Card description updates
@@ -188,4 +193,3 @@ The Canon Update system provides granular loading states that can be used to:
 3. **Disable Interactive Elements**: Disable buttons and inputs during updates to prevent conflicts.
 4. **Handle Errors Gracefully**: The system automatically handles errors, but you can provide custom error handling if needed.
 5. **Keep Updates Atomic**: Each Canon Update call should represent a single logical operation.
-

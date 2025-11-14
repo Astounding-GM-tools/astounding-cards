@@ -1,8 +1,8 @@
 /**
  * Fetch Published Deck API
- * 
+ *
  * GET /api/deck/[id]
- * 
+ *
  * Fetches a published deck by ID or slug.
  * Increments view count on successful fetch.
  */
@@ -21,7 +21,7 @@ export const GET: RequestHandler = async ({ params }) => {
 	try {
 		// Try to fetch by UUID first, then by slug
 		const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
-		
+
 		let query = supabaseAdmin
 			.from('published_decks')
 			.select('*')
@@ -75,9 +75,6 @@ export const GET: RequestHandler = async ({ params }) => {
 		});
 	} catch (error) {
 		console.error('Unexpected error:', error);
-		return json(
-			{ error: 'An unexpected error occurred' },
-			{ status: 500 }
-		);
+		return json({ error: 'An unexpected error occurred' }, { status: 500 });
 	}
 };

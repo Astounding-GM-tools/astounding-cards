@@ -1,6 +1,6 @@
 /**
  * Supabase Server Client
- * 
+ *
  * Server-side Supabase client with service role key for admin operations.
  * Use this for API routes that need to bypass RLS.
  */
@@ -13,7 +13,9 @@ import { PUBLIC_SUPABASE_URL } from '$env/static/public';
 const apiKey = SUPABASE_SECRET_API_KEY || SUPABASE_SERVICE_ROLE_KEY;
 
 if (!PUBLIC_SUPABASE_URL || !apiKey) {
-	throw new Error('Missing Supabase environment variables: PUBLIC_SUPABASE_URL and SUPABASE_SECRET_API_KEY (or SUPABASE_SERVICE_ROLE_KEY) are required');
+	throw new Error(
+		'Missing Supabase environment variables: PUBLIC_SUPABASE_URL and SUPABASE_SECRET_API_KEY (or SUPABASE_SERVICE_ROLE_KEY) are required'
+	);
 }
 
 // Server client with secret API key (bypasses RLS, replaces service_role)

@@ -11,7 +11,7 @@
 		}
 
 		const file = fileInput.files[0];
-		
+
 		uploading = true;
 		error = null;
 		result = null;
@@ -42,15 +42,10 @@
 
 <div class="container">
 	<h1>R2 Image Upload Test</h1>
-	
+
 	<div class="upload-form">
-		<input 
-			type="file" 
-			accept="image/*" 
-			bind:this={fileInput}
-			disabled={uploading}
-		/>
-		
+		<input type="file" accept="image/*" bind:this={fileInput} disabled={uploading} />
+
 		<button onclick={handleUpload} disabled={uploading}>
 			{uploading ? 'Uploading...' : 'Upload to R2'}
 		</button>
@@ -58,7 +53,8 @@
 
 	{#if error}
 		<div class="error">
-			<strong>Error:</strong> {error}
+			<strong>Error:</strong>
+			{error}
 		</div>
 	{/if}
 
@@ -66,12 +62,12 @@
 		<div class="success">
 			<h2>✅ Upload Successful!</h2>
 			<pre>{JSON.stringify(result, null, 2)}</pre>
-			
+
 			<p><strong>Key:</strong> {result.key}</p>
 			<p><strong>URL:</strong> <a href={result.url} target="_blank">{result.url}</a></p>
 			<p><strong>Size:</strong> {(result.size / 1024).toFixed(2)} KB</p>
 			<p><strong>Type:</strong> {result.contentType}</p>
-			
+
 			{#if result.url.startsWith('http')}
 				<div class="image-preview">
 					<h3>Image Preview:</h3>
@@ -87,7 +83,10 @@
 		max-width: 600px;
 		margin: 2rem auto;
 		padding: 2rem;
-		font-family: system-ui, -apple-system, sans-serif;
+		font-family:
+			system-ui,
+			-apple-system,
+			sans-serif;
 	}
 
 	h1 {

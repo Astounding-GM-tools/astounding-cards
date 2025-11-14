@@ -3,6 +3,7 @@
 ## 🎉 Current Status (Completed)
 
 ### ✅ Ultra-Compact Card Edit Dialog
+
 - **Complete redesign** - No header, fieldset-style inputs, compact footer
 - **Real card previews** - Uses actual Card components with live updates
 - **Space efficient** - Both front/back cards visible without scrolling
@@ -10,6 +11,7 @@
 - **Technical foundation** - Proper Svelte 5 reactive state, dialog system
 
 ### ✅ Core Infrastructure
+
 - **Dialog system** - Reusable dialog with snippet-based content
 - **Database layer** - Persistent storage with reactive updates
 - **Card components** - Header, StatFocus, StatBlock, TraitList
@@ -20,6 +22,7 @@
 ## 🚀 Phase 1: Stats Editor (HIGH PRIORITY - NEXT)
 
 ### 📋 Tasks
+
 1. **Add Stats Fieldset to CardEditDialog**
    - [ ] Create "Stats" fieldset in edit form
    - [ ] List all existing stats with editable inputs
@@ -45,6 +48,7 @@
    - [ ] Verify stat formatting and display
 
 ### 🎯 Success Criteria
+
 - Click "Add Stat" and see new stat in preview immediately
 - Edit stat values and see live updates in both card previews
 - Toggle stat visibility and see it move between front/back
@@ -55,6 +59,7 @@
 ## 🏷️ Phase 2: Traits Editor (HIGH PRIORITY)
 
 ### 📋 Tasks
+
 1. **Add Traits Fieldset to CardEditDialog**
    - [ ] Create "Traits" fieldset in edit form
    - [ ] List all existing traits with editable label/value pairs
@@ -82,6 +87,7 @@
 ## ✨ Phase 3: Polish & UX (MEDIUM PRIORITY)
 
 ### 📋 Tasks
+
 1. **Keyboard Shortcuts**
    - [ ] Ctrl+S to save changes
    - [ ] Escape to cancel/close dialog
@@ -110,24 +116,28 @@
 ## 🔮 Phase 4: Advanced Features (FUTURE)
 
 ### 📋 Image Management
+
 - [ ] Card artwork upload system
 - [ ] Image positioning and scaling tools
 - [ ] Crop and filter functionality
 - [ ] Image library/gallery
 
 ### 📋 Templates & Presets
+
 - [ ] Card type templates (Character, Item, Location, Spell)
 - [ ] Pre-configured stat sets by card type
 - [ ] Trait libraries and quick-add
 - [ ] Duplicate card functionality
 
 ### 📋 Export & Sharing
+
 - [ ] Export individual cards as images
 - [ ] Print-ready PDF generation
 - [ ] Share card designs via URL
 - [ ] Import/export card JSON
 
 ### 📋 Advanced Editing
+
 - [ ] Rich text editing for descriptions
 - [ ] Markdown support
 - [ ] Color themes and styling options
@@ -138,12 +148,14 @@
 ## 🛠️ Technical Notes
 
 ### Current Architecture
+
 - **Framework**: Svelte 5 with runes ($state, $derived, $effect)
 - **Database**: IndexedDB with reactive store layer
 - **Styling**: CSS with CSS custom properties
 - **Components**: Modular card components (Header, StatFocus, etc.)
 
 ### Key Files
+
 - `/src/routes/next/+page.svelte` - Main card view and dialog trigger
 - `/src/lib/next/components/dialogs/CardEditDialog.svelte` - Edit dialog
 - `/src/lib/next/stores/deckStore.svelte.ts` - Card data management
@@ -151,12 +163,14 @@
 - `/src/lib/next/components/card/` - Card rendering components
 
 ### Development Workflow
+
 1. Start dev server: `npm run dev`
 2. Open: `http://localhost:5173/next`
 3. Click any card to open edit dialog
 4. Test changes in both card previews
 
 ### Next Session Quick Start
+
 ```bash
 cd /Users/olemak/Projects/eksperimenter/char-cards
 npm run dev
@@ -169,6 +183,7 @@ npm run dev
 ## 📝 Session Notes
 
 ### 2025-01-18 Session Accomplishments
+
 - ✅ Completely redesigned CardEditDialog for ultra-compact layout
 - ✅ Replaced mock previews with real Card components
 - ✅ Fixed layout toggle and loading loop issues
@@ -178,6 +193,7 @@ npm run dev
 - ✅ Established solid foundation for stats/traits editing
 
 ### Ready for Next Session
+
 **Primary Goal**: Implement Stats Editor in CardEditDialog
 **Estimated Time**: 2-3 hours for full stats editing functionality
 **Stretch Goal**: Begin Traits Editor if stats complete quickly

@@ -1,6 +1,6 @@
 /**
  * Supabase Client
- * 
+ *
  * Client-side Supabase client for authentication.
  * Uses public anon key (safe to expose in browser).
  */

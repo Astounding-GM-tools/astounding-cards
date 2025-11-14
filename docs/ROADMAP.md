@@ -3,7 +3,9 @@
 ## Implementation Notes
 
 ### Store Update Pattern
+
 To prevent scroll jumps and maintain performance:
+
 - Use writable store for currentDeck (not derived)
 - Update store directly with set() when saving changes
 - Never force reloads by toggling currentDeckId
@@ -11,7 +13,9 @@ To prevent scroll jumps and maintain performance:
 - This ensures only changed cards re-render and scroll position is maintained
 
 ### CSS Variables Pattern
+
 For consistent styling and theming:
+
 - Separate theme variables (affecting cards) from UI variables
 - Use CSS variables for all colors, spacing, and typography
 - Keep UI styling consistent regardless of theme
@@ -19,7 +23,9 @@ For consistent styling and theming:
 - Maintain print-friendly styles
 
 ### Theme Component Pattern
+
 For consistent theme application:
+
 - Use regular elements for interactive/conditional decorations
 - Use pseudo-elements for static decorations
 - Maintain clear z-index layering
@@ -109,8 +115,9 @@ For consistent theme application:
 ## Game System Support ✅
 
 ### Vocabulary Customization System (Complete)
+
 - [x] **Database Schema**: Extended to support statblock configurations with proper indexes
-- [x] **Type System**: Added `StatblockConfig`, `StatblockVocabulary`, and enhanced `CardMechanic` types  
+- [x] **Type System**: Added `StatblockConfig`, `StatblockVocabulary`, and enhanced `CardMechanic` types
 - [x] **Official Configurations**: Created multiple RPG system vocabularies (Modern RPG, OSR, Narrative, Investigation)
 - [x] **Configuration Store**: Complete Svelte store with CRUD operations for vocabulary management
 - [x] **Vocabulary Editor**: Intuitive UI component for customizing stat names per deck
@@ -118,20 +125,23 @@ For consistent theme application:
 - [x] **Front/Back Philosophy**: Clear separation of player-visible vs GM-only information
 
 ### Evolution from Complex to Simple
-The vocabulary customization system evolved from initial game preset work, focusing on the most important need: 
-**customizable terminology**. Instead of complex preset selection, users get an intuitive vocabulary editor 
-that lets them adapt any RPG system (D&D → "Hit Points", PbtA → "Stress", etc.) while maintaining 
+
+The vocabulary customization system evolved from initial game preset work, focusing on the most important need:
+**customizable terminology**. Instead of complex preset selection, users get an intuitive vocabulary editor
+that lets them adapt any RPG system (D&D → "Hit Points", PbtA → "Stress", etc.) while maintaining
 all the power of contextual templates and structured data.
 
 ### Front/Back Card Design Philosophy 📋
 
 **Front Card (Player-Visible)**:
+
 - Public character information (age, heritage, clan, profession)
-- Item properties (value, rarity, weight, material) 
+- Item properties (value, rarity, weight, material)
 - Location details (area, population, climate)
 - Spell/ability basics (level, school, duration, range)
 
 **Back Card (GM-Only)**:
+
 - Combat mechanics (HP, AC, attack bonuses, damage)
 - Saving throws and resistances
 - Special abilities and game mechanics

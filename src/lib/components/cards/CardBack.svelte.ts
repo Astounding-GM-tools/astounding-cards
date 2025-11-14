@@ -12,21 +12,21 @@ import { parseSecrets, addSecret } from '$lib/utils/card-utils';
  * Used in: getCard() function (lines 36-45)
  */
 export function getCardData(
-  cardId: string,
-  previewCard: Card,
-  isPreview: boolean,
-  deckCards?: Card[]
+	cardId: string,
+	previewCard: Card,
+	isPreview: boolean,
+	deckCards?: Card[]
 ): Card {
-  if (isPreview) {
-    return previewCard;
-  }
-  
-  if (!deckCards) {
-    return previewCard;
-  }
-  
-  const foundCard = deckCards.find(c => c.id === cardId);
-  return foundCard || previewCard;
+	if (isPreview) {
+		return previewCard;
+	}
+
+	if (!deckCards) {
+		return previewCard;
+	}
+
+	const foundCard = deckCards.find((c) => c.id === cardId);
+	return foundCard || previewCard;
 }
 
 // ===== THEME RESOLUTION =====
@@ -36,11 +36,11 @@ export function getCardData(
  * Used in: activeTheme derived (line 27)
  */
 export function resolveActiveTheme(
-  propTheme?: string,
-  deckTheme?: string,
-  fallback: string = 'classic'
+	propTheme?: string,
+	deckTheme?: string,
+	fallback: string = 'classic'
 ): string {
-  return propTheme ?? deckTheme ?? fallback;
+	return propTheme ?? deckTheme ?? fallback;
 }
 
 // ===== NAME PROCESSING =====
@@ -50,8 +50,8 @@ export function resolveActiveTheme(
  * Used in: handleNameBlur() function (lines 49-55)
  */
 export function processNameFromBlur(event: FocusEvent): string {
-  const target = event.target as HTMLElement;
-  return target.textContent?.trim() || '';
+	const target = event.target as HTMLElement;
+	return target.textContent?.trim() || '';
 }
 
 /**
@@ -59,7 +59,7 @@ export function processNameFromBlur(event: FocusEvent): string {
  * Used in: handleNameBlur() function (line 52)
  */
 export function nameHasChanged(newName: string, currentName: string): boolean {
-  return newName !== currentName;
+	return newName !== currentName;
 }
 
 // ===== DESCRIPTION PROCESSING =====
@@ -69,9 +69,9 @@ export function nameHasChanged(newName: string, currentName: string): boolean {
  * Used in: handleDescBlur() function (lines 67-73)
  */
 export function processDescriptionFromElement(element: HTMLElement | null): string | null {
-  if (!element) return null;
-  const newDesc = element.innerText?.trim();
-  return newDesc || null;
+	if (!element) return null;
+	const newDesc = element.innerText?.trim();
+	return newDesc || null;
 }
 
 /**
@@ -79,7 +79,7 @@ export function processDescriptionFromElement(element: HTMLElement | null): stri
  * Used in: handleDescBlur() function (line 70)
  */
 export function shouldUpdateDescription(newDesc: string | null, currentDesc: string): boolean {
-  return !!(newDesc && newDesc !== currentDesc);
+	return !!(newDesc && newDesc !== currentDesc);
 }
 
 // ===== SECRETS PROCESSING =====
@@ -89,8 +89,8 @@ export function shouldUpdateDescription(newDesc: string | null, currentDesc: str
  * Used in: handleSecretsBlur() function (line 77)
  */
 export function processSecretsFromElement(element: HTMLElement | null): any[] {
-  if (!element) return [];
-  return parseSecrets(element.innerHTML);
+	if (!element) return [];
+	return parseSecrets(element.innerHTML);
 }
 
 /**
@@ -98,7 +98,7 @@ export function processSecretsFromElement(element: HTMLElement | null): any[] {
  * Used in: handleSecretsBlur() function (line 78)
  */
 export function secretsHaveChanged(newSecrets: any[], currentSecrets: any[]): boolean {
-  return JSON.stringify(newSecrets) !== JSON.stringify(currentSecrets);
+	return JSON.stringify(newSecrets) !== JSON.stringify(currentSecrets);
 }
 
 /**
@@ -106,7 +106,7 @@ export function secretsHaveChanged(newSecrets: any[], currentSecrets: any[]): bo
  * Used in: handleAddSecret() function (line 85)
  */
 export function addSecretToArray(secrets: any[]): any[] {
-  return addSecret(secrets);
+	return addSecret(secrets);
 }
 
 // ===== TEMPLATE PROCESSING =====
@@ -116,23 +116,23 @@ export function addSecretToArray(secrets: any[]): any[] {
  * Used in: handleTemplateSelect() function (lines 102-128)
  */
 export async function applyTemplateWithVocabulary(
-  template: StatblockTemplate,
-  deckConfigId?: string,
-  configLoader?: (id: string) => Promise<any>
+	template: StatblockTemplate,
+	deckConfigId?: string,
+	configLoader?: (id: string) => Promise<any>
 ): Promise<CardMechanic[]> {
-  if (deckConfigId && configLoader) {
-    try {
-      const deckConfig = await configLoader(deckConfigId);
-      const vocabulary = configToSimpleVocabulary(deckConfig);
-      return instantiateTemplateWithVocabulary(template, vocabulary);
-    } catch (error) {
-    // Failed to load deck config
-      // Fallback to default instantiation on error
-      return instantiateTemplate(template);
-    }
-  }
-  
-  return instantiateTemplate(template);
+	if (deckConfigId && configLoader) {
+		try {
+			const deckConfig = await configLoader(deckConfigId);
+			const vocabulary = configToSimpleVocabulary(deckConfig);
+			return instantiateTemplateWithVocabulary(template, vocabulary);
+		} catch (error) {
+			// Failed to load deck config
+			// Fallback to default instantiation on error
+			return instantiateTemplate(template);
+		}
+	}
+
+	return instantiateTemplate(template);
 }
 
 // ===== UTILITY FUNCTIONS =====
@@ -142,7 +142,7 @@ export async function applyTemplateWithVocabulary(
  * Used throughout component for conditional logic
  */
 export function isEditableMode(editable: boolean): boolean {
-  return editable;
+	return editable;
 }
 
 /**
@@ -150,5 +150,5 @@ export function isEditableMode(editable: boolean): boolean {
  * Used in: contenteditable attributes (lines 157, 170, 195)
  */
 export function shouldBeContentEditable(editable: boolean, isUpdating: boolean): boolean {
-  return editable && !isUpdating;
+	return editable && !isUpdating;
 }

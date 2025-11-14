@@ -21,7 +21,7 @@
 
 		if (mode === 'sign-up') {
 			const { error } = await authStore.signUp(email, password);
-			
+
 			if (error) {
 				toasts.error(error.message);
 			} else {
@@ -30,7 +30,7 @@
 			}
 		} else {
 			const { error } = await authStore.signIn(email, password);
-			
+
 			if (error) {
 				toasts.error(error.message);
 			} else {
@@ -45,7 +45,7 @@
 	async function handleGoogleAuth() {
 		loading = true;
 		const { error } = await authStore.signInWithGoogle();
-		
+
 		if (error) {
 			toasts.error(error.message);
 			loading = false;
@@ -61,7 +61,7 @@
 
 		loading = true;
 		const { error } = await authStore.resetPassword(email);
-		
+
 		if (error) {
 			toasts.error(error.message);
 		} else {
@@ -74,7 +74,7 @@
 
 	function handleSubmit(e: Event) {
 		e.preventDefault();
-		
+
 		if (mode === 'reset') {
 			handleResetPassword();
 		} else {
@@ -102,9 +102,7 @@
 						Reset Password
 					{/if}
 				</h2>
-				<button class="close-button" onclick={() => (open = false)} aria-label="Close">
-					×
-				</button>
+				<button class="close-button" onclick={() => (open = false)} aria-label="Close"> × </button>
 			</div>
 
 			<div class="dialog-content">

@@ -1,6 +1,6 @@
 /**
  * Content Moderation & Classification Prompts
- * 
+ *
  * For analyzing published decks for safety, categorization, and quality
  */
 
@@ -10,107 +10,107 @@ import { Type } from '@google/genai';
  * Taxonomy of deck categories and tags
  */
 export const DECK_TAXONOMY = {
-  // Primary categories (broad, inclusive)
-  categories: [
-    'rpg',           // Tabletop RPG content
-    'educational',   // Learning materials, study aids
-    'recipes',       // Food and drink recipes
-    'flashcards',    // Language learning, trivia, memorization
-    'worldbuilding', // Settings, locations, lore
-    'creative',      // Writing prompts, art inspiration, brainstorming
-    'reference',     // Quick reference materials, cheat sheets
-    'game',          // Game mechanics, items, characters
-    'humor',         // Comedy, parody, satire, memes
-    'fan-content',   // Fan fiction, reimaginings, crossovers
-    'personal',      // Personal collections, journaling, tracking
-    'business',      // Productivity, planning, organization
-    'fitness',       // Workouts, exercises, routines
-    'travel',        // Destinations, itineraries, guides
-    'entertainment', // Movies, books, music, shows
-    'collection',    // Collecting, cataloging, organizing
-    'other'          // Uncategorized
-  ],
-  
-  // RPG subcategories
-  rpgSystems: [
-    'dnd',           // D&D (all editions)
-    'pathfinder',    // Pathfinder 1e/2e
-    'wfrp',          // Warhammer Fantasy Roleplay
-    'call-of-cthulhu', // Call of Cthulhu
-    'fate',          // FATE system
-    'pbta',          // Powered by the Apocalypse
-    'osr',           // Old School Revival
-    'generic',       // System-agnostic
-    'other-rpg'      // Other RPG systems
-  ],
-  
-  // Themes and genres (expansive)
-  themes: [
-    'fantasy',       // High fantasy, medieval, magic
-    'scifi',         // Science fiction, space, future
-    'cyberpunk',     // Cyberpunk, near-future tech
-    'horror',        // Horror, scary, creepy
-    'historical',    // Real-world historical periods
-    'modern',        // Contemporary, present day
-    'post-apocalyptic', // Post-apocalyptic, wasteland
-    'steampunk',     // Steampunk, victorian tech
-    'superhero',     // Superhero, powers, heroes
-    'mystery',       // Mystery, detective, noir
-    'comedy',        // Humorous, lighthearted, funny
-    'dark',          // Dark, grim, serious
-    'whimsical',     // Lighthearted, fairy tale, cute
-    'anime',         // Anime, manga style
-    'western',       // Wild west, cowboys
-    'noir',          // Film noir, detective
-    'mythology',     // Mythology, legends, folklore
-    'nautical',      // Naval, pirate, ocean
-    'space-opera',   // Space opera, epic sci-fi
-    'urban-fantasy', // Modern world + magic
-    'slice-of-life', // Everyday, realistic
-    'absurd',        // Surreal, nonsensical, weird
-    'parody',        // Parody, satire, homage
-    'educational',   // Teaching, informative
-    'inspirational', // Motivational, uplifting
-  ],
-  
-  // Content types (what the cards represent)
-  contentTypes: [
-    'characters',    // People, NPCs, PCs, monsters, creatures
-    'locations',     // Places, buildings, regions, maps
-    'items',         // Objects, equipment, artifacts, treasure
-    'spells',        // Magic, abilities, powers, skills
-    'encounters',    // Combat, challenges, events, scenarios
-    'plot-hooks',    // Story ideas, quests, missions
-    'lore',          // Background, history, worldbuilding
-    'mechanics',     // Rules, systems, procedures
-    'concepts',      // Ideas, theories, philosophies
-    'quotes',        // Quotations, sayings, dialogue
-    'facts',         // Information, trivia, data
-    'instructions',  // How-to, guides, tutorials
-    'prompts',       // Writing prompts, art prompts, ideas
-    'lists',         // Checklists, inventories, catalogs
-    'profiles',      // Biographies, summaries, overviews
-    'reviews',       // Critiques, opinions, ratings
-    'comparisons',   // Contrasts, versus, alternatives
-    'timelines',     // Chronology, history, sequences
-    'recipes',       // Cooking, crafting, formulas
-    'exercises',     // Workouts, activities, drills
-    'vocabulary',    // Words, terms, definitions
-    'mixed',         // Various types in one deck
-  ],
-  
-  // Quality indicators
-  qualityFlags: [
-    'high-effort',   // Clearly handcrafted with care
-    'original-art',  // Custom artwork
-    'well-illustrated', // Has good images
-    'creative',      // Unique and imaginative
-    'practical',     // Useful and actionable
-    'detailed',      // Rich in detail
-    'cohesive',      // Well-structured theme
-    'ai-generated',  // Clearly AI-generated
-    'generic',       // Formulaic, lacks uniqueness
-  ]
+	// Primary categories (broad, inclusive)
+	categories: [
+		'rpg', // Tabletop RPG content
+		'educational', // Learning materials, study aids
+		'recipes', // Food and drink recipes
+		'flashcards', // Language learning, trivia, memorization
+		'worldbuilding', // Settings, locations, lore
+		'creative', // Writing prompts, art inspiration, brainstorming
+		'reference', // Quick reference materials, cheat sheets
+		'game', // Game mechanics, items, characters
+		'humor', // Comedy, parody, satire, memes
+		'fan-content', // Fan fiction, reimaginings, crossovers
+		'personal', // Personal collections, journaling, tracking
+		'business', // Productivity, planning, organization
+		'fitness', // Workouts, exercises, routines
+		'travel', // Destinations, itineraries, guides
+		'entertainment', // Movies, books, music, shows
+		'collection', // Collecting, cataloging, organizing
+		'other' // Uncategorized
+	],
+
+	// RPG subcategories
+	rpgSystems: [
+		'dnd', // D&D (all editions)
+		'pathfinder', // Pathfinder 1e/2e
+		'wfrp', // Warhammer Fantasy Roleplay
+		'call-of-cthulhu', // Call of Cthulhu
+		'fate', // FATE system
+		'pbta', // Powered by the Apocalypse
+		'osr', // Old School Revival
+		'generic', // System-agnostic
+		'other-rpg' // Other RPG systems
+	],
+
+	// Themes and genres (expansive)
+	themes: [
+		'fantasy', // High fantasy, medieval, magic
+		'scifi', // Science fiction, space, future
+		'cyberpunk', // Cyberpunk, near-future tech
+		'horror', // Horror, scary, creepy
+		'historical', // Real-world historical periods
+		'modern', // Contemporary, present day
+		'post-apocalyptic', // Post-apocalyptic, wasteland
+		'steampunk', // Steampunk, victorian tech
+		'superhero', // Superhero, powers, heroes
+		'mystery', // Mystery, detective, noir
+		'comedy', // Humorous, lighthearted, funny
+		'dark', // Dark, grim, serious
+		'whimsical', // Lighthearted, fairy tale, cute
+		'anime', // Anime, manga style
+		'western', // Wild west, cowboys
+		'noir', // Film noir, detective
+		'mythology', // Mythology, legends, folklore
+		'nautical', // Naval, pirate, ocean
+		'space-opera', // Space opera, epic sci-fi
+		'urban-fantasy', // Modern world + magic
+		'slice-of-life', // Everyday, realistic
+		'absurd', // Surreal, nonsensical, weird
+		'parody', // Parody, satire, homage
+		'educational', // Teaching, informative
+		'inspirational' // Motivational, uplifting
+	],
+
+	// Content types (what the cards represent)
+	contentTypes: [
+		'characters', // People, NPCs, PCs, monsters, creatures
+		'locations', // Places, buildings, regions, maps
+		'items', // Objects, equipment, artifacts, treasure
+		'spells', // Magic, abilities, powers, skills
+		'encounters', // Combat, challenges, events, scenarios
+		'plot-hooks', // Story ideas, quests, missions
+		'lore', // Background, history, worldbuilding
+		'mechanics', // Rules, systems, procedures
+		'concepts', // Ideas, theories, philosophies
+		'quotes', // Quotations, sayings, dialogue
+		'facts', // Information, trivia, data
+		'instructions', // How-to, guides, tutorials
+		'prompts', // Writing prompts, art prompts, ideas
+		'lists', // Checklists, inventories, catalogs
+		'profiles', // Biographies, summaries, overviews
+		'reviews', // Critiques, opinions, ratings
+		'comparisons', // Contrasts, versus, alternatives
+		'timelines', // Chronology, history, sequences
+		'recipes', // Cooking, crafting, formulas
+		'exercises', // Workouts, activities, drills
+		'vocabulary', // Words, terms, definitions
+		'mixed' // Various types in one deck
+	],
+
+	// Quality indicators
+	qualityFlags: [
+		'high-effort', // Clearly handcrafted with care
+		'original-art', // Custom artwork
+		'well-illustrated', // Has good images
+		'creative', // Unique and imaginative
+		'practical', // Useful and actionable
+		'detailed', // Rich in detail
+		'cohesive', // Well-structured theme
+		'ai-generated', // Clearly AI-generated
+		'generic' // Formulaic, lacks uniqueness
+	]
 } as const;
 
 /**
@@ -180,91 +180,91 @@ Be permissive with creative content. This platform celebrates diversity and imag
  * Schema for moderation and classification response
  */
 export function createModerationSchema() {
-  return {
-    type: Type.OBJECT,
-    properties: {
-      moderation: {
-        type: Type.OBJECT,
-        properties: {
-          status: {
-            type: Type.STRING,
-            enum: ['safe', 'warning', 'blocked']
-          },
-          blockedReason: { type: Type.STRING },
-          warnings: {
-            type: Type.ARRAY,
-            items: {
-              type: Type.STRING,
-              enum: ['mature_sexual', 'mature_violent', 'mature_disturbing']
-            }
-          },
-          flaggedCards: {
-            type: Type.ARRAY,
-            items: {
-              type: Type.OBJECT,
-              properties: {
-                cardTitle: { type: Type.STRING },
-                reason: { type: Type.STRING }
-              },
-              required: ['cardTitle', 'reason']
-            }
-          }
-        },
-        required: ['status', 'warnings']
-      },
-      classification: {
-        type: Type.OBJECT,
-        properties: {
-          category: {
-            type: Type.STRING,
-            enum: DECK_TAXONOMY.categories
-          },
-          subcategories: {
-            type: Type.ARRAY,
-            items: { type: Type.STRING }
-          },
-          themes: {
-            type: Type.ARRAY,
-            items: { type: Type.STRING }
-          },
-          contentTypes: {
-            type: Type.ARRAY,
-            items: { type: Type.STRING }
-          },
-          language: { type: Type.STRING },
-          estimatedAge: {
-            type: Type.STRING,
-            enum: ['all-ages', '12+', '16+', '18+']
-          }
-        },
-        required: ['category', 'language', 'estimatedAge']
-      },
-      quality: {
-        type: Type.OBJECT,
-        properties: {
-          score: {
-            type: Type.NUMBER,
-            description: 'Quality score from 0-10'
-          },
-          isEditorsPick: { type: Type.BOOLEAN },
-          qualityFlags: {
-            type: Type.ARRAY,
-            items: { type: Type.STRING }
-          },
-          reasoning: { type: Type.STRING }
-        },
-        required: ['score', 'isEditorsPick', 'qualityFlags']
-      }
-    },
-    required: ['moderation', 'classification', 'quality']
-  };
+	return {
+		type: Type.OBJECT,
+		properties: {
+			moderation: {
+				type: Type.OBJECT,
+				properties: {
+					status: {
+						type: Type.STRING,
+						enum: ['safe', 'warning', 'blocked']
+					},
+					blockedReason: { type: Type.STRING },
+					warnings: {
+						type: Type.ARRAY,
+						items: {
+							type: Type.STRING,
+							enum: ['mature_sexual', 'mature_violent', 'mature_disturbing']
+						}
+					},
+					flaggedCards: {
+						type: Type.ARRAY,
+						items: {
+							type: Type.OBJECT,
+							properties: {
+								cardTitle: { type: Type.STRING },
+								reason: { type: Type.STRING }
+							},
+							required: ['cardTitle', 'reason']
+						}
+					}
+				},
+				required: ['status', 'warnings']
+			},
+			classification: {
+				type: Type.OBJECT,
+				properties: {
+					category: {
+						type: Type.STRING,
+						enum: DECK_TAXONOMY.categories
+					},
+					subcategories: {
+						type: Type.ARRAY,
+						items: { type: Type.STRING }
+					},
+					themes: {
+						type: Type.ARRAY,
+						items: { type: Type.STRING }
+					},
+					contentTypes: {
+						type: Type.ARRAY,
+						items: { type: Type.STRING }
+					},
+					language: { type: Type.STRING },
+					estimatedAge: {
+						type: Type.STRING,
+						enum: ['all-ages', '12+', '16+', '18+']
+					}
+				},
+				required: ['category', 'language', 'estimatedAge']
+			},
+			quality: {
+				type: Type.OBJECT,
+				properties: {
+					score: {
+						type: Type.NUMBER,
+						description: 'Quality score from 0-10'
+					},
+					isEditorsPick: { type: Type.BOOLEAN },
+					qualityFlags: {
+						type: Type.ARRAY,
+						items: { type: Type.STRING }
+					},
+					reasoning: { type: Type.STRING }
+				},
+				required: ['score', 'isEditorsPick', 'qualityFlags']
+			}
+		},
+		required: ['moderation', 'classification', 'quality']
+	};
 }
 
 /**
  * Create prompt for analyzing deck content
  */
 export function createModerationPrompt(deckJson: string): string {
-  return `Analyze this deck for moderation, classification, and quality:
+	return `Analyze this deck for moderation, classification, and quality:
 
 ${deckJson}
 

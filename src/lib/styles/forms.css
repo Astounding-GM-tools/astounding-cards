@@ -2,80 +2,82 @@
 
 /* Fieldsets */
 fieldset {
-    border: 1px solid var(--ui-border);
-    border-radius: 4px;
-    padding: var(--content-gap);
-    margin: 0;
-    background: var(--ui-bg);
+	border: 1px solid var(--ui-border);
+	border-radius: 4px;
+	padding: var(--content-gap);
+	margin: 0;
+	background: var(--ui-bg);
 }
 
 legend {
-    font-size: var(--ui-font-size);
-    font-family: var(--ui-font-family);
-    color: var(--ui-muted);
-    padding: 0 var(--content-gap);
-    background: var(--ui-bg);
+	font-size: var(--ui-font-size);
+	font-family: var(--ui-font-family);
+	color: var(--ui-muted);
+	padding: 0 var(--content-gap);
+	background: var(--ui-bg);
 }
 
 /* Form inputs */
-select, 
-input[type="text"], 
-input[type="url"], 
-input[type="file"], 
+select,
+input[type='text'],
+input[type='url'],
+input[type='file'],
 textarea {
-    padding: calc(var(--content-gap) * 0.75);
-    border: 1px solid var(--ui-border);
-    border-radius: 4px;
-    background: var(--ui-bg);
-    color: var(--ui-text);
-    font-size: var(--ui-font-size);
-    font-family: var(--ui-font-family);
-    transition: border-color 0.2s, box-shadow 0.2s;
+	padding: calc(var(--content-gap) * 0.75);
+	border: 1px solid var(--ui-border);
+	border-radius: 4px;
+	background: var(--ui-bg);
+	color: var(--ui-text);
+	font-size: var(--ui-font-size);
+	font-family: var(--ui-font-family);
+	transition:
+		border-color 0.2s,
+		box-shadow 0.2s;
 }
 
 select {
-    cursor: pointer;
+	cursor: pointer;
 }
 
 select:hover,
 input:hover {
-    border-color: var(--button-primary-bg);
+	border-color: var(--button-primary-bg);
 }
 
 select:focus,
 input:focus,
 textarea:focus {
-    outline: none;
-    border-color: var(--button-primary-bg);
-    box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.1);
+	outline: none;
+	border-color: var(--button-primary-bg);
+	box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.1);
 }
 
 /* Status messages */
 .status {
-    display: block;
-    padding: calc(var(--content-gap) * 0.75);
-    color: var(--ui-muted);
-    font-size: var(--ui-font-size);
-    font-family: var(--ui-font-family);
+	display: block;
+	padding: calc(var(--content-gap) * 0.75);
+	color: var(--ui-muted);
+	font-size: var(--ui-font-size);
+	font-family: var(--ui-font-family);
 }
 
 .status.error {
-    color: var(--toast-error);
+	color: var(--toast-error);
 }
 
 /* Icon buttons */
 .icon-button {
-    padding: 0.25rem 0.5rem;
-    border: none;
-    background: none;
-    cursor: pointer;
-    font-size: var(--ui-font-size);
-    font-family: var(--ui-font-family);
-    color: var(--ui-text);
-    opacity: 0.7;
-    transition: opacity 0.2s;
+	padding: 0.25rem 0.5rem;
+	border: none;
+	background: none;
+	cursor: pointer;
+	font-size: var(--ui-font-size);
+	font-family: var(--ui-font-family);
+	color: var(--ui-text);
+	opacity: 0.7;
+	transition: opacity 0.2s;
 }
 
 .icon-button:hover {
-    opacity: 1;
+	opacity: 1;
 }

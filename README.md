@@ -31,6 +31,7 @@ Browser tool for creating and managing custom cards for tabletop RPGs, board gam
 ## 🎯 How It Works
 
 Card Deck Creator is a **client-side only** application:
+
 - ✅ All data stored in your browser (IndexedDB)
 - ✅ Images stored locally as blobs
 - ✅ No servers, databases, or accounts needed
@@ -43,6 +44,7 @@ Card Deck Creator is a **client-side only** application:
 You have two options for creating your character cards:
 
 ### Option 1: Double-Sided Paper Printing
+
 Perfect for quick prototyping or when you need cards quickly:
 
 1. Select the characters you want to print
@@ -57,12 +59,14 @@ Perfect for quick prototyping or when you need cards quickly:
 5. Print and cut along crop marks
 
 **Paper Recommendations:**
+
 - Use 160-200gsm paper for best results (card stock)
 - 120gsm minimum for double-sided printing
 - Most home/office printers can handle up to 200gsm
 - Test a single page first if using heavier paper
 
 **Making Cards More Durable:**
+
 - Use clear acrylic spray sealant (available at craft stores)
 - Apply 2-3 light coats, letting each dry completely
 - Seals the ink and provides water resistance
@@ -70,6 +74,7 @@ Perfect for quick prototyping or when you need cards quickly:
 - Test on a sample card first!
 
 ### Option 2: Premium Playing Card Mount
+
 For a more durable, professional feel:
 
 1. Print fronts and backs separately (single-sided)
@@ -91,26 +96,31 @@ This second method gives you sturdy, card-stock quality character cards that fee
 ## 📚 Documentation
 
 ### For Users:
+
 - **[Usage Guide](docs/USAGE.md)** - Complete user guide and feature walkthrough
 
 ### For Developers:
+
 - **[Architecture Overview](docs/ARCHITECTURE.md)** - System design and technical patterns
 - **[Canon Update Pattern](docs/CANON_UPDATE_PATTERN.md)** - State management system
 - **[Development Rules](docs/DEVELOPMENT_RULES.md)** - Svelte 5 runes mode standards
 - **[Development Methodology](docs/DEVELOPMENT_METHODOLOGY.md)** - Project development approach
 
 ### Project Status & Planning:
+
 - **[Development Roadmap](docs/ROADMAP.md)** - Future plans and feature roadmap
 - **[Logic Extraction Roadmap](docs/LOGIC_EXTRACTION_ROADMAP.md)** - Component refactoring progress
 - **[Refactoring Checklist](docs/REFACTORING_CHECKLIST.md)** - Systematic refactoring tracking
 
 ### Testing & Quality:
+
 - **[Dev Tools Summary](docs/DEV_TOOLS_SUMMARY.md)** - E2E testing infrastructure
 - **Current Test Status**: 244+ tests (231 unit + 13+ E2E) with comprehensive coverage
 
 ## 🛠️ Development
 
 This project is built with:
+
 - **SvelteKit** (static adapter for client-side only deployment)
 - **TypeScript** for type safety
 - **IndexedDB** for local browser storage
@@ -119,6 +129,7 @@ This project is built with:
 ### Architecture
 
 The application uses a robust **Canon Update Pattern** for all state changes:
+
 - Database-first atomic updates
 - Granular loading states for user feedback
 - No optimistic updates - UI reflects persisted state only
@@ -143,6 +154,7 @@ npm run build
 ```
 
 Preview the production build with:
+
 ```bash
 npm run preview
 ```

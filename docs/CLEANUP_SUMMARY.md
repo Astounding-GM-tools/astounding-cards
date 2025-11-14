@@ -5,10 +5,12 @@
 After implementing the Canon Update pattern across the codebase, we performed a comprehensive cleanup to remove obsolete code and dependencies.
 
 ### Files Removed
+
 - `src/lib/stores/deckContext.ts` - Old context-based update system, replaced by Canon Update pattern
 - `src/lib/utils/debounce.ts` - No longer used after moving to immediate updates with loading states
 
 ### Functions Removed
+
 - `updateCardProperty()` from `src/lib/db.ts` - Old database update function, replaced by `putDeck()` with Canon Update pattern
 - Backward compatibility types from `src/lib/types.ts`:
   - `Character` type alias
@@ -18,11 +20,13 @@ After implementing the Canon Update pattern across the codebase, we performed a 
   - `isCharacterDeck` function alias
 
 ### Imports Cleaned Up
+
 - Removed unused `debounce` import from `CardFront.svelte`
 - Removed `getDeckContext` and `createDeckContext` imports from components
 - Cleaned up unused `onUpdate` prop from `ShareDialog` in main page
 
 ### Code Improvements
+
 - Fixed theme preview images in `ThemeSelect.svelte` to use correct `/portraits/` paths
 - Removed rollback comment that was no longer applicable
 - Removed empty `onUpdate` callback prop from ShareDialog usage
@@ -38,6 +42,7 @@ The cleanup was made possible by our successful implementation of the Canon Upda
 5. **Maintainability**: Single update pattern across all components
 
 ## Files Updated
+
 - `src/lib/components/ui/ThemeSelect.svelte` - Fixed theme preview images
 - `src/lib/components/dialogs/ShareDialog.svelte` - Converted to Canon Update pattern
 - `src/routes/+page.svelte` - Removed deckContext creation and unused props

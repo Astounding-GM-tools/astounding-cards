@@ -12,18 +12,18 @@ Added powerful console functions available globally:
 
 ```javascript
 // Enable/disable dev mode
-window.e2eHelpers.enableDevMode()
-window.e2eHelpers.disableDevMode()
+window.e2eHelpers.enableDevMode();
+window.e2eHelpers.disableDevMode();
 
 // Database operations (bypass UI completely)
-await window.e2eHelpers.clearDatabase()
-await window.e2eHelpers.addSampleData()
+await window.e2eHelpers.clearDatabase();
+await window.e2eHelpers.addSampleData();
 
 // Complete test environment setup
-await window.e2eHelpers.setupTestEnvironment()
+await window.e2eHelpers.setupTestEnvironment();
 
 // Get test data info
-window.e2eHelpers.getSampleInfo()
+window.e2eHelpers.getSampleInfo();
 ```
 
 ### 2. Test ID Attributes
@@ -33,7 +33,7 @@ Added `data-testid` attributes for reliable element targeting:
 - `data-testid="manage-decks-button"` - Main deck management button
 - `data-testid="dev-tools-section"` - Dev tools section
 - `data-testid="clear-database-button"` - Clear database button
-- `data-testid="add-sample-data-button"` - Add sample data button  
+- `data-testid="add-sample-data-button"` - Add sample data button
 - `data-testid="test-toast-button"` - Test toast button
 
 ### 3. DevToolsHelper Class
@@ -42,24 +42,24 @@ Created a comprehensive helper class (`e2e/helpers/dev-tools.ts`) with methods:
 
 ```typescript
 // Basic dev mode management
-await devTools.enableDevMode()
-await devTools.disableDevMode()
+await devTools.enableDevMode();
+await devTools.disableDevMode();
 
 // UI-based operations (slower but tests real UI)
-await devTools.clearDatabase()
-await devTools.addSampleData()
+await devTools.clearDatabase();
+await devTools.addSampleData();
 
 // Console-based operations (faster, bypasses UI)
-await devTools.clearDatabaseConsole()
-await devTools.addSampleDataConsole()
+await devTools.clearDatabaseConsole();
+await devTools.addSampleDataConsole();
 
 // Complete environment setup
-await devTools.setupTestEnvironment() // Console-based, fast
-await devTools.setupEmptyEnvironment()
+await devTools.setupTestEnvironment(); // Console-based, fast
+await devTools.setupEmptyEnvironment();
 
 // Utility methods
-devTools.getSampleDataInfo()
-await devTools.testToast()
+devTools.getSampleDataInfo();
+await devTools.testToast();
 ```
 
 ## Sample Data
@@ -76,6 +76,7 @@ The system provides a consistent test dataset:
 ## Benefits for CardMechanicsEditor Testing
 
 ### Before (Manual Setup):
+
 ```typescript
 // Complex, brittle setup
 await page.click('button:has-text("📚 Manage Decks")');
@@ -87,6 +88,7 @@ await page.click('button:has-text("➕ Add Card")');
 ```
 
 ### After (Dev Tools):
+
 ```typescript
 // Simple, reliable setup
 await devTools.setupTestEnvironment();
@@ -104,41 +106,46 @@ await devTools.setupTestEnvironment();
 ## Usage Examples
 
 ### Quick Test Setup
+
 ```typescript
 test.beforeEach(async ({ page }) => {
-  devTools = new DevToolsHelper(page);
-  await page.goto('/');
-  await devTools.setupTestEnvironment(); // Fast console-based setup
+	devTools = new DevToolsHelper(page);
+	await page.goto('/');
+	await devTools.setupTestEnvironment(); // Fast console-based setup
 });
 ```
 
-### Testing UI Dev Tools  
+### Testing UI Dev Tools
+
 ```typescript
 test('dev tools UI works', async ({ page }) => {
-  await devTools.enableDevMode();
-  await page.getByTestId('manage-decks-button').click();
-  await expect(page.getByTestId('dev-tools-section')).toBeVisible();
+	await devTools.enableDevMode();
+	await page.getByTestId('manage-decks-button').click();
+	await expect(page.getByTestId('dev-tools-section')).toBeVisible();
 });
 ```
 
 ### Console-Only Operations
+
 ```typescript
 test('fast data operations', async ({ page }) => {
-  await devTools.clearDatabaseConsole();
-  await devTools.addSampleDataConsole();
-  // No UI interaction needed!
+	await devTools.clearDatabaseConsole();
+	await devTools.addSampleDataConsole();
+	// No UI interaction needed!
 });
 ```
 
 ## Files Modified/Created
 
 ### New Files:
+
 - `e2e/helpers/dev-tools.ts` - Main helper class
 - `e2e/dev-tools-discovery.spec.ts` - Discovery/exploration test
 - `e2e/dev-tools-improved.spec.ts` - Verification test
 - `DEV_TOOLS_SUMMARY.md` - This summary
 
 ### Modified Files:
+
 - `src/lib/stores/dev.ts` - Added console shortcuts
 - `src/routes/+page.svelte` - Added test ID to manage decks button
 - `src/lib/components/deck/DeckSelector.svelte` - Added test IDs to dev tools

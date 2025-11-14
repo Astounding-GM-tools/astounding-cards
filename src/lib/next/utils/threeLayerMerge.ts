@@ -1,11 +1,11 @@
 /**
  * Three-Layer Merge System
- * 
+ *
  * Merges deck data from three sources in priority order:
  * 1. Curated Deck (Supabase) - Base layer
  * 2. Hash Data (URL) - Shared modifications
  * 3. Local Deck (IndexedDB) - Highest priority (user's changes)
- * 
+ *
  * Priority: Local > Hash > Curated
  */
 
@@ -15,13 +15,13 @@ import { detectDeckConflict, type DeckConflict } from './deckMerging.js';
 export interface ThreeLayerMergeResult {
 	/** The final merged deck */
 	deck: Deck;
-	
+
 	/** Whether a conflict was detected with local changes */
 	hasConflict: boolean;
-	
+
 	/** Conflict details if hasConflict is true */
 	conflict?: DeckConflict;
-	
+
 	/** Which layers were present in the merge */
 	layers: {
 		curated: boolean;
@@ -51,7 +51,7 @@ function convertPublishedDeckToDeck(publishedDeck: any): Deck {
 
 /**
  * Perform three-layer merge
- * 
+ *
  * @param curatedDeck - Deck from Supabase (base layer)
  * @param hashDeck - Deck from URL hash (shared modifications)
  * @param localDeck - Deck from IndexedDB (highest priority)
@@ -71,7 +71,7 @@ export function performThreeLayerMerge(
 
 	// Start with the base layer (curated or hash)
 	let baseDeck: Deck;
-	
+
 	if (curatedDeck) {
 		// Convert published deck format to internal Deck format
 		baseDeck = convertPublishedDeckToDeck(curatedDeck);
@@ -99,7 +99,7 @@ export function performThreeLayerMerge(
 	if (localDeck) {
 		// Detect if there's a conflict between the merged base and local version
 		const conflict = detectDeckConflict(localDeck, baseDeck);
-		
+
 		if (conflict) {
 			// There's a conflict - return both versions for user to resolve
 			return {
@@ -149,10 +149,10 @@ export function buildCuratedShareUrl(
 	hashData?: string
 ): string {
 	const url = new URL(`/deck-viewer?curated=${curatedId}`, baseUrl);
-	
+
 	if (hashData) {
 		url.hash = hashData;
 	}
-	
+
 	return url.toString();
 }

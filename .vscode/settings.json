@@ -1,9 +1,4 @@
 {
-    "cSpell.words": [
-        "cyberdeck",
-        "Longsword",
-        "scriptorum",
-        "statblock"
-    ],
-    "kiroAgent.configureMCP": "Disabled"
+	"cSpell.words": ["cyberdeck", "Longsword", "scriptorum", "statblock"],
+	"kiroAgent.configureMCP": "Disabled"
 }

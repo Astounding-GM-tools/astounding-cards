@@ -1,6 +1,6 @@
 /**
  * Authentication Store
- * 
+ *
  * Manages user session, auth state, and provides auth methods
  */
 
@@ -26,9 +26,11 @@ function createAuthStore() {
 	// Initialize session listener
 	async function initialize() {
 		// Get initial session
-		const { data: { session } } = await supabase.auth.getSession();
-		
-		update(state => ({
+		const {
+			data: { session }
+		} = await supabase.auth.getSession();
+
+		update((state) => ({
 			...state,
 			user: session?.user ?? null,
 			session: session ?? null,
@@ -37,7 +39,7 @@ function createAuthStore() {
 
 		// Listen for auth changes
 		supabase.auth.onAuthStateChange((_event, session) => {
-			update(state => ({
+			update((state) => ({
 				...state,
 				user: session?.user ?? null,
 				session: session ?? null,
@@ -48,8 +50,8 @@ function createAuthStore() {
 
 	// Sign up with email/password
 	async function signUp(email: string, password: string) {
-		update(state => ({ ...state, loading: true, error: null }));
-		
+		update((state) => ({ ...state, loading: true, error: null }));
+
 		const { data, error } = await supabase.auth.signUp({
 			email,
 			password,
@@ -58,8 +60,8 @@ function createAuthStore() {
 			}
 		});
 
-		update(state => ({ 
-			...state, 
+		update((state) => ({
+			...state,
 			loading: false,
 			error: error ?? null
 		}));
@@ -69,15 +71,15 @@ function createAuthStore() {
 
 	// Sign in with email/password
 	async function signIn(email: string, password: string) {
-		update(state => ({ ...state, loading: true, error: null }));
-		
+		update((state) => ({ ...state, loading: true, error: null }));
+
 		const { data, error } = await supabase.auth.signInWithPassword({
 			email,
 			password
 		});
 
-		update(state => ({ 
-			...state, 
+		update((state) => ({
+			...state,
 			loading: false,
 			error: error ?? null
 		}));
@@ -87,8 +89,8 @@ function createAuthStore() {
 
 	// Sign in with Google OAuth
 	async function signInWithGoogle() {
-		update(state => ({ ...state, loading: true, error: null }));
-		
+		update((state) => ({ ...state, loading: true, error: null }));
+
 		const { data, error } = await supabase.auth.signInWithOAuth({
 			provider: 'google',
 			options: {
@@ -98,8 +100,8 @@ function createAuthStore() {
 
 		// Don't update loading here - OAuth redirect will happen
 		if (error) {
-			update(state => ({ 
-				...state, 
+			update((state) => ({
+				...state,
 				loading: false,
 				error
 			}));
@@ -110,12 +112,12 @@ function createAuthStore() {
 
 	// Sign out
 	async function signOut() {
-		update(state => ({ ...state, loading: true, error: null }));
-		
+		update((state) => ({ ...state, loading: true, error: null }));
+
 		const { error } = await supabase.auth.signOut();
 
-		update(state => ({ 
-			...state, 
+		update((state) => ({
+			...state,
 			user: null,
 			session: null,
 			loading: false,
@@ -127,14 +129,14 @@ function createAuthStore() {
 
 	// Reset password
 	async function resetPassword(email: string) {
-		update(state => ({ ...state, loading: true, error: null }));
-		
+		update((state) => ({ ...state, loading: true, error: null }));
+
 		const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
 			redirectTo: `${window.location.origin}/reset-password`
 		});
 
-		update(state => ({ 
-			...state, 
+		update((state) => ({
+			...state,
 			loading: false,
 			error: error ?? null
 		}));
@@ -158,7 +160,7 @@ function createAuthStore() {
 export const authStore = createAuthStore();
 
 // Derived stores for convenience
-export const user = derived(authStore, $auth => $auth.user);
-export const session = derived(authStore, $auth => $auth.session);
-export const isAuthenticated = derived(authStore, $auth => !!$auth.user);
-export const authLoading = derived(authStore, $auth => $auth.loading);
+export const user = derived(authStore, ($auth) => $auth.user);
+export const session = derived(authStore, ($auth) => $auth.session);
+export const isAuthenticated = derived(authStore, ($auth) => !!$auth.user);
+export const authLoading = derived(authStore, ($auth) => $auth.loading);

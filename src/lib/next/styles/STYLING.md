@@ -15,17 +15,18 @@
    - `--font-title` and `--font-body` for typography
 
 3. **Override Values, Not Properties**
+
    ```css
    /* Good: Override the value where needed */
    .inverse-header {
-       --color: white;
-       --accent: #cbd5e0;
+   	--color: white;
+   	--accent: #cbd5e0;
    }
 
    /* Bad: Creating new properties */
    :root {
-       --header-color: #000;
-       --subtitle-color: #666;
+   	--header-color: #000;
+   	--subtitle-color: #666;
    }
    ```
 
@@ -44,33 +45,41 @@
 
 ```css
 @property --page-padding {
-    syntax: '<length>';
-    initial-value: 10mm;
-    inherits: false;  /* Constants don't inherit */
+	syntax: '<length>';
+	initial-value: 10mm;
+	inherits: false; /* Constants don't inherit */
 }
 
 @property --font-title {
-    syntax: '*';
-    initial-value: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
-    inherits: true;
+	syntax: '*';
+	initial-value: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
+	inherits: true;
 }
 
 @property --font-body {
-    syntax: '*';
-    initial-value: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    inherits: true;
+	syntax: '*';
+	initial-value:
+		system-ui,
+		-apple-system,
+		BlinkMacSystemFont,
+		'Segoe UI',
+		Roboto,
+		'Helvetica Neue',
+		Arial,
+		sans-serif;
+	inherits: true;
 }
 
 @property --color {
-    syntax: '<color>';
-    initial-value: #1a1a1a;
-    inherits: true;
+	syntax: '<color>';
+	initial-value: #1a1a1a;
+	inherits: true;
 }
 
 @property --accent {
-    syntax: '<color>';
-    initial-value: #4a5568;
-    inherits: true;
+	syntax: '<color>';
+	initial-value: #4a5568;
+	inherits: true;
 }
 ```
 
@@ -78,13 +87,13 @@
 
 ```css
 .header-title {
-    font-family: var(--font-title);
-    color: var(--color);
+	font-family: var(--font-title);
+	color: var(--color);
 }
 
 .header-subtitle {
-    font-family: var(--font-body);
-    color: var(--accent);
+	font-family: var(--font-body);
+	color: var(--accent);
 }
 ```
 
@@ -99,6 +108,7 @@
 ## Adding New Properties
 
 Before adding a new property, ask:
+
 1. Can this be achieved by overriding an existing property?
 2. Is this truly a system-wide concern?
 3. Does it have a clear, single purpose?
