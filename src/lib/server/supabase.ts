@@ -6,14 +6,18 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
-import { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } from '$env/static/private';
+import { SUPABASE_SECRET_API_KEY, SUPABASE_SERVICE_ROLE_KEY } from '$env/static/private';
+import { PUBLIC_SUPABASE_URL } from '$env/static/public';
 
-if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-	throw new Error('Missing Supabase environment variables');
+// Use new SECRET_API_KEY if available, fallback to legacy SERVICE_ROLE_KEY
+const apiKey = SUPABASE_SECRET_API_KEY || SUPABASE_SERVICE_ROLE_KEY;
+
+if (!PUBLIC_SUPABASE_URL || !apiKey) {
+	throw new Error('Missing Supabase environment variables: PUBLIC_SUPABASE_URL and SUPABASE_SECRET_API_KEY (or SUPABASE_SERVICE_ROLE_KEY) are required');
 }
 
-// Server client with service role key (bypasses RLS)
-export const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+// Server client with secret API key (bypasses RLS, replaces service_role)
+export const supabaseAdmin = createClient(PUBLIC_SUPABASE_URL, apiKey, {
 	auth: {
 		autoRefreshToken: false,
 		persistSession: false
