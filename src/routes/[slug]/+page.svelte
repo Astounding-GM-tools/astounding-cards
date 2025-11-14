@@ -4,6 +4,7 @@
     import { page } from '$app/stores';
     import { track } from '@vercel/analytics';
     import { importFromUrl } from '$lib/next/utils/shareUrlUtils.js';
+    import { performThreeLayerMerge } from '$lib/next/utils/threeLayerMerge.js';
     import { nextDeckStore } from '$lib/next/stores/deckStore.svelte.ts';
     import { nextDb } from '$lib/next/stores/database.js';
     import { toasts } from '$lib/stores/toast.js';
@@ -33,6 +34,7 @@
         try {
             track('shared_deck_accessed', {
                 slug: data.slug,
+                curated: !!data.curatedDeck,
                 timestamp: new Date().toISOString(),
                 referrer: document.referrer || 'direct'
             });
@@ -41,54 +43,66 @@
         }
         
         try {
-            // Ensure we're in the browser before accessing window
             if (typeof window === 'undefined') {
                 error = 'Import functionality requires browser environment';
                 return;
             }
             
-            // Get the current URL with hash
-            const currentUrl = window.location.href;
-            // Try to import deck from the URL
-            const deck = importFromUrl(currentUrl);
+            // THREE-LAYER MERGE SYSTEM
+            // Layer 1: Curated deck from Supabase (if present)
+            const curatedDeck = data.curatedDeck;
             
-            if (deck) {
-                importedDeck = deck;
+            // Layer 2: Hash data from URL (shared modifications)
+            const hashDeck = importFromUrl(window.location.href);
+            
+            // Layer 3: Local deck from IndexedDB (if exists)
+            let localDeck: Deck | null = null;
+            if (curatedDeck) {
+                // Check if user has a local copy of this curated deck
+                localDeck = await nextDb.getDeck(curatedDeck.id);
+            } else if (hashDeck) {
+                // Check if user has a local copy of the hash deck
+                localDeck = await nextDb.getDeck(hashDeck.id);
+            }
+            
+            // Perform the three-layer merge
+            if (curatedDeck || hashDeck) {
+                const mergeResult = performThreeLayerMerge(curatedDeck, hashDeck, localDeck);
                 
-                // Check if a deck with the same ID already exists
-                const existingDeck = await nextDb.getDeck(deck.id);
+                importedDeck = mergeResult.deck;
                 
-                if (existingDeck) {
-                    // Conflict detected! Show merge tool
-                    const detectedConflict = detectDeckConflict(existingDeck, deck);
-                    
-                    if (detectedConflict) {
-                        conflict = detectedConflict;
-                        showMergeTool = true;
-                        toasts.info(`⚠️ Deck "${deck.meta.title}" already exists. Please resolve conflicts.`);
-                    } else {
-                        // No conflicts, just import directly
-                        await nextDeckStore.importDeck(deck);
-                        imported = true;
-                        toasts.success(`🎉 Deck "${deck.meta.title}" imported from URL!`);
-                    }
+                if (mergeResult.hasConflict && mergeResult.conflict) {
+                    // Conflict detected - show merge tool
+                    conflict = mergeResult.conflict;
+                    showMergeTool = true;
+                    toasts.info(`⚠️ Deck "${mergeResult.deck.meta.title}" has local changes. Please resolve conflicts.`);
                 } else {
-                    // No existing deck, import directly
-                    await nextDeckStore.importDeck(deck);
+                    // No conflict - import the merged deck
+                    await nextDeckStore.importDeck(mergeResult.deck);
                     imported = true;
-                    toasts.success(`🎉 Deck "${deck.meta.title}" imported from URL!`);
+                    
+                    // Show appropriate success message based on layers
+                    if (mergeResult.layers.curated && mergeResult.layers.local) {
+                        toasts.success(`🎉 Using your local version of "${mergeResult.deck.meta.title}"`);
+                    } else if (mergeResult.layers.curated) {
+                        toasts.success(`🎉 Curated deck "${mergeResult.deck.meta.title}" imported!`);
+                    } else {
+                        toasts.success(`🎉 Deck "${mergeResult.deck.meta.title}" imported from URL!`);
+                    }
                 }
                 
                 // Clear the URL hash to prevent re-importing
-                replaceState(window.location.pathname, {});
+                if (hashDeck) {
+                    replaceState(window.location.pathname + (data.curatedId ? `?curated=${data.curatedId}` : ''), {});
+                }
             } else {
-                error = 'Invalid share URL - could not decode deck data';
-                toasts.error('Failed to import deck from URL');
+                error = 'No deck data found in URL';
+                toasts.error('No deck data found');
             }
         } catch (err) {
             console.error('Import error:', err);
             error = err instanceof Error ? err.message : 'Failed to import deck';
-            toasts.error('Failed to import deck from URL');
+            toasts.error('Failed to import deck');
         } finally {
             importing = false;
         }
