@@ -14,6 +14,8 @@ import {
     import BinaryToggle from '../ui/BinaryToggle.svelte';
     import type { Layout } from '../../types/deck.js';
     import { createEventDispatcher } from 'svelte';
+    import { authStore, user, isAuthenticated } from '$lib/next/stores/auth';
+    import AuthDialog from '../dialogs/AuthDialog.svelte';
     
     const dispatch = createEventDispatcher<{
         cardBacksToggle: boolean;
@@ -28,6 +30,12 @@ import {
     
     // Card backs visibility state
     let showCardBacks = $state(true);
+    
+    // Auth dialog state
+    let authDialogOpen = $state(false);
+    
+    // User menu state
+    let userMenuOpen = $state(false);
     
     // Handle layout toggle with persistence
     async function handleLayoutToggle(isTarot: boolean) {
@@ -190,6 +198,34 @@ import {
             console.error('Error clearing database:', error);
         }
     }
+    
+    // Auth handlers
+    function handleSignIn() {
+        authDialogOpen = true;
+        userMenuOpen = false;
+    }
+    
+    async function handleSignOut() {
+        const { error } = await authStore.signOut();
+        if (error) {
+            toasts.error('Failed to sign out');
+        } else {
+            toasts.success('Signed out successfully');
+        }
+        userMenuOpen = false;
+    }
+    
+    function toggleUserMenu() {
+        userMenuOpen = !userMenuOpen;
+    }
+    
+    // Close user menu when clicking outside
+    function handleClickOutside(event: MouseEvent) {
+        const target = event.target as HTMLElement;
+        if (!target.closest('.user-menu-container')) {
+            userMenuOpen = false;
+        }
+    }
 </script>
 
 <header class="app-header">
@@ -228,6 +264,37 @@ import {
         </div>
         
         <div class="header-right">
+            <!-- Auth section -->
+            {#if $isAuthenticated}
+                <div class="user-menu-container">
+                    <button 
+                        class="user-button"
+                        onclick={toggleUserMenu}
+                    >
+                        <span class="user-email">{$user?.email}</span>
+                        <span class="user-avatar">👤</span>
+                    </button>
+                    
+                    {#if userMenuOpen}
+                        <div class="user-menu">
+                            <div class="user-menu-header">
+                                <span class="user-email-full">{$user?.email}</span>
+                            </div>
+                            <button class="user-menu-item" onclick={handleSignOut}>
+                                🚪 Sign Out
+                            </button>
+                        </div>
+                    {/if}
+                </div>
+            {:else}
+                <button 
+                    class="action-button"
+                    onclick={handleSignIn}
+                >
+                    🔐 Sign In
+                </button>
+            {/if}
+            
             <button 
                 class="action-button primary"
                 onclick={handleManageDecks}
@@ -286,6 +353,12 @@ import {
         </div>
     {/if}
 </header>
+
+<!-- Auth Dialog -->
+<AuthDialog bind:open={authDialogOpen} />
+
+<!-- Click outside handler for user menu -->
+<svelte:window onclick={handleClickOutside} />
 
 <style>
     .app-header {
@@ -432,6 +505,80 @@ import {
     .dev-button:disabled {
         opacity: 0.5;
         cursor: not-allowed;
+    }
+    
+    /* Auth UI */
+    .user-menu-container {
+        position: relative;
+    }
+    
+    .user-button {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid var(--ui-border, #e2e8f0);
+        border-radius: 6px;
+        background: var(--ui-bg, #ffffff);
+        color: var(--ui-text, #1a202c);
+        font-size: 0.875rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .user-button:hover {
+        background: var(--ui-hover-bg, #f8fafc);
+        border-color: var(--button-primary-bg, #3b82f6);
+    }
+    
+    .user-email {
+        max-width: 150px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    
+    .user-avatar {
+        font-size: 1.25rem;
+    }
+    
+    .user-menu {
+        position: absolute;
+        top: calc(100% + 0.5rem);
+        right: 0;
+        min-width: 200px;
+        background: white;
+        border: 1px solid var(--ui-border, #e2e8f0);
+        border-radius: 6px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        z-index: 100;
+    }
+    
+    .user-menu-header {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid var(--ui-border, #e2e8f0);
+    }
+    
+    .user-email-full {
+        font-size: 0.875rem;
+        color: var(--ui-muted, #64748b);
+        word-break: break-all;
+    }
+    
+    .user-menu-item {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: none;
+        background: none;
+        text-align: left;
+        cursor: pointer;
+        font-size: 0.875rem;
+        color: var(--ui-text, #1a202c);
+        transition: background 0.2s;
+    }
+    
+    .user-menu-item:hover {
+        background: var(--ui-hover-bg, #f8fafc);
     }
     
     /* Responsive design */
