@@ -11,7 +11,8 @@ export default defineConfig({
 	/* Only run working E2E tests for MVP launch - disable failing tests temporarily */
 	testMatch: [
 		'**/statblock-integration.spec.ts',
-		'**/dev-tools-working.spec.ts'
+		'**/dev-tools-working.spec.ts',
+		'**/preview-mode.spec.ts'
 	],
 	/* Run tests in files in parallel */
 	fullyParallel: true,

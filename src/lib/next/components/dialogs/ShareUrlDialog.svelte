@@ -4,6 +4,7 @@
     import { nextDb } from '$lib/next/stores/database.js';
     import type { Deck } from '$lib/next/types/deck.js';
     import ImageMigrationDialog from './ImageMigrationDialog.svelte';
+    import { generateShareUrl as createShareUrl } from '$lib/next/utils/shareUrlUtils.js';
     
     interface Props {
         deck: Deck;
@@ -66,11 +67,24 @@
         error = null;
         
         try {
-            // TODO: Implement URL generation logic
-            // This will validate deck (no blobs), create shareable URL
-            shareUrl = 'https://example.com/share/deck-id-placeholder';
+            // IMPORTANT: Fetch fresh deck data from database to ensure we have
+            // the latest image URLs (in case images were just migrated)
+            const freshDeck = await nextDb.getDeck(deck.id);
+            
+            if (!freshDeck) {
+                throw new Error('Deck not found in database');
+            }
+            
+            console.log('[ShareURL] Generating from fresh deck');
+            console.log('[ShareURL] First card image:', freshDeck.cards[0]?.image);
+            
+            // Generate share URL with hash format using fresh data
+            shareUrl = createShareUrl(freshDeck);
+            toasts.success('Share URL generated!');
         } catch (err) {
             error = err instanceof Error ? err.message : 'Failed to generate share URL';
+            toasts.error('Failed to generate share URL');
+            console.error('[ShareURL] Generation error:', err);
         } finally {
             isGenerating = false;
         }
@@ -104,8 +118,21 @@
                 }
             }));
             
+            console.log('[Migration] Updating cards:', cardUpdates);
+            
             // Use the next database system to update multiple cards atomically
             const updatedDeck = await nextDb.updateMultipleCards(deck.id, cardUpdates);
+            
+            console.log('[Migration] Updated deck:', updatedDeck);
+            console.log('[Migration] First card image:', updatedDeck.cards[0]?.image);
+            
+            // IMPORTANT: Update the deck store if this is the active deck
+            // This ensures the current editing session has the new image URLs
+            const currentDeck = nextDeckStore.deck;
+            if (currentDeck && currentDeck.id === updatedDeck.id) {
+                console.log('[Migration] Reloading deck in store');
+                await nextDeckStore.loadDeck(updatedDeck.id);
+            }
             
             toasts.success('Images migrated successfully!');
             
@@ -161,6 +188,7 @@
                         <div class="url-input-group">
                             <input 
                                 id="share-url"
+                                data-testid="share-url-input"
                                 type="text" 
                                 value={shareUrl} 
                                 readonly 

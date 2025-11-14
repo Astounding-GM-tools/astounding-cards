@@ -9,7 +9,7 @@
  */
 
 import type { Deck } from '../types/deck.js';
-import type { ShareableDeck } from '../types/shareable.js';
+import type { ShareableDeck } from '../types/shareUrl.js';
 import { toShareable, fromShareable } from './shareUrlConverter.js';
 import { createSlug } from './slugUtils.js';
 

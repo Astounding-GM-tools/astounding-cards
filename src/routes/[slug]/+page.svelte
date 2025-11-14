@@ -15,6 +15,7 @@
         applyMergeResolution 
     } from '$lib/next/utils/deckMerging.js';
     import MergeTool from '$lib/next/components/merge/MergeTool.svelte';
+    import DeckPreview from '$lib/next/components/preview/DeckPreview.svelte';
     import type { Deck } from '$lib/next/types/deck.js';
     import type { PageData } from './$types';
     
@@ -22,11 +23,14 @@
     let { data }: { data: PageData } = $props();
     
     
-    let importing = $state(true);
+    let loading = $state(true);
     let error = $state<string | null>(null);
+    let previewing = $state(false);
+    let importing = $state(false);
     let imported = $state(false);
     let showMergeTool = $state(false);
     let conflict = $state<DeckConflict | null>(null);
+    let previewDeck = $state<Deck | null>(null);
     let importedDeck = $state<Deck | null>(null);
     
     onMount(async () => {
@@ -44,16 +48,19 @@
         
         try {
             if (typeof window === 'undefined') {
-                error = 'Import functionality requires browser environment';
+                error = 'Preview functionality requires browser environment';
                 return;
             }
             
-            // THREE-LAYER MERGE SYSTEM
+            // PREPARE PREVIEW (don't import yet)
             // Layer 1: Curated deck from Supabase (if present)
             const curatedDeck = data.curatedDeck;
+            console.log('[Preview] Curated deck:', curatedDeck);
             
             // Layer 2: Hash data from URL (shared modifications)
+            console.log('[Preview] Current URL:', window.location.href);
             const hashDeck = importFromUrl(window.location.href);
+            console.log('[Preview] Hash deck:', hashDeck);
             
             // Layer 3: Local deck from IndexedDB (if exists)
             let localDeck: Deck | null = null;
@@ -65,39 +72,55 @@
                 localDeck = await nextDb.getDeck(hashDeck.id);
             }
             
-            // Perform the three-layer merge
+            // Perform the three-layer merge for preview
             if (curatedDeck || hashDeck) {
                 const mergeResult = performThreeLayerMerge(curatedDeck, hashDeck, localDeck);
                 
-                importedDeck = mergeResult.deck;
+                previewDeck = mergeResult.deck;
+                previewing = true;
                 
+                // Store conflict info for later if needed
                 if (mergeResult.hasConflict && mergeResult.conflict) {
-                    // Conflict detected - show merge tool
                     conflict = mergeResult.conflict;
-                    showMergeTool = true;
-                    toasts.info(`⚠️ Deck "${mergeResult.deck.meta.title}" has local changes. Please resolve conflicts.`);
-                } else {
-                    // No conflict - import the merged deck
-                    await nextDeckStore.importDeck(mergeResult.deck);
-                    imported = true;
-                    
-                    // Show appropriate success message based on layers
-                    if (mergeResult.layers.curated && mergeResult.layers.local) {
-                        toasts.success(`🎉 Using your local version of "${mergeResult.deck.meta.title}"`);
-                    } else if (mergeResult.layers.curated) {
-                        toasts.success(`🎉 Curated deck "${mergeResult.deck.meta.title}" imported!`);
-                    } else {
-                        toasts.success(`🎉 Deck "${mergeResult.deck.meta.title}" imported from URL!`);
-                    }
                 }
                 
-                // Clear the URL hash to prevent re-importing
-                if (hashDeck) {
-                    replaceState(window.location.pathname + (data.curatedId ? `?curated=${data.curatedId}` : ''), {});
-                }
+                // Keep the hash in URL during preview - we'll clear it after import
             } else {
                 error = 'No deck data found in URL';
                 toasts.error('No deck data found');
+            }
+        } catch (err) {
+            console.error('Preview error:', err);
+            error = err instanceof Error ? err.message : 'Failed to load deck preview';
+            toasts.error('Failed to load deck preview');
+        } finally {
+            loading = false;
+        }
+    });
+    
+    // Handle import action (triggered by user button click)
+    async function handleImport() {
+        if (!previewDeck) return;
+        
+        importing = true;
+        try {
+            if (conflict) {
+                // Has conflicts - show merge tool
+                showMergeTool = true;
+                importedDeck = previewDeck;
+                toasts.info(`⚠️ Deck "${previewDeck.meta.title}" has local changes. Please resolve conflicts.`);
+            } else {
+                // No conflicts - import directly
+                await nextDeckStore.importDeck(previewDeck);
+                
+                // Switch from preview to success screen
+                previewing = false;
+                imported = true;
+                
+                // Clear the URL hash after successful import
+                replaceState(window.location.pathname, {});
+                
+                toasts.success(`🎉 Deck "${previewDeck.meta.title}" imported to your library!`);
             }
         } catch (err) {
             console.error('Import error:', err);
@@ -106,7 +129,7 @@
         } finally {
             importing = false;
         }
-    });
+    }
     
     // Handle merge resolution
     async function handleMergeResolve(resolution: MergeResolution) {
@@ -160,14 +183,50 @@
                 onCancel={handleMergeCancel}
             />
         </div>
+    {:else if previewing && previewDeck}
+        <!-- Preview mode with deck viewer -->
+        <div class="preview-container">
+            <div class="preview-header">
+                <div class="preview-info">
+                    <h1>{previewDeck.meta.title}</h1>
+                    {#if previewDeck.meta.description}
+                        <p class="description">{previewDeck.meta.description}</p>
+                    {/if}
+                    <p class="card-count">{previewDeck.cards.length} cards</p>
+                </div>
+                <div class="preview-actions">
+                    <button 
+                        class="import-button"
+                        onclick={handleImport}
+                        disabled={importing}
+                    >
+                        {#if importing}
+                            <div class="button-spinner"></div>
+                            Importing...
+                        {:else}
+                            💾 Import to Library
+                        {/if}
+                    </button>
+                    <button 
+                        class="secondary-button"
+                        onclick={() => goto('/next')}
+                    >
+                        Cancel
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Read-only deck viewer -->
+            <DeckPreview deck={previewDeck} />
+        </div>
     {:else}
-        <!-- Standard import states -->
+        <!-- Loading/Error states -->
         <div class="import-content">
-            {#if importing}
+            {#if loading}
                 <div class="importing">
                     <div class="spinner"></div>
-                    <h2>🔗 Importing Deck</h2>
-                    <p>Decoding share URL...</p>
+                    <h2>🔗 Loading Deck</h2>
+                    <p>Preparing preview...</p>
                     {#if decodedSlug}
                         <p class="slug">"{decodedSlug}"</p>
                     {/if}
@@ -187,7 +246,7 @@
             {:else if error}
                 <div class="error">
                     <div class="error-icon">❌</div>
-                    <h2>Import Failed</h2>
+                    <h2>Load Failed</h2>
                     <p>{error}</p>
                     <button 
                         class="retry-button"
@@ -317,10 +376,127 @@
         overflow-y: auto;
     }
     
+    /* Preview container */
+    .preview-container {
+        width: 100%;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+    
+    .preview-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 2rem;
+        margin-bottom: 2rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 2px solid var(--ui-border, #e2e8f0);
+    }
+    
+    .preview-info h1 {
+        margin: 0 0 0.5rem 0;
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--ui-text, #1a202c);
+    }
+    
+    .preview-info .description {
+        margin: 0 0 0.5rem 0;
+        font-size: 1.125rem;
+        color: var(--ui-muted, #64748b);
+        line-height: 1.6;
+    }
+    
+    .preview-info .card-count {
+        margin: 0;
+        font-size: 0.875rem;
+        color: var(--ui-muted, #64748b);
+        font-weight: 500;
+    }
+    
+    .preview-actions {
+        display: flex;
+        gap: 0.75rem;
+        flex-shrink: 0;
+    }
+    
+    .import-button {
+        padding: 0.75rem 1.5rem;
+        background: var(--button-primary-bg, #3b82f6);
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        white-space: nowrap;
+    }
+    
+    .import-button:hover:not(:disabled) {
+        background: var(--button-primary-hover-bg, #2563eb);
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .import-button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+    
+    .secondary-button {
+        padding: 0.75rem 1.5rem;
+        background: var(--ui-hover-bg, #f8fafc);
+        color: var(--ui-text, #1a202c);
+        border: 1px solid var(--ui-border, #e2e8f0);
+        border-radius: 6px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        white-space: nowrap;
+    }
+    
+    .secondary-button:hover {
+        background: var(--ui-border, #e2e8f0);
+    }
+    
+    .button-spinner {
+        width: 14px;
+        height: 14px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-top: 2px solid white;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+    }
+    
     /* Responsive merge container */
     @media (max-width: 640px) {
         .merge-container {
             padding: 1rem;
+        }
+        
+        .preview-container {
+            padding: 1rem;
+        }
+        
+        .preview-header {
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .preview-actions {
+            width: 100%;
+            flex-direction: column;
+        }
+        
+        .import-button,
+        .secondary-button {
+            width: 100%;
         }
     }
 </style>

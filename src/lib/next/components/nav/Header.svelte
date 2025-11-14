@@ -116,17 +116,53 @@ import {
     }
     
     // Handle completion of image migration - BOOM to clipboard!
-    async function handleMigrationComplete() {
+    async function handleMigrationComplete(migrationData: Record<string, { url: string; metadata: any }>) {
+        console.log('[Header] handleMigrationComplete called with:', migrationData);
+        
         try {
-            // Migration complete - generate URL and copy to clipboard
-            const shareUrl = generateShareUrl(deck!);
+            if (!deck) {
+                throw new Error('No deck loaded');
+            }
+            
+            // Prepare card updates
+            const cardUpdates = Object.entries(migrationData).map(([cardId, migration]) => ({
+                cardId,
+                updates: {
+                    image: migration.url,
+                    imageBlob: null, // Remove blob since we now have URL
+                    imageMetadata: migration.metadata
+                }
+            }));
+            
+            console.log('[Header] Updating cards with migrationData:', cardUpdates);
+            
+            // Import the nextDb to update the deck
+            const { nextDb } = await import('$lib/next/stores/database.js');
+            
+            // Update the deck in the database
+            const updatedDeck = await nextDb.updateMultipleCards(deck.id, cardUpdates);
+            
+            console.log('[Header] Deck updated, reloading in store');
+            
+            // Reload the deck in the store to reflect changes
+            await nextDeckStore.loadDeck(updatedDeck.id);
+            
+            console.log('[Header] Generating share URL from updated deck');
+            
+            // Migration complete - generate URL from fresh data and copy to clipboard
+            const freshDeck = await nextDb.getDeck(updatedDeck.id);
+            if (!freshDeck) {
+                throw new Error('Failed to fetch updated deck');
+            }
+            
+            const shareUrl = generateShareUrl(freshDeck);
             await navigator.clipboard.writeText(shareUrl);
             toasts.success('🎉 Images migrated and share URL copied to clipboard!');
             
             // Close the migration dialog
             dialogStore.close();
         } catch (error) {
-            console.error('Post-migration share error:', error);
+            console.error('[Header] Post-migration error:', error);
             toasts.error('Migration complete, but failed to generate share URL');
         }
     }
