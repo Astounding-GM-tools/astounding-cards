@@ -5,10 +5,11 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- Users table (extends Supabase auth.users)
+-- New users get 500 credits welcome bonus (configurable in src/lib/config/token-costs.ts)
 CREATE TABLE IF NOT EXISTS users (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   email TEXT UNIQUE NOT NULL,
-  credits INTEGER DEFAULT 0 CHECK (credits >= 0),
+  credits INTEGER DEFAULT 500 CHECK (credits >= 0),
   daily_free_decks_used INTEGER DEFAULT 0 CHECK (daily_free_decks_used >= 0),
   daily_free_decks_reset_at TIMESTAMPTZ DEFAULT NOW(),
   created_at TIMESTAMPTZ DEFAULT NOW()

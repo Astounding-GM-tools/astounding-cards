@@ -46,7 +46,7 @@
 		<button onclick={handleLogIn} class="btn-secondary">Log In</button>
 	</div>
 
-	<p class="note">No credit card required • Free tier includes 10 AI generations</p>
+	<p class="note">No credit card required • Get 500 free tokens on signup (5 generations)</p>
 </div>
 
 <style>

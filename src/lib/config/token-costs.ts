@@ -5,6 +5,16 @@
  * 1 token = 0.01 NOK
  */
 
+/**
+ * Welcome bonus for new users (in tokens)
+ * 
+ * 500 tokens = 5 NOK value = ~5 community image generations
+ * This gives new users a chance to try the AI generation features.
+ * 
+ * Note: This must match the DEFAULT value in supabase/schema.sql
+ */
+export const NEW_USER_WELCOME_BONUS = 500;
+
 export const TOKEN_COSTS = {
 	/** Community image generation (100 tokens = 1 NOK) */
 	IMAGE_GENERATION_COMMUNITY: 100,
