@@ -14,8 +14,7 @@
  * To change this value:
  * 1. Update this constant
  * 2. Update the value in grant_welcome_bonus() function in supabase/schema.sql
- * 3. Run migration: UPDATE users SET credits = <new_value> WHERE created_at > NOW() - INTERVAL '1 day';
- *    (to update recent signups to new bonus amount if desired)
+ * 3. Apply the migration via Supabase dashboard or migration script
  */
 export const NEW_USER_WELCOME_BONUS = 500;
 
