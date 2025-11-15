@@ -203,10 +203,10 @@ POST /api/images/upload        - Upload image to Cloudflare R2
 
 ### Week 2: Image Hosting (Cloudflare R2)
 
-- [ ] Set up Cloudflare R2 bucket
-- [ ] Configure R2 API credentials and custom domain
-- [ ] Install @aws-sdk/client-s3 for S3-compatible uploads
-- [ ] Create image upload API route
+- [x] Set up Cloudflare R2 bucket
+- [x] Configure R2 API credentials and custom domain
+- [x] Install @aws-sdk/client-s3 for S3-compatible uploads
+- [x] Create image upload API route
 - [ ] Automatic upload on publish
 - [ ] Track which images are AI-generated (skip moderation)
 
