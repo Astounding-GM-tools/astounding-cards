@@ -1,0 +1,330 @@
+<script lang="ts">
+	import { dialogStore } from '../dialog/dialogStore.svelte.js';
+	import { isAuthenticated } from '../../stores/auth.js';
+	import { getImageStyles } from '$lib/config/image-styles.js';
+	import type { Card } from '../../types/card.js';
+	import type { ImageStyle } from '../../types/deck.js';
+
+	interface Props {
+		card: Card;
+		deckImageStyle: ImageStyle;
+		// Optional props for testing/stories
+		isAuthenticatedOverride?: boolean;
+		hasTokensOverride?: boolean;
+	}
+
+	let { card, deckImageStyle, isAuthenticatedOverride, hasTokensOverride }: Props = $props();
+
+	// State
+	let selectedStyle = $state<ImageStyle>(deckImageStyle);
+	let isGenerating = $state(false);
+
+	// Auth/Token checks (use overrides for testing, otherwise use real store/logic)
+	const isUserAuthenticated = $derived(
+		isAuthenticatedOverride !== undefined ? isAuthenticatedOverride : $isAuthenticated
+	);
+	const hasTokens = $derived(hasTokensOverride !== undefined ? hasTokensOverride : true); // Dev: unlimited tokens
+	const canGenerate = $derived(isUserAuthenticated && hasTokens);
+
+	const imageStyles = getImageStyles();
+
+	async function generateImage() {
+		isGenerating = true;
+		try {
+			const response = await fetch('/api/ai/generate-image', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					card,
+					deckTheme: deckImageStyle, // TODO: use separate deck theme
+					existingImageUrl: card.image ?? undefined
+				})
+			});
+
+			if (!response.ok) {
+				throw new Error('Generation failed');
+			}
+
+			const data = await response.json();
+			
+			// TODO: Upload image to R2, update card
+			console.log('Generated image:', data);
+			
+		} catch (error) {
+			console.error('Generation error:', error);
+		} finally {
+			isGenerating = false;
+		}
+	}
+
+	function removeImage() {
+		// TODO: Clear card image
+		dialogStore.close();
+	}
+</script>
+
+<div class="ai-image-generation">
+	<div class="header">
+		<h2>🎨 Generate AI Image</h2>
+		<button class="close-button" onclick={() => dialogStore.close()}>×</button>
+	</div>
+
+	<div class="content">
+		<!-- Card Preview -->
+		<div class="card-info">
+			<strong>{card.title}</strong>
+			{#if card.subtitle}
+				<span class="subtitle">- {card.subtitle}</span>
+			{/if}
+		</div>
+
+		<!-- Image Style Selector -->
+		<div class="form-group">
+			<label for="imageStyle">Image Style</label>
+			<select id="imageStyle" bind:value={selectedStyle}>
+				{#each imageStyles as style}
+					<option value={style.id}>
+						{style.name}
+						{#if style.id === deckImageStyle}(Deck Default){/if}
+					</option>
+				{/each}
+			</select>
+			<p class="help-text">{imageStyles.find((s) => s.id === selectedStyle)?.description}</p>
+		</div>
+
+		<!-- Existing Image Notice -->
+		{#if card.image}
+			<div class="notice">
+				ℹ️ This card has an existing image. It will be used as a style reference for the new
+				generation.
+			</div>
+		{/if}
+
+		<!-- Token Budget (when logged in) -->
+		{#if isUserAuthenticated}
+			<div class="token-budget">
+				{#if hasTokens}
+					<p>✨ Image generation costs <strong>1 token</strong></p>
+				{:else}
+					<div class="no-tokens">
+						<p>💰 You need tokens to generate images</p>
+						<button class="primary-button" onclick={() => console.log('Buy tokens')}
+							>Buy Tokens</button
+						>
+					</div>
+				{/if}
+			</div>
+		{/if}
+
+		<!-- Auth Gate (not logged in) -->
+		{#if !isUserAuthenticated}
+			<div class="auth-gate">
+				<p>🔒 Please log in to generate images</p>
+				<button class="primary-button" onclick={() => console.log('Login')}>Login</button>
+			</div>
+		{/if}
+	</div>
+
+	<div class="footer">
+		{#if card.image}
+			<button class="secondary-button" onclick={removeImage}>Remove Image</button>
+		{/if}
+		<button class="primary-button" onclick={generateImage} disabled={!canGenerate || isGenerating}>
+			{isGenerating ? '⏳ Generating...' : '✨ Generate Image'}
+		</button>
+	</div>
+</div>
+
+<style>
+	.ai-image-generation {
+		background: white;
+		display: flex;
+		flex-direction: column;
+		max-height: 85vh;
+		min-width: 500px;
+	}
+
+	.header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		padding: 1.5rem;
+		border-bottom: 1px solid #e2e8f0;
+	}
+
+	.header h2 {
+		margin: 0;
+		font-size: 1.25rem;
+		font-weight: 600;
+	}
+
+	.close-button {
+		background: none;
+		border: none;
+		font-size: 1.5rem;
+		cursor: pointer;
+		padding: 0.25rem;
+		color: #64748b;
+		border-radius: 4px;
+		width: 2rem;
+		height: 2rem;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.close-button:hover {
+		background: #f8fafc;
+		color: #1a202c;
+	}
+
+	.content {
+		flex: 1;
+		padding: 1.5rem;
+		overflow-y: auto;
+		display: flex;
+		flex-direction: column;
+		gap: 1.5rem;
+	}
+
+	.card-info {
+		background: #f8fafc;
+		padding: 1rem;
+		border-radius: 6px;
+		border: 1px solid #e2e8f0;
+	}
+
+	.card-info strong {
+		font-size: 1.1rem;
+	}
+
+	.subtitle {
+		color: #64748b;
+		font-style: italic;
+	}
+
+	.form-group {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+
+	.form-group label {
+		font-weight: 500;
+		font-size: 0.875rem;
+		color: #1a202c;
+	}
+
+	.form-group select {
+		padding: 0.75rem;
+		border: 1px solid #e2e8f0;
+		border-radius: 6px;
+		font-size: 0.875rem;
+		background: white;
+		cursor: pointer;
+	}
+
+	.form-group select:focus {
+		outline: none;
+		border-color: #059669;
+	}
+
+	.help-text {
+		font-size: 0.75rem;
+		color: #64748b;
+		margin: 0;
+		line-height: 1.4;
+	}
+
+	.notice {
+		background: rgba(59, 130, 246, 0.1);
+		border: 1px solid rgba(59, 130, 246, 0.2);
+		border-radius: 6px;
+		padding: 0.75rem;
+		font-size: 0.875rem;
+		color: #1a202c;
+	}
+
+	.token-budget {
+		background: rgba(34, 197, 94, 0.1);
+		border: 1px solid rgba(34, 197, 94, 0.2);
+		border-radius: 6px;
+		padding: 0.75rem;
+		font-size: 0.875rem;
+	}
+
+	.token-budget p {
+		margin: 0;
+		color: #1a202c;
+	}
+
+	.no-tokens {
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+		align-items: center;
+	}
+
+	.no-tokens p {
+		margin: 0;
+	}
+
+	.auth-gate {
+		background: rgba(239, 68, 68, 0.1);
+		border: 1px solid rgba(239, 68, 68, 0.2);
+		border-radius: 6px;
+		padding: 1rem;
+		text-align: center;
+	}
+
+	.auth-gate p {
+		margin: 0 0 0.75rem 0;
+		color: #1a202c;
+	}
+
+	.footer {
+		padding: 1.5rem;
+		border-top: 1px solid #e2e8f0;
+		display: flex;
+		justify-content: flex-end;
+		gap: 0.75rem;
+	}
+
+	.primary-button,
+	.secondary-button {
+		padding: 0.75rem 1.5rem;
+		border-radius: 6px;
+		font-size: 0.875rem;
+		font-weight: 500;
+		cursor: pointer;
+		transition: all 0.2s;
+	}
+
+	.primary-button {
+		background: #059669;
+		color: white;
+		border: none;
+	}
+
+	.primary-button:hover:not(:disabled) {
+		background: #047857;
+		transform: translateY(-1px);
+	}
+
+	.primary-button:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+		transform: none;
+	}
+
+	.secondary-button {
+		background: white;
+		color: #1a202c;
+		border: 1px solid #e2e8f0;
+	}
+
+	.secondary-button:hover {
+		background: #f8fafc;
+		border-color: #cbd5e1;
+	}
+</style>

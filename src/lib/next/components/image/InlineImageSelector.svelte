@@ -26,7 +26,10 @@
 		| ((blob: Blob | null, sourceUrl?: string, originalFileName?: string) => void)
 		| undefined;
 	const onRemoveImage = props.onRemoveImage as (() => void) | undefined;
+	const onGenerateImage = props.onGenerateImage as (() => void) | undefined;
 	const hasExistingImage = props.hasExistingImage as boolean | undefined;
+	const imageLocked = props.imageLocked as boolean | undefined;
+	const onToggleLock = props.onToggleLock as ((locked: boolean) => void) | undefined;
 	const existingImageInfo = props.existingImageInfo as
 		| {
 				filename?: string;
@@ -127,29 +130,15 @@
 </script>
 
 <div class="inline-image-selector">
-	<!-- Line 1: Upload -->
-	<div class="input-line">
-		<span class="input-label">Upload</span>
-		<input
-			bind:this={fileInput}
-			type="file"
-			id="file-input"
-			accept="image/*"
-			onchange={handleFile}
-			disabled={isProcessing(state)}
-		/>
-	</div>
-
-	<!-- Line 2: Download -->
-	<div class="input-line">
-		<span class="input-label">Download</span>
-		<div class="url-field">
+	{#if !hasExistingImage}
+		<!-- Single compact row: URL or File -->
+		<div class="compact-input-row">
 			<input
 				bind:this={urlInput}
 				bind:value={state.urlValue}
 				type="url"
 				id="url-input"
-				placeholder="https://..."
+				placeholder="Paste image URL..."
 				oninput={(e) =>
 					(state = updateUrlValue(state, (e.currentTarget as HTMLInputElement).value))}
 				disabled={isProcessing(state)}
@@ -160,15 +149,34 @@
 				class="load-btn"
 				type="button"
 			>
-				{isProcessing(state) ? '...' : 'Load image'}
+				{isProcessing(state) ? '...' : 'Load Image'}
 			</button>
-			{#if hasExistingImage}
-				<button onclick={handleRemove} class="unset-btn" type="button" title="Remove current image">
-					Unset
-				</button>
-			{/if}
+			<span class="divider">or</span>
+			<label class="file-btn">
+				<input
+					bind:this={fileInput}
+					type="file"
+					id="file-input"
+					accept="image/*"
+					onchange={handleFile}
+					disabled={isProcessing(state)}
+					hidden
+				/>
+				Choose File
+			</label>
 		</div>
-	</div>
+
+		<!-- Generate/Select Button (prominent when no image) -->
+		{#if onGenerateImage}
+			<button onclick={onGenerateImage} class="generate-select-btn" type="button">
+				<span class="btn-icon">✨</span>
+				<span class="btn-text">
+					<strong>Generate or Select Image</strong>
+					<small>AI generation & premium library</small>
+				</span>
+			</button>
+		{/if}
+	{/if}
 
 	<!-- Line 3: File info + Status -->
 	{#if state.originalFileName || existingImageInfo || isProcessing(state) || hasError(state) || hasPreview(state)}
@@ -216,6 +224,17 @@
 					<div class="status success">✅ Image ready</div>
 				{/if}
 
+				{#if hasExistingImage && onToggleLock}
+					<label class="lock-checkbox">
+						<input
+							type="checkbox"
+							checked={imageLocked}
+							onchange={(e) => onToggleLock?.((e.currentTarget as HTMLInputElement).checked)}
+						/>
+						<span>🔒</span>
+					</label>
+				{/if}
+
 				{#if hasExistingImage}
 					<button type="button" class="remove-btn" onclick={handleRemove}> Remove </button>
 				{/if}
@@ -231,32 +250,25 @@
 		gap: 0.5rem;
 	}
 
-	/* Line 1 & 2: Input lines */
-	.input-line {
+	/* Compact single row for URL/File input */
+	.compact-input-row {
 		display: flex;
 		align-items: center;
-		gap: 0.75rem;
-	}
-
-	.input-label {
-		min-width: 5rem;
-		font-size: 0.8rem;
-		font-weight: 600;
-		color: var(--color);
-	}
-
-	.url-field {
-		display: flex;
 		gap: 0.5rem;
-		flex: 1;
 	}
 
-	.url-field input {
+	.compact-input-row input[type='url'] {
 		flex: 1;
 		min-width: 0;
 	}
 
-	input[type='file'],
+	.divider {
+		font-size: 0.75rem;
+		color: #999;
+		font-style: italic;
+		padding: 0 0.25rem;
+	}
+
 	input[type='url'] {
 		padding: 0.375rem 0.5rem;
 		border: 1px solid #ddd;
@@ -265,7 +277,6 @@
 		font-size: 0.85rem;
 	}
 
-	input[type='file']:focus,
 	input[type='url']:focus {
 		outline: none;
 		border-color: var(--accent);
@@ -275,6 +286,29 @@
 	input:disabled {
 		opacity: 0.5;
 		cursor: not-allowed;
+	}
+
+	.file-btn {
+		padding: 0.375rem 0.75rem;
+		border: 1px solid #ddd;
+		border-radius: 3px;
+		background: var(--accent);
+		color: white;
+		cursor: pointer;
+		font-family: var(--font-body);
+		font-size: 0.8rem;
+		white-space: nowrap;
+		transition: opacity 0.2s;
+		display: inline-block;
+	}
+
+	.file-btn:hover {
+		opacity: 0.9;
+	}
+
+	.file-btn input:disabled {
+		opacity: 0.5;
+		pointer-events: none;
 	}
 
 	.load-btn {
@@ -298,22 +332,34 @@
 		opacity: 0.9;
 	}
 
-	.unset-btn {
-		padding: 0.375rem 0.75rem;
-		border: 1px solid #ddd;
+	.lock-checkbox {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.25rem;
+		padding: 0.25rem 0.5rem;
 		border-radius: 3px;
-		background: #f8f9fa;
-		color: #666;
+		background: rgba(234, 179, 8, 0.1);
+		border: 1px solid rgba(234, 179, 8, 0.2);
 		cursor: pointer;
-		font-family: var(--font-body);
-		font-size: 0.8rem;
-		white-space: nowrap;
+		transition: all 0.2s;
 	}
 
-	.unset-btn:hover {
-		background: #fee;
-		color: #c53030;
-		border-color: #fcc;
+	.lock-checkbox:hover {
+		background: rgba(234, 179, 8, 0.15);
+		border-color: rgba(234, 179, 8, 0.3);
+	}
+
+	.lock-checkbox input[type='checkbox'] {
+		width: 0.875rem;
+		height: 0.875rem;
+		cursor: pointer;
+		margin: 0;
+	}
+
+	.lock-checkbox span {
+		font-size: 0.875rem;
+		line-height: 1;
+		title: "Lock image (prevent batch regeneration)";
 	}
 
 	/* Line 3: Info and status line */
@@ -433,14 +479,8 @@
 
 	/* Responsive */
 	@media (max-width: 640px) {
-		.input-line {
-			flex-direction: column;
-			align-items: stretch;
-			gap: 0.5rem;
-		}
-
-		.input-label {
-			min-width: auto;
+		.compact-input-row {
+			flex-wrap: wrap;
 		}
 
 		.info-status-line {
