@@ -24,6 +24,7 @@ export interface Card {
 		source?: 'upload' | 'url' | 'generated'; // how the image was added
 		size?: number; // file size in bytes
 		imageStyle?: string; // generation style if source is 'generated' (e.g., 'classic', 'modern', 'inked')
+		imageLocked?: boolean; // if true, prevents regeneration in batch operations
 	} | null;
 	traits: Trait[];
 	stats: Stat[];
