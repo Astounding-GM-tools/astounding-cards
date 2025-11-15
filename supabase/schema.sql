@@ -5,11 +5,11 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- Users table (extends Supabase auth.users)
--- New users get 500 credits welcome bonus (configurable in src/lib/config/token-costs.ts)
+-- Welcome bonus is granted by application code on signup (configurable)
 CREATE TABLE IF NOT EXISTS users (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   email TEXT UNIQUE NOT NULL,
-  credits INTEGER DEFAULT 500 CHECK (credits >= 0),
+  credits INTEGER DEFAULT 0 CHECK (credits >= 0),
   daily_free_decks_used INTEGER DEFAULT 0 CHECK (daily_free_decks_used >= 0),
   daily_free_decks_reset_at TIMESTAMPTZ DEFAULT NOW(),
   created_at TIMESTAMPTZ DEFAULT NOW()
@@ -182,6 +182,24 @@ BEGIN
   WHERE id = deck_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Function to grant welcome bonus to new users
+-- This is called automatically when a user row is created
+CREATE OR REPLACE FUNCTION grant_welcome_bonus()
+RETURNS TRIGGER AS $$
+BEGIN
+  -- Set credits to welcome bonus (500 tokens)
+  -- This value should match NEW_USER_WELCOME_BONUS in src/lib/config/token-costs.ts
+  NEW.credits = 500;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger to grant welcome bonus on user creation
+CREATE TRIGGER grant_welcome_bonus_trigger
+BEFORE INSERT ON users
+FOR EACH ROW
+EXECUTE FUNCTION grant_welcome_bonus();
 
 -- Comments for documentation
 COMMENT ON TABLE users IS 'Extends Supabase auth.users with app-specific fields';

@@ -11,7 +11,11 @@
  * 500 tokens = 5 NOK value = ~5 community image generations
  * This gives new users a chance to try the AI generation features.
  * 
- * Note: This must match the DEFAULT value in supabase/schema.sql
+ * To change this value:
+ * 1. Update this constant
+ * 2. Update the value in grant_welcome_bonus() function in supabase/schema.sql
+ * 3. Run migration: UPDATE users SET credits = <new_value> WHERE created_at > NOW() - INTERVAL '1 day';
+ *    (to update recent signups to new bonus amount if desired)
  */
 export const NEW_USER_WELCOME_BONUS = 500;
 
