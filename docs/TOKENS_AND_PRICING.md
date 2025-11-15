@@ -49,3 +49,10 @@ export const TOKEN_COSTS = {
 - Deck generation is always free to maximize engagement
 - Images are the monetization point (community library grows with use)
 - 500 token welcome bonus lets users try ~5 images immediately
+
+## Future: Admin Dashboard
+
+- Could store welcome bonus in an `admin_config` table
+- Trigger function reads from table instead of hardcoded value
+- Admin UI to adjust settings without SQL knowledge
+- For now: manual SQL updates are simple and sufficient
