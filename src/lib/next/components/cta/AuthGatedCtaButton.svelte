@@ -2,50 +2,46 @@
 	import { isAuthenticated } from '$lib/next/stores/auth';
 	import { dialogStore } from '$lib/next/components/dialog/dialogStore.svelte';
 	import AuthGateDialog from '$lib/next/components/dialogs/AuthGateDialog.svelte';
-	import AiImageGenerationDialog from '$lib/next/components/dialogs/AiImageGenerationDialog.svelte';
-	import type { Card } from '$lib/types';
-	import type { ImageStyle } from '$lib/config/image-styles';
+	import type { CtaConfig } from '$lib/config/cta-configs';
 
 	type Props = {
-		card: Card;
-		imageStyle: ImageStyle;
-		isAuthenticatedOverride?: boolean; // For Storybook testing
-		onImageGenerated?: (imageData: string) => void;
+		/** CTA configuration (text, auth gate settings) */
+		config: CtaConfig;
+		/** Handler called when authenticated user clicks button */
+		onAuthenticatedClick: () => void;
+		/** Override auth state for Storybook testing */
+		isAuthenticatedOverride?: boolean;
 	};
 
-	let { card, imageStyle, isAuthenticatedOverride, onImageGenerated }: Props = $props();
+	let { config, onAuthenticatedClick, isAuthenticatedOverride }: Props = $props();
 
 	const isAuth = $derived(isAuthenticatedOverride ?? $isAuthenticated);
+	const buttonText = $derived(isAuth ? config.authenticated : config.unauthenticated);
 
 	function handleClick() {
 		if (!isAuth) {
-			// Show auth gate dialog
+			// Show auth gate dialog with config from CTA
 			dialogStore.setContent(AuthGateDialog, {
-				feature: 'AI Image Generation',
-				description:
-					'Generate stunning card artwork with AI or browse our premium image library. Create a free account to unlock these exclusive features!'
+				feature: config.unauthenticated.authGate.featureName,
+				description: config.unauthenticated.authGate.description
 			});
 		} else {
-			// Show AI generation dialog (future: tabs for Generate/Library)
-			dialogStore.setContent(AiImageGenerationDialog, {
-				card,
-				imageStyle,
-				onImageGenerated
-			});
+			// Execute authenticated action
+			onAuthenticatedClick();
 		}
 	}
 </script>
 
-<button onclick={handleClick} class="generate-select-btn" type="button">
+<button onclick={handleClick} class="cta-btn" type="button">
 	<span class="btn-icon">✨</span>
 	<span class="btn-text">
-		<strong>Generate or Select Image</strong>
-		<small>AI generation & premium library</small>
+		<strong>{buttonText.title}</strong>
+		<small>{buttonText.subtitle}</small>
 	</span>
 </button>
 
 <style>
-	.generate-select-btn {
+	.cta-btn {
 		display: flex;
 		align-items: center;
 		gap: 12px;
@@ -60,7 +56,7 @@
 		font: inherit;
 	}
 
-	.generate-select-btn:hover {
+	.cta-btn:hover {
 		background: linear-gradient(135deg, rgba(34, 197, 94, 0.15) 0%, rgba(16, 185, 129, 0.15) 100%);
 		border-color: rgba(34, 197, 94, 0.5);
 		transform: translateY(-1px);
