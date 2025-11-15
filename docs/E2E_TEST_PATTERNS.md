@@ -159,16 +159,40 @@ test('my test', async ({ page }) => {
 - `e2e/statblock-integration.spec.ts` - Complex workflow ✅
 - `e2e/dev-tools-working.spec.ts` - Infrastructure ✅
 
-**DevToolsHelper:**
+**DevToolsHelper API:**
 
-- `e2e/helpers/dev-tools.ts` - Main helper class
-- Provides `setupTestEnvironment()`, `clearDatabase()`, etc.
+Class: `e2e/helpers/dev-tools.ts`
 
-**Sample Data Available:**
+```typescript
+// Environment setup (use these)
+await devTools.setupTestEnvironment();  // Fast: Creates "Tales of the Uncanny" deck
+await devTools.clearDatabaseConsole();   // Fast: Wipes all data
+await devTools.addSampleDataConsole();   // Fast: Adds sample deck
 
-- Deck name: "Tales of the Uncanny"
-- 3 cards: Dr. Blackwood (character), The Ethereal Compass (item), The Misty Vale (location)
-- Accessible via `devTools.getSampleDataInfo()`
+// Dev mode
+await devTools.enableDevMode();
+await devTools.disableDevMode();
+
+// Info
+devTools.getSampleDataInfo();
+```
+
+**Console Shortcuts:**
+
+Available globally in browser console:
+
+```javascript
+// Quick operations (bypass UI)
+await window.e2eHelpers.setupTestEnvironment();
+await window.e2eHelpers.clearDatabase();
+await window.e2eHelpers.addSampleData();
+window.e2eHelpers.getSampleInfo();
+```
+
+**Sample Data:**
+
+- **Deck**: "Tales of the Uncanny"
+- **Cards**: Dr. Blackwood, The Ethereal Compass, The Misty Vale
 
 ---
 
