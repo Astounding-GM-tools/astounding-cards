@@ -14,8 +14,8 @@ const meta = {
 		isAuthenticatedOverride: {
 			control: 'boolean'
 		},
-		hasTokensOverride: {
-			control: 'boolean'
+		tokenBalanceOverride: {
+			control: 'number'
 		}
 	}
 } satisfies Meta<AiImageGenerationDialog>;
@@ -51,15 +51,15 @@ const cardWithImage: Card = {
 };
 
 /**
- * Default state - user logged in with tokens, ready for community generation.
- * Shows 100 token cost and community benefits.
+ * Default state - user logged in with sufficient tokens (500).
+ * Shows affordability with green checkmark.
  */
 export const Default: Story = {
 	args: {
 		card: sampleCard,
 		deckImageStyle: 'classic',
 		isAuthenticatedOverride: true,
-		hasTokensOverride: true
+		tokenBalanceOverride: 500
 	}
 };
 
@@ -71,7 +71,7 @@ export const WithExistingImage: Story = {
 		card: cardWithImage,
 		deckImageStyle: 'classic',
 		isAuthenticatedOverride: true,
-		hasTokensOverride: true
+		tokenBalanceOverride: 500
 	}
 };
 
@@ -83,7 +83,7 @@ export const ModernStyle: Story = {
 		card: sampleCard,
 		deckImageStyle: 'modern',
 		isAuthenticatedOverride: true,
-		hasTokensOverride: true
+		tokenBalanceOverride: 500
 	}
 };
 
@@ -95,7 +95,7 @@ export const InkedStyle: Story = {
 		card: sampleCard,
 		deckImageStyle: 'inked',
 		isAuthenticatedOverride: true,
-		hasTokensOverride: true
+		tokenBalanceOverride: 500
 	}
 };
 
@@ -113,7 +113,7 @@ export const LockedImage: Story = {
 		},
 		deckImageStyle: 'classic',
 		isAuthenticatedOverride: true,
-		hasTokensOverride: true
+		tokenBalanceOverride: 500
 	}
 };
 
@@ -125,27 +125,42 @@ export const NotLoggedIn: Story = {
 		card: sampleCard,
 		deckImageStyle: 'classic',
 		isAuthenticatedOverride: false,
-		hasTokensOverride: true
+		tokenBalanceOverride: 500
 	}
 };
 
 /**
- * User logged in but has no tokens - shows buy tokens CTA.
+ * User logged in with insufficient tokens (40) - shows red X and buy tokens button.
  */
-export const LoggedInNoTokens: Story = {
+export const InsufficientTokens: Story = {
 	args: {
 		card: sampleCard,
 		deckImageStyle: 'classic',
 		isAuthenticatedOverride: true,
-		hasTokensOverride: false
+		tokenBalanceOverride: 40
 	}
 };
 
-export const NotLoggedInNoTokens: Story = {
+/**
+ * User logged in with no tokens (0) - shows buy tokens CTA.
+ */
+export const NoTokens: Story = {
 	args: {
 		card: sampleCard,
 		deckImageStyle: 'classic',
-		isAuthenticatedOverride: false,
-		hasTokensOverride: false
+		isAuthenticatedOverride: true,
+		tokenBalanceOverride: 0
+	}
+};
+
+/**
+ * User has exactly enough tokens (100) - edge case.
+ */
+export const ExactlyEnoughTokens: Story = {
+	args: {
+		card: sampleCard,
+		deckImageStyle: 'classic',
+		isAuthenticatedOverride: true,
+		tokenBalanceOverride: 100
 	}
 };

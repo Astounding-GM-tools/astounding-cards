@@ -1,7 +1,9 @@
 <script lang="ts">
 	import { dialogStore } from '../dialog/dialogStore.svelte.js';
 	import { isAuthenticated } from '../../stores/auth.js';
+	import { tokenAmount } from '../../stores/tokenBalance.js';
 	import { getImageStyles } from '$lib/config/image-styles.js';
+	import { TOKEN_COSTS, formatTokenBalance } from '$lib/config/token-costs.js';
 	import type { Card } from '../../types/card.js';
 	import type { ImageStyle } from '../../types/deck.js';
 
@@ -10,10 +12,10 @@
 		deckImageStyle: ImageStyle;
 		// Optional props for testing/stories
 		isAuthenticatedOverride?: boolean;
-		hasTokensOverride?: boolean;
+		tokenBalanceOverride?: number; // For testing - overrides real token balance
 	}
 
-	let { card, deckImageStyle, isAuthenticatedOverride, hasTokensOverride }: Props = $props();
+	let { card, deckImageStyle, isAuthenticatedOverride, tokenBalanceOverride }: Props = $props();
 
 	// State
 	let selectedStyle = $state<ImageStyle>(deckImageStyle);
@@ -23,8 +25,12 @@
 	const isUserAuthenticated = $derived(
 		isAuthenticatedOverride !== undefined ? isAuthenticatedOverride : $isAuthenticated
 	);
-	const hasTokens = $derived(hasTokensOverride !== undefined ? hasTokensOverride : true); // Dev: unlimited tokens
-	const canGenerate = $derived(isUserAuthenticated && hasTokens);
+	const userTokenBalance = $derived(
+		tokenBalanceOverride !== undefined ? tokenBalanceOverride : $tokenAmount
+	);
+	const generationCost = TOKEN_COSTS.IMAGE_GENERATION_COMMUNITY;
+	const canAffordGeneration = $derived(userTokenBalance >= generationCost);
+	const canGenerate = $derived(isUserAuthenticated && canAffordGeneration);
 
 	const imageStyles = getImageStyles();
 
@@ -112,14 +118,24 @@
 					<li>📚 Image added to shared library for all members</li>
 					<li>🔓 Browse & reuse community images for free</li>
 				</ul>
-				{#if !hasTokens}
-					<div class="no-tokens">
-						<p>💰 You need tokens to generate images</p>
-						<button class="primary-button" onclick={() => console.log('Buy tokens')}
-							>Buy Tokens</button
-						>
-					</div>
-				{/if}
+				
+				<!-- Token Balance & Affordability -->
+				<div class="token-balance" class:insufficient={!canAffordGeneration}>
+					{#if canAffordGeneration}
+						<p>
+							Generating this image will cost <strong>{generationCost} tokens</strong>
+							(you have <strong>{formatTokenBalance(userTokenBalance)}</strong> ✅)
+						</p>
+					{:else}
+						<p>
+							Generating this image will cost <strong>{generationCost} tokens</strong>
+							(you have <strong>{formatTokenBalance(userTokenBalance)}</strong> ❌)
+						</p>
+						<button class="buy-tokens-btn" onclick={() => console.log('Buy tokens')}>
+							💰 Buy More Tokens
+						</button>
+					{/if}
+				</div>
 			</div>
 		{/if}
 
@@ -291,15 +307,42 @@
 		margin-bottom: 0;
 	}
 
-	.no-tokens {
-		display: flex;
-		flex-direction: column;
-		gap: 0.75rem;
-		align-items: center;
+	.token-balance {
+		margin-top: 0.75rem;
+		padding-top: 0.75rem;
+		border-top: 1px solid rgba(34, 197, 94, 0.2);
 	}
 
-	.no-tokens p {
-		margin: 0;
+	.token-balance p {
+		margin: 0 0 0.5rem 0;
+		color: #1a202c;
+		font-size: 0.875rem;
+	}
+
+	.token-balance.insufficient {
+		background: rgba(239, 68, 68, 0.05);
+		margin: 0.75rem -1rem -1rem;
+		padding: 1rem;
+		border-top: 1px solid rgba(239, 68, 68, 0.2);
+		border-radius: 0 0 8px 8px;
+	}
+
+	.buy-tokens-btn {
+		padding: 0.5rem 1rem;
+		border-radius: 6px;
+		font-size: 0.875rem;
+		font-weight: 500;
+		cursor: pointer;
+		transition: all 0.2s;
+		background: #f59e0b;
+		color: white;
+		border: none;
+		width: 100%;
+	}
+
+	.buy-tokens-btn:hover {
+		background: #d97706;
+		transform: translateY(-1px);
 	}
 
 	.auth-gate {
