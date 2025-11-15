@@ -50,7 +50,10 @@ const cardWithImage: Card = {
 	}
 };
 
-// Happy path - user can generate
+/**
+ * Default state - user logged in with tokens, ready for community generation.
+ * Shows 100 token cost and community benefits.
+ */
 export const Default: Story = {
 	args: {
 		card: sampleCard,
@@ -60,6 +63,9 @@ export const Default: Story = {
 	}
 };
 
+/**
+ * Card already has an image - will be used as style reference for generation.
+ */
 export const WithExistingImage: Story = {
 	args: {
 		card: cardWithImage,
@@ -69,6 +75,9 @@ export const WithExistingImage: Story = {
 	}
 };
 
+/**
+ * Modern image style selected.
+ */
 export const ModernStyle: Story = {
 	args: {
 		card: sampleCard,
@@ -78,6 +87,9 @@ export const ModernStyle: Story = {
 	}
 };
 
+/**
+ * Inked image style selected.
+ */
 export const InkedStyle: Story = {
 	args: {
 		card: sampleCard,
@@ -87,6 +99,9 @@ export const InkedStyle: Story = {
 	}
 };
 
+/**
+ * Image is locked - note shown in UI (future feature).
+ */
 export const LockedImage: Story = {
 	args: {
 		card: {
@@ -102,7 +117,9 @@ export const LockedImage: Story = {
 	}
 };
 
-// Auth/Token states
+/**
+ * User not logged in - shows auth gate.
+ */
 export const NotLoggedIn: Story = {
 	args: {
 		card: sampleCard,
@@ -112,6 +129,9 @@ export const NotLoggedIn: Story = {
 	}
 };
 
+/**
+ * User logged in but has no tokens - shows buy tokens CTA.
+ */
 export const LoggedInNoTokens: Story = {
 	args: {
 		card: sampleCard,

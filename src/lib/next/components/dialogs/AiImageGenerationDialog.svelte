@@ -100,12 +100,19 @@
 			</div>
 		{/if}
 
-		<!-- Token Budget (when logged in) -->
+		<!-- Community Generation Info (when logged in) -->
 		{#if isUserAuthenticated}
-			<div class="token-budget">
-				{#if hasTokens}
-					<p>✨ Image generation costs <strong>1 token</strong></p>
-				{:else}
+			<div class="community-info">
+				<div class="info-header">
+					<span class="icon">🌐</span>
+					<strong>Community Generation</strong>
+				</div>
+				<ul class="benefits">
+					<li>✨ AI-generated artwork for <strong>100 tokens (1 NOK)</strong></li>
+					<li>📚 Image added to shared library for all members</li>
+					<li>🔓 Browse & reuse community images for free</li>
+				</ul>
+				{#if !hasTokens}
 					<div class="no-tokens">
 						<p>💰 You need tokens to generate images</p>
 						<button class="primary-button" onclick={() => console.log('Buy tokens')}
@@ -130,7 +137,7 @@
 			<button class="secondary-button" onclick={removeImage}>Remove Image</button>
 		{/if}
 		<button class="primary-button" onclick={generateImage} disabled={!canGenerate || isGenerating}>
-			{isGenerating ? '⏳ Generating...' : '✨ Generate Image'}
+			{isGenerating ? '⏳ Generating...' : '🌐 Generate & Share (100 tokens)'}
 		</button>
 	</div>
 </div>
@@ -245,17 +252,43 @@
 		color: #1a202c;
 	}
 
-	.token-budget {
-		background: rgba(34, 197, 94, 0.1);
+	.community-info {
+		background: rgba(34, 197, 94, 0.05);
 		border: 1px solid rgba(34, 197, 94, 0.2);
-		border-radius: 6px;
-		padding: 0.75rem;
+		border-radius: 8px;
+		padding: 1rem;
 		font-size: 0.875rem;
 	}
 
-	.token-budget p {
-		margin: 0;
+	.info-header {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		margin-bottom: 0.75rem;
 		color: #1a202c;
+	}
+
+	.info-header .icon {
+		font-size: 1.25rem;
+	}
+
+	.info-header strong {
+		font-size: 0.95rem;
+	}
+
+	.benefits {
+		margin: 0;
+		padding-left: 1.5rem;
+		color: #1a202c;
+	}
+
+	.benefits li {
+		margin-bottom: 0.5rem;
+		line-height: 1.5;
+	}
+
+	.benefits li:last-child {
+		margin-bottom: 0;
 	}
 
 	.no-tokens {
