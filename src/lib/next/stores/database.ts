@@ -10,7 +10,7 @@
  * Store: "decks" (key: deck.id, value: Deck)
  */
 
-import type { Deck, Theme, Layout } from '../types/deck.js';
+import type { Deck, Theme, Layout, ImageStyle } from '../types/deck.js';
 import type { Card } from '../types/card.js';
 import { safeDeepClone } from '$lib/utils/clone-utils.js';
 import { generateId, generateKey } from '../utils/idUtils.js';
@@ -89,7 +89,8 @@ class NextDatabase {
 	async createDeck(
 		title: string,
 		theme: Theme = 'classic',
-		layout: Layout = 'tarot'
+		layout: Layout = 'tarot',
+		imageStyle: ImageStyle = 'classic'
 	): Promise<Deck> {
 		const db = await this.ensureInit();
 		const now = Date.now();
@@ -99,6 +100,7 @@ class NextDatabase {
 			meta: {
 				title,
 				theme,
+				imageStyle,
 				layout,
 				lastEdited: now,
 				createdAt: now
