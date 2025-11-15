@@ -5,6 +5,8 @@
 -->
 <script lang="ts">
 	import type { CardSize } from '$lib/types';
+	import AuthGatedCtaButton from '$lib/next/components/cta/AuthGatedCtaButton.svelte';
+	import { IMAGE_GENERATION_CTA } from '$lib/config/cta-configs';
 	import {
 		initializeImageSelectorState,
 		updateUrlValue,
@@ -168,13 +170,7 @@
 
 		<!-- Generate/Select Button (prominent when no image) -->
 		{#if onGenerateImage}
-			<button onclick={onGenerateImage} class="generate-select-btn" type="button">
-				<span class="btn-icon">✨</span>
-				<span class="btn-text">
-					<strong>Generate or Select Image</strong>
-					<small>AI generation & premium library</small>
-				</span>
-			</button>
+			<AuthGatedCtaButton config={IMAGE_GENERATION_CTA} onAuthenticatedClick={onGenerateImage} />
 		{/if}
 	{/if}
 
@@ -330,6 +326,11 @@
 
 	.load-btn:hover:not(:disabled) {
 		opacity: 0.9;
+	}
+
+	/* CTA button spacing */
+	:global(.inline-image-selector .cta-btn) {
+		margin-top: 0.5rem;
 	}
 
 	.lock-checkbox {
