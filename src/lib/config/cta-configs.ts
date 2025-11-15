@@ -54,20 +54,21 @@ export const IMAGE_GENERATION_CTA: CtaConfig = {
 
 /**
  * Deck generation CTA - for deck creation/editing
+ * Deck generation is FREE - it's the gateway to image generation
  */
 export const DECK_GENERATION_CTA: CtaConfig = {
 	id: 'deck-generation',
 	unauthenticated: {
 		title: 'Generate Deck with AI',
-		subtitle: 'Free account unlocks AI deck creation',
+		subtitle: 'Free AI deck creation - sign up',
 		authGate: {
 			featureName: 'AI Deck Generation',
-			description: 'Create complete themed decks in seconds with AI. Define your theme and let AI generate unique cards with artwork, stats, and mechanics. Free to start!'
+			description: 'Create complete themed decks in seconds with AI. Define your theme and let AI generate unique cards with stats and mechanics. Always free!'
 		}
 	},
 	authenticated: {
 		title: 'Generate Deck with AI',
-		subtitle: 'Create themed deck in seconds'
+		subtitle: 'Free - create themed deck instantly'
 	}
 };
 

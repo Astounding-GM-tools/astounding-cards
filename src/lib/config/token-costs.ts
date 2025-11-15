@@ -19,8 +19,8 @@ export const TOKEN_COSTS = {
 	/** Community image generation (100 tokens = 1 NOK) */
 	IMAGE_GENERATION_COMMUNITY: 100,
 	
-	/** AI deck generation (200 tokens = 2 NOK) */
-	DECK_GENERATION: 200,
+	/** AI deck generation - FREE (gateway to image generation) */
+	DECK_GENERATION: 0,
 	
 	/** Future: Private image generation (240 tokens = 2.40 NOK) */
 	IMAGE_GENERATION_PRIVATE: 240,
