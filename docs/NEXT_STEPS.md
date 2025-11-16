@@ -117,18 +117,23 @@ POST /api/images/search
 
 ## Immediate Next Steps
 
-### 1. Update UI to Use New Flow 🎨 HIGH PRIORITY
+### 1. ✅ UI Integration COMPLETE
 
-**Current**: Dialog exists with Storybook stories but needs integration
+**Status**: CardEditDialog integrated with new server-side API
 
-**Changes needed**:
-- Connect to `/api/ai/generate-image` API
-- Handle response: `{ success, url, imageId, cost, cached, optimizedPrompt }`
-- Update card via deck store with R2 URL
-- Show "cached" indicator when `cached: true`
-- Refresh token balance after generation
-- Show "Found similar image!" if cached=true
-- Handle search results UI (show similar images before generating)
+**Completed**:
+- ✅ Removed BYOK components (ApiKeyInput, AiImageGenerator)
+- ✅ Added AuthGatedCtaButton with IMAGE_GENERATION_CTA config
+- ✅ Opens AiImageGenerationDialog with current card data
+- ✅ Dialog handles: auth gating, token balance, style selection
+- ✅ Connected to `/api/ai/generate-image` endpoint
+- ✅ Updates card with R2 URL via nextDeckStore.updateCard()
+- ✅ Shows cached vs new image toasts
+- ✅ Refreshes token balance after generation
+
+**Remaining**:
+- ⏳ BatchImageGenerationDialog integration (deck-level generation)
+- ⏳ Remove unused BYOK components from codebase
 
 **Optional enhancement**: Add image search before generation
 - "Before generating, search for similar images?"

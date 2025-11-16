@@ -21,9 +21,10 @@
 	import CardBackContent from '../card/CardBackContent.svelte';
 	import InlineImageSelector from '../image/InlineImageSelector.svelte';
 	import BinaryToggle from '../ui/BinaryToggle.svelte';
-	import ApiKeyInput from '../ui/ApiKeyInput.svelte';
+	import AuthGatedCtaButton from '../cta/AuthGatedCtaButton.svelte';
+	import AiImageGenerationDialog from './AiImageGenerationDialog.svelte';
+	import { IMAGE_GENERATION_CTA } from '$lib/config/cta-configs.js';
 	import { toasts } from '$lib/stores/toast.js';
-	import { AiImageGenerator } from '$lib/utils/ai-image-generator.js';
 
 	import type { Trait, Stat } from '$lib/next/types/card.js';
 	import { ImageUrlManager } from '$lib/utils/image-handler.js';
@@ -305,56 +306,27 @@
 		() => formData.traits
 	);
 
-	// AI Image Generation state
-	let apiKey = $state('');
-	let isGeneratingImage = $state(false);
-
-	// AI Image Generation function
-	async function generateAiImage() {
+	// Open AI Image Generation Dialog
+	function openImageGenerationDialog() {
 		if (!card) return;
-
-		if (!apiKey.trim()) {
-			toasts.error('Please enter your Google AI Studio API key');
-			return;
-		}
-
-		isGeneratingImage = true;
-		const toastId = toasts.loading('Generating AI image...');
-
-		try {
-			// Create a card with current form data (including unsaved changes) for AI prompt generation
-			const currentCardData: Card = {
-				...card,
-				title: formData.title,
-				subtitle: formData.subtitle,
-				description: formData.description,
-				stats: formData.stats,
-				traits: formData.traits
-			};
-
-			// Get the deck theme, default to 'classic' if no deck or theme
-			const deckTheme = nextDeckStore.deck?.meta?.theme || 'classic';
-
-			const generator = new AiImageGenerator();
-			const result = await generator.generateCardImage(currentCardData, deckTheme, apiKey.trim());
-
-			if (result.success && result.imageBlob) {
-				// Update the card image with the generated result
-				await handleImageChange(result.imageBlob, result.sourceUrl, result.filename);
-				toasts.remove(toastId);
-				toasts.success('AI image generated successfully! 🎨 Full resolution saved to Downloads');
-			} else {
-				toasts.remove(toastId);
-				toasts.error(result.error || 'Failed to generate image');
-			}
-		} catch (error) {
-			toasts.remove(toastId);
-			toasts.error(
-				`Error generating image: ${error instanceof Error ? error.message : 'Unknown error'}`
-			);
-		} finally {
-			isGeneratingImage = false;
-		}
+		
+		// Get the deck's image style
+		const deckImageStyle = nextDeckStore.deck?.meta?.imageStyle || 'classic';
+		
+		// Create a card with current form data for generation
+		const currentCardData: Card = {
+			...card,
+			title: formData.title,
+			subtitle: formData.subtitle,
+			description: formData.description,
+			stats: formData.stats,
+			traits: formData.traits
+		};
+		
+		dialogStore.setContent(AiImageGenerationDialog, {
+			card: currentCardData,
+			deckImageStyle
+		});
 	}
 </script>
 
@@ -402,14 +374,9 @@
 
 					<!-- AI Image Generation -->
 					<div class="ai-image-generation">
-						<ApiKeyInput
-							{apiKey}
-							onApiKeyChange={(key: string) => (apiKey = key)}
-							onSubmit={generateAiImage}
-							isProcessing={isGeneratingImage}
-							submitButtonText="🎨 Generate Image"
-							processingButtonText="🎨 Generating..."
-							placeholder="Google AI Studio API key"
+						<AuthGatedCtaButton
+							config={IMAGE_GENERATION_CTA}
+							onAuthenticatedClick={openImageGenerationDialog}
 						/>
 					</div>
 				</fieldset>
