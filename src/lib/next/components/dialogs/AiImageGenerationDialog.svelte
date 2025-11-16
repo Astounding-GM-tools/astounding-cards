@@ -23,6 +23,7 @@
 	let selectedStyle = $state<ImageStyle>(deckImageStyle);
 	let isGenerating = $state(false);
 	let wasCached = $state(false);
+	let generationStartTime = $state<number>(0);
 
 	// Auth/Token checks (use overrides for testing, otherwise use real store/logic)
 	const isUserAuthenticated = $derived(
@@ -40,19 +41,14 @@
 	async function generateImage() {
 		isGenerating = true;
 		wasCached = false;
+		generationStartTime = Date.now();
 		
-		// Capture card data before closing dialog (component will unmount)
+		// Capture card data (in case user closes dialog)
 		const cardId = card.id;
 		const cardData = card;
 		const cardTitle = card.title;
 		const style = selectedStyle;
 		const existingImage = card.image ?? undefined;
-		
-		// Close dialog immediately and let generation continue in background
-		dialogStore.close();
-		
-		// Show loading toast
-		const loadingToastId = toasts.loading('🎨 Generating image...');
 		
 		try {
 			// Get access token from localStorage for Authorization header
@@ -104,20 +100,23 @@
 			// Refresh token balance
 			await refreshTokenBalance();
 
-			// Remove loading toast and show success message
-			toasts.remove(loadingToastId);
+			// Calculate generation time
+			const generationTime = ((Date.now() - generationStartTime) / 1000).toFixed(1);
+			
+			// Show success message
 			if (data.cached) {
 				toasts.success('✨ Found existing image - no tokens charged!');
 			} else {
-				toasts.success(`✅ Image generated! ${data.cost} tokens used`);
+				toasts.success(`✅ Image generated in ${generationTime}s! ${data.cost} tokens used`);
 			}
+			
+			// Close dialog after success
+			dialogStore.close();
 			
 		} catch (error) {
 			console.error('Generation error:', error);
-			toasts.remove(loadingToastId);
 			toasts.error(error instanceof Error ? error.message : 'Failed to generate image');
-		} finally {
-			isGenerating = false;
+			isGenerating = false; // Allow retry
 		}
 	}
 
@@ -139,13 +138,26 @@
 	</div>
 
 	<div class="content">
-		<!-- Card Preview -->
-		<div class="card-info">
-			<strong>{card.title}</strong>
-			{#if card.subtitle}
-				<span class="subtitle">- {card.subtitle}</span>
-			{/if}
-		</div>
+		{#if isGenerating}
+			<!-- Generating State -->
+			<div class="generating-state">
+				<div class="spinner">🎨</div>
+				<h3>Generating Image...</h3>
+				<p class="card-name">{card.title}</p>
+				<div class="info-box">
+					<p><strong>✓ Generation started</strong></p>
+					<p>Expected time: ~20-30 seconds</p>
+					<p class="safe-notice">💡 Safe to close this dialog or even the browser tab - your image will be generated and saved automatically!</p>
+				</div>
+			</div>
+		{:else}
+			<!-- Card Preview -->
+			<div class="card-info">
+				<strong>{card.title}</strong>
+				{#if card.subtitle}
+					<span class="subtitle">- {card.subtitle}</span>
+				{/if}
+			</div>
 
 		<!-- Image Style Selector -->
 		<div class="form-group">
@@ -202,22 +214,27 @@
 			</div>
 		{/if}
 
-		<!-- Auth Gate (not logged in) -->
-		{#if !isUserAuthenticated}
-			<div class="auth-gate">
-				<p>🔒 Please log in to generate images</p>
-				<button class="primary-button" onclick={() => console.log('Login')}>Login</button>
-			</div>
+			<!-- Auth Gate (not logged in) -->
+			{#if !isUserAuthenticated}
+				<div class="auth-gate">
+					<p>🔒 Please log in to generate images</p>
+					<button class="primary-button" onclick={() => console.log('Login')}>Login</button>
+				</div>
+			{/if}
 		{/if}
 	</div>
 
 	<div class="footer">
-		{#if card.image}
-			<button class="secondary-button" onclick={removeImage}>Remove Image</button>
+		{#if isGenerating}
+			<button class="secondary-button" onclick={() => dialogStore.close()}>Close & Continue Generation</button>
+		{:else}
+			{#if card.image}
+				<button class="secondary-button" onclick={removeImage}>Remove Image</button>
+			{/if}
+			<button class="primary-button" onclick={generateImage} disabled={!canGenerate || isGenerating}>
+				🌐 Generate & Share (100 tokens)
+			</button>
 		{/if}
-		<button class="primary-button" onclick={generateImage} disabled={!canGenerate || isGenerating}>
-			{isGenerating ? '⏳ Generating...' : '🌐 Generate & Share (100 tokens)'}
-		</button>
 	</div>
 </div>
 
@@ -465,5 +482,75 @@
 	.secondary-button:hover {
 		background: #f8fafc;
 		border-color: #cbd5e1;
+	}
+
+	/* Generating State */
+	.generating-state {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		padding: 2rem;
+		text-align: center;
+		gap: 1rem;
+	}
+
+	.spinner {
+		font-size: 3rem;
+		animation: spin 2s linear infinite;
+	}
+
+	@keyframes spin {
+		from {
+			transform: rotate(0deg);
+		}
+		to {
+			transform: rotate(360deg);
+		}
+	}
+
+	.generating-state h3 {
+		margin: 0;
+		font-size: 1.5rem;
+		font-weight: 600;
+		color: #1a202c;
+	}
+
+	.generating-state .card-name {
+		margin: 0;
+		font-size: 1rem;
+		color: #64748b;
+		font-style: italic;
+	}
+
+	.generating-state .info-box {
+		background: rgba(59, 130, 246, 0.08);
+		border: 1px solid rgba(59, 130, 246, 0.2);
+		border-radius: 8px;
+		padding: 1.25rem;
+		margin-top: 1rem;
+		max-width: 400px;
+	}
+
+	.generating-state .info-box p {
+		margin: 0.5rem 0;
+		font-size: 0.875rem;
+		color: #1a202c;
+	}
+
+	.generating-state .info-box p:first-child {
+		margin-top: 0;
+	}
+
+	.generating-state .info-box p:last-child {
+		margin-bottom: 0;
+	}
+
+	.safe-notice {
+		background: rgba(34, 197, 94, 0.08);
+		padding: 0.75rem;
+		border-radius: 6px;
+		margin-top: 0.5rem !important;
+		font-weight: 500;
 	}
 </style>
