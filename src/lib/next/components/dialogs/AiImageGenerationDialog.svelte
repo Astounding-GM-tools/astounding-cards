@@ -50,6 +50,7 @@
 		const cardTitle = card.title;
 		const style = selectedStyle;
 		const existingImage = card.image ?? undefined;
+		const sourceImageId = card.imageMetadata?.imageId ?? null;
 		
 		// Set generating flag on card to show loading indicator
 		await nextDeckStore.updateCard(cardId, {
@@ -72,11 +73,12 @@
 					'Content-Type': 'application/json',
 					'Authorization': `Bearer ${accessToken}`
 				},
-				body: JSON.stringify({
-					card: cardData,
-					deckTheme: style,
-					existingImageUrl: existingImage
-				})
+			body: JSON.stringify({
+				card: cardData,
+				deckTheme: style,
+				existingImageUrl: existingImage,
+				sourceImageId: sourceImageId
+			})
 			});
 
 			if (!response.ok) {
