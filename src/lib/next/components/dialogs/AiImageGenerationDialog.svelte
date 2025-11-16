@@ -41,6 +41,13 @@
 		isGenerating = true;
 		wasCached = false;
 		
+		// Capture card data before closing dialog (component will unmount)
+		const cardId = card.id;
+		const cardData = card;
+		const cardTitle = card.title;
+		const style = selectedStyle;
+		const existingImage = card.image ?? undefined;
+		
 		// Close dialog immediately and let generation continue in background
 		dialogStore.close();
 		
@@ -63,9 +70,9 @@
 					'Authorization': `Bearer ${accessToken}`
 				},
 				body: JSON.stringify({
-					card,
-					deckTheme: selectedStyle, // Use selected style, not deck default
-					existingImageUrl: card.image ?? undefined
+					card: cardData,
+					deckTheme: style,
+					existingImageUrl: existingImage
 				})
 			});
 
@@ -84,10 +91,10 @@
 			wasCached = data.cached || false;
 
 			// Update card with new image URL
-			await nextDeckStore.updateCard(card.id, {
+			await nextDeckStore.updateCard(cardId, {
 				image: data.url,
 				imageMetadata: {
-					originalName: `ai-generated-${card.title}.png`,
+					originalName: `ai-generated-${cardTitle}.png`,
 					addedAt: Date.now(),
 					source: 'ai-generation',
 					imageId: data.imageId
