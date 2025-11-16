@@ -28,6 +28,17 @@ function createTokenBalanceStore() {
 		try {
 			const response = await fetch('/api/tokens/balance');
 			
+			// 401 is expected when not authenticated - not an error, just reset
+			if (response.status === 401) {
+				update(state => ({
+					...state,
+					amount: 0,
+					loading: false,
+					error: null
+				}));
+				return;
+			}
+			
 			if (!response.ok) {
 				throw new Error('Failed to fetch token balance');
 			}
