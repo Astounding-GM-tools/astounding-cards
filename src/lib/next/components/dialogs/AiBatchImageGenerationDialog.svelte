@@ -228,9 +228,11 @@
 				throw new Error(result.error || 'Failed to generate images');
 			}
 
-			// Update cards with generated images
+			// Update cards with generated/cached images AND update thumbnails in real-time
+			let completedCount = 0;
 			for (const imageResult of result.results) {
 				if (imageResult.success && imageResult.url) {
+					// Update the card in the deck store
 					await nextDeckStore.updateCard(imageResult.cardId, {
 						image: imageResult.url,
 						imageMetadata: {
@@ -239,6 +241,22 @@
 							addedAt: Date.now()
 						}
 					});
+
+					// Update the thumbnail in the dialog immediately
+					if (!imageResult.cached) {
+						completedCount++;
+						generationProgress = { current: completedCount, total: cardsNeedingGeneration };
+					}
+
+					// Update card image status to show the new image
+					cardImageStatus = {
+						...cardImageStatus,
+						[imageResult.cardId]: {
+							hasImage: true,
+							imageUrl: imageResult.url,
+							isLoading: false
+						}
+					};
 				}
 			}
 
@@ -253,11 +271,13 @@
 				`✅ Batch generation complete in ${elapsedTime}s! Generated: ${generated}, Cached: ${cached} (${result.totalCost} tokens)`
 			);
 
-			dialogStore.close();
+			// Show completion state briefly before allowing close
+			setTimeout(() => {
+				isGenerating = false;
+			}, 1500);
 		} catch (error) {
 			console.error('Batch generation error:', error);
 			toasts.error(error instanceof Error ? error.message : 'Failed to generate images');
-		} finally {
 			isGenerating = false;
 			generationProgress = { current: 0, total: 0 };
 		}
@@ -276,21 +296,49 @@
 
 	<div class="content">
 		{#if isGenerating}
-			<!-- Generating State -->
+			<!-- Generating State with Live Updates -->
 			<div class="generating-state">
 				<div class="spinner">🎨</div>
 				<h3>Generating Images...</h3>
 				<p class="progress-text">
-					Processing {generationProgress.current} of {generationProgress.total} cards
+					Completed {generationProgress.current} of {generationProgress.total} cards
 				</p>
-				<div class="info-box">
-					<p><strong>✓ Generation started</strong></p>
-					<p>Generating images for {cardsNeedingGeneration} cards</p>
-					<p>Expected time: ~{Math.ceil(cardsNeedingGeneration * 20)} seconds</p>
-					<p class="safe-notice">
-						💡 Safe to close this dialog - images will be generated and applied automatically!
-					</p>
+				
+				<!-- Progress bar -->
+				<div class="progress-bar">
+					<div 
+						class="progress-fill" 
+						style="width: {generationProgress.total > 0 ? (generationProgress.current / generationProgress.total) * 100 : 0}%"
+					></div>
 				</div>
+
+				<!-- Live thumbnail updates -->
+				<div class="generating-card-list">
+					{#each cards as card}
+						{@const status = cardImageStatus[card.id]}
+						<div class="generating-card-item" class:completed={status?.hasImage}>
+							<!-- Thumbnail -->
+							{#if status?.imageUrl}
+								<div class="card-thumbnail completed-thumbnail">
+									<img src={status.imageUrl} alt={card.title} />
+									<div class="check-overlay">✓</div>
+								</div>
+							{:else}
+								<div class="card-thumbnail loading">
+									<div class="loading-spinner">⏳</div>
+								</div>
+							{/if}
+							
+							<div class="card-info-compact">
+								<span class="card-name-small">{card.title}</span>
+							</div>
+						</div>
+					{/each}
+				</div>
+
+				<p class="safe-notice">
+					💡 Watch your images appear in real-time!
+				</p>
 			</div>
 		{:else}
 			<!-- Configuration -->
@@ -496,7 +544,96 @@
 	.progress-text {
 		font-size: 14px;
 		opacity: 0.8;
-		margin: 0 0 24px;
+		margin: 0 0 16px;
+	}
+
+	/* Progress bar */
+	.progress-bar {
+		width: 100%;
+		max-width: 400px;
+		height: 8px;
+		background: rgba(255, 255, 255, 0.1);
+		border-radius: 4px;
+		overflow: hidden;
+		margin-bottom: 24px;
+	}
+
+	.progress-fill {
+		height: 100%;
+		background: linear-gradient(90deg, #22c55e 0%, #10b981 100%);
+		transition: width 0.5s ease;
+	}
+
+	/* Generating card list */
+	.generating-card-list {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+		gap: 12px;
+		width: 100%;
+		max-width: 600px;
+		max-height: 300px;
+		overflow-y: auto;
+		padding: 16px;
+		background: rgba(255, 255, 255, 0.02);
+		border-radius: 8px;
+		margin-bottom: 16px;
+	}
+
+	.generating-card-item {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 8px;
+		opacity: 0.6;
+		transition: opacity 0.3s, transform 0.3s;
+	}
+
+	.generating-card-item.completed {
+		opacity: 1;
+		transform: scale(1.05);
+	}
+
+	.completed-thumbnail {
+		position: relative;
+	}
+
+	.check-overlay {
+		position: absolute;
+		top: 4px;
+		right: 4px;
+		background: #22c55e;
+		color: white;
+		width: 20px;
+		height: 20px;
+		border-radius: 50%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 12px;
+		font-weight: bold;
+		animation: checkPop 0.3s ease;
+	}
+
+	@keyframes checkPop {
+		0% { transform: scale(0); }
+		50% { transform: scale(1.2); }
+		100% { transform: scale(1); }
+	}
+
+	.card-info-compact {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		text-align: center;
+		width: 100%;
+	}
+
+	.card-name-small {
+		font-size: 11px;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		max-width: 100%;
 	}
 
 	.info-box {
