@@ -41,6 +41,12 @@
 		isGenerating = true;
 		wasCached = false;
 		
+		// Close dialog immediately and let generation continue in background
+		dialogStore.close();
+		
+		// Show loading toast
+		const loadingToastId = toasts.loading('🎨 Generating image...');
+		
 		try {
 			// Get access token from localStorage for Authorization header
 			const authKey = Object.keys(localStorage).find((k) => k.includes('auth-token'));
@@ -91,18 +97,17 @@
 			// Refresh token balance
 			await refreshTokenBalance();
 
-			// Show success message
+			// Remove loading toast and show success message
+			toasts.remove(loadingToastId);
 			if (data.cached) {
 				toasts.success('✨ Found existing image - no tokens charged!');
 			} else {
 				toasts.success(`✅ Image generated! ${data.cost} tokens used`);
 			}
-
-			// Close dialog
-			dialogStore.close();
 			
 		} catch (error) {
 			console.error('Generation error:', error);
+			toasts.remove(loadingToastId);
 			toasts.error(error instanceof Error ? error.message : 'Failed to generate image');
 		} finally {
 			isGenerating = false;
