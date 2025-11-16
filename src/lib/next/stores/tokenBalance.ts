@@ -5,8 +5,8 @@
  * Tokens are used for AI generation, cloud storage, and other premium features.
  */
 
-import { writable, derived } from 'svelte/store';
-import { isAuthenticated, user } from './auth';
+import { writable, derived, get } from 'svelte/store';
+import { isAuthenticated, authLoading } from './auth';
 
 interface TokenBalance {
 	amount: number;
@@ -112,8 +112,17 @@ export async function refreshTokenBalance(): Promise<void> {
 	await tokenBalanceStore.fetchBalance();
 }
 
-// Auto-fetch balance when user logs in
+// Auto-fetch balance when user logs in (but only after auth loads)
+let initialized = false;
 isAuthenticated.subscribe(async (authenticated) => {
+	// Wait for auth to finish loading before fetching
+	const loading = get(authLoading);
+	if (loading && !initialized) {
+		return; // Skip initial subscription call while still loading
+	}
+	
+	initialized = true;
+	
 	if (authenticated) {
 		await tokenBalanceStore.fetchBalance();
 	} else {
