@@ -4,11 +4,11 @@
 	import { dialogStore } from '../dialog/dialogStore.svelte.js';
 	import {
 		AiPromptDialog,
-		BatchImageGenerationDialog,
 		DeckManagerDialog,
 		CardEditDialog,
 		ImageMigrationDialog
 	} from '../dialogs/index.js';
+	import AiBatchImageGenerationDialog from '../dialogs/AiBatchImageGenerationDialog.svelte';
 	import { generateShareUrl } from '$lib/next/utils/shareUrlUtils.js';
 	import { toasts } from '$lib/stores/toast.js';
 	import BinaryToggle from '../ui/BinaryToggle.svelte';
@@ -181,7 +181,7 @@
 
 	// Handle batch image generation
 	function handleBatchImageGeneration() {
-		dialogStore.setContent(BatchImageGenerationDialog);
+		dialogStore.setContent(AiBatchImageGenerationDialog);
 	}
 
 	// Dev functions (temporary)
@@ -301,7 +301,7 @@
 				</button>
 
 				<button class="action-button" onclick={handleBatchImageGeneration} disabled={isLoading}>
-					🖼️ Generate Images
+					🖼️ Batch Images
 				</button>
 			{/if}
 		</div>

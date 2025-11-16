@@ -7,8 +7,7 @@
 	import { toasts } from '$lib/stores/toast.js';
 	import BinaryToggle from '../ui/BinaryToggle.svelte';
 	import { formatTime } from '$lib/next/utils/dateUtils.js';
-	import AiDeckGenerationDialog from './AiDeckGenerationDialog.svelte';
-	import AiBatchImageGenerationDialog from './AiBatchImageGenerationDialog.svelte';
+import AiDeckGenerationDialog from './AiDeckGenerationDialog.svelte';
 	import type { Deck } from '$lib/next/types/deck.js';
 
 	// Local state
@@ -161,11 +160,6 @@
 	function handleAiDeckGenerator() {
 		dialogStore.setContent(AiDeckGenerationDialog);
 	}
-
-	// Handle Batch Image Generator
-	function handleBatchImageGenerator() {
-		dialogStore.setContent(AiBatchImageGenerationDialog);
-	}
 </script>
 
 <div class="deck-manager-dialog">
@@ -262,19 +256,6 @@
 				</div>
 				<div class="ai-button-arrow">→</div>
 			</button>
-
-			{#if currentDeck && currentDeck.cards.length > 0}
-				<button class="ai-generator-button" onclick={handleBatchImageGenerator}>
-					<div class="ai-button-icon">🖼️</div>
-					<div class="ai-button-content">
-						<div class="ai-button-title">Generate Images for All Cards</div>
-						<div class="ai-button-description">
-							Add stunning artwork to {currentDeck.cards.length} card{currentDeck.cards.length !== 1 ? 's' : ''} at once!
-						</div>
-					</div>
-					<div class="ai-button-arrow">→</div>
-				</button>
-			{/if}
 		</div>
 
 		{#if isLoading}

@@ -103,6 +103,7 @@
 					addedAt: Date.now(),
 					source: 'ai-generation',
 					imageId: data.imageId,
+					style: style,
 					isGenerating: false
 				}
 			});

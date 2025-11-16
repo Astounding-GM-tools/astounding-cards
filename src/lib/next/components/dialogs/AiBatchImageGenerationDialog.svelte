@@ -24,7 +24,23 @@
 	let isGenerating = $state(false);
 	let generationProgress = $state({ current: 0, total: 0 });
 	let isCheckingVariants = $state(false);
-	let cardImageStatus = $state<Record<string, { hasImage: boolean; imageUrl: string | null; isLoading: boolean }>>({}); 
+	
+	// Enhanced card image status tracking
+	interface CardImageStatus {
+		// Current image (what's on the card now)
+		currentImageUrl: string | null;
+		currentImageStyle: string | null;
+		isExternalImage: boolean; // Not in our R2 storage
+		
+		// Target style image (what we're checking for)
+		targetImageUrl: string | null;
+		targetImageExists: boolean;
+		
+		isLoading: boolean;
+	}
+	
+	let cardImageStatus = $state<Record<string, CardImageStatus>>({});
+	let cardSelectionState = $state<Record<string, boolean>>({}); // Which cards are checked for generation
 	let previewImageUrl = $state<string | null>(null);
 
 	// Get current deck from store (or use overrides for Storybook)
@@ -47,12 +63,17 @@
 	const cards = $derived(cardsOverride || currentDeck?.cards || []);
 	const cardCount = $derived(cards.length);
 
-	// Calculate how many cards need generation based on image status
+	// Calculate how many cards need generation (checked + don't have target variant)
 	const cardsNeedingGeneration = $derived(
-		Object.values(cardImageStatus).filter(status => !status.hasImage).length || cardCount
+		Object.entries(cardImageStatus).filter(([cardId, status]) => 
+			cardSelectionState[cardId] && !status.targetImageExists
+		).length
 	);
-	const cardsWithExistingImages = $derived(
-		Object.values(cardImageStatus).filter(status => status.hasImage).length
+	
+	const cardsWithExistingVariants = $derived(
+		Object.entries(cardImageStatus).filter(([cardId, status]) => 
+			cardSelectionState[cardId] && status.targetImageExists
+		).length
 	);
 
 	// Cost calculation
@@ -69,55 +90,68 @@
 		}))
 	);
 
+	// Track the last checked style to prevent redundant checks
+	let lastCheckedStyle = $state('');
+
 	// Initialize card image status when cards or style changes
 	$effect(() => {
-		if (cards.length > 0 && selectedStyle) {
+		if (cards.length > 0 && selectedStyle && selectedStyle !== lastCheckedStyle) {
+			lastCheckedStyle = selectedStyle;
 			checkImageVariants();
-		}
-	});
-
-	// Initialize card status on mount
-	$effect(() => {
-		if (cards.length > 0) {
-			// Initialize with current images
-			const initialStatus: typeof cardImageStatus = {};
-			for (const card of cards) {
-				initialStatus[card.id] = {
-					hasImage: !!card.image,
-					imageUrl: card.image || null,
-					isLoading: false
-				};
-			}
-			cardImageStatus = initialStatus;
 		}
 	});
 
 	// Check if images exist in the selected style
 	async function checkImageVariants() {
-		if (!selectedStyle || selectedStyle === deckTheme || isCheckingVariants) {
-			// If style is same as deck theme, use current images
-			if (selectedStyle === deckTheme) {
-				const status: typeof cardImageStatus = {};
-				for (const card of cards) {
-					status[card.id] = {
-						hasImage: !!card.image,
-						imageUrl: card.image || null,
-						isLoading: false
-					};
-				}
-				cardImageStatus = status;
-			}
+		if (!selectedStyle || isCheckingVariants) {
 			return;
 		}
 
-		isCheckingVariants = true;
+		// If style is same as deck theme, check if current images match the target style
+		if (selectedStyle === deckTheme) {
+			const status: typeof cardImageStatus = {};
+			const selection: typeof cardSelectionState = {};
+			
+		for (const card of cards) {
+			const isExternal = !!card.image && !card.imageMetadata?.imageId;
+			const currentStyle = card.imageMetadata?.style || null;
+			
+			// Check if current image's style matches the selected style
+			const styleMatches = currentStyle === selectedStyle;
+			const targetExists = !!card.image && styleMatches;
+				
+				status[card.id] = {
+					currentImageUrl: card.image || null,
+					currentImageStyle: currentStyle,
+					isExternalImage: isExternal,
+					targetImageUrl: targetExists ? card.image : null,
+					targetImageExists: targetExists,
+					isLoading: false
+				};
+				
+				// Checkbox logic:
+				// - Unchecked: external images OR has any image (user can opt-in)
+				// - Checked: no image at all
+				selection[card.id] = isExternal ? false : !card.image;
+			}
+			
+			cardImageStatus = status;
+			cardSelectionState = selection;
+			return;
+		}
+
+	isCheckingVariants = true;
 
 		// Set all to loading
 		const loadingStatus: typeof cardImageStatus = {};
 		for (const card of cards) {
+			const isExternal = !!card.image && !card.imageMetadata?.imageId;
 			loadingStatus[card.id] = {
-				hasImage: false,
-				imageUrl: null,
+				currentImageUrl: card.image || null,
+				currentImageStyle: card.imageMetadata?.style || null,
+				isExternalImage: isExternal,
+				targetImageUrl: null,
+				targetImageExists: false,
 				isLoading: true
 			};
 		}
@@ -135,6 +169,7 @@
 				body: JSON.stringify({
 					cards: cards.map(c => ({
 						id: c.id,
+						image: c.image,
 						imageMetadata: c.imageMetadata
 					})),
 					style: selectedStyle
@@ -144,41 +179,68 @@
 			if (response.ok) {
 				const result = await response.json();
 				const newStatus: typeof cardImageStatus = {};
+				const newSelection: typeof cardSelectionState = {};
 				
 				for (const card of cards) {
 					const variantInfo = result.variants[card.id];
+					const isExternal = !!card.image && !card.imageMetadata?.imageId;
+					const currentStyle = card.imageMetadata?.style || null;
+					
 					newStatus[card.id] = {
-						hasImage: variantInfo?.exists || false,
-						imageUrl: variantInfo?.url || null,
+						currentImageUrl: card.image || null,
+						currentImageStyle: currentStyle,
+						isExternalImage: isExternal,
+						targetImageUrl: variantInfo?.url || null,
+						targetImageExists: variantInfo?.exists || false,
 						isLoading: false
 					};
+					
+					// Checkbox logic:
+					// - Unchecked: external images OR variant exists (free switch, user opt-in)
+					// - Checked: no variant exists (needs generation)
+					newSelection[card.id] = !isExternal && !variantInfo?.exists;
 				}
 				
 				cardImageStatus = newStatus;
+				cardSelectionState = newSelection;
 			} else {
 				// On error, assume all need generation
 				const errorStatus: typeof cardImageStatus = {};
+				const errorSelection: typeof cardSelectionState = {};
 				for (const card of cards) {
+					const isExternal = !!card.image && !card.imageMetadata?.imageId;
 					errorStatus[card.id] = {
-						hasImage: false,
-						imageUrl: null,
+						currentImageUrl: card.image || null,
+						currentImageStyle: card.imageMetadata?.style || null,
+						isExternalImage: isExternal,
+						targetImageUrl: null,
+						targetImageExists: false,
 						isLoading: false
 					};
+					errorSelection[card.id] = !isExternal; // Don't check external images by default
 				}
 				cardImageStatus = errorStatus;
+				cardSelectionState = errorSelection;
 			}
 		} catch (error) {
 			console.error('Error checking image variants:', error);
 			// On error, assume all need generation
 			const errorStatus: typeof cardImageStatus = {};
+			const errorSelection: typeof cardSelectionState = {};
 			for (const card of cards) {
+				const isExternal = !!card.image && !card.imageMetadata?.imageId;
 				errorStatus[card.id] = {
-					hasImage: false,
-					imageUrl: null,
+					currentImageUrl: card.image || null,
+					currentImageStyle: card.imageMetadata?.style || null,
+					isExternalImage: isExternal,
+					targetImageUrl: null,
+					targetImageExists: false,
 					isLoading: false
 				};
+				errorSelection[card.id] = !isExternal;
 			}
 			cardImageStatus = errorStatus;
+			cardSelectionState = errorSelection;
 		} finally {
 			isCheckingVariants = false;
 		}
@@ -190,12 +252,20 @@
 			return;
 		}
 
+		// Filter to only checked cards
+		const selectedCards = cards.filter(card => cardSelectionState[card.id]);
+		
+		if (selectedCards.length === 0) {
+			toasts.error('No cards selected for generation');
+			return;
+		}
+
 		isGenerating = true;
 		generationProgress = { current: 0, total: cardsNeedingGeneration };
 		const startTime = Date.now();
 
 		try {
-			// Call the API endpoint with full card data
+			// Call the API endpoint with full card data (only checked cards)
 			const authHeaders = getAuthHeaders();
 			const response = await fetch('/api/ai/batch-generate-images', {
 				method: 'POST',
@@ -204,7 +274,7 @@
 					...authHeaders
 				},
 				body: JSON.stringify({
-					cards: cards.map(c => ({
+					cards: selectedCards.map(c => ({
 						id: c.id,
 						title: c.title,
 						subtitle: c.subtitle,
@@ -238,6 +308,7 @@
 						imageMetadata: {
 							imageId: imageResult.imageId,
 							source: 'ai-generation',
+							style: selectedStyle,
 							addedAt: Date.now()
 						}
 					});
@@ -249,11 +320,14 @@
 					}
 
 					// Update card image status to show the new image
+					const oldStatus = cardImageStatus[imageResult.cardId];
 					cardImageStatus = {
 						...cardImageStatus,
 						[imageResult.cardId]: {
-							hasImage: true,
-							imageUrl: imageResult.url,
+							...oldStatus,
+							currentImageUrl: imageResult.url,
+							targetImageUrl: imageResult.url,
+							targetImageExists: true,
 							isLoading: false
 						}
 					};
@@ -356,42 +430,116 @@
 
 				<!-- Card List Preview -->
 				<div class="card-list-section">
-					<h3>Cards to Process ({cardCount})</h3>
+					<h3>Cards ({cardCount})</h3>
 					<div class="card-list">
 						{#each cards as card}
 							{@const status = cardImageStatus[card.id]}
-							<div class="card-item">
-								<!-- Image thumbnail (clickable to preview) -->
-								{#if status?.isLoading}
-									<div class="card-thumbnail loading">
-										<div class="loading-spinner">⏳</div>
-									</div>
-								{:else if status?.imageUrl}
-									<button 
-										class="card-thumbnail" 
-										onclick={() => previewImageUrl = status.imageUrl}
-										title="Click to preview"
-									>
-										<img src={status.imageUrl} alt={card.title} />
-									</button>
-								{:else}
-									<div class="card-thumbnail empty">
-										<span class="empty-icon">🖼️</span>
-									</div>
-								{/if}
+							{@const isChecked = cardSelectionState[card.id]}
+							<div class="card-row" class:checked={isChecked}>
+								<!-- Checkbox -->
+								<input
+									type="checkbox"
+									checked={isChecked}
+									onchange={(e) => {
+										cardSelectionState = {
+											...cardSelectionState,
+											[card.id]: e.currentTarget.checked
+										};
+									}}
+									class="card-checkbox"
+								/>
 								
-								<div class="card-info">
-									<span class="card-name">{card.title}</span>
-									<span class="card-subtitle">{card.subtitle}</span>
+								<!-- Before → After Images -->
+								<div class="before-after">
+									<!-- Current Image -->
+									{#if status?.isLoading}
+										<div class="image-thumb loading">
+											<div class="loading-spinner">⏳</div>
+										</div>
+									{:else if status?.currentImageUrl}
+										<button
+											class="image-thumb"
+											onclick={() => previewImageUrl = status.currentImageUrl}
+											title="Click to preview current image"
+										>
+											<img src={status.currentImageUrl} alt={card.title} />
+										</button>
+									{:else}
+										<div class="image-thumb text-placeholder">
+											<span class="placeholder-text">No image</span>
+										</div>
+									{/if}
+									
+									<!-- Arrow -->
+									<span class="arrow">→</span>
+									
+									<!-- Target Image/Status -->
+									{#if status?.isLoading}
+										<div class="image-thumb loading">
+											<div class="loading-spinner">⏳</div>
+										</div>
+									{:else if isChecked}
+										<!-- When checked: show target variant if different, "no change" if same, or "new image" -->
+										{#if status?.targetImageExists && status?.targetImageUrl && status.targetImageUrl !== status.currentImageUrl}
+											<!-- Show variant image (different from current) -->
+											<button
+												class="image-thumb"
+												onclick={() => previewImageUrl = status.targetImageUrl}
+												title="Click to preview target variant"
+											>
+												<img src={status.targetImageUrl} alt={card.title} />
+											</button>
+										{:else if status?.targetImageExists && status?.targetImageUrl === status.currentImageUrl}
+											<!-- Same image (correct style already) -->
+											<div class="image-thumb text-placeholder">
+												<span class="placeholder-text">No change</span>
+											</div>
+										{:else}
+											<!-- Will generate new image -->
+											<div class="image-thumb text-placeholder">
+												<span class="placeholder-text">New image</span>
+											</div>
+										{/if}
+									{:else}
+										<!-- When unchecked: show "no change" -->
+										<div class="image-thumb text-placeholder">
+											<span class="placeholder-text">No change</span>
+										</div>
+									{/if}
 								</div>
 								
-								{#if status?.isLoading}
-									<span class="status-badge checking">Checking...</span>
-								{:else if status?.hasImage}
-									<span class="status-badge existing">Has image</span>
-								{:else}
-									<span class="status-badge needs">Needs image</span>
-								{/if}
+								<!-- Card Info -->
+								<div class="card-details">
+									<div class="card-name">{card.title}</div>
+									{#if card.subtitle}
+										<div class="card-subtitle">{card.subtitle}</div>
+									{/if}
+									{#if status?.currentImageStyle}
+										<div class="style-badge">{status.currentImageStyle}</div>
+									{/if}
+								</div>
+								
+								<!-- Status Badges -->
+								<div class="status-area">
+									{#if status?.isLoading}
+										<span class="status-badge info">Checking...</span>
+									{:else if !isChecked}
+										<!-- When unchecked: show "No action" -->
+										<span class="status-badge info">No action</span>
+									{:else if status?.isExternalImage}
+										<!-- External image being replaced -->
+										<span class="status-badge info">Will generate</span>
+										<span class="status-badge warning">{costPerImage} tokens</span>
+									{:else if status?.targetImageExists}
+										<!-- Variant exists (free switch) -->
+										<span class="status-badge info">Variant found</span>
+										<span class="status-badge success">No cost</span>
+									{:else}
+										<!-- Will generate new image -->
+										<span class="status-badge info">Will generate</span>
+										<span class="status-badge warning">{costPerImage} tokens</span>
+									{/if}
+								</div>
 							</div>
 						{/each}
 					</div>
@@ -405,16 +553,15 @@
 							<strong>Cost Summary</strong>
 						</div>
 						<div class="cost-breakdown">
-							<div class="cost-line">
-								<span>Cards needing generation:</span>
-								<span>{cardsNeedingGeneration} × {costPerImage} tokens</span>
-							</div>
-							{#if cardsWithExistingImages > 0}
-								<div class="cost-line cached">
-									<span>Cards with existing images:</span>
-									<span>{cardsWithExistingImages} × 0 tokens (cached)</span>
+								<div class="cost-line">
+									<span>Cards needing generation:</span>
+									<span>{cardsNeedingGeneration} × {costPerImage} tokens</span>
 								</div>
-							{/if}
+								<!-- Always show variant line to prevent content shift -->
+								<div class="cost-line cached" class:hidden={cardsWithExistingVariants === 0}>
+									<span>Cards with existing variants:</span>
+									<span>{cardsWithExistingVariants} × 0 tokens (free)</span>
+								</div>
 							<div class="cost-line total">
 								<span><strong>Total Cost:</strong></span>
 								<span><strong>{totalCost} tokens</strong></span>
@@ -704,22 +851,53 @@
 		background: rgba(255, 255, 255, 0.02);
 	}
 
-	.card-item {
-		display: flex;
+	/* Card Row Layout */
+	.card-row {
+		display: grid;
+		grid-template-columns: auto 1fr 2fr auto;
 		align-items: center;
 		gap: 12px;
 		padding: 12px;
 		border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+		transition: background 0.2s;
 	}
 
-	.card-item:last-child {
+	.card-row:last-child {
 		border-bottom: none;
 	}
 
-	/* Card thumbnail */
-	.card-thumbnail {
-		width: 50px;
-		height: 70px;
+	.card-row:hover {
+		background: rgba(255, 255, 255, 0.03);
+	}
+
+	.card-row.checked {
+		background: rgba(34, 197, 94, 0.05);
+	}
+
+	/* Checkbox */
+	.card-checkbox {
+		width: 18px;
+		height: 18px;
+		cursor: pointer;
+	}
+
+	/* Before → After Layout */
+	.before-after {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+	}
+
+	.arrow {
+		font-size: 20px;
+		opacity: 0.5;
+		flex-shrink: 0;
+	}
+
+	/* Image Thumbnails */
+	.image-thumb {
+		width: 40px;
+		height: 56px;
 		border-radius: 4px;
 		overflow: hidden;
 		background: rgba(255, 255, 255, 0.05);
@@ -729,28 +907,61 @@
 		flex-shrink: 0;
 		border: 1px solid rgba(255, 255, 255, 0.1);
 		cursor: pointer;
-		transition: transform 0.2s;
+		transition: transform 0.2s, border-color 0.2s;
 		padding: 0;
 	}
 
-	.card-thumbnail:hover:not(.loading):not(.empty) {
-		transform: scale(1.05);
+	.image-thumb:hover:not(.loading):not(.empty):not(.placeholder) {
+		transform: scale(1.1);
 		border-color: rgba(34, 197, 94, 0.5);
 	}
 
-	.card-thumbnail.empty {
+	.image-thumb.empty,
+	.image-thumb.placeholder {
 		cursor: default;
 		opacity: 0.5;
 	}
 
-	.card-thumbnail.loading {
+	.image-thumb.placeholder {
+		border-style: dashed;
+	}
+
+	.image-thumb.text-placeholder {
+		width: 40px;
+		height: 56px;
+		border: 1px solid rgba(255, 255, 255, 0.2);
+		border-radius: 4px;
+		background: rgba(255, 255, 255, 0.03);
+		cursor: default;
+		opacity: 0.8;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 4px;
+		flex-shrink: 0;
+	}
+
+	.image-thumb.loading {
 		cursor: default;
 	}
 
-	.card-thumbnail img {
+	.image-thumb img {
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
+	}
+
+	.placeholder-icon {
+		font-size: 20px;
+		opacity: 0.3;
+	}
+
+	.placeholder-text {
+		font-size: 9px;
+		text-align: center;
+		line-height: 1.2;
+		opacity: 0.7;
+		font-weight: 500;
 	}
 
 	.loading-spinner {
@@ -768,11 +979,11 @@
 		opacity: 0.3;
 	}
 
-	/* Card info */
-	.card-info {
+	/* Card Details */
+	.card-details {
 		display: flex;
 		flex-direction: column;
-		gap: 2px;
+		gap: 4px;
 		flex: 1;
 		min-width: 0;
 	}
@@ -786,33 +997,55 @@
 	}
 
 	.card-subtitle {
-		font-size: 12px;
+		font-size: 11px;
 		opacity: 0.7;
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
 	}
 
-	.status-badge {
-		font-size: 11px;
-		padding: 4px 8px;
-		border-radius: 12px;
-		font-weight: 600;
-	}
-
-	.status-badge.existing {
-		background: rgba(34, 197, 94, 0.2);
-		color: #22c55e;
-	}
-
-	.status-badge.needs {
-		background: rgba(251, 191, 36, 0.2);
-		color: #fbbf24;
-	}
-
-	.status-badge.checking {
+	.style-badge {
+		font-size: 10px;
+		padding: 2px 6px;
+		border-radius: 8px;
 		background: rgba(59, 130, 246, 0.2);
 		color: #3b82f6;
+		width: fit-content;
+		text-transform: capitalize;
+	}
+
+	/* Status Area */
+	.status-area {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-end;
+		justify-content: center;
+		gap: 4px;
+		min-width: 180px;
+	}
+
+	.status-badge {
+		font-size: 10px;
+		padding: 4px 8px;
+		border-radius: 10px;
+		font-weight: 600;
+		white-space: nowrap;
+	}
+
+	.status-badge.info {
+		background: rgba(147, 197, 253, 0.9);
+		color: #1e3a8a;
+	}
+
+	.status-badge.success {
+		background: rgba(134, 239, 172, 0.9);
+		color: #14532d;
+	}
+
+	.status-badge.warning {
+		background: rgba(252, 211, 77, 0.95);
+		color: #78350f;
+		font-weight: 700;
 	}
 
 	/* Cost Notice */
@@ -857,6 +1090,10 @@
 
 	.cost-line.cached {
 		opacity: 0.7;
+	}
+
+	.cost-line.hidden {
+		visibility: hidden;
 	}
 
 	.cost-line.total {
