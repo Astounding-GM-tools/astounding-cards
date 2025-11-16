@@ -7,6 +7,10 @@ const meta = {
 	tags: ['autodocs'],
 	parameters: {
 		layout: 'centered'
+	},
+	argTypes: {
+		feature: { control: 'text' },
+		description: { control: 'text' }
 	}
 } satisfies Meta<AuthGateDialog>;
 

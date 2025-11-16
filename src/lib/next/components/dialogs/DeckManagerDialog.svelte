@@ -7,7 +7,7 @@
 	import { toasts } from '$lib/stores/toast.js';
 	import BinaryToggle from '../ui/BinaryToggle.svelte';
 	import { formatTime } from '$lib/next/utils/dateUtils.js';
-	import { AiPromptDialog } from './index.js';
+	import AiDeckGenerationDialog from './AiDeckGenerationDialog.svelte';
 	import type { Deck } from '$lib/next/types/deck.js';
 
 	// Local state
@@ -158,7 +158,7 @@
 
 	// Handle AI Generator
 	function handleAiGenerator() {
-		dialogStore.setContent(AiPromptDialog);
+		dialogStore.setContent(AiDeckGenerationDialog);
 	}
 </script>
 
@@ -247,11 +247,11 @@
 		<!-- Prominent AI Generator Button -->
 		<div class="ai-generator-section">
 			<button class="ai-generator-button" onclick={handleAiGenerator}>
-				<div class="ai-button-icon">🤖</div>
+				<div class="ai-button-icon">🎴</div>
 				<div class="ai-button-content">
-					<div class="ai-button-title">AI Deck Generator</div>
+					<div class="ai-button-title">Generate Deck Instantly</div>
 					<div class="ai-button-description">
-						Create an entire deck instantly using AI - just describe your theme!
+						Create themed decks in seconds - fast, easy, and affordable!
 					</div>
 				</div>
 				<div class="ai-button-arrow">→</div>

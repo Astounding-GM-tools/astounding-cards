@@ -2,10 +2,14 @@
 	import { dialogStore } from '../dialog/dialogStore.svelte.js';
 	import { isAuthenticated } from '../../stores/auth.js';
 	import { toasts } from '$lib/stores/toast.js';
-	import { tokenAmount } from '../../stores/tokenBalance.js';
+	import { tokenAmount, tokenBalanceStore } from '../../stores/tokenBalance.js';
+	import { nextDeckStore } from '../../stores/deckStore.svelte.js';
 	import AuthGatedCtaButton from '../cta/AuthGatedCtaButton.svelte';
 	import { DECK_GENERATION_CTA } from '$lib/config/cta-configs.js';
 	import { calculateDeckGenerationCost, formatTokenBalance } from '$lib/config/token-costs.js';
+	import { getAuthHeaders } from '$lib/utils/auth-helpers.js';
+	import { importDeckFromJson } from '../../utils/jsonImporter.js';
+	import { nextDb } from '../../stores/database.js';
 
 	interface Props {
 		// Optional props for testing/stories
@@ -66,15 +70,51 @@
 		}
 
 		isGenerating = true;
+		const startTime = Date.now();
 
 		try {
-			// TODO: Call /api/ai/generate-deck
-			console.log('Generating deck:', { prompt, cardCount });
+			// Call the API endpoint
+			const authHeaders = getAuthHeaders();
+			const response = await fetch('/api/ai/generate-deck', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					...authHeaders
+				},
+				body: JSON.stringify({ prompt, cardCount })
+			});
 
-			// Simulate generation for now
-			await new Promise((resolve) => setTimeout(resolve, 2000));
+			if (!response.ok) {
+				const errorData = await response.json().catch(() => ({ message: response.statusText }));
+				throw new Error(errorData.message || `Failed to generate deck: ${response.statusText}`);
+			}
 
-			toasts.success(`✅ Deck generated with ${cardCount} cards!`);
+			const result = await response.json();
+
+			if (!result.success || !result.deck) {
+				throw new Error('Invalid response from server');
+			}
+
+			// Convert the generated deck JSON to standard format
+			const jsonString = JSON.stringify(result.deck);
+			const importResult = await importDeckFromJson(jsonString);
+
+			if (!importResult.success || !importResult.deck) {
+				throw new Error(importResult.error || 'Failed to import generated deck');
+			}
+
+			// Save the deck to IndexedDB
+			const savedDeck = await nextDb.saveDeck(importResult.deck);
+
+			// Load the deck into the store
+			await nextDeckStore.loadDeck(savedDeck.id);
+
+			// Refresh token balance
+			await tokenBalanceStore.fetchBalance();
+
+			const elapsedTime = ((Date.now() - startTime) / 1000).toFixed(1);
+			toasts.success(`✅ Deck generated with ${result.cardCount} cards in ${elapsedTime}s! (${result.cost} tokens)`);
+
 			dialogStore.close();
 		} catch (error) {
 			console.error('Generation error:', error);

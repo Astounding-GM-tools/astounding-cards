@@ -1,4 +1,5 @@
 // Export all dialog components for easy importing
+export { default as AiDeckGenerationDialog } from './AiDeckGenerationDialog.svelte';
 export { default as AiImagePromptDialog } from './AiImagePromptDialog.svelte';
 export { default as AiPromptDialog } from './AiPromptDialog.svelte';
 export { default as BatchImageGenerationDialog } from './BatchImageGenerationDialog.svelte';
