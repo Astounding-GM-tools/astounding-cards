@@ -1,7 +1,9 @@
 <script lang="ts">
 	import { dialogStore } from '../dialog/dialogStore.svelte.js';
 	import { isAuthenticated } from '../../stores/auth.js';
-	import { tokenAmount } from '../../stores/tokenBalance.js';
+	import { tokenAmount, refreshTokenBalance } from '../../stores/tokenBalance.js';
+	import { nextDeckStore } from '../../stores/deckStore.svelte.js';
+	import { toasts } from '$lib/stores/toast.js';
 	import { getImageStyles } from '$lib/config/image-styles.js';
 	import { TOKEN_COSTS, formatTokenBalance } from '$lib/config/token-costs.js';
 	import type { Card } from '../../types/card.js';
@@ -20,6 +22,7 @@
 	// State
 	let selectedStyle = $state<ImageStyle>(deckImageStyle);
 	let isGenerating = $state(false);
+	let wasCached = $state(false);
 
 	// Auth/Token checks (use overrides for testing, otherwise use real store/logic)
 	const isUserAuthenticated = $derived(
@@ -36,35 +39,83 @@
 
 	async function generateImage() {
 		isGenerating = true;
+		wasCached = false;
+		
 		try {
+			// Get access token from localStorage for Authorization header
+			const authKey = Object.keys(localStorage).find((k) => k.includes('auth-token'));
+			if (!authKey) {
+				throw new Error('Not authenticated - please refresh and log in again');
+			}
+			const authData = JSON.parse(localStorage.getItem(authKey)!);
+			const accessToken = authData.access_token;
+
 			const response = await fetch('/api/ai/generate-image', {
 				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
+				headers: {
+					'Content-Type': 'application/json',
+					'Authorization': `Bearer ${accessToken}`
+				},
 				body: JSON.stringify({
 					card,
-					deckTheme: deckImageStyle, // TODO: use separate deck theme
+					deckTheme: selectedStyle, // Use selected style, not deck default
 					existingImageUrl: card.image ?? undefined
 				})
 			});
 
 			if (!response.ok) {
-				throw new Error('Generation failed');
+				const errorData = await response.json().catch(() => ({ message: 'Generation failed' }));
+				throw new Error(errorData.message || `HTTP ${response.status}`);
 			}
 
 			const data = await response.json();
 			
-			// TODO: Upload image to R2, update card
-			console.log('Generated image:', data);
+			if (!data.success || !data.url) {
+				throw new Error('Invalid response from server');
+			}
+
+			// Track if this was a cached result
+			wasCached = data.cached || false;
+
+			// Update card with new image URL
+			await nextDeckStore.updateCard(card.id, {
+				image: data.url,
+				imageMetadata: {
+					originalName: `ai-generated-${card.title}.png`,
+					addedAt: Date.now(),
+					source: 'ai-generation',
+					imageId: data.imageId
+				}
+			});
+
+			// Refresh token balance
+			await refreshTokenBalance();
+
+			// Show success message
+			if (data.cached) {
+				toasts.success('✨ Found existing image - no tokens charged!');
+			} else {
+				toasts.success(`✅ Image generated! ${data.cost} tokens used`);
+			}
+
+			// Close dialog
+			dialogStore.close();
 			
 		} catch (error) {
 			console.error('Generation error:', error);
+			toasts.error(error instanceof Error ? error.message : 'Failed to generate image');
 		} finally {
 			isGenerating = false;
 		}
 	}
 
-	function removeImage() {
-		// TODO: Clear card image
+	async function removeImage() {
+		// Clear card image
+		await nextDeckStore.updateCard(card.id, {
+			image: null,
+			imageBlob: null,
+			imageMetadata: null
+		});
 		dialogStore.close();
 	}
 </script>

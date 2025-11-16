@@ -96,6 +96,11 @@ export function canAfford(cost: number, balance: number): boolean {
 	return balance >= cost;
 }
 
+// Helper to refresh token balance (e.g., after generation)
+export async function refreshTokenBalance(): Promise<void> {
+	await tokenBalanceStore.fetchBalance();
+}
+
 // Auto-fetch balance when user logs in
 isAuthenticated.subscribe(async (authenticated) => {
 	if (authenticated) {
