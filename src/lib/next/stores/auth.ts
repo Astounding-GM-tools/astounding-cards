@@ -60,6 +60,27 @@ function createAuthStore() {
 			}
 		});
 
+		// If signup successful, create user record with welcome bonus
+		if (data.user && !error) {
+			try {
+				// Create user record via API (will use supabaseAdmin to bypass RLS)
+				await fetch('/api/auth/create-user', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+						'Authorization': `Bearer ${data.session?.access_token}`
+					},
+					body: JSON.stringify({
+						userId: data.user.id,
+						email: data.user.email
+					})
+				});
+			} catch (userCreateError) {
+				console.warn('Failed to create user record:', userCreateError);
+				// Non-critical - they can still use the app, just need to create manually
+			}
+		}
+
 		update((state) => ({
 			...state,
 			loading: false,

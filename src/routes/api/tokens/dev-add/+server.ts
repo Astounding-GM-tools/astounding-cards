@@ -1,6 +1,7 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { supabase } from '$lib/supabaseClient';
+import { supabaseAdmin } from '$lib/server/supabase';
+import { getUserFromSession } from '$lib/server/auth';
 import { R2_PATH_PREFIX } from '$env/static/private';
 
 /**
@@ -27,22 +28,10 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 	}
 
 	try {
-		// Get auth token from cookie
-		const accessToken = cookies.get('sb-access-token');
-		const refreshToken = cookies.get('sb-refresh-token');
-
-		if (!accessToken || !refreshToken) {
+		// Authenticate user
+		const userId = await getUserFromSession(cookies, request);
+		if (!userId) {
 			return json({ error: 'Not authenticated' }, { status: 401 });
-		}
-
-		// Set session with tokens
-		const { data: { user }, error: sessionError } = await supabase.auth.setSession({
-			access_token: accessToken,
-			refresh_token: refreshToken
-		});
-
-		if (sessionError || !user) {
-			return json({ error: 'Invalid session' }, { status: 401 });
 		}
 
 		// Get amount from body
@@ -54,10 +43,10 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 		}
 
 		// Fetch current balance
-		const { data: userData, error: fetchError } = await supabase
+		const { data: userData, error: fetchError } = await supabaseAdmin
 			.from('users')
 			.select('credits')
-			.eq('id', user.id)
+			.eq('id', userId)
 			.single();
 
 		if (fetchError) {
@@ -69,17 +58,17 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 		const newCredits = currentCredits + amount;
 
 		// Update balance
-		const { error: updateError } = await supabase
+		const { error: updateError } = await supabaseAdmin
 			.from('users')
 			.update({ credits: newCredits })
-			.eq('id', user.id);
+			.eq('id', userId);
 
 		if (updateError) {
 			console.error('Error updating credits:', updateError);
 			return json({ error: 'Failed to update balance' }, { status: 500 });
 		}
 
-		console.log(`[DEV] Added ${amount} tokens to user ${user.id}. New balance: ${newCredits}`);
+		console.log(`[DEV] Added ${amount} tokens to user ${userId}. New balance: ${newCredits}`);
 
 		return json({
 			success: true,
