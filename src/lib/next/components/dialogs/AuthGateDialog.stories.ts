@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/svelte';
 import AuthGateDialog from './AuthGateDialog.svelte';
 
 const meta = {
-	title: 'Components/Dialogs/AuthGateDialog',
+	title: 'Dialogs/AuthGateDialog',
 	component: AuthGateDialog,
 	tags: ['autodocs'],
 	parameters: {

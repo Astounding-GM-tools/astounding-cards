@@ -2,8 +2,10 @@
 	import { dialogStore } from '../dialog/dialogStore.svelte.js';
 	import { isAuthenticated } from '../../stores/auth.js';
 	import { toasts } from '$lib/stores/toast.js';
+	import { tokenAmount } from '../../stores/tokenBalance.js';
 	import AuthGatedCtaButton from '../cta/AuthGatedCtaButton.svelte';
 	import { DECK_GENERATION_CTA } from '$lib/config/cta-configs.js';
+	import { calculateDeckGenerationCost, formatTokenBalance } from '$lib/config/token-costs.js';
 
 	interface Props {
 		// Optional props for testing/stories
@@ -22,6 +24,11 @@
 	const isUserAuthenticated = $derived(
 		isAuthenticatedOverride !== undefined ? isAuthenticatedOverride : $isAuthenticated
 	);
+	
+	// Calculate cost and check affordability
+	const generationCost = $derived(calculateDeckGenerationCost(cardCount));
+	const userTokenBalance = $derived($tokenAmount);
+	const canAfford = $derived(userTokenBalance >= generationCost);
 
 	// Example prompts to inspire users
 	const examplePrompts = [
@@ -158,18 +165,28 @@
 				<p class="help-text">Recommended: 8-20 cards for most decks</p>
 			</div>
 
-			<!-- Free Feature Notice -->
+			<!-- Cost & Balance Notice -->
 			{#if isUserAuthenticated}
-				<div class="free-notice">
+				<div class="cost-notice" class:insufficient={!canAfford}>
 					<div class="notice-header">
-						<span class="icon">🎁</span>
-						<strong>Deck Generation is Free!</strong>
+						<span class="icon">💰</span>
+						<strong>Cost: {generationCost} tokens</strong>
 					</div>
-					<p>
-						Create as many decks as you want at no cost. This is our way of helping you get started
-						with amazing content. You'll only pay tokens if you want to generate AI images for your
-						cards.
-					</p>
+					{#if canAfford}
+						<p>
+							You have <strong>{formatTokenBalance(userTokenBalance)}</strong> ✅
+							Deck generation costs <strong>{generationCost} tokens</strong> ({cardCount} cards × 10 tokens each).
+							Images cost extra (100 tokens each).
+						</p>
+					{:else}
+						<p>
+							You have <strong>{formatTokenBalance(userTokenBalance)}</strong> ❌
+							You need <strong>{generationCost} tokens</strong> to generate this deck.
+						</p>
+						<button class="buy-tokens-btn" onclick={() => console.log('Buy tokens')}>
+							💰 Buy More Tokens
+						</button>
+					{/if}
 				</div>
 			{/if}
 		{/if}
@@ -464,13 +481,18 @@
 		line-height: 1.4;
 	}
 
-	/* Free Notice */
-	.free-notice {
+	/* Cost Notice */
+	.cost-notice {
 		background: rgba(34, 197, 94, 0.05);
 		border: 1px solid rgba(34, 197, 94, 0.2);
 		border-radius: 8px;
 		padding: 1rem;
 		font-size: 0.875rem;
+	}
+	
+	.cost-notice.insufficient {
+		background: rgba(239, 68, 68, 0.05);
+		border-color: rgba(239, 68, 68, 0.2);
 	}
 
 	.notice-header {
@@ -489,10 +511,29 @@
 		font-size: 0.95rem;
 	}
 
-	.free-notice p {
+	.cost-notice p {
 		margin: 0;
 		color: #1a202c;
 		line-height: 1.5;
+	}
+	
+	.buy-tokens-btn {
+		padding: 0.5rem 1rem;
+		border-radius: 6px;
+		font-size: 0.875rem;
+		font-weight: 500;
+		cursor: pointer;
+		transition: all 0.2s;
+		background: #f59e0b;
+		color: white;
+		border: none;
+		width: 100%;
+		margin-top: 0.5rem;
+	}
+	
+	.buy-tokens-btn:hover {
+		background: #d97706;
+		transform: translateY(-1px);
 	}
 
 	/* Footer */
