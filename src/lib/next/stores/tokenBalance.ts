@@ -112,16 +112,21 @@ export async function refreshTokenBalance(): Promise<void> {
 	await tokenBalanceStore.fetchBalance();
 }
 
-// Auto-fetch balance when user logs in (but only after auth loads)
-let initialized = false;
+// Auto-fetch balance when user logs in (but only on actual auth changes)
+let previousAuthState: boolean | null = null;
 isAuthenticated.subscribe(async (authenticated) => {
-	// Wait for auth to finish loading before fetching
-	const loading = get(authLoading);
-	if (loading && !initialized) {
-		return; // Skip initial subscription call while still loading
+	// Skip the very first call (initial subscription)
+	if (previousAuthState === null) {
+		previousAuthState = authenticated;
+		return;
 	}
 	
-	initialized = true;
+	// Only proceed if auth state actually changed
+	if (previousAuthState === authenticated) {
+		return;
+	}
+	
+	previousAuthState = authenticated;
 	
 	if (authenticated) {
 		await tokenBalanceStore.fetchBalance();
