@@ -65,26 +65,69 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 			return error(400, 'Card must have a title');
 		}
 
-		const style = deckTheme; // Using deckTheme as style
+	const style = deckTheme; // Using deckTheme as style
+	
+	// Track the original image ID for proper family linking
+	let originalImageIdForSave: string | null = null;
 
-		// 3. Check for existing remix (if this is a style variant)
-		if (sourceImageId && style) {
-			console.log(`🔍 Checking for existing remix: ${sourceImageId} → ${style}`);
+	// 3. Check for existing remix (if this is a style variant)
+	if (sourceImageId && style) {
+			console.log(`🔍 Checking for existing images: sourceId=${sourceImageId}, targetStyle=${style}`);
 
-			const { data: existingRemix } = await supabaseAdmin.rpc('find_image_remix', {
-				p_source_image_id: sourceImageId,
-				p_style: style
-			});
-
-			if (existingRemix && existingRemix.length > 0) {
-				console.log('✅ Found existing remix, returning cached result');
-				return json({
-					success: true,
-					url: existingRemix[0].url,
-					imageId: existingRemix[0].id,
-					cost: 0,
-					cached: true
-				});
+			// First, get the source image to understand the family
+			const { data: sourceImage } = await supabaseAdmin
+				.from('community_images')
+				.select('id, style, source_image_id')
+				.eq('id', sourceImageId)
+				.single();
+			
+			if (sourceImage) {
+				// If the source image itself is already the right style, return it!
+				if (sourceImage.style === style) {
+					console.log('✅ Source image is already the right style, returning it');
+					const { data: sourceImageData } = await supabaseAdmin
+						.from('community_images')
+						.select('id, url')
+						.eq('id', sourceImageId)
+						.single();
+					
+					if (sourceImageData) {
+						return json({
+							success: true,
+							url: sourceImageData.url,
+							imageId: sourceImageData.id,
+							cost: 0,
+							cached: true
+						});
+					}
+				}
+				
+			// Find the original (root) image in this family
+			const originalImageId = sourceImage.source_image_id || sourceImage.id;
+			originalImageIdForSave = originalImageId;
+			
+			// Look for any image in the family with the target style
+				// This includes checking the original and all its remixes
+				const { data: familyImages } = await supabaseAdmin
+					.from('community_images')
+					.select('id, url, style')
+					.or(`id.eq.${originalImageId},source_image_id.eq.${originalImageId}`)
+					.eq('style', style);
+				
+				if (familyImages && familyImages.length > 0) {
+					console.log('✅ Found existing image in family, returning cached result');
+					return json({
+						success: true,
+						url: familyImages[0].url,
+						imageId: familyImages[0].id,
+						cost: 0,
+						cached: true
+					});
+				}
+				
+				// No existing image found, will need to generate
+				// But make sure we store the original ID for proper family linking
+				console.log(`🎨 No existing ${style} image in family, will generate with originalId=${originalImageId}`);
 			}
 		}
 
@@ -260,11 +303,11 @@ Visual prompt: ${optimizedPrompt}`;
 		const { data: imageRecord, error: dbError } = await supabaseAdmin
 			.from('community_images')
 			.insert({
-				user_id: userId,
-				url: publicUrl,
-				r2_key: r2Key,
-				style,
-				source_image_id: sourceImageId || null,
+			user_id: userId,
+			url: publicUrl,
+			r2_key: r2Key,
+			style,
+			source_image_id: originalImageIdForSave,
 				embedding: embedding ? `[${embedding.join(',')}]` : null,
 				card_title: card.title,
 				cost_tokens: cost
