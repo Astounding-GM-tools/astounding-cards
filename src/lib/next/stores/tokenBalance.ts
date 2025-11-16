@@ -26,7 +26,18 @@ function createTokenBalanceStore() {
 		update(state => ({ ...state, loading: true, error: null }));
 
 		try {
-			const response = await fetch('/api/tokens/balance');
+			// Get access token from localStorage for Authorization header
+			const authKey = Object.keys(localStorage).find((k) => k.includes('auth-token'));
+			const headers: HeadersInit = {};
+			
+			if (authKey) {
+				const authData = JSON.parse(localStorage.getItem(authKey)!);
+				if (authData?.access_token) {
+					headers['Authorization'] = `Bearer ${authData.access_token}`;
+				}
+			}
+			
+			const response = await fetch('/api/tokens/balance', { headers });
 			
 			// 401 is expected when not authenticated - not an error, just reset
 			if (response.status === 401) {
