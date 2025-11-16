@@ -9,8 +9,10 @@
 		children?: Snippet;
 	}>();
 	
-	// Expose dev helpers to browser console (only in browser)
-	if (browser) {
+	// Expose dev helpers to browser console after mount
+	$effect(() => {
+		if (!browser) return;
+		
 		import('$lib/dev/console-helpers').then((helpers) => {
 			window.devHelpers = {
 				addTokens: helpers.addTokens,
@@ -21,10 +23,10 @@
 			console.log('%c🛠️ Dev Helpers Available', 'font-weight: bold; font-size: 14px; color: #059669;');
 			console.log('%cAdd tokens:', 'font-weight: bold;', 'await window.devHelpers.addTokens(1000)');
 			console.log('%cCheck balance:', 'font-weight: bold;', 'await window.devHelpers.checkBalance()');
-		}).catch(() => {
-			// Silently fail if helpers can't load
+		}).catch((err) => {
+			console.error('Failed to load dev helpers:', err);
 		});
-	}
+	});
 </script>
 
 {@render children()}
