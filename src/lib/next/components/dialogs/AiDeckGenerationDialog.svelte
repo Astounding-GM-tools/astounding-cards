@@ -28,7 +28,7 @@
 		{
 			title: 'Fantasy Heroes',
 			prompt:
-				'A deck of fantasy RPG heroes. Include warriors, mages, rogues, and clerics. Each card should have combat stats (strength, agility, intelligence), special abilities, and a brief backstory. Make them diverse in race and background.'
+				'A deck of fantasy RPG heroes including Elara Moonwhisper (elven ranger), Grimm Ironforge (dwarven warrior), and Zephyr Nightshade (tiefling rogue). Each should have combat stats (strength, agility, intelligence), unique special abilities, and a compelling backstory. Make them diverse in race, class, and background.'
 		},
 		{
 			title: 'Startup Founders',
