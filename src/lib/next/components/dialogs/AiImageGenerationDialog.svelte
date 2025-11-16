@@ -50,6 +50,14 @@
 		const style = selectedStyle;
 		const existingImage = card.image ?? undefined;
 		
+		// Set generating flag on card to show loading indicator
+		await nextDeckStore.updateCard(cardId, {
+			imageMetadata: {
+				...(card.imageMetadata || {}),
+				isGenerating: true
+			}
+		});
+		
 		try {
 			// Get access token from localStorage for Authorization header
 			const authKey = Object.keys(localStorage).find((k) => k.includes('auth-token'));
@@ -86,14 +94,15 @@
 			// Track if this was a cached result
 			wasCached = data.cached || false;
 
-			// Update card with new image URL
+			// Update card with new image URL and clear generating flag
 			await nextDeckStore.updateCard(cardId, {
 				image: data.url,
 				imageMetadata: {
 					originalName: `ai-generated-${cardTitle}.png`,
 					addedAt: Date.now(),
 					source: 'ai-generation',
-					imageId: data.imageId
+					imageId: data.imageId,
+					isGenerating: false
 				}
 			});
 
@@ -116,6 +125,15 @@
 		} catch (error) {
 			console.error('Generation error:', error);
 			toasts.error(error instanceof Error ? error.message : 'Failed to generate image');
+			
+			// Clear generating flag on error
+			await nextDeckStore.updateCard(cardId, {
+				imageMetadata: {
+					...(card.imageMetadata || {}),
+					isGenerating: false
+				}
+			});
+			
 			isGenerating = false; // Allow retry
 		}
 	}

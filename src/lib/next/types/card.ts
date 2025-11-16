@@ -21,10 +21,12 @@ export interface Card {
 	imageMetadata?: {
 		originalName?: string;
 		addedAt?: number; // timestamp when image was added
-		source?: 'upload' | 'url' | 'generated'; // how the image was added
+		source?: 'upload' | 'url' | 'generated' | 'ai-generation'; // how the image was added
 		size?: number; // file size in bytes
 		imageStyle?: string; // generation style if source is 'generated' (e.g., 'classic', 'modern', 'inked')
 		imageLocked?: boolean; // if true, prevents regeneration in batch operations
+		imageId?: string; // ID from community_images table if AI-generated
+		isGenerating?: boolean; // true while AI generation is in progress
 	} | null;
 	traits: Trait[];
 	stats: Stat[];
