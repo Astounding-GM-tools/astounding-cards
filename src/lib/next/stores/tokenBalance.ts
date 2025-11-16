@@ -7,6 +7,7 @@
 
 import { writable, derived, get } from 'svelte/store';
 import { isAuthenticated, authLoading } from './auth';
+import { getAuthHeaders } from '$lib/utils/auth-helpers';
 
 interface TokenBalance {
 	amount: number;
@@ -26,18 +27,9 @@ function createTokenBalanceStore() {
 		update(state => ({ ...state, loading: true, error: null }));
 
 		try {
-			// Get access token from localStorage for Authorization header
-			const authKey = Object.keys(localStorage).find((k) => k.includes('auth-token'));
-			const headers: HeadersInit = {};
-			
-			if (authKey) {
-				const authData = JSON.parse(localStorage.getItem(authKey)!);
-				if (authData?.access_token) {
-					headers['Authorization'] = `Bearer ${authData.access_token}`;
-				}
-			}
-			
-			const response = await fetch('/api/tokens/balance', { headers });
+			const response = await fetch('/api/tokens/balance', { 
+				headers: getAuthHeaders() 
+			});
 			
 			// 401 is expected when not authenticated - not an error, just reset
 			if (response.status === 401) {

@@ -14,11 +14,20 @@ import { R2_PATH_PREFIX } from '$env/static/private';
  * 
  * Usage from browser console:
  * ```js
+ * // Helper to get auth token
+ * const getToken = () => JSON.parse(localStorage.getItem(Object.keys(localStorage).find(k => k.includes('auth-token')))).access_token;
+ * 
+ * // Add tokens
  * await fetch('/api/tokens/dev-add', {
  *   method: 'POST',
- *   headers: { 'Content-Type': 'application/json' },
+ *   headers: { 
+ *     'Content-Type': 'application/json',
+ *     'Authorization': `Bearer ${getToken()}`
+ *   },
  *   body: JSON.stringify({ amount: 1000 })
  * }).then(r => r.json()).then(console.log)
+ * 
+ * // Refresh page to see new balance
  * ```
  */
 export const POST: RequestHandler = async ({ request, cookies }) => {

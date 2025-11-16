@@ -6,6 +6,7 @@
 	import { toasts } from '$lib/stores/toast.js';
 	import { getImageStyles } from '$lib/config/image-styles.js';
 	import { TOKEN_COSTS, formatTokenBalance } from '$lib/config/token-costs.js';
+	import { getAccessToken } from '$lib/utils/auth-helpers.js';
 	import type { Card } from '../../types/card.js';
 	import type { ImageStyle } from '../../types/deck.js';
 
@@ -59,13 +60,11 @@
 		});
 		
 		try {
-			// Get access token from localStorage for Authorization header
-			const authKey = Object.keys(localStorage).find((k) => k.includes('auth-token'));
-			if (!authKey) {
+			// Get access token for Authorization header
+			const accessToken = getAccessToken();
+			if (!accessToken) {
 				throw new Error('Not authenticated - please refresh and log in again');
 			}
-			const authData = JSON.parse(localStorage.getItem(authKey)!);
-			const accessToken = authData.access_token;
 
 			const response = await fetch('/api/ai/generate-image', {
 				method: 'POST',
