@@ -195,7 +195,7 @@
 		const startTime = Date.now();
 
 		try {
-			// Call the API endpoint
+			// Call the API endpoint with full card data
 			const authHeaders = getAuthHeaders();
 			const response = await fetch('/api/ai/batch-generate-images', {
 				method: 'POST',
@@ -204,9 +204,16 @@
 					...authHeaders
 				},
 				body: JSON.stringify({
-					deckId: currentDeck.id,
-					style: selectedStyle,
-					cardIds: cards.map(c => c.id)
+					cards: cards.map(c => ({
+						id: c.id,
+						title: c.title,
+						subtitle: c.subtitle,
+						description: c.description,
+						traits: c.traits,
+						stats: c.stats,
+						imageMetadata: c.imageMetadata
+					})),
+					style: selectedStyle
 				})
 			});
 
