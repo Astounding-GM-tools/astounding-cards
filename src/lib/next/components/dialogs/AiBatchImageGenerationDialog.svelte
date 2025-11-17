@@ -24,6 +24,17 @@
 	let isGenerating = $state(false);
 	let generationProgress = $state({ current: 0, total: 0 });
 	let isCheckingVariants = $state(false);
+	let generationStartTime = $state<number>(0);
+	let generationElapsedSeconds = $state<number>(0);
+
+	// Update elapsed time every second during generation
+	$effect(() => {
+		if (!isGenerating) return;
+		const interval = setInterval(() => {
+			generationElapsedSeconds = Math.floor((Date.now() - generationStartTime) / 1000);
+		}, 1000);
+		return () => clearInterval(interval);
+	});
 
 	// Enhanced card image status tracking
 	interface CardImageStatus {
@@ -75,6 +86,9 @@
 			([cardId, status]) => cardSelectionState[cardId] && status.targetImageExists
 		).length
 	);
+
+	// Progress tracking with estimated time (needs cardsNeedingGeneration defined first)
+	const estimatedTimeSeconds = $derived(isGenerating ? 20 + cardsNeedingGeneration * 2 : 0);
 
 	// Cost calculation
 	const costPerImage = TOKEN_COSTS.IMAGE_GENERATION_COMMUNITY;
@@ -262,6 +276,8 @@
 
 		isGenerating = true;
 		generationProgress = { current: 0, total: cardsNeedingGeneration };
+		generationStartTime = Date.now();
+		generationElapsedSeconds = 0;
 		const startTime = Date.now();
 
 		try {
@@ -308,7 +324,7 @@
 						imageMetadata: {
 							imageId: imageResult.imageId,
 							source: 'ai-generation',
-							style: selectedStyle,
+							imageStyle: selectedStyle,
 							addedAt: Date.now()
 						}
 					});
@@ -370,51 +386,30 @@
 
 	<div class="content">
 		{#if isGenerating}
-			<!-- Generating State with Live Updates -->
-			<div class="generating-state">
-				<div class="spinner">🎨</div>
-				<h3>Generating Images...</h3>
-				<p class="progress-text">
-					Completed {generationProgress.current} of {generationProgress.total} cards
-				</p>
-
-				<!-- Progress bar -->
-				<div class="progress-bar">
-					<div
-						class="progress-fill"
-						style="width: {generationProgress.total > 0
-							? (generationProgress.current / generationProgress.total) * 100
-							: 0}%"
-					></div>
+			<!-- Generating State - Show selection UI with progress overlay -->
+			<div class="generation-progress-overlay">
+				<div class="progress-info">
+					<div class="progress-icon">⚙️</div>
+					<h3>Generating Images...</h3>
+					<p>This may take a moment. It's safe to close this window.</p>
+					<div class="progress-bar-container">
+						<div
+							class="progress-bar"
+							style="width: {Math.min(
+								100,
+								(generationElapsedSeconds / estimatedTimeSeconds) * 100
+							)}%"
+						></div>
+					</div>
+					<p class="progress-time">
+						{generationElapsedSeconds}s / ~{estimatedTimeSeconds}s
+					</p>
 				</div>
-
-				<!-- Live thumbnail updates -->
-				<div class="generating-card-list">
-					{#each cards as card}
-						{@const status = cardImageStatus[card.id]}
-						<div class="generating-card-item" class:completed={status?.hasImage}>
-							<!-- Thumbnail -->
-							{#if status?.imageUrl}
-								<div class="card-thumbnail completed-thumbnail">
-									<img src={status.imageUrl} alt={card.title} />
-									<div class="check-overlay">✓</div>
-								</div>
-							{:else}
-								<div class="card-thumbnail loading">
-									<div class="loading-spinner">⏳</div>
-								</div>
-							{/if}
-
-							<div class="card-info-compact">
-								<span class="card-name-small">{card.title}</span>
-							</div>
-						</div>
-					{/each}
-				</div>
-
-				<p class="safe-notice">💡 Watch your images appear in real-time!</p>
 			</div>
-		{:else}
+		{/if}
+
+		<!-- Main Content (disabled during generation) -->
+		<div class="main-content" class:generating={isGenerating}>
 			<!-- Configuration -->
 			<div class="config-section">
 				<!-- Style Selector -->
@@ -583,7 +578,7 @@
 					</div>
 				{/if}
 			</div>
-		{/if}
+		</div>
 	</div>
 
 	<div class="footer">
@@ -672,144 +667,83 @@
 		flex: 1;
 		overflow-y: auto;
 		padding: 24px;
+		position: relative;
 	}
 
-	/* Generating State */
-	.generating-state {
+	/* Generation Progress Overlay */
+	.generation-progress-overlay {
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background: rgba(0, 0, 0, 0.8);
+		backdrop-filter: blur(4px);
 		display: flex;
-		flex-direction: column;
 		align-items: center;
+		justify-content: center;
+		z-index: 10;
+		padding: 24px;
+	}
+
+	.progress-info {
+		background: rgba(255, 255, 255, 0.1);
+		border: 2px solid rgba(255, 255, 255, 0.2);
+		border-radius: 12px;
+		padding: 32px;
 		text-align: center;
-		padding: 32px 0;
-	}
-
-	.spinner {
-		font-size: 64px;
-		animation: spin 2s linear infinite;
-	}
-
-	@keyframes spin {
-		from {
-			transform: rotate(0deg);
-		}
-		to {
-			transform: rotate(360deg);
-		}
-	}
-
-	.generating-state h3 {
-		margin: 16px 0 8px;
-		font-size: 18px;
-	}
-
-	.progress-text {
-		font-size: 14px;
-		opacity: 0.8;
-		margin: 0 0 16px;
-	}
-
-	/* Progress bar */
-	.progress-bar {
-		width: 100%;
 		max-width: 400px;
+	}
+
+	.progress-icon {
+		font-size: 64px;
+		margin-bottom: 16px;
+		opacity: 0.8;
+	}
+
+	.progress-info h3 {
+		margin: 0 0 8px 0;
+		font-size: 20px;
+		font-weight: 600;
+	}
+
+	.progress-info p {
+		margin: 0 0 24px 0;
+		opacity: 0.8;
+		font-size: 14px;
+	}
+
+	.progress-bar-container {
+		width: 100%;
 		height: 8px;
 		background: rgba(255, 255, 255, 0.1);
 		border-radius: 4px;
 		overflow: hidden;
-		margin-bottom: 24px;
+		margin-bottom: 12px;
 	}
 
-	.progress-fill {
+	.progress-bar {
 		height: 100%;
-		background: linear-gradient(90deg, #22c55e 0%, #10b981 100%);
-		transition: width 0.5s ease;
+		background: linear-gradient(90deg, #4caf50, #8bc34a);
+		transition: width 0.3s ease;
+		border-radius: 4px;
 	}
 
-	/* Generating card list */
-	.generating-card-list {
-		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-		gap: 12px;
-		width: 100%;
-		max-width: 600px;
-		max-height: 300px;
-		overflow-y: auto;
-		padding: 16px;
-		background: rgba(255, 255, 255, 0.02);
-		border-radius: 8px;
-		margin-bottom: 16px;
-	}
-
-	.generating-card-item {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 8px;
+	.progress-time {
+		margin: 0 !important;
+		font-size: 13px;
+		font-family: monospace;
 		opacity: 0.6;
-		transition:
-			opacity 0.3s,
-			transform 0.3s;
 	}
 
-	.generating-card-item.completed {
-		opacity: 1;
-		transform: scale(1.05);
+	/* Main content - disabled during generation */
+	.main-content {
+		transition: opacity 0.3s ease;
 	}
 
-	.completed-thumbnail {
-		position: relative;
-	}
-
-	.check-overlay {
-		position: absolute;
-		top: 4px;
-		right: 4px;
-		background: #22c55e;
-		color: white;
-		width: 20px;
-		height: 20px;
-		border-radius: 50%;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		font-size: 12px;
-		font-weight: bold;
-		animation: checkPop 0.3s ease;
-	}
-
-	@keyframes checkPop {
-		0% {
-			transform: scale(0);
-		}
-		50% {
-			transform: scale(1.2);
-		}
-		100% {
-			transform: scale(1);
-		}
-	}
-
-	.card-info-compact {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		text-align: center;
-		width: 100%;
-	}
-
-	.card-name-small {
-		font-size: 11px;
-		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		max-width: 100%;
-	}
-
-	.safe-notice {
-		margin-top: 16px !important;
-		padding-top: 16px;
-		border-top: 1px solid rgba(255, 255, 255, 0.1);
-		opacity: 0.7;
+	.main-content.generating {
+		opacity: 0.4;
+		pointer-events: none;
 	}
 
 	/* Configuration */
