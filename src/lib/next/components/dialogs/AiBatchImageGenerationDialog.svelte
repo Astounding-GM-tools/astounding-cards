@@ -15,17 +15,26 @@
 		isAuthenticatedOverride?: boolean;
 		cardsOverride?: any[]; // For Storybook - override deck cards
 		deckThemeOverride?: string; // For Storybook - override deck theme
+		isGeneratingOverride?: boolean; // For Storybook - show generating state
 	}
 
-	let { isAuthenticatedOverride, cardsOverride, deckThemeOverride }: Props = $props();
+	let { isAuthenticatedOverride, cardsOverride, deckThemeOverride, isGeneratingOverride }: Props =
+		$props();
 
 	// State
 	let selectedStyle = $state('');
-	let isGenerating = $state(false);
+	let isGenerating = $state(isGeneratingOverride || false);
+
+	// Sync override with state for Storybook
+	$effect(() => {
+		if (isGeneratingOverride !== undefined) {
+			isGenerating = isGeneratingOverride;
+		}
+	});
 	let generationProgress = $state({ current: 0, total: 0 });
 	let isCheckingVariants = $state(false);
-	let generationStartTime = $state<number>(0);
-	let generationElapsedSeconds = $state<number>(0);
+	let generationStartTime = $state<number>(isGeneratingOverride ? Date.now() - 5000 : 0); // Start 5s in for Storybook
+	let generationElapsedSeconds = $state<number>(isGeneratingOverride ? 5 : 0);
 
 	// Update elapsed time every second during generation
 	$effect(() => {
