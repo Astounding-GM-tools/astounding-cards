@@ -88,7 +88,10 @@
 	);
 
 	// Progress tracking with estimated time (needs cardsNeedingGeneration defined first)
-	const estimatedTimeSeconds = $derived(isGenerating ? 20 + cardsNeedingGeneration * 2 : 0);
+	// Base 30s + 2s stagger per image after the first
+	const estimatedTimeSeconds = $derived(
+		isGenerating ? 30 + Math.max(0, cardsNeedingGeneration - 1) * 2 : 0
+	);
 
 	// Progress percentage with ease-out in last 5 seconds (cap at 95% until complete)
 	const progressPercentage = $derived.by(() => {

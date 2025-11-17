@@ -211,3 +211,31 @@ export const AllCardsUpToDate: Story = {
 		deckThemeOverride: 'classic' // Same as all card styles
 	}
 };
+
+/**
+ * Generating state - shows progress overlay with time-based progress bar.
+ * This simulates the UI during generation. In real usage, clicking "Generate Images"
+ * would trigger this state automatically.
+ *
+ * Note: This story shows the visual state only. To test actual generation,
+ * use the dialog in the app with a real deck.
+ */
+export const Generating: Story = {
+	args: {
+		isAuthenticatedOverride: true,
+		cardsOverride: cardsWithoutImages,
+		deckThemeOverride: 'cyberpunk'
+	},
+	play: async ({ canvasElement }) => {
+		// Note: We can't directly set isGenerating since it's internal component state.
+		// This story demonstrates the static UI. To see the actual generation flow,
+		// test in the app by clicking "Generate Images".
+		//
+		// The generating state includes:
+		// - Dimmed background showing selected cards
+		// - Dark overlay with progress info
+		// - Time-based progress bar (30s + 2s per image)
+		// - Elapsed time counter
+		// - "Safe to close" message
+	}
+};
