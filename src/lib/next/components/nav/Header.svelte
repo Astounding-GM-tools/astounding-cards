@@ -287,6 +287,10 @@
 				<button class="action-button" onclick={handleSignIn}> 🔐 Sign In </button>
 			{/if}
 
+			<a href="/next/gallery" class="action-button">
+				🌍 Gallery
+			</a>
+
 			<button class="action-button primary" onclick={handleManageDecks} disabled={isLoading}>
 				📚 Manage Decks
 			</button>
