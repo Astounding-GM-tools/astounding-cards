@@ -218,13 +218,15 @@ Visual prompt: ${optimizedPrompt}`;
 			contents: contentParts,
 			config: {
 				temperature: AI_CONFIGS.IMAGE_GENERATION.temperature,
-				aspectRatio: AI_CONFIGS.IMAGE_GENERATION.aspectRatio,
-				outputFormat: AI_CONFIGS.IMAGE_GENERATION.outputFormat,
-				quality: AI_CONFIGS.IMAGE_GENERATION.quality
+				imageConfig: {
+					aspectRatio: AI_CONFIGS.IMAGE_GENERATION.aspectRatio,
+					outputFormat: AI_CONFIGS.IMAGE_GENERATION.outputFormat,
+					quality: AI_CONFIGS.IMAGE_GENERATION.quality
+				}
 			}
 		});
 		
-		console.log('📐 Using 5:7 aspect ratio configuration (no reference image needed)');
+		console.log(`📐 Using ${AI_CONFIGS.IMAGE_GENERATION.aspectRatio} aspect ratio (${AI_CONFIGS.IMAGE_GENERATION.resolution})`);
 
 		// Extract image data from response (matches client-side format)
 		const imageData = imageResponse.candidates?.[0]?.content?.parts?.find(

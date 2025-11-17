@@ -21,8 +21,8 @@ export const AI_CONFIGS = {
 		temperature: 0.7, // More creative for image generation
 		outputFormat: 'image/webp' as const,
 		quality: 0.6, // Good quality for WebP
-		aspectRatio: '5:7' as const,
-		resolution: '1024x1434' as const
+		aspectRatio: '2:3' as const, // Closest to 5:7 (0.667 vs 0.714) - 832x1248
+		resolution: '832x1248' as const
 	},
 	CONTENT_FILTERING: {
 		model: AI_MODELS.GEMINI_FLASH,
