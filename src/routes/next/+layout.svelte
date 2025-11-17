@@ -10,11 +10,11 @@
 	const { children } = $props<{
 		children?: Snippet;
 	}>();
-	
+
 	// Expose dev helpers to browser console after mount
 	$effect(() => {
 		if (!browser) return;
-		
+
 		// Define helpers inline
 		window.devHelpers = {
 			async addTokens(amount: number) {
@@ -56,9 +56,12 @@
 				}
 			}
 		};
-		
+
 		// Show hints in console
-		console.log('%c🛠️ Dev Helpers Available', 'font-weight: bold; font-size: 14px; color: #059669;');
+		console.log(
+			'%c🛠️ Dev Helpers Available',
+			'font-weight: bold; font-size: 14px; color: #059669;'
+		);
 		console.log('%cAdd tokens:', 'font-weight: bold;', 'await window.devHelpers.addTokens(1000)');
 		console.log('%cCheck balance:', 'font-weight: bold;', 'await window.devHelpers.checkBalance()');
 	});

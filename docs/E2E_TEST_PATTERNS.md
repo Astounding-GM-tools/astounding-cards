@@ -165,9 +165,9 @@ Class: `e2e/helpers/dev-tools.ts`
 
 ```typescript
 // Environment setup (use these)
-await devTools.setupTestEnvironment();  // Fast: Creates "Tales of the Uncanny" deck
-await devTools.clearDatabaseConsole();   // Fast: Wipes all data
-await devTools.addSampleDataConsole();   // Fast: Adds sample deck
+await devTools.setupTestEnvironment(); // Fast: Creates "Tales of the Uncanny" deck
+await devTools.clearDatabaseConsole(); // Fast: Wipes all data
+await devTools.addSampleDataConsole(); // Fast: Adds sample deck
 
 // Dev mode
 await devTools.enableDevMode();

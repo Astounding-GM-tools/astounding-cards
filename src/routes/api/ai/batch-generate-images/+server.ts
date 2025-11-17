@@ -69,7 +69,7 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 		// 4. Check which cards already have images in target style (remix detection)
 		const cardsToGenerate: any[] = [];
 		const cachedResults: any[] = [];
-		
+
 		for (const card of cards) {
 			// If card doesn't have an image, it definitely needs generation
 			if (!card.imageMetadata?.imageId) {
@@ -138,7 +138,9 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 		const generationCount = cardsToGenerate.length;
 		const totalCost = generationCount * TOKEN_COSTS.IMAGE_GENERATION_COMMUNITY;
 
-		console.log(`💰 Cost calculation: ${generationCount} to generate, ${cachedResults.length} cached = ${totalCost} tokens`);
+		console.log(
+			`💰 Cost calculation: ${generationCount} to generate, ${cachedResults.length} cached = ${totalCost} tokens`
+		);
 
 		// If everything is cached, return early
 		if (generationCount === 0) {
@@ -184,13 +186,15 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 		const results: any[] = [];
 		const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 		const selectedArtStyle = ART_STYLES[style as keyof typeof ART_STYLES] || ART_STYLES.classic;
-		
+
 		for (let i = 0; i < cardsToGenerate.length; i++) {
 			const card = cardsToGenerate[i];
-			
+
 			try {
-				console.log(`🎨 Generating image ${i + 1}/${cardsToGenerate.length} for card "${card.title}"`);
-				
+				console.log(
+					`🎨 Generating image ${i + 1}/${cardsToGenerate.length} for card "${card.title}"`
+				);
+
 				// Step 1: Optimize the card content into a visual prompt
 				const originalPrompt = createPromptOptimizationRequest(
 					card.title || 'Untitled',
@@ -210,7 +214,8 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 					}
 				});
 
-				const optimizedPrompt = optimizationResponse.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+				const optimizedPrompt =
+					optimizationResponse.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
 				if (!optimizedPrompt) {
 					throw new Error('Failed to optimize prompt');
 				}
@@ -292,7 +297,7 @@ Visual prompt: ${optimizedPrompt}`;
 
 				// Stagger requests (except for the last one)
 				if (i < cardsToGenerate.length - 1) {
-					await new Promise(resolve => setTimeout(resolve, STAGGER_DELAY));
+					await new Promise((resolve) => setTimeout(resolve, STAGGER_DELAY));
 				}
 			} catch (err) {
 				console.error(`❌ Failed to generate image for card "${card.title}":`, err);
@@ -309,9 +314,9 @@ Visual prompt: ${optimizedPrompt}`;
 		results.push(...cachedResults);
 
 		// 9. Record transaction
-		const generatedCount = results.filter(r => r.success && !r.cached).length;
-		const failedCount = results.filter(r => !r.success).length;
-		
+		const generatedCount = results.filter((r) => r.success && !r.cached).length;
+		const failedCount = results.filter((r) => !r.success).length;
+
 		const { error: txError } = await supabaseAdmin.from('transactions').insert({
 			user_id: userId,
 			type: 'usage',
@@ -326,7 +331,9 @@ Visual prompt: ${optimizedPrompt}`;
 		}
 
 		console.log('✅ Transaction recorded');
-		console.log(`📊 Batch complete: ${generatedCount} generated, ${cachedResults.length} cached, ${failedCount} failed`);
+		console.log(
+			`📊 Batch complete: ${generatedCount} generated, ${cachedResults.length} cached, ${failedCount} failed`
+		);
 
 		// 10. Return results
 		return json({

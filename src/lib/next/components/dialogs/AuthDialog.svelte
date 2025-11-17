@@ -98,7 +98,14 @@
 		tabindex="0"
 		aria-label="Close dialog"
 	>
-		<div class="dialog" onclick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
+		<div
+			class="dialog"
+			onclick={(e) => e.stopPropagation()}
+			onkeydown={(e) => e.key === 'Escape' && (open = false)}
+			role="dialog"
+			aria-modal="true"
+			tabindex="-1"
+		>
 			<div class="dialog-header">
 				<h2>
 					{#if mode === 'sign-in'}

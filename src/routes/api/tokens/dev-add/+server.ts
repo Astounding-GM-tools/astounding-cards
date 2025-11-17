@@ -6,27 +6,27 @@ import { R2_PATH_PREFIX } from '$env/static/private';
 
 /**
  * POST /api/tokens/dev-add
- * 
+ *
  * DEV ONLY: Adds tokens to the authenticated user's balance for testing.
  * Only enabled when R2_PATH_PREFIX=dev
- * 
+ *
  * Body: { amount: number }
- * 
+ *
  * Usage from browser console:
  * ```js
  * // Helper to get auth token
  * const getToken = () => JSON.parse(localStorage.getItem(Object.keys(localStorage).find(k => k.includes('auth-token')))).access_token;
- * 
+ *
  * // Add tokens
  * await fetch('/api/tokens/dev-add', {
  *   method: 'POST',
- *   headers: { 
+ *   headers: {
  *     'Content-Type': 'application/json',
  *     'Authorization': `Bearer ${getToken()}`
  *   },
  *   body: JSON.stringify({ amount: 1000 })
  * }).then(r => r.json()).then(console.log)
- * 
+ *
  * // Refresh page to see new balance
  * ```
  */
@@ -86,7 +86,6 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 			newBalance: newCredits,
 			message: `✅ Added ${amount} tokens. New balance: ${newCredits} tokens`
 		});
-
 	} catch (error) {
 		console.error('Dev add tokens error:', error);
 		return json({ error: 'Internal server error' }, { status: 500 });

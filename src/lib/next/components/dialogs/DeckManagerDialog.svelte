@@ -7,7 +7,7 @@
 	import { toasts } from '$lib/stores/toast.js';
 	import BinaryToggle from '../ui/BinaryToggle.svelte';
 	import { formatTime } from '$lib/next/utils/dateUtils.js';
-import AiDeckGenerationDialog from './AiDeckGenerationDialog.svelte';
+	import AiDeckGenerationDialog from './AiDeckGenerationDialog.svelte';
 	import type { Deck } from '$lib/next/types/deck.js';
 
 	// Local state

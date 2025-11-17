@@ -360,7 +360,7 @@
 	.lock-checkbox span {
 		font-size: 0.875rem;
 		line-height: 1;
-		title: "Lock image (prevent batch regeneration)";
+		title: 'Lock image (prevent batch regeneration)';
 	}
 
 	/* Line 3: Info and status line */

@@ -21,7 +21,7 @@
 			return null;
 		}
 	});
-	
+
 	// Check if image is currently being generated
 	let isGenerating = $derived(card.imageMetadata?.isGenerating || false);
 
@@ -37,7 +37,7 @@
 	{#if imageUrl()}
 		<img src={imageUrl()} alt={card.title} loading="lazy" class:generating={isGenerating} />
 	{/if}
-	
+
 	{#if isGenerating}
 		<div class="generating-overlay">
 			<div class="spinner-container">
@@ -58,7 +58,7 @@
 		width: 100%;
 		height: 100%;
 	}
-	
+
 	img {
 		position: absolute;
 		top: 0;
@@ -70,12 +70,12 @@
 		object-fit: cover;
 		object-position: center top;
 	}
-	
+
 	img.generating {
 		opacity: 0.4;
 		filter: blur(2px);
 	}
-	
+
 	.generating-overlay {
 		position: absolute;
 		top: 0;
@@ -88,7 +88,7 @@
 		justify-content: center;
 		z-index: 10;
 	}
-	
+
 	.spinner-container {
 		text-align: center;
 		background: rgba(255, 255, 255, 0.95);
@@ -96,7 +96,7 @@
 		border-radius: 8px;
 		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 	}
-	
+
 	.spinner {
 		width: 32px;
 		height: 32px;
@@ -106,13 +106,13 @@
 		animation: spin 1s linear infinite;
 		margin: 0 auto 0.5rem;
 	}
-	
+
 	@keyframes spin {
 		to {
 			transform: rotate(360deg);
 		}
 	}
-	
+
 	.spinner-container p {
 		margin: 0;
 		font-size: 0.75rem;

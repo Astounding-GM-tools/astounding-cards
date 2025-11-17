@@ -309,10 +309,10 @@
 	// Open AI Image Generation Dialog
 	function openImageGenerationDialog() {
 		if (!card) return;
-		
+
 		// Get the deck's image style
 		const deckImageStyle = nextDeckStore.deck?.meta?.imageStyle || 'classic';
-		
+
 		// Create a card with current form data for generation
 		const currentCardData: Card = {
 			...card,
@@ -322,7 +322,7 @@
 			stats: formData.stats,
 			traits: formData.traits
 		};
-		
+
 		dialogStore.setContent(AiImageGenerationDialog, {
 			card: currentCardData,
 			deckImageStyle

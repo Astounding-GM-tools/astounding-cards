@@ -1,6 +1,6 @@
 /**
  * Token Balance Store
- * 
+ *
  * Manages user token inventory for premium features.
  * Tokens are used for AI generation, cloud storage, and other premium features.
  */
@@ -24,16 +24,16 @@ function createTokenBalanceStore() {
 
 	// Fetch token balance from API
 	async function fetchBalance() {
-		update(state => ({ ...state, loading: true, error: null }));
+		update((state) => ({ ...state, loading: true, error: null }));
 
 		try {
-			const response = await fetch('/api/tokens/balance', { 
-				headers: getAuthHeaders() 
+			const response = await fetch('/api/tokens/balance', {
+				headers: getAuthHeaders()
 			});
-			
+
 			// 401 is expected when not authenticated - not an error, just reset
 			if (response.status === 401) {
-				update(state => ({
+				update((state) => ({
 					...state,
 					amount: 0,
 					loading: false,
@@ -41,21 +41,21 @@ function createTokenBalanceStore() {
 				}));
 				return;
 			}
-			
+
 			if (!response.ok) {
 				throw new Error('Failed to fetch token balance');
 			}
 
 			const data = await response.json();
-			
-			update(state => ({
+
+			update((state) => ({
 				...state,
 				amount: data.balance ?? 0,
 				loading: false
 			}));
 		} catch (error) {
 			console.error('Token balance fetch error:', error);
-			update(state => ({
+			update((state) => ({
 				...state,
 				loading: false,
 				error: error instanceof Error ? error.message : 'Unknown error'
@@ -65,7 +65,7 @@ function createTokenBalanceStore() {
 
 	// Deduct tokens (optimistic update, will be confirmed by server)
 	function deduct(amount: number) {
-		update(state => ({
+		update((state) => ({
 			...state,
 			amount: Math.max(0, state.amount - amount)
 		}));
@@ -73,7 +73,7 @@ function createTokenBalanceStore() {
 
 	// Add tokens (e.g., after purchase)
 	function add(amount: number) {
-		update(state => ({
+		update((state) => ({
 			...state,
 			amount: state.amount + amount
 		}));
@@ -100,10 +100,10 @@ function createTokenBalanceStore() {
 export const tokenBalanceStore = createTokenBalanceStore();
 
 // Derived store for token amount only
-export const tokenAmount = derived(tokenBalanceStore, $balance => $balance.amount);
+export const tokenAmount = derived(tokenBalanceStore, ($balance) => $balance.amount);
 
 // Derived store for loading state
-export const tokenLoading = derived(tokenBalanceStore, $balance => $balance.loading);
+export const tokenLoading = derived(tokenBalanceStore, ($balance) => $balance.loading);
 
 // Helper to check if user can afford a cost
 export function canAfford(cost: number, balance: number): boolean {
@@ -123,14 +123,14 @@ isAuthenticated.subscribe(async (authenticated) => {
 		previousAuthState = authenticated;
 		return;
 	}
-	
+
 	// Only proceed if auth state actually changed
 	if (previousAuthState === authenticated) {
 		return;
 	}
-	
+
 	previousAuthState = authenticated;
-	
+
 	if (authenticated) {
 		await tokenBalanceStore.fetchBalance();
 	} else {

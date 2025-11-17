@@ -53,8 +53,12 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 		}
 
 		// 2. Parse request body
-		const { card, deckTheme = 'classic', existingImageUrl, sourceImageId = null } =
-			await request.json();
+		const {
+			card,
+			deckTheme = 'classic',
+			existingImageUrl,
+			sourceImageId = null
+		} = await request.json();
 
 		// Validate inputs
 		if (!card || typeof card !== 'object') {
@@ -65,14 +69,16 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 			return error(400, 'Card must have a title');
 		}
 
-	const style = deckTheme; // Using deckTheme as style
-	
-	// Track the original image ID for proper family linking
-	let originalImageIdForSave: string | null = null;
+		const style = deckTheme; // Using deckTheme as style
 
-	// 3. Check for existing remix (if this is a style variant)
-	if (sourceImageId && style) {
-			console.log(`🔍 Checking for existing images: sourceId=${sourceImageId}, targetStyle=${style}`);
+		// Track the original image ID for proper family linking
+		let originalImageIdForSave: string | null = null;
+
+		// 3. Check for existing remix (if this is a style variant)
+		if (sourceImageId && style) {
+			console.log(
+				`🔍 Checking for existing images: sourceId=${sourceImageId}, targetStyle=${style}`
+			);
 
 			// First, get the source image to understand the family
 			const { data: sourceImage } = await supabaseAdmin
@@ -80,7 +86,7 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 				.select('id, style, source_image_id')
 				.eq('id', sourceImageId)
 				.single();
-			
+
 			if (sourceImage) {
 				// If the source image itself is already the right style, return it!
 				if (sourceImage.style === style) {
@@ -90,7 +96,7 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 						.select('id, url')
 						.eq('id', sourceImageId)
 						.single();
-					
+
 					if (sourceImageData) {
 						return json({
 							success: true,
@@ -101,19 +107,19 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 						});
 					}
 				}
-				
-			// Find the original (root) image in this family
-			const originalImageId = sourceImage.source_image_id || sourceImage.id;
-			originalImageIdForSave = originalImageId;
-			
-			// Look for any image in the family with the target style
+
+				// Find the original (root) image in this family
+				const originalImageId = sourceImage.source_image_id || sourceImage.id;
+				originalImageIdForSave = originalImageId;
+
+				// Look for any image in the family with the target style
 				// This includes checking the original and all its remixes
 				const { data: familyImages } = await supabaseAdmin
 					.from('community_images')
 					.select('id, url, style')
 					.or(`id.eq.${originalImageId},source_image_id.eq.${originalImageId}`)
 					.eq('style', style);
-				
+
 				if (familyImages && familyImages.length > 0) {
 					console.log('✅ Found existing image in family, returning cached result');
 					return json({
@@ -124,10 +130,12 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 						cached: true
 					});
 				}
-				
+
 				// No existing image found, will need to generate
 				// But make sure we store the original ID for proper family linking
-				console.log(`🎨 No existing ${style} image in family, will generate with originalId=${originalImageId}`);
+				console.log(
+					`🎨 No existing ${style} image in family, will generate with originalId=${originalImageId}`
+				);
 			}
 		}
 
@@ -192,7 +200,7 @@ Visual prompt: ${optimizedPrompt}`;
 		// Add user's existing card image if available (for style reference)
 		if (existingImageUrl) {
 			try {
-				console.log('📷 Fetching user\'s existing image for style reference...');
+				console.log("📷 Fetching user's existing image for style reference...");
 				const imageResponse = await fetch(existingImageUrl);
 				if (imageResponse.ok) {
 					const imageBuffer = await imageResponse.arrayBuffer();
@@ -205,7 +213,7 @@ Visual prompt: ${optimizedPrompt}`;
 							data: imageBase64
 						}
 					});
-					console.log('✅ Added user\'s existing image for style reference');
+					console.log("✅ Added user's existing image for style reference");
 				} else {
 					console.warn('⚠️ Failed to fetch existing image, continuing without it');
 				}
@@ -303,11 +311,11 @@ Visual prompt: ${optimizedPrompt}`;
 		const { data: imageRecord, error: dbError } = await supabaseAdmin
 			.from('community_images')
 			.insert({
-			user_id: userId,
-			url: publicUrl,
-			r2_key: r2Key,
-			style,
-			source_image_id: originalImageIdForSave,
+				user_id: userId,
+				url: publicUrl,
+				r2_key: r2Key,
+				style,
+				source_image_id: originalImageIdForSave,
 				embedding: embedding ? `[${embedding.join(',')}]` : null,
 				card_title: card.title,
 				cost_tokens: cost

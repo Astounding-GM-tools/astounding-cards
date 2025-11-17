@@ -8,6 +8,7 @@
 ## What Was Implemented
 
 ### 1. Database Migration ✅
+
 **File**: `supabase/migrations/003_token_functions.sql`
 
 - Created `deduct_tokens(user_id, amount)` function
@@ -16,6 +17,7 @@
 - Includes user existence check
 
 ### 2. Embeddings Helper ✅
+
 **File**: `src/lib/server/embeddings.ts`
 
 - `generateEmbedding(text)` function
@@ -25,6 +27,7 @@
 - Error handling with detailed messages
 
 ### 3. Auth Helper ✅
+
 **File**: `src/lib/server/auth.ts`
 
 - `getUserFromSession(cookies)` - extracts user ID
@@ -33,9 +36,11 @@
 - Returns null for invalid/missing sessions
 
 ### 4. Complete Image Generation API ✅
+
 **File**: `src/routes/api/ai/generate-image/+server.ts`
 
 **Flow**:
+
 1. ✅ **Authenticate user** via session cookies
 2. ✅ **Parse request** (card, deckTheme, sourceImageId)
 3. ✅ **Check for remix** using `find_image_remix()` - returns cached (0 cost)
@@ -50,6 +55,7 @@
 12. ✅ **Return success** with URL, imageId, cost, cached flag
 
 **Response Format**:
+
 ```typescript
 {
   success: true,
@@ -82,6 +88,7 @@ supabase db push
 ## Testing Checklist
 
 ### Prerequisites
+
 - [ ] Migration applied to database
 - [ ] User account created with tokens (use /api/tokens/dev-add to add tokens)
 - [ ] Authenticated session (login via UI)
@@ -91,6 +98,7 @@ supabase db push
 ### Manual Testing
 
 #### Test 1: Basic Image Generation
+
 ```bash
 # From browser console (while logged in):
 const response = await fetch('/api/ai/generate-image', {
@@ -112,7 +120,7 @@ const response = await fetch('/api/ai/generate-image', {
 const data = await response.json();
 console.log(data);
 
-// Expected: 
+// Expected:
 // - success: true
 // - url: R2 public URL
 // - imageId: UUID
@@ -121,6 +129,7 @@ console.log(data);
 ```
 
 **Verify**:
+
 - [ ] Image accessible at returned URL
 - [ ] Token balance reduced by 100
 - [ ] Record in `community_images` table
@@ -128,6 +137,7 @@ console.log(data);
 - [ ] Embedding exists (check `embedding` column)
 
 #### Test 2: Insufficient Tokens
+
 ```bash
 # First, check your balance
 await fetch('/api/tokens/balance').then(r => r.json()).then(console.log);
@@ -139,6 +149,7 @@ const response = await fetch('/api/ai/generate-image', { /* same as Test 1 */ })
 ```
 
 #### Test 3: Unauthenticated Request
+
 ```bash
 # Log out, then try:
 const response = await fetch('/api/ai/generate-image', { /* same as Test 1 */ });
@@ -147,6 +158,7 @@ const response = await fetch('/api/ai/generate-image', { /* same as Test 1 */ })
 ```
 
 #### Test 4: Remix Detection (Future)
+
 ```bash
 // After Test 1 succeeds, try generating same card with different style:
 const response = await fetch('/api/ai/generate-image', {
@@ -173,19 +185,19 @@ const response = await fetch('/api/ai/generate-image', {
 SELECT id, email, credits FROM users WHERE email = 'your-email@example.com';
 
 -- Check generated images
-SELECT id, url, style, source_image_id, card_title, cost_tokens, created_at 
-FROM community_images 
+SELECT id, url, style, source_image_id, card_title, cost_tokens, created_at
+FROM community_images
 WHERE user_id = '<your-user-id>'
 ORDER BY created_at DESC;
 
 -- Check embedding was created (originals only)
-SELECT id, card_title, 
+SELECT id, card_title,
        CASE WHEN embedding IS NOT NULL THEN 'Has embedding' ELSE 'No embedding' END as embedding_status
 FROM community_images;
 
 -- Check transactions
-SELECT id, type, credits_delta, description, created_at 
-FROM transactions 
+SELECT id, type, credits_delta, description, created_at
+FROM transactions
 WHERE user_id = '<your-user-id>'
 ORDER BY created_at DESC;
 
@@ -199,7 +211,9 @@ SELECT credits FROM users WHERE id = '<your-user-id>';  -- Should be reduced by 
 ## Known Limitations & TODOs
 
 ### Cleanup on Failure
+
 Currently, if token deduction succeeds but database insert fails:
+
 - Tokens are already spent
 - Image is uploaded to R2
 - No database record exists
@@ -207,19 +221,23 @@ Currently, if token deduction succeeds but database insert fails:
 **TODO**: Implement transaction rollback or refund logic
 
 ### Embedding Format
+
 Currently storing embedding as text array: `[1.23,4.56,...]`
 
 Supabase expects `vector` type. May need to adjust insert:
+
 ```typescript
 // Current
-embedding: embedding ? `[${embedding.join(',')}]` : null
+embedding: embedding ? `[${embedding.join(',')}]` : null;
 
 // May need (depending on Supabase client version):
-embedding: embedding ? embedding : null  // Pass array directly
+embedding: embedding ? embedding : null; // Pass array directly
 ```
 
 ### Style Variants
+
 The `sourceImageId` parameter is not yet used by the UI - this will be implemented when:
+
 1. User views an existing image
 2. Wants to generate same image in different style
 3. System checks for remix and returns cached version (0 cost)
@@ -229,22 +247,22 @@ The `sourceImageId` parameter is not yet used by the UI - this will be implement
 ## Next Steps
 
 ### Immediate (After Testing)
+
 1. Apply migration to production database
 2. Test with real user account
 3. Verify R2 URLs are publicly accessible
 4. Check embedding format in database
 
 ### Phase 2: UI Integration
+
 1. Update `AiImageGenerationDialog.svelte`:
    - Handle new response format (URL instead of base64)
    - Show "cached" indicator when `cached: true`
    - Update card with R2 URL
-   
 2. Migrate `BatchImageGenerationDialog.svelte`:
    - Remove BYOK/ApiKeyInput
    - Add token cost calculation (cards × 100 tokens)
    - Check balance before starting
-   
 3. Update `CardEditDialog.svelte`:
    - Replace BYOK inline generation
    - Use `AiImageGenerationDialog` instead
@@ -255,11 +273,11 @@ The `sourceImageId` parameter is not yet used by the UI - this will be implement
    - Show similar existing images
 
 ### Phase 3: Cleanup
+
 1. Delete BYOK components:
    - `ApiKeyInput.svelte`
    - `AiImageGenerator.ts`
    - `AiImagePromptDialog.svelte` (or repurpose)
-   
 2. Remove BYOK from `AiPromptDialog.svelte`
 3. Update documentation
 4. Add E2E tests
@@ -285,6 +303,7 @@ The `sourceImageId` parameter is not yet used by the UI - this will be implement
 ## Cost Analysis
 
 **Per Image Generation**:
+
 - Gemini prompt optimization: ~0.00002 NOK
 - Gemini image generation: ~0.04 NOK
 - Gemini embedding: ~0.00005 NOK
@@ -293,6 +312,7 @@ The `sourceImageId` parameter is not yet used by the UI - this will be implement
 - **Margin**: ~96%
 
 **Breakeven** (covering Supabase Pro $25/month):
+
 - $25 = ~290 NOK
 - Need: 290 images/month (assuming 1 NOK per image minus costs)
 - That's ~10 images/day
@@ -302,21 +322,25 @@ The `sourceImageId` parameter is not yet used by the UI - this will be implement
 ## Support & Troubleshooting
 
 ### Error: "Failed to generate embedding"
+
 - Check GEMINI_API_KEY is set correctly
 - Verify API key has access to text-embedding-004 model
 - Check Gemini API quota/limits
 
 ### Error: "Failed to deduct tokens"
+
 - Verify migration was applied
 - Check user has sufficient balance
 - Look for concurrent requests (race condition)
 
 ### Error: "Failed to upload image to R2"
+
 - Verify R2 credentials (R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, etc.)
 - Check R2 bucket exists and is accessible
 - Verify R2_PATH_PREFIX is correct (dev/prod)
 
 ### Images not accessible
+
 - Verify R2_PUBLIC_URL is set correctly
 - Check R2 bucket has public access enabled
 - Test URL directly in browser

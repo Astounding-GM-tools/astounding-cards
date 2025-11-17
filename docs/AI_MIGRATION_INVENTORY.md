@@ -1,8 +1,10 @@
 # AI Migration Inventory
+
 **Created**: 2025-11-16  
 **Status**: Planning Phase
 
 ## Overview
+
 This document inventories existing AI components and outlines the migration from BYOK (Bring Your Own Key) to server-side AI with token-based payments.
 
 ---
@@ -12,6 +14,7 @@ This document inventories existing AI components and outlines the migration from
 ### ✅ Server-Side Infrastructure (Complete)
 
 #### Token Economy
+
 - **API Routes**:
   - `/api/tokens/balance` - Get user token balance
   - `/api/tokens/dev-add` - Add tokens (dev only)
@@ -23,6 +26,7 @@ This document inventories existing AI components and outlines the migration from
 - **Stores**: `src/lib/next/stores/tokenBalance.ts`
 
 #### Image Generation API
+
 - **File**: `src/routes/api/ai/generate-image/+server.ts`
 - **Status**: ⚠️ PARTIALLY COMPLETE
 - **What it does**:
@@ -39,6 +43,7 @@ This document inventories existing AI components and outlines the migration from
   - ❌ Transaction recording
 
 #### Deck Generation API
+
 - **File**: `src/routes/api/ai/generate-deck/+server.ts`
 - **Status**: ✅ COMPLETE (for its purpose)
 - **What it does**:
@@ -48,6 +53,7 @@ This document inventories existing AI components and outlines the migration from
 - **Note**: Deck persistence happens client-side in IndexedDB initially, publishing to Supabase comes later
 
 #### Community Image Library Schema
+
 - **File**: `supabase/migrations/002_community_images.sql`
 - **Tables**: `community_images` with pgvector
 - **Features**:
@@ -60,6 +66,7 @@ This document inventories existing AI components and outlines the migration from
 ### 🆕 New Components (With Storybook Stories)
 
 #### 1. AiImageGenerationDialog.svelte
+
 - **Path**: `src/lib/next/components/dialogs/AiImageGenerationDialog.svelte`
 - **Storybook**: `AiImageGenerationDialog.stories.ts`
 - **Status**: ✅ READY FOR INTEGRATION
@@ -77,6 +84,7 @@ This document inventories existing AI components and outlines the migration from
   - Integrate with deck store for card updates
 
 #### 2. BatchImageGenerationDialog.svelte
+
 - **Path**: `src/lib/next/components/dialogs/BatchImageGenerationDialog.svelte`
 - **Status**: ⚠️ NEEDS MIGRATION
 - **Current behavior**: Uses BYOK via `AiImageGenerator` class
@@ -93,6 +101,7 @@ This document inventories existing AI components and outlines the migration from
   - Block if insufficient tokens
 
 #### 3. AuthGatedCtaButton.svelte
+
 - **Path**: `src/lib/next/components/cta/AuthGatedCtaButton.svelte`
 - **Storybook**: `AuthGatedCtaButton.stories.ts`
 - **Status**: ✅ READY TO USE
@@ -103,8 +112,9 @@ This document inventories existing AI components and outlines the migration from
 ### 🗑️ BYOK Components (To Be Removed/Replaced)
 
 #### 1. AiPromptDialog.svelte
+
 - **Path**: `src/lib/next/components/dialogs/AiPromptDialog.svelte`
-- **Current behavior**: 
+- **Current behavior**:
   - Takes theme + card count
   - Shows `ApiKeyInput` for BYOK
   - Calls `generateDeckWithToasts()` client-side
@@ -116,8 +126,9 @@ This document inventories existing AI components and outlines the migration from
   - Remove `ApiKeyInput` completely
 
 #### 2. AiImagePromptDialog.svelte
+
 - **Path**: `src/lib/next/components/dialogs/AiImagePromptDialog.svelte`
-- **Current behavior**: 
+- **Current behavior**:
   - Generates image prompt from card
   - Optional: process prompt with Gemini to avoid content filters
   - Copies prompt to clipboard
@@ -126,6 +137,7 @@ This document inventories existing AI components and outlines the migration from
   - Option B: Keep as "copy prompt for external tools" feature
 
 #### 3. ApiKeyInput.svelte
+
 - **Path**: `src/lib/next/components/ui/ApiKeyInput.svelte`
 - **Status**: 🗑️ REMOVE COMPLETELY
 - **Used by**:
@@ -134,12 +146,13 @@ This document inventories existing AI components and outlines the migration from
   - `AiImagePromptDialog.svelte` (optional section)
 
 #### 4. AiImageGenerator class
+
 - **Path**: `src/lib/utils/ai-image-generator.ts`
 - **Status**: 🗑️ REMOVE COMPLETELY
 - **Used by**:
   - `BatchImageGenerationDialog.svelte`
   - `CardEditDialog.svelte` (needs checking)
-- **Current behavior**: 
+- **Current behavior**:
   - Client-side image generation with user's API key
   - 2-step optimization + generation
   - Auto-downloads images
@@ -149,12 +162,14 @@ This document inventories existing AI components and outlines the migration from
 ## Integration Points
 
 ### CardEditDialog.svelte
+
 - **Path**: `src/lib/next/components/dialogs/CardEditDialog.svelte`
 - **Current state**: Likely uses BYOK for image generation
 - **TODO**: Check if it imports/uses `AiImageGenerator`
 - **Action**: Replace with new `AiImageGenerationDialog`
 
 ### DeckManagerDialog.svelte
+
 - **Path**: `src/lib/next/components/dialogs/DeckManagerDialog.svelte`
 - **Action**: Ensure it uses new AI generation dialogs
 
@@ -163,6 +178,7 @@ This document inventories existing AI components and outlines the migration from
 ## Migration Tasks (Priority Order)
 
 ### Phase 1: Complete Server-Side Infrastructure
+
 **Priority**: 🔥 HIGH
 
 1. **Complete Image Generation Flow** (NEXT_STEPS.md #1)
@@ -185,6 +201,7 @@ This document inventories existing AI components and outlines the migration from
 ---
 
 ### Phase 2: Update UI Components
+
 **Priority**: 🔥 HIGH
 
 4. **Integrate AiImageGenerationDialog**
@@ -210,6 +227,7 @@ This document inventories existing AI components and outlines the migration from
 ---
 
 ### Phase 3: Clean Up BYOK Components
+
 **Priority**: 🟡 MEDIUM
 
 7. **Remove BYOK Components**
@@ -226,17 +244,20 @@ This document inventories existing AI components and outlines the migration from
 ## Testing Strategy
 
 ### Unit Tests
+
 - Token balance calculations
 - Affordability checks
 - Auth gate logic
 
 ### E2E Tests
+
 - Image generation flow (auth → generate → deduct tokens)
 - Insufficient tokens flow
 - Batch generation with token tracking
 - Deck generation (free)
 
 ### Manual Testing
+
 - Generate image with sufficient tokens ✓
 - Generate image with insufficient tokens ✓
 - Batch generate with mixed success/failures ✓
@@ -256,7 +277,7 @@ This document inventories existing AI components and outlines the migration from
 ✅ Auth gate blocks unauthenticated users  
 ✅ Insufficient tokens shows "Buy tokens" CTA  
 ✅ Remix detection avoids duplicate costs  
-✅ E2E tests pass for all flows  
+✅ E2E tests pass for all flows
 
 ---
 

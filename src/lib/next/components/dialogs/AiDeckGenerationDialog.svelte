@@ -28,7 +28,7 @@
 	const isUserAuthenticated = $derived(
 		isAuthenticatedOverride !== undefined ? isAuthenticatedOverride : $isAuthenticated
 	);
-	
+
 	// Calculate cost and check affordability
 	const generationCost = $derived(calculateDeckGenerationCost(cardCount));
 	const userTokenBalance = $derived($tokenAmount);
@@ -113,7 +113,9 @@
 			await tokenBalanceStore.fetchBalance();
 
 			const elapsedTime = ((Date.now() - startTime) / 1000).toFixed(1);
-			toasts.success(`✅ Deck generated with ${result.cardCount} cards in ${elapsedTime}s! (${result.cost} tokens)`);
+			toasts.success(
+				`✅ Deck generated with ${result.cardCount} cards in ${elapsedTime}s! (${result.cost} tokens)`
+			);
 
 			dialogStore.close();
 		} catch (error) {
@@ -214,14 +216,14 @@
 					</div>
 					{#if canAfford}
 						<p>
-							You have <strong>{formatTokenBalance(userTokenBalance)}</strong> ✅
-							Deck generation costs <strong>{generationCost} tokens</strong> ({cardCount} cards × 10 tokens each).
-							Images cost extra (100 tokens each).
+							You have <strong>{formatTokenBalance(userTokenBalance)}</strong> ✅ Deck generation
+							costs <strong>{generationCost} tokens</strong> ({cardCount} cards × 10 tokens each). Images
+							cost extra (100 tokens each).
 						</p>
 					{:else}
 						<p>
-							You have <strong>{formatTokenBalance(userTokenBalance)}</strong> ❌
-							You need <strong>{generationCost} tokens</strong> to generate this deck.
+							You have <strong>{formatTokenBalance(userTokenBalance)}</strong> ❌ You need
+							<strong>{generationCost} tokens</strong> to generate this deck.
 						</p>
 						<button class="buy-tokens-btn" onclick={() => console.log('Buy tokens')}>
 							💰 Buy More Tokens
@@ -238,7 +240,11 @@
 				Close & Continue Generation
 			</button>
 		{:else}
-			<AuthGatedCtaButton config={DECK_GENERATION_CTA} onAuthenticatedClick={handleAuthenticatedClick} {isAuthenticatedOverride} />
+			<AuthGatedCtaButton
+				config={DECK_GENERATION_CTA}
+				onAuthenticatedClick={handleAuthenticatedClick}
+				{isAuthenticatedOverride}
+			/>
 		{/if}
 	</div>
 </div>
@@ -529,7 +535,7 @@
 		padding: 1rem;
 		font-size: 0.875rem;
 	}
-	
+
 	.cost-notice.insufficient {
 		background: rgba(239, 68, 68, 0.05);
 		border-color: rgba(239, 68, 68, 0.2);
@@ -556,7 +562,7 @@
 		color: #1a202c;
 		line-height: 1.5;
 	}
-	
+
 	.buy-tokens-btn {
 		padding: 0.5rem 1rem;
 		border-radius: 6px;
@@ -570,7 +576,7 @@
 		width: 100%;
 		margin-top: 0.5rem;
 	}
-	
+
 	.buy-tokens-btn:hover {
 		background: #d97706;
 		transform: translateY(-1px);

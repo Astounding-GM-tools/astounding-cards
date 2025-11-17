@@ -24,21 +24,21 @@
 	let isGenerating = $state(false);
 	let generationProgress = $state({ current: 0, total: 0 });
 	let isCheckingVariants = $state(false);
-	
+
 	// Enhanced card image status tracking
 	interface CardImageStatus {
 		// Current image (what's on the card now)
 		currentImageUrl: string | null;
 		currentImageStyle: string | null;
 		isExternalImage: boolean; // Not in our R2 storage
-		
+
 		// Target style image (what we're checking for)
 		targetImageUrl: string | null;
 		targetImageExists: boolean;
-		
+
 		isLoading: boolean;
 	}
-	
+
 	let cardImageStatus = $state<Record<string, CardImageStatus>>({});
 	let cardSelectionState = $state<Record<string, boolean>>({}); // Which cards are checked for generation
 	let previewImageUrl = $state<string | null>(null);
@@ -46,7 +46,7 @@
 	// Get current deck from store (or use overrides for Storybook)
 	let currentDeck = $derived(nextDeckStore.deck);
 	let deckTheme = $derived(deckThemeOverride || currentDeck?.meta.theme || 'classic');
-	
+
 	// Initialize selected style to deck theme
 	$effect(() => {
 		if (!selectedStyle && deckTheme) {
@@ -65,14 +65,14 @@
 
 	// Calculate how many cards need generation (checked + don't have target variant)
 	const cardsNeedingGeneration = $derived(
-		Object.entries(cardImageStatus).filter(([cardId, status]) => 
-			cardSelectionState[cardId] && !status.targetImageExists
+		Object.entries(cardImageStatus).filter(
+			([cardId, status]) => cardSelectionState[cardId] && !status.targetImageExists
 		).length
 	);
-	
+
 	const cardsWithExistingVariants = $derived(
-		Object.entries(cardImageStatus).filter(([cardId, status]) => 
-			cardSelectionState[cardId] && status.targetImageExists
+		Object.entries(cardImageStatus).filter(
+			([cardId, status]) => cardSelectionState[cardId] && status.targetImageExists
 		).length
 	);
 
@@ -111,15 +111,15 @@
 		if (selectedStyle === deckTheme) {
 			const status: typeof cardImageStatus = {};
 			const selection: typeof cardSelectionState = {};
-			
-		for (const card of cards) {
-			const isExternal = !!card.image && !card.imageMetadata?.imageId;
-			const currentStyle = card.imageMetadata?.style || null;
-			
-			// Check if current image's style matches the selected style
-			const styleMatches = currentStyle === selectedStyle;
-			const targetExists = !!card.image && styleMatches;
-				
+
+			for (const card of cards) {
+				const isExternal = !!card.image && !card.imageMetadata?.imageId;
+				const currentStyle = card.imageMetadata?.style || null;
+
+				// Check if current image's style matches the selected style
+				const styleMatches = currentStyle === selectedStyle;
+				const targetExists = !!card.image && styleMatches;
+
 				status[card.id] = {
 					currentImageUrl: card.image || null,
 					currentImageStyle: currentStyle,
@@ -128,19 +128,19 @@
 					targetImageExists: targetExists,
 					isLoading: false
 				};
-				
+
 				// Checkbox logic:
 				// - Unchecked: external images OR has any image (user can opt-in)
 				// - Checked: no image at all
 				selection[card.id] = isExternal ? false : !card.image;
 			}
-			
+
 			cardImageStatus = status;
 			cardSelectionState = selection;
 			return;
 		}
 
-	isCheckingVariants = true;
+		isCheckingVariants = true;
 
 		// Set all to loading
 		const loadingStatus: typeof cardImageStatus = {};
@@ -167,7 +167,7 @@
 					...authHeaders
 				},
 				body: JSON.stringify({
-					cards: cards.map(c => ({
+					cards: cards.map((c) => ({
 						id: c.id,
 						image: c.image,
 						imageMetadata: c.imageMetadata
@@ -180,12 +180,12 @@
 				const result = await response.json();
 				const newStatus: typeof cardImageStatus = {};
 				const newSelection: typeof cardSelectionState = {};
-				
+
 				for (const card of cards) {
 					const variantInfo = result.variants[card.id];
 					const isExternal = !!card.image && !card.imageMetadata?.imageId;
 					const currentStyle = card.imageMetadata?.style || null;
-					
+
 					newStatus[card.id] = {
 						currentImageUrl: card.image || null,
 						currentImageStyle: currentStyle,
@@ -194,13 +194,13 @@
 						targetImageExists: variantInfo?.exists || false,
 						isLoading: false
 					};
-					
+
 					// Checkbox logic:
 					// - Unchecked: external images OR variant exists (free switch, user opt-in)
 					// - Checked: no variant exists (needs generation)
 					newSelection[card.id] = !isExternal && !variantInfo?.exists;
 				}
-				
+
 				cardImageStatus = newStatus;
 				cardSelectionState = newSelection;
 			} else {
@@ -253,8 +253,8 @@
 		}
 
 		// Filter to only checked cards
-		const selectedCards = cards.filter(card => cardSelectionState[card.id]);
-		
+		const selectedCards = cards.filter((card) => cardSelectionState[card.id]);
+
 		if (selectedCards.length === 0) {
 			toasts.error('No cards selected for generation');
 			return;
@@ -274,7 +274,7 @@
 					...authHeaders
 				},
 				body: JSON.stringify({
-					cards: selectedCards.map(c => ({
+					cards: selectedCards.map((c) => ({
 						id: c.id,
 						title: c.title,
 						subtitle: c.subtitle,
@@ -340,7 +340,7 @@
 			const elapsedTime = ((Date.now() - startTime) / 1000).toFixed(1);
 			const generated = result.results.filter((r: any) => !r.cached).length;
 			const cached = result.results.filter((r: any) => r.cached).length;
-			
+
 			toasts.success(
 				`✅ Batch generation complete in ${elapsedTime}s! Generated: ${generated}, Cached: ${cached} (${result.totalCost} tokens)`
 			);
@@ -377,12 +377,14 @@
 				<p class="progress-text">
 					Completed {generationProgress.current} of {generationProgress.total} cards
 				</p>
-				
+
 				<!-- Progress bar -->
 				<div class="progress-bar">
-					<div 
-						class="progress-fill" 
-						style="width: {generationProgress.total > 0 ? (generationProgress.current / generationProgress.total) * 100 : 0}%"
+					<div
+						class="progress-fill"
+						style="width: {generationProgress.total > 0
+							? (generationProgress.current / generationProgress.total) * 100
+							: 0}%"
 					></div>
 				</div>
 
@@ -402,7 +404,7 @@
 									<div class="loading-spinner">⏳</div>
 								</div>
 							{/if}
-							
+
 							<div class="card-info-compact">
 								<span class="card-name-small">{card.title}</span>
 							</div>
@@ -410,9 +412,7 @@
 					{/each}
 				</div>
 
-				<p class="safe-notice">
-					💡 Watch your images appear in real-time!
-				</p>
+				<p class="safe-notice">💡 Watch your images appear in real-time!</p>
 			</div>
 		{:else}
 			<!-- Configuration -->
@@ -448,7 +448,7 @@
 									}}
 									class="card-checkbox"
 								/>
-								
+
 								<!-- Before → After Images -->
 								<div class="before-after">
 									<!-- Current Image -->
@@ -459,7 +459,7 @@
 									{:else if status?.currentImageUrl}
 										<button
 											class="image-thumb"
-											onclick={() => previewImageUrl = status.currentImageUrl}
+											onclick={() => (previewImageUrl = status.currentImageUrl)}
 											title="Click to preview current image"
 										>
 											<img src={status.currentImageUrl} alt={card.title} />
@@ -469,10 +469,10 @@
 											<span class="placeholder-text">No image</span>
 										</div>
 									{/if}
-									
+
 									<!-- Arrow -->
 									<span class="arrow">→</span>
-									
+
 									<!-- Target Image/Status -->
 									{#if status?.isLoading}
 										<div class="image-thumb loading">
@@ -484,7 +484,7 @@
 											<!-- Show variant image (different from current) -->
 											<button
 												class="image-thumb"
-												onclick={() => previewImageUrl = status.targetImageUrl}
+												onclick={() => (previewImageUrl = status.targetImageUrl)}
 												title="Click to preview target variant"
 											>
 												<img src={status.targetImageUrl} alt={card.title} />
@@ -507,7 +507,7 @@
 										</div>
 									{/if}
 								</div>
-								
+
 								<!-- Card Info -->
 								<div class="card-details">
 									<div class="card-name">{card.title}</div>
@@ -518,7 +518,7 @@
 										<div class="style-badge">{status.currentImageStyle}</div>
 									{/if}
 								</div>
-								
+
 								<!-- Status Badges -->
 								<div class="status-area">
 									{#if status?.isLoading}
@@ -553,15 +553,15 @@
 							<strong>Cost Summary</strong>
 						</div>
 						<div class="cost-breakdown">
-								<div class="cost-line">
-									<span>Cards needing generation:</span>
-									<span>{cardsNeedingGeneration} × {costPerImage} tokens</span>
-								</div>
-								<!-- Always show variant line to prevent content shift -->
-								<div class="cost-line cached" class:hidden={cardsWithExistingVariants === 0}>
-									<span>Cards with existing variants:</span>
-									<span>{cardsWithExistingVariants} × 0 tokens (free)</span>
-								</div>
+							<div class="cost-line">
+								<span>Cards needing generation:</span>
+								<span>{cardsNeedingGeneration} × {costPerImage} tokens</span>
+							</div>
+							<!-- Always show variant line to prevent content shift -->
+							<div class="cost-line cached" class:hidden={cardsWithExistingVariants === 0}>
+								<span>Cards with existing variants:</span>
+								<span>{cardsWithExistingVariants} × 0 tokens (free)</span>
+							</div>
 							<div class="cost-line total">
 								<span><strong>Total Cost:</strong></span>
 								<span><strong>{totalCost} tokens</strong></span>
@@ -606,14 +606,21 @@
 {#if previewImageUrl}
 	<div
 		class="preview-overlay"
-		onclick={() => previewImageUrl = null}
+		onclick={() => (previewImageUrl = null)}
 		onkeydown={(e) => e.key === 'Escape' && (previewImageUrl = null)}
 		role="button"
 		tabindex="0"
 		aria-label="Close preview"
 	>
-		<div class="preview-content" onclick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
-			<button class="preview-close" onclick={() => previewImageUrl = null}>×</button>
+		<div
+			class="preview-content"
+			onclick={(e) => e.stopPropagation()}
+			onkeydown={(e) => e.key === 'Escape' && (previewImageUrl = null)}
+			role="dialog"
+			aria-modal="true"
+			tabindex="-1"
+		>
+			<button class="preview-close" onclick={() => (previewImageUrl = null)}>×</button>
 			<img src={previewImageUrl} alt="Preview" class="preview-image" />
 		</div>
 	</div>
@@ -739,7 +746,9 @@
 		align-items: center;
 		gap: 8px;
 		opacity: 0.6;
-		transition: opacity 0.3s, transform 0.3s;
+		transition:
+			opacity 0.3s,
+			transform 0.3s;
 	}
 
 	.generating-card-item.completed {
@@ -769,9 +778,15 @@
 	}
 
 	@keyframes checkPop {
-		0% { transform: scale(0); }
-		50% { transform: scale(1.2); }
-		100% { transform: scale(1); }
+		0% {
+			transform: scale(0);
+		}
+		50% {
+			transform: scale(1.2);
+		}
+		100% {
+			transform: scale(1);
+		}
 	}
 
 	.card-info-compact {
@@ -901,7 +916,9 @@
 		flex-shrink: 0;
 		border: 1px solid rgba(255, 255, 255, 0.1);
 		cursor: pointer;
-		transition: transform 0.2s, border-color 0.2s;
+		transition:
+			transform 0.2s,
+			border-color 0.2s;
 		padding: 0;
 	}
 
@@ -949,8 +966,13 @@
 	}
 
 	@keyframes pulse {
-		0%, 100% { opacity: 1; }
-		50% { opacity: 0.5; }
+		0%,
+		100% {
+			opacity: 1;
+		}
+		50% {
+			opacity: 0.5;
+		}
 	}
 
 	/* Card Details */
@@ -1137,8 +1159,12 @@
 	}
 
 	@keyframes fadeIn {
-		from { opacity: 0; }
-		to { opacity: 1; }
+		from {
+			opacity: 0;
+		}
+		to {
+			opacity: 1;
+		}
 	}
 
 	.preview-content {
@@ -1149,8 +1175,14 @@
 	}
 
 	@keyframes scaleIn {
-		from { transform: scale(0.9); opacity: 0; }
-		to { transform: scale(1); opacity: 1; }
+		from {
+			transform: scale(0.9);
+			opacity: 0;
+		}
+		to {
+			transform: scale(1);
+			opacity: 1;
+		}
 	}
 
 	.preview-image {

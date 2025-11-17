@@ -106,4 +106,3 @@ export const SharingAuth: Story = {
 		isAuthenticatedOverride: true
 	}
 };
-

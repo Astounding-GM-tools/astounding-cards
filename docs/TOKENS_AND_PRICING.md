@@ -18,10 +18,10 @@ This document explains how our token economy works and how to change pricing and
 ```ts
 export const NEW_USER_WELCOME_BONUS = 500; // tokens
 export const TOKEN_COSTS = {
-  IMAGE_GENERATION_COMMUNITY: 100,
-  DECK_GENERATION: 0,
-  IMAGE_GENERATION_PRIVATE: 240, // future
-  CLOUD_STORAGE_MONTHLY: 50 // future
+	IMAGE_GENERATION_COMMUNITY: 100,
+	DECK_GENERATION: 0,
+	IMAGE_GENERATION_PRIVATE: 240, // future
+	CLOUD_STORAGE_MONTHLY: 50 // future
 };
 ```
 

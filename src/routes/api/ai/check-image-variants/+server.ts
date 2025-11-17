@@ -100,10 +100,12 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 		}
 
 		// 5. Return results
-		const existingCount = Object.values(variants).filter(v => v.exists).length;
-		const needsGenerationCount = Object.values(variants).filter(v => !v.exists).length;
+		const existingCount = Object.values(variants).filter((v) => v.exists).length;
+		const needsGenerationCount = Object.values(variants).filter((v) => !v.exists).length;
 
-		console.log(`✅ Variant check complete: ${existingCount} exist, ${needsGenerationCount} need generation`);
+		console.log(
+			`✅ Variant check complete: ${existingCount} exist, ${needsGenerationCount} need generation`
+		);
 
 		return json({
 			success: true,

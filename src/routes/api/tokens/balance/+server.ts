@@ -5,7 +5,7 @@ import { getUserFromSession } from '$lib/server/auth';
 
 /**
  * GET /api/tokens/balance
- * 
+ *
  * Returns the authenticated user's token balance.
  * Tokens = credits (1:1 mapping, credits is DB term, tokens is user-facing term)
  */
@@ -34,7 +34,6 @@ export const GET: RequestHandler = async ({ request, cookies }) => {
 			balance: userData?.credits ?? 0,
 			userId
 		});
-
 	} catch (error) {
 		console.error('Token balance error:', error);
 		return json({ error: 'Internal server error' }, { status: 500 });

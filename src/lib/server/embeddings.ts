@@ -36,9 +36,7 @@ export async function generateEmbedding(text: string): Promise<number[]> {
 
 		// Verify dimensionality (should be 768)
 		if (embedding.values.length !== 768) {
-			console.warn(
-				`Unexpected embedding dimension: ${embedding.values.length} (expected 768)`
-			);
+			console.warn(`Unexpected embedding dimension: ${embedding.values.length} (expected 768)`);
 		}
 
 		return embedding.values;

@@ -43,7 +43,7 @@
 		isGenerating = true;
 		wasCached = false;
 		generationStartTime = Date.now();
-		
+
 		// Capture card data (in case user closes dialog)
 		const cardId = card.id;
 		const cardData = card;
@@ -51,7 +51,7 @@
 		const style = selectedStyle;
 		const existingImage = card.image ?? undefined;
 		const sourceImageId = card.imageMetadata?.imageId ?? null;
-		
+
 		// Set generating flag on card to show loading indicator
 		await nextDeckStore.updateCard(cardId, {
 			imageMetadata: {
@@ -59,7 +59,7 @@
 				isGenerating: true
 			}
 		});
-		
+
 		try {
 			// Get access token for Authorization header
 			const accessToken = getAccessToken();
@@ -71,14 +71,14 @@
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
-					'Authorization': `Bearer ${accessToken}`
+					Authorization: `Bearer ${accessToken}`
 				},
-			body: JSON.stringify({
-				card: cardData,
-				deckTheme: style,
-				existingImageUrl: existingImage,
-				sourceImageId: sourceImageId
-			})
+				body: JSON.stringify({
+					card: cardData,
+					deckTheme: style,
+					existingImageUrl: existingImage,
+					sourceImageId: sourceImageId
+				})
 			});
 
 			if (!response.ok) {
@@ -87,7 +87,7 @@
 			}
 
 			const data = await response.json();
-			
+
 			if (!data.success || !data.url) {
 				throw new Error('Invalid response from server');
 			}
@@ -113,21 +113,20 @@
 
 			// Calculate generation time
 			const generationTime = ((Date.now() - generationStartTime) / 1000).toFixed(1);
-			
+
 			// Show success message
 			if (data.cached) {
 				toasts.success('✨ Found existing image - no tokens charged!');
 			} else {
 				toasts.success(`✅ Image generated in ${generationTime}s! ${data.cost} tokens used`);
 			}
-			
+
 			// Close dialog after success
 			dialogStore.close();
-			
 		} catch (error) {
 			console.error('Generation error:', error);
 			toasts.error(error instanceof Error ? error.message : 'Failed to generate image');
-			
+
 			// Clear generating flag on error
 			await nextDeckStore.updateCard(cardId, {
 				imageMetadata: {
@@ -135,7 +134,7 @@
 					isGenerating: false
 				}
 			});
-			
+
 			isGenerating = false; // Allow retry
 		}
 	}
@@ -167,7 +166,10 @@
 				<div class="info-box">
 					<p><strong>✓ Generation started</strong></p>
 					<p>Expected time: ~20-30 seconds</p>
-					<p class="safe-notice">💡 Safe to close this dialog or even the browser tab - your image will be generated and saved automatically!</p>
+					<p class="safe-notice">
+						💡 Safe to close this dialog or even the browser tab - your image will be generated and
+						saved automatically!
+					</p>
 				</div>
 			</div>
 		{:else}
@@ -179,60 +181,60 @@
 				{/if}
 			</div>
 
-		<!-- Image Style Selector -->
-		<div class="form-group">
-			<label for="imageStyle">Image Style</label>
-			<select id="imageStyle" bind:value={selectedStyle}>
-				{#each imageStyles as style}
-					<option value={style.id}>
-						{style.name}
-						{#if style.id === deckImageStyle}(Deck Default){/if}
-					</option>
-				{/each}
-			</select>
-			<p class="help-text">{imageStyles.find((s) => s.id === selectedStyle)?.description}</p>
-		</div>
-
-		<!-- Existing Image Notice -->
-		{#if card.image}
-			<div class="notice">
-				ℹ️ This card has an existing image. It will be used as a style reference for the new
-				generation.
+			<!-- Image Style Selector -->
+			<div class="form-group">
+				<label for="imageStyle">Image Style</label>
+				<select id="imageStyle" bind:value={selectedStyle}>
+					{#each imageStyles as style}
+						<option value={style.id}>
+							{style.name}
+							{#if style.id === deckImageStyle}(Deck Default){/if}
+						</option>
+					{/each}
+				</select>
+				<p class="help-text">{imageStyles.find((s) => s.id === selectedStyle)?.description}</p>
 			</div>
-		{/if}
 
-		<!-- Community Generation Info (when logged in) -->
-		{#if isUserAuthenticated}
-			<div class="community-info">
-				<div class="info-header">
-					<span class="icon">🌐</span>
-					<strong>Community Generation</strong>
+			<!-- Existing Image Notice -->
+			{#if card.image}
+				<div class="notice">
+					ℹ️ This card has an existing image. It will be used as a style reference for the new
+					generation.
 				</div>
-				<ul class="benefits">
-					<li>✨ AI-generated artwork for <strong>100 tokens (1 NOK)</strong></li>
-					<li>📚 Image added to shared library for all members</li>
-					<li>🔓 Browse & reuse community images for free</li>
-				</ul>
-				
-				<!-- Token Balance & Affordability -->
-				<div class="token-balance" class:insufficient={!canAffordGeneration}>
-					{#if canAffordGeneration}
-						<p>
-							Generating this image will cost <strong>{generationCost} tokens</strong>
-							(you have <strong>{formatTokenBalance(userTokenBalance)}</strong> ✅)
-						</p>
-					{:else}
-						<p>
-							Generating this image will cost <strong>{generationCost} tokens</strong>
-							(you have <strong>{formatTokenBalance(userTokenBalance)}</strong> ❌)
-						</p>
-						<button class="buy-tokens-btn" onclick={() => console.log('Buy tokens')}>
-							💰 Buy More Tokens
-						</button>
-					{/if}
+			{/if}
+
+			<!-- Community Generation Info (when logged in) -->
+			{#if isUserAuthenticated}
+				<div class="community-info">
+					<div class="info-header">
+						<span class="icon">🌐</span>
+						<strong>Community Generation</strong>
+					</div>
+					<ul class="benefits">
+						<li>✨ AI-generated artwork for <strong>100 tokens (1 NOK)</strong></li>
+						<li>📚 Image added to shared library for all members</li>
+						<li>🔓 Browse & reuse community images for free</li>
+					</ul>
+
+					<!-- Token Balance & Affordability -->
+					<div class="token-balance" class:insufficient={!canAffordGeneration}>
+						{#if canAffordGeneration}
+							<p>
+								Generating this image will cost <strong>{generationCost} tokens</strong>
+								(you have <strong>{formatTokenBalance(userTokenBalance)}</strong> ✅)
+							</p>
+						{:else}
+							<p>
+								Generating this image will cost <strong>{generationCost} tokens</strong>
+								(you have <strong>{formatTokenBalance(userTokenBalance)}</strong> ❌)
+							</p>
+							<button class="buy-tokens-btn" onclick={() => console.log('Buy tokens')}>
+								💰 Buy More Tokens
+							</button>
+						{/if}
+					</div>
 				</div>
-			</div>
-		{/if}
+			{/if}
 
 			<!-- Auth Gate (not logged in) -->
 			{#if !isUserAuthenticated}
@@ -246,12 +248,18 @@
 
 	<div class="footer">
 		{#if isGenerating}
-			<button class="secondary-button" onclick={() => dialogStore.close()}>Close & Continue Generation</button>
+			<button class="secondary-button" onclick={() => dialogStore.close()}
+				>Close & Continue Generation</button
+			>
 		{:else}
 			{#if card.image}
 				<button class="secondary-button" onclick={removeImage}>Remove Image</button>
 			{/if}
-			<button class="primary-button" onclick={generateImage} disabled={!canGenerate || isGenerating}>
+			<button
+				class="primary-button"
+				onclick={generateImage}
+				disabled={!canGenerate || isGenerating}
+			>
 				🌐 Generate & Share (100 tokens)
 			</button>
 		{/if}

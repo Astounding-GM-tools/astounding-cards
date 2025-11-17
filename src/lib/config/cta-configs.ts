@@ -1,6 +1,6 @@
 /**
  * CTA Button Configurations
- * 
+ *
  * Defines different call-to-action scenarios for auth-gated features.
  * Each config specifies the button text and behavior for both authenticated and unauthenticated states.
  */
@@ -8,7 +8,7 @@
 export type CtaConfig = {
 	/** Unique identifier for this CTA scenario */
 	id: string;
-	
+
 	/** Configuration for unauthenticated users */
 	unauthenticated: {
 		/** Primary button text (bold) */
@@ -23,7 +23,7 @@ export type CtaConfig = {
 			description: string;
 		};
 	};
-	
+
 	/** Configuration for authenticated users */
 	authenticated: {
 		/** Primary button text (bold) */
@@ -43,7 +43,8 @@ export const IMAGE_GENERATION_CTA: CtaConfig = {
 		subtitle: 'Free account unlocks AI & library',
 		authGate: {
 			featureName: 'AI Image Generation',
-			description: 'Generate stunning card artwork with AI or browse our premium image library. Create a free account to unlock these exclusive features!'
+			description:
+				'Generate stunning card artwork with AI or browse our premium image library. Create a free account to unlock these exclusive features!'
 		}
 	},
 	authenticated: {
@@ -63,7 +64,8 @@ export const DECK_GENERATION_CTA: CtaConfig = {
 		subtitle: 'Fast & easy - sign up',
 		authGate: {
 			featureName: 'Automatic Deck Generation',
-			description: 'Create complete themed decks in seconds. Define your theme and automatically generate unique cards with stats and mechanics. Fast, easy, and affordable!'
+			description:
+				'Create complete themed decks in seconds. Define your theme and automatically generate unique cards with stats and mechanics. Fast, easy, and affordable!'
 		}
 	},
 	authenticated: {
@@ -82,7 +84,8 @@ export const CLOUD_SYNC_CTA: CtaConfig = {
 		subtitle: 'Free account enables cloud sync',
 		authGate: {
 			featureName: 'Cloud Sync',
-			description: 'Sync your decks across devices and never lose your work. Access your collection from anywhere with a free account.'
+			description:
+				'Sync your decks across devices and never lose your work. Access your collection from anywhere with a free account.'
 		}
 	},
 	authenticated: {
@@ -101,7 +104,8 @@ export const SHARING_CTA: CtaConfig = {
 		subtitle: 'Free account unlocks sharing',
 		authGate: {
 			featureName: 'Deck Sharing',
-			description: 'Share your custom decks with the community or collaborate with friends. Get feedback and discover amazing creations from other creators.'
+			description:
+				'Share your custom decks with the community or collaborate with friends. Get feedback and discover amazing creations from other creators.'
 		}
 	},
 	authenticated: {

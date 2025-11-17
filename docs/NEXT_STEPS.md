@@ -8,6 +8,7 @@
 ## What's Already Done ✅
 
 ### Token Economy (Complete)
+
 - Token balance API: `/api/tokens/balance`, `/api/tokens/dev-add`
 - Welcome bonus: 500 tokens via DB trigger (`grant_welcome_bonus()`)
 - Token costs config: `src/lib/config/token-costs.ts`
@@ -15,6 +16,7 @@
 - Database: `users.credits`, `transactions` table
 
 ### Community Image Library Schema (Complete)
+
 - Database table: `community_images` with pgvector
 - Remix tracking: `source_image_id` for style variants
 - Vector embeddings: 768-dim for semantic search (originals only)
@@ -22,6 +24,7 @@
 - Migration: `supabase/migrations/002_community_images.sql`
 
 ### Server-Side AI Generation ✅ COMPLETE
+
 - `/api/ai/generate-image` - Full 12-step flow implemented
 - ✅ Authentication required (Authorization header support)
 - ✅ Remix detection (returns cached results, 0 cost)
@@ -32,6 +35,7 @@
 - ⚠️ Embeddings temporarily disabled (API format needs fixing)
 
 ### Strategic Decisions
+
 - ❌ No user-uploaded images (copyright/liability)
 - ✅ AI-generated only (safe, controlled)
 - ✅ R2-only style references (no external images)
@@ -49,6 +53,7 @@
 **Status**: DONE - All features implemented except embeddings
 
 **Completed features**:
+
 - ✅ Remix detection via `find_image_remix()`
 - ✅ R2 upload with public URLs
 - ✅ Database save to `community_images`
@@ -58,6 +63,7 @@
 - ⚠️ Embeddings (temporarily disabled - API format needs fixing)
 
 **Created files**:
+
 - `src/lib/server/embeddings.ts` - Embedding helper (needs API format fix)
 - `src/lib/server/auth.ts` - Session validation with Authorization header support
 - `src/routes/api/auth/create-user/+server.ts` - Auto-create user on signup
@@ -72,6 +78,7 @@
 **Purpose**: Search for similar images by card content
 
 **Flow**:
+
 1. Accept card data (title, subtitle, description, traits)
 2. Generate optimized prompt (same as image generation Step 1)
 3. Generate embedding of optimized prompt
@@ -79,6 +86,7 @@
 5. Return results with all style variants
 
 **Request**:
+
 ```typescript
 POST /api/images/search
 {
@@ -89,20 +97,21 @@ POST /api/images/search
 ```
 
 **Response**:
+
 ```typescript
 {
-  results: [
-    {
-      originalId: uuid,
-      originalUrl: string,
-      originalStyle: 'classic',
-      similarity: 0.89,
-      variants: [
-        { id: uuid, url: string, style: 'inked' },
-        { id: uuid, url: string, style: 'modern' }
-      ]
-    }
-  ]
+	results: [
+		{
+			originalId: uuid,
+			originalUrl: string,
+			originalStyle: 'classic',
+			similarity: 0.89,
+			variants: [
+				{ id: uuid, url: string, style: 'inked' },
+				{ id: uuid, url: string, style: 'modern' }
+			]
+		}
+	];
 }
 ```
 
@@ -122,6 +131,7 @@ POST /api/images/search
 **Status**: CardEditDialog integrated with new server-side API
 
 **Completed**:
+
 - ✅ Removed BYOK components (ApiKeyInput, AiImageGenerator)
 - ✅ Added AuthGatedCtaButton with IMAGE_GENERATION_CTA config
 - ✅ Opens AiImageGenerationDialog with current card data
@@ -132,10 +142,12 @@ POST /api/images/search
 - ✅ Refreshes token balance after generation
 
 **Remaining**:
+
 - ⏳ BatchImageGenerationDialog integration (deck-level generation)
 - ⏳ Remove unused BYOK components from codebase
 
 **Optional enhancement**: Add image search before generation
+
 - "Before generating, search for similar images?"
 - Show results, let user choose existing or generate new
 
@@ -148,6 +160,7 @@ POST /api/images/search
 **File**: `src/lib/ai/prompts/content-moderation.ts` (create new)
 
 **What's needed**:
+
 1. Text-only moderation (no image moderation - Gemini handles that)
 2. Block/warn/allow classification
 3. Category and tag extraction
@@ -160,6 +173,7 @@ POST /api/images/search
 **File**: `src/routes/api/deck/publish/+server.ts`
 
 **Flow**:
+
 1. Accept deck data with image URLs (from community_images)
 2. Run text moderation
 3. Save to `published_decks` table
@@ -170,11 +184,13 @@ POST /api/images/search
 ## Key Information
 
 ### Economics
+
 - **Gemini image**: ~0.04 NOK cost → charge 100 tokens (1 NOK) → **96% margin**
 - **Gemini embedding**: ~0.00005 NOK (negligible)
 - **Breakeven**: ~50 images/month (covers $25 Supabase Pro)
 
 ### Important Files
+
 - `src/lib/config/token-costs.ts` - Pricing constants
 - `src/lib/config/cta-configs.ts` - CTA button configs
 - `src/lib/next/stores/tokenBalance.ts` - Token balance store
@@ -185,6 +201,7 @@ POST /api/images/search
 - `docs/PHASE_1B_PLAN.md` - Overall plan
 
 ### Test Commands
+
 ```bash
 # Dev: Add tokens to yourself
 await fetch('/api/tokens/dev-add', {

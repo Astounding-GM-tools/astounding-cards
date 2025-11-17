@@ -9,11 +9,11 @@
 
 	// Initialize Vercel Web Analytics
 	inject();
-	
+
 	// Expose dev helpers to browser console
 	onMount(() => {
 		if (typeof window === 'undefined') return;
-		
+
 		// Define helpers
 		window.devHelpers = {
 			async addTokens(amount: number) {
@@ -55,9 +55,12 @@
 				}
 			}
 		};
-		
+
 		// Show hints in console
-		console.log('%c🛠️ Dev Helpers Available', 'font-weight: bold; font-size: 14px; color: #059669;');
+		console.log(
+			'%c🛠️ Dev Helpers Available',
+			'font-weight: bold; font-size: 14px; color: #059669;'
+		);
 		console.log('%cAdd tokens:', 'font-weight: bold;', 'await window.devHelpers.addTokens(1000)');
 		console.log('%cCheck balance:', 'font-weight: bold;', 'await window.devHelpers.checkBalance()');
 	});

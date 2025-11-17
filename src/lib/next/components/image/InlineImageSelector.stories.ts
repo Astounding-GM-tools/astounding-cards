@@ -26,7 +26,7 @@ export const NoImage: Story = {
 		},
 		onGenerateImage: () => {
 			console.log('Generate AI image clicked');
-		},
+		}
 	}
 };
 
@@ -50,7 +50,7 @@ export const WithUploadedImage: Story = {
 		},
 		onToggleLock: (locked) => {
 			console.log('Lock toggled:', locked);
-		},
+		}
 	}
 };
 
@@ -74,7 +74,7 @@ export const WithDownloadedImage: Story = {
 		},
 		onToggleLock: (locked) => {
 			console.log('Lock toggled:', locked);
-		},
+		}
 	}
 };
 
@@ -98,7 +98,7 @@ export const LockedImage: Story = {
 		},
 		onToggleLock: (locked) => {
 			console.log('Lock toggled:', locked);
-		},
+		}
 	}
 };
 
@@ -109,7 +109,7 @@ export const NotAuthenticated: Story = {
 		hasExistingImage: false,
 		onGenerateImage: () => {
 			console.log('Generate AI image clicked');
-		},
+		}
 	}
 };
 
@@ -128,7 +128,7 @@ export const AddImageEncouragement: Story = {
 		},
 		onGenerateImage: () => {
 			console.log('Generate AI image clicked');
-		},
+		}
 	}
 };
 
@@ -152,6 +152,6 @@ export const ReadyToSave: Story = {
 		},
 		onToggleLock: (locked) => {
 			console.log('Lock toggled:', locked);
-		},
+		}
 	}
 };
