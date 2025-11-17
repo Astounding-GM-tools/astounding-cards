@@ -27,8 +27,6 @@ import {
 	ART_STYLES,
 	createPromptOptimizationRequest
 } from '$lib/ai/prompts/image-generation';
-// Reference image URL (served from static folder)
-const LAYOUT_REFERENCE_URL = '/card-layout-reference.png';
 
 export const POST: RequestHandler = async ({ request, cookies }) => {
 	try {
@@ -214,40 +212,19 @@ Visual prompt: ${optimizedPrompt}`;
 			}
 		}
 
-		// Add card layout reference (always included, always last)
-		try {
-			console.log('📐 Fetching layout reference for aspect ratio guidance...');
-			const origin = request.headers.get('origin') || 'http://localhost:5173';
-			const referenceUrl = `${origin}${LAYOUT_REFERENCE_URL}`;
-			const refResponse = await fetch(referenceUrl);
-			
-			if (refResponse.ok) {
-				const refBuffer = await refResponse.arrayBuffer();
-				const refBase64 = Buffer.from(refBuffer).toString('base64');
-				
-				contentParts.push({
-					inlineData: {
-						mimeType: 'image/png',
-						data: refBase64
-					}
-				});
-				console.log('✅ Added layout reference for 5:7 aspect ratio guidance');
-			} else {
-				console.warn('⚠️ Failed to fetch layout reference, continuing without it');
-			}
-		} catch (err) {
-			console.warn('⚠️ Error fetching layout reference:', err);
-			// Continue without it - not critical but images may be square
-		}
-
-		// Generate the image with multi-part context
+		// Generate the image with multi-part context and aspect ratio config
 		const imageResponse = await ai.models.generateContent({
 			model: AI_CONFIGS.IMAGE_GENERATION.model,
 			contents: contentParts,
 			config: {
-				temperature: AI_CONFIGS.IMAGE_GENERATION.temperature
+				temperature: AI_CONFIGS.IMAGE_GENERATION.temperature,
+				aspectRatio: AI_CONFIGS.IMAGE_GENERATION.aspectRatio,
+				outputFormat: AI_CONFIGS.IMAGE_GENERATION.outputFormat,
+				quality: AI_CONFIGS.IMAGE_GENERATION.quality
 			}
 		});
+		
+		console.log('📐 Using 5:7 aspect ratio configuration (no reference image needed)');
 
 		// Extract image data from response (matches client-side format)
 		const imageData = imageResponse.candidates?.[0]?.content?.parts?.find(
