@@ -90,7 +90,17 @@
 	// Progress tracking with estimated time (needs cardsNeedingGeneration defined first)
 	const estimatedTimeSeconds = $derived(isGenerating ? 20 + cardsNeedingGeneration * 2 : 0);
 
-	// Cost calculation
+	// Progress percentage with ease-out in last 5 seconds (cap at 95% until complete)
+	const progressPercentage = $derived(() => {
+		if (!isGenerating || estimatedTimeSeconds === 0) return 0;
+		const ratio = generationElapsedSeconds / estimatedTimeSeconds;
+		// If we're in the last 5 seconds (ratio > 0.75), ease out to max 95%
+		if (ratio > 0.75) {
+			const remaining = 1 - ratio;
+			return Math.min(95, ratio * 100);
+		}
+		return Math.min(100, ratio * 100);
+	});
 	const costPerImage = TOKEN_COSTS.IMAGE_GENERATION_COMMUNITY;
 	const totalCost = $derived(cardsNeedingGeneration * costPerImage);
 	const userTokenBalance = $derived($tokenAmount);
@@ -357,14 +367,12 @@
 			const generated = result.results.filter((r: any) => !r.cached).length;
 			const cached = result.results.filter((r: any) => r.cached).length;
 
+			// Close dialog and show success toast
+			isGenerating = false;
+			dialogStore.close();
 			toasts.success(
 				`✅ Batch generation complete in ${elapsedTime}s! Generated: ${generated}, Cached: ${cached} (${result.totalCost} tokens)`
 			);
-
-			// Show completion state briefly before allowing close
-			setTimeout(() => {
-				isGenerating = false;
-			}, 1500);
 		} catch (error) {
 			console.error('Batch generation error:', error);
 			toasts.error(error instanceof Error ? error.message : 'Failed to generate images');
@@ -389,17 +397,10 @@
 			<!-- Generating State - Show selection UI with progress overlay -->
 			<div class="generation-progress-overlay">
 				<div class="progress-info">
-					<div class="progress-icon">⚙️</div>
 					<h3>Generating Images...</h3>
 					<p>This may take a moment. It's safe to close this window.</p>
 					<div class="progress-bar-container">
-						<div
-							class="progress-bar"
-							style="width: {Math.min(
-								100,
-								(generationElapsedSeconds / estimatedTimeSeconds) * 100
-							)}%"
-						></div>
+						<div class="progress-bar" style="width: {progressPercentage}%"></div>
 					</div>
 					<p class="progress-time">
 						{generationElapsedSeconds}s / ~{estimatedTimeSeconds}s
@@ -687,30 +688,27 @@
 	}
 
 	.progress-info {
-		background: rgba(255, 255, 255, 0.1);
-		border: 2px solid rgba(255, 255, 255, 0.2);
+		background: rgba(0, 0, 0, 0.9);
+		border: 2px solid rgba(255, 255, 255, 0.3);
 		border-radius: 12px;
 		padding: 32px;
 		text-align: center;
 		max-width: 400px;
-	}
-
-	.progress-icon {
-		font-size: 64px;
-		margin-bottom: 16px;
-		opacity: 0.8;
+		color: white;
 	}
 
 	.progress-info h3 {
-		margin: 0 0 8px 0;
+		margin: 0 0 12px 0;
 		font-size: 20px;
 		font-weight: 600;
+		color: white;
 	}
 
 	.progress-info p {
 		margin: 0 0 24px 0;
-		opacity: 0.8;
+		opacity: 0.9;
 		font-size: 14px;
+		color: white;
 	}
 
 	.progress-bar-container {
@@ -733,7 +731,8 @@
 		margin: 0 !important;
 		font-size: 13px;
 		font-family: monospace;
-		opacity: 0.6;
+		opacity: 0.7;
+		color: rgba(255, 255, 255, 0.8);
 	}
 
 	/* Main content - disabled during generation */
