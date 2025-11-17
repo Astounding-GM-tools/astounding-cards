@@ -28,6 +28,27 @@ import {
 	createPromptOptimizationRequest
 } from '$lib/ai/prompts/image-generation';
 
+// Cache the reference image in memory (fetched once on first use)
+let cachedReferenceBase64: string | null = null;
+const LAYOUT_REFERENCE_URL = '/card-layout-reference.png';
+
+async function getReferenceImage(origin: string): Promise<string> {
+	if (cachedReferenceBase64) {
+		return cachedReferenceBase64;
+	}
+
+	const referenceUrl = `${origin}${LAYOUT_REFERENCE_URL}`;
+	const response = await fetch(referenceUrl);
+	if (!response.ok) {
+		throw new Error('Failed to fetch reference image');
+	}
+
+	const buffer = await response.arrayBuffer();
+	cachedReferenceBase64 = Buffer.from(buffer).toString('base64');
+	console.log('✅ Cached reference image in memory (350×490, 5.3KB, ~$0.001/generation)');
+	return cachedReferenceBase64;
+}
+
 export const POST: RequestHandler = async ({ request, cookies }) => {
 	try {
 		// 1. Authenticate user
@@ -212,18 +233,26 @@ Visual prompt: ${optimizedPrompt}`;
 			}
 		}
 
-		// Generate the image with multi-part context and aspect ratio config
-		const generationConfig = {
-			temperature: AI_CONFIGS.IMAGE_GENERATION.temperature,
-			imageConfig: {
-				aspectRatio: AI_CONFIGS.IMAGE_GENERATION.aspectRatio,
-				outputFormat: AI_CONFIGS.IMAGE_GENERATION.outputFormat,
-				quality: AI_CONFIGS.IMAGE_GENERATION.quality
-			}
-		};
+		// Add reference image for aspect ratio guidance (cached in memory, ~$0.001 cost)
+		try {
+			const origin = request.headers.get('origin') || 'http://localhost:5173';
+			const refBase64 = await getReferenceImage(origin);
+			
+			contentParts.push({
+				inlineData: {
+					mimeType: 'image/png',
+					data: refBase64
+				}
+			});
+			console.log('📐 Added 2:3 reference image for aspect ratio guidance');
+		} catch (err) {
+			console.warn('⚠️ Could not load reference image, continuing without it:', err);
+		}
 		
-		console.log(`📐 Attempting ${AI_CONFIGS.IMAGE_GENERATION.aspectRatio} aspect ratio (${AI_CONFIGS.IMAGE_GENERATION.resolution})`);
-		console.log('🔍 Config being sent:', JSON.stringify(generationConfig, null, 2));
+		// Generate the image (keeping config for future compatibility)
+		const generationConfig = {
+			temperature: AI_CONFIGS.IMAGE_GENERATION.temperature
+		};
 		
 		const imageResponse = await ai.models.generateContent({
 			model: AI_CONFIGS.IMAGE_GENERATION.model,
