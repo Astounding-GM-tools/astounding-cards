@@ -90,8 +90,15 @@
 </script>
 
 {#if open}
-	<div class="dialog-backdrop" onclick={() => (open = false)}>
-		<div class="dialog" onclick={(e) => e.stopPropagation()}>
+	<div
+		class="dialog-backdrop"
+		onclick={() => (open = false)}
+		onkeydown={(e) => e.key === 'Escape' && (open = false)}
+		role="button"
+		tabindex="0"
+		aria-label="Close dialog"
+	>
+		<div class="dialog" onclick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
 			<div class="dialog-header">
 				<h2>
 					{#if mode === 'sign-in'}

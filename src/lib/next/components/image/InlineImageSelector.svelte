@@ -42,8 +42,8 @@
 		  }
 		| undefined;
 
-	let fileInput: HTMLInputElement;
-	let urlInput: HTMLInputElement;
+	let fileInput = $state<HTMLInputElement>();
+	let urlInput = $state<HTMLInputElement>();
 	let state = $state<ImageSelectorState>(initializeImageSelectorState());
 
 	async function handleFile(event: Event) {

@@ -604,8 +604,15 @@
 
 <!-- Image Preview Dialog -->
 {#if previewImageUrl}
-	<div class="preview-overlay" onclick={() => previewImageUrl = null}>
-		<div class="preview-content" onclick={(e) => e.stopPropagation()}>
+	<div
+		class="preview-overlay"
+		onclick={() => previewImageUrl = null}
+		onkeydown={(e) => e.key === 'Escape' && (previewImageUrl = null)}
+		role="button"
+		tabindex="0"
+		aria-label="Close preview"
+	>
+		<div class="preview-content" onclick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
 			<button class="preview-close" onclick={() => previewImageUrl = null}>×</button>
 			<img src={previewImageUrl} alt="Preview" class="preview-image" />
 		</div>
@@ -783,19 +790,6 @@
 		max-width: 100%;
 	}
 
-	.info-box {
-		background: rgba(255, 255, 255, 0.05);
-		border-radius: 8px;
-		padding: 16px;
-		width: 100%;
-		max-width: 400px;
-	}
-
-	.info-box p {
-		margin: 8px 0;
-		font-size: 14px;
-	}
-
 	.safe-notice {
 		margin-top: 16px !important;
 		padding-top: 16px;
@@ -911,19 +905,9 @@
 		padding: 0;
 	}
 
-	.image-thumb:hover:not(.loading):not(.empty):not(.placeholder) {
+	.image-thumb:hover:not(.loading):not(.text-placeholder) {
 		transform: scale(1.1);
 		border-color: rgba(34, 197, 94, 0.5);
-	}
-
-	.image-thumb.empty,
-	.image-thumb.placeholder {
-		cursor: default;
-		opacity: 0.5;
-	}
-
-	.image-thumb.placeholder {
-		border-style: dashed;
 	}
 
 	.image-thumb.text-placeholder {
@@ -951,11 +935,6 @@
 		object-fit: cover;
 	}
 
-	.placeholder-icon {
-		font-size: 20px;
-		opacity: 0.3;
-	}
-
 	.placeholder-text {
 		font-size: 9px;
 		text-align: center;
@@ -972,11 +951,6 @@
 	@keyframes pulse {
 		0%, 100% { opacity: 1; }
 		50% { opacity: 0.5; }
-	}
-
-	.empty-icon {
-		font-size: 24px;
-		opacity: 0.3;
 	}
 
 	/* Card Details */
