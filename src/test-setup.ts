@@ -2,7 +2,7 @@
 import { vi } from 'vitest';
 
 // Mock crypto.randomUUID for consistent testing
-Object.defineProperty(global, 'crypto', {
+Object.defineProperty(window, 'crypto', {
 	value: {
 		randomUUID: vi.fn(() => 'test-uuid-1234-5678-90ab-cdef')
 	}

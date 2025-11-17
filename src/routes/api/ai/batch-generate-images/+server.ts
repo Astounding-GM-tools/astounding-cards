@@ -25,17 +25,6 @@ import {
 	ART_STYLES,
 	createPromptOptimizationRequest
 } from '$lib/ai/prompts/image-generation';
-import { readFileSync } from 'fs';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-// Load static layout reference PNG
-const LAYOUT_REFERENCE_BASE64 = readFileSync(
-	join(__dirname, '../../../../../static/card-layout-reference.png')
-).toString('base64');
 
 const STAGGER_DELAY = 2000; // 2 seconds between generation requests
 
@@ -227,15 +216,16 @@ Art style: ${selectedArtStyle}
 
 Visual prompt: ${optimizedPrompt}`;
 
-				const contentParts: any[] = [
-					{ text: artStyleInstructions },
-					{
-						inlineData: {
-							mimeType: 'image/png',
-							data: LAYOUT_REFERENCE_BASE64
-						}
+			// Add nano reference image for portrait aspect ratio (5x7, 1KB)
+			const contentParts: any[] = [
+				{ text: artStyleInstructions },
+				{
+					inlineData: {
+						mimeType: 'image/png',
+						data: REFERENCE_IMAGE_BASE64
 					}
-				];
+				}
+			];
 
 				const imageResponse = await ai.models.generateContent({
 					model: AI_CONFIGS.IMAGE_GENERATION.model,

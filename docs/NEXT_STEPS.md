@@ -5,6 +5,33 @@
 
 ---
 
+## Recent Updates (2025-11-17)
+
+### Image Aspect Ratio Investigation ⚠️
+
+**Status**: Investigated thoroughly - Gemini 2.5 limitation documented
+
+**What we tried**:
+- ✅ Switched from `gemini-2.5-flash-image-preview` to stable `gemini-2.5-flash-image`
+- ❌ API `aspectRatio` config parameter - completely ignored by model
+- ❌ Reference images (350×490, 50×70, 5×7) - inconsistently applied
+- ❌ Explicit "PORTRAIT" prompt instructions - inconsistent results
+- ✅ Created comprehensive test suite (`src/lib/ai/imageGeneration.test.ts`)
+
+**Result**: ~20% portrait success rate in production (vs 100% in isolated tests)
+
+**Decision**: Documented limitation, created GitHub issue #17 for future follow-up
+
+**Files**:
+- `src/lib/ai/config/models.ts` - Switched to stable model
+- `src/lib/ai/assets/referenceImage.ts` - Optimized 50×70 reference (77% smaller)
+- `src/lib/ai/imageGeneration.test.ts` - Test suite with API integration tests
+- `vitest.api.config.ts` - Separate config for API tests
+
+**Conclusion**: Gemini 2.5's aspect ratio control is unreliable. Monitor API updates for improvements.
+
+---
+
 ## What's Already Done ✅
 
 ### Token Economy (Complete)

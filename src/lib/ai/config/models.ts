@@ -7,7 +7,7 @@
 export const AI_MODELS = {
 	GEMINI_FLASH: 'gemini-2.0-flash-001',
 	GEMINI_PRO: 'gemini-1.5-pro',
-	GEMINI_FLASH_IMAGE: 'gemini-2.5-flash-image-preview' // Gemini's native image generation
+	GEMINI_FLASH_IMAGE: 'gemini-2.5-flash-image' // Stable version (was -preview)
 } as const;
 
 export const AI_CONFIGS = {

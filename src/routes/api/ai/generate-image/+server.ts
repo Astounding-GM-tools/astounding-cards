@@ -178,7 +178,9 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 		// Select art style based on theme
 		const selectedArtStyle = ART_STYLES[deckTheme as keyof typeof ART_STYLES] || ART_STYLES.classic;
 
-		const artStyleInstructions = `${IMAGE_GENERATION_CONTEXT}
+	const artStyleInstructions = `${IMAGE_GENERATION_CONTEXT}
+
+IMPORTANT: Generate in PORTRAIT orientation (taller than wide), approximately 2:3 aspect ratio.
 
 Art style: ${selectedArtStyle}
 
@@ -210,17 +212,18 @@ Visual prompt: ${optimizedPrompt}`;
 			} catch (err) {
 				console.warn('⚠️ Error fetching existing image:', err);
 				// Continue without the image - not critical
-			}
 		}
+	}
 
-		// Add pre-encoded reference image for aspect ratio guidance (~$0.001 cost)
-		contentParts.push({
-			inlineData: {
-				mimeType: 'image/png',
-				data: REFERENCE_IMAGE_BASE64
-			}
-		});
-		console.log('📐 Added tiny 2:3 reference image (50×70, 472 bytes, ~$0.0001 cost)');
+	// Add pre-encoded nano reference image for portrait aspect ratio
+	// 5x7 pixels, 1KB, costs ~$0.0002 per generation
+	contentParts.push({
+		inlineData: {
+			mimeType: 'image/png',
+			data: REFERENCE_IMAGE_BASE64
+		}
+	});
+	console.log('📐 Added nano reference image (5×7, 1KB, 81% smaller!)');
 		
 		// Generate the image (keeping config for future compatibility)
 		const generationConfig = {
