@@ -3,6 +3,9 @@
 	import { goto } from '$app/navigation';
 	import { toasts } from '$lib/stores/toast.js';
 	import { nextDeckStore } from '$lib/next/stores/deckStore.svelte.js';
+	import { nextDb } from '$lib/next/stores/database.js';
+	import { generateId } from '$lib/next/utils/idUtils.js';
+	import type { Deck } from '$lib/next/types/deck.js';
 
 	// State
 	let decks = $state<any[]>([]);
@@ -123,22 +126,33 @@
 
 			// Create new local deck with imported data
 			const importedTitle = `${fullDeck.title} (Imported)`;
-			const success = await nextDeckStore.createDeck(importedTitle, {
-				theme: fullDeck.theme,
+			const now = Date.now();
+
+			// Create complete deck object
+			const newDeck: Deck = {
+				id: generateId(),
+				meta: {
+					title: importedTitle,
+					theme: fullDeck.theme,
+					imageStyle: fullDeck.imageStyle || 'classic',
+					layout: fullDeck.layout || 'tarot',
+					lastEdited: now,
+					createdAt: now
+				},
 				cards: fullDeck.cards
-			});
+			};
 
-			if (success) {
-				// Increment import count
-				await fetch(`/api/decks/${deck.id}/import`, {
-					method: 'POST'
-				});
+			// Save to database
+			await nextDb.upsertDeck(newDeck);
 
-				toasts.success(`✅ Deck imported! Now editing "${importedTitle}"`);
-				goto('/next');
-			} else {
-				throw new Error('Failed to create deck');
-			}
+			// Load the new deck in the store
+			await nextDeckStore.loadDeck(newDeck.id);
+
+			// Increment import count (fire and forget)
+			fetch(`/api/decks/${deck.id}/import`, { method: 'POST' }).catch(() => {});
+
+			toasts.success(`✅ Deck imported! Now editing "${importedTitle}"`);
+			goto('/next');
 		} catch (err) {
 			console.error('Import error:', err);
 			toasts.error(err instanceof Error ? err.message : 'Failed to import deck');
