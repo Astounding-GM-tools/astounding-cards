@@ -63,6 +63,8 @@ export const GET: RequestHandler = async ({ params }) => {
 				title: deck.title,
 				description: deck.description,
 				theme: deck.theme,
+				imageStyle: deck.image_style || 'classic',
+				layout: deck.layout || 'tarot',
 				cards: deck.cards,
 				tags: deck.tags,
 				is_featured: deck.is_featured,

@@ -4,7 +4,7 @@ import type { PageLoad } from './$types';
 export const prerender = false;
 
 export const load: PageLoad = async ({ params, url, fetch }) => {
-	// Check if this is a curated deck request
+	// Check if this is a curated deck request (legacy support)
 	const curatedId = url.searchParams.get('curated');
 
 	if (curatedId) {
@@ -25,7 +25,22 @@ export const load: PageLoad = async ({ params, url, fetch }) => {
 		}
 	}
 
-	// No curated deck, return just the slug
+	// Try to fetch published deck by slug (using /api/deck which handles both ID and slug)
+	try {
+		const response = await fetch(`/api/deck/${params.slug}`);
+		if (response.ok) {
+			const data = await response.json();
+			return {
+				slug: params.slug,
+				curatedDeck: data.deck,
+				curatedId: data.deck.id
+			};
+		}
+	} catch (error) {
+		console.error('Failed to load published deck:', error);
+	}
+
+	// No deck found, return just the slug (will show URL hash data if present)
 	return {
 		slug: params.slug,
 		curatedDeck: null,
