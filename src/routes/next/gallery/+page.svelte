@@ -18,7 +18,7 @@
 
 	// Available themes and common tags
 	const themes = ['classic', 'modern', 'inked', 'cyberpunk', 'fantasy'];
-	const commonTags = $state<string[]>([]);
+	let commonTags = $state<string[]>([]);
 
 	// Load decks
 	async function loadDecks(append = false) {
