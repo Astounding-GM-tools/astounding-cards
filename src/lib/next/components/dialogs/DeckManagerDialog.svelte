@@ -8,7 +8,10 @@
 	import BinaryToggle from '../ui/BinaryToggle.svelte';
 	import { formatTime } from '$lib/next/utils/dateUtils.js';
 	import AiDeckGenerationDialog from './AiDeckGenerationDialog.svelte';
+	import PublishDeckDialog from './PublishDeckDialog.svelte';
 	import type { Deck } from '$lib/next/types/deck.js';
+	import { isAuthenticated } from '$lib/next/stores/auth.js';
+	import { getAuthHeaders } from '$lib/utils/auth-helpers.js';
 
 	// Local state
 	let availableDecks = $state<Deck[]>([]);
@@ -23,6 +26,8 @@
 	let editingDeckName = $state('');
 	let isDuplicating = $state(false);
 	let exportComplete = $state(false); // false = Light, true = Complete
+	// Track published status for each deck
+	let publishedDecks = $state<Record<string, string>>({}); // deckId -> publishedDeckId
 
 	// Current deck from store
 	let currentDeck = $derived(nextDeckStore.deck);
@@ -45,6 +50,7 @@
 	// Initialize when component mounts
 	$effect(() => {
 		loadDecks();
+		loadPublishedStatus();
 	});
 
 	// Handle deck selection
@@ -159,6 +165,70 @@
 	// Handle AI Deck Generator
 	function handleAiDeckGenerator() {
 		dialogStore.setContent(AiDeckGenerationDialog);
+	}
+
+	// Handle deck publishing
+	function handlePublish(deck: Deck) {
+		dialogStore.setContent(PublishDeckDialog, {
+			deck,
+			publishedDeckId: publishedDecks[deck.id],
+			onPublished: () => {
+				// Refresh to get updated published status
+				loadDecks();
+				loadPublishedStatus();
+			}
+		});
+	}
+
+	// Load published status for all decks
+	async function loadPublishedStatus() {
+		if (!$isAuthenticated) return;
+
+		try {
+			const response = await fetch('/api/decks/gallery?limit=100', {
+				headers: getAuthHeaders()
+			});
+
+			if (response.ok) {
+				const result = await response.json();
+				const statusMap: Record<string, string> = {};
+				// Note: This is a simplified check - in reality we'd need a way to link
+				// local deck IDs to published deck IDs. For MVP, we'll check by title match.
+				for (const publishedDeck of result.decks) {
+					const localDeck = availableDecks.find((d) => d.meta.title === publishedDeck.title);
+					if (localDeck) {
+						statusMap[localDeck.id] = publishedDeck.id;
+					}
+				}
+				publishedDecks = statusMap;
+			}
+		} catch (err) {
+			console.error('Failed to load published status:', err);
+		}
+	}
+
+	// Handle unpublish
+	async function handleUnpublish(deckId: string) {
+		const publishedId = publishedDecks[deckId];
+		if (!publishedId) return;
+
+		try {
+			const response = await fetch(`/api/decks/${publishedId}/unpublish`, {
+				method: 'DELETE',
+				headers: getAuthHeaders()
+			});
+
+			if (response.ok) {
+				toasts.success('Deck unpublished successfully');
+				const { [deckId]: removed, ...rest } = publishedDecks;
+				publishedDecks = rest;
+			} else {
+				throw new Error('Failed to unpublish deck');
+			}
+		} catch (error) {
+			console.error('Unpublish error:', error);
+			toasts.error('Failed to unpublish deck');
+		}
 	}
 </script>
 
@@ -287,7 +357,12 @@
 						{:else}
 							<div class="deck-info">
 								<div class="deck-main">
-									<h3 class="deck-title">{deck.meta.title}</h3>
+									<div class="deck-title-row">
+										<h3 class="deck-title">{deck.meta.title}</h3>
+										{#if publishedDecks[deck.id]}
+											<span class="published-badge" title="Published to gallery">🌍 Published</span>
+										{/if}
+									</div>
 									<div class="deck-meta">
 										<span class="card-count">{deck.cards.length} cards</span>
 										<span class="deck-date">Created {formatTime(deck.meta.createdAt, 'date')}</span>
@@ -304,6 +379,33 @@
 										</button>
 									{:else}
 										<span class="current-indicator">Current</span>
+									{/if}
+
+									{#if $isAuthenticated}
+										{#if publishedDecks[deck.id]}
+											<button
+												class="action-button publish"
+												onclick={() => handlePublish(deck)}
+												title="Update published deck"
+											>
+												🔄
+											</button>
+											<button
+												class="action-button unpublish"
+												onclick={() => handleUnpublish(deck.id)}
+												title="Unpublish from gallery"
+											>
+												🌐⨯
+											</button>
+										{:else}
+											<button
+												class="action-button publish"
+												onclick={() => handlePublish(deck)}
+												title="Publish to gallery"
+											>
+												🌍
+											</button>
+										{/if}
 									{/if}
 
 									<button
@@ -536,10 +638,30 @@
 		flex: 1;
 	}
 
+	.deck-title-row {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		margin-bottom: 0.5rem;
+		flex-wrap: wrap;
+	}
+
 	.deck-title {
-		margin: 0 0 0.5rem 0;
+		margin: 0;
 		font-size: 1rem;
 		font-weight: 600;
+	}
+
+	.published-badge {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.25rem;
+		background: rgba(34, 197, 94, 0.1);
+		color: #16a34a;
+		padding: 0.125rem 0.5rem;
+		border-radius: 12px;
+		font-size: 0.75rem;
+		font-weight: 500;
 	}
 
 	.deck-meta {
