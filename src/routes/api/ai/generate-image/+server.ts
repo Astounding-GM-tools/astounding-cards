@@ -220,7 +220,7 @@ Visual prompt: ${optimizedPrompt}`;
 				data: REFERENCE_IMAGE_BASE64
 			}
 		});
-		console.log('📐 Added 2:3 reference image (350×490, pre-encoded, zero overhead)');
+		console.log('📐 Added tiny 2:3 reference image (50×70, 472 bytes, ~$0.0001 cost)');
 		
 		// Generate the image (keeping config for future compatibility)
 		const generationConfig = {
