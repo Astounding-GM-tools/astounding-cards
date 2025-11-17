@@ -91,12 +91,11 @@
 	const estimatedTimeSeconds = $derived(isGenerating ? 20 + cardsNeedingGeneration * 2 : 0);
 
 	// Progress percentage with ease-out in last 5 seconds (cap at 95% until complete)
-	const progressPercentage = $derived(() => {
+	const progressPercentage = $derived.by(() => {
 		if (!isGenerating || estimatedTimeSeconds === 0) return 0;
 		const ratio = generationElapsedSeconds / estimatedTimeSeconds;
 		// If we're in the last 5 seconds (ratio > 0.75), ease out to max 95%
 		if (ratio > 0.75) {
-			const remaining = 1 - ratio;
 			return Math.min(95, ratio * 100);
 		}
 		return Math.min(100, ratio * 100);
