@@ -213,20 +213,23 @@ Visual prompt: ${optimizedPrompt}`;
 		}
 
 		// Generate the image with multi-part context and aspect ratio config
+		const generationConfig = {
+			temperature: AI_CONFIGS.IMAGE_GENERATION.temperature,
+			imageConfig: {
+				aspectRatio: AI_CONFIGS.IMAGE_GENERATION.aspectRatio,
+				outputFormat: AI_CONFIGS.IMAGE_GENERATION.outputFormat,
+				quality: AI_CONFIGS.IMAGE_GENERATION.quality
+			}
+		};
+		
+		console.log(`📐 Attempting ${AI_CONFIGS.IMAGE_GENERATION.aspectRatio} aspect ratio (${AI_CONFIGS.IMAGE_GENERATION.resolution})`);
+		console.log('🔍 Config being sent:', JSON.stringify(generationConfig, null, 2));
+		
 		const imageResponse = await ai.models.generateContent({
 			model: AI_CONFIGS.IMAGE_GENERATION.model,
 			contents: contentParts,
-			config: {
-				temperature: AI_CONFIGS.IMAGE_GENERATION.temperature,
-				imageConfig: {
-					aspectRatio: AI_CONFIGS.IMAGE_GENERATION.aspectRatio,
-					outputFormat: AI_CONFIGS.IMAGE_GENERATION.outputFormat,
-					quality: AI_CONFIGS.IMAGE_GENERATION.quality
-				}
-			}
+			config: generationConfig
 		});
-		
-		console.log(`📐 Using ${AI_CONFIGS.IMAGE_GENERATION.aspectRatio} aspect ratio (${AI_CONFIGS.IMAGE_GENERATION.resolution})`);
 
 		// Extract image data from response (matches client-side format)
 		const imageData = imageResponse.candidates?.[0]?.content?.parts?.find(
