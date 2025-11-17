@@ -27,27 +27,7 @@ import {
 	ART_STYLES,
 	createPromptOptimizationRequest
 } from '$lib/ai/prompts/image-generation';
-
-// Cache the reference image in memory (fetched once on first use)
-let cachedReferenceBase64: string | null = null;
-const LAYOUT_REFERENCE_URL = '/card-layout-reference.png';
-
-async function getReferenceImage(origin: string): Promise<string> {
-	if (cachedReferenceBase64) {
-		return cachedReferenceBase64;
-	}
-
-	const referenceUrl = `${origin}${LAYOUT_REFERENCE_URL}`;
-	const response = await fetch(referenceUrl);
-	if (!response.ok) {
-		throw new Error('Failed to fetch reference image');
-	}
-
-	const buffer = await response.arrayBuffer();
-	cachedReferenceBase64 = Buffer.from(buffer).toString('base64');
-	console.log('✅ Cached reference image in memory (350×490, 5.3KB, ~$0.001/generation)');
-	return cachedReferenceBase64;
-}
+import { REFERENCE_IMAGE_BASE64 } from '$lib/ai/assets/referenceImage';
 
 export const POST: RequestHandler = async ({ request, cookies }) => {
 	try {
@@ -233,21 +213,14 @@ Visual prompt: ${optimizedPrompt}`;
 			}
 		}
 
-		// Add reference image for aspect ratio guidance (cached in memory, ~$0.001 cost)
-		try {
-			const origin = request.headers.get('origin') || 'http://localhost:5173';
-			const refBase64 = await getReferenceImage(origin);
-			
-			contentParts.push({
-				inlineData: {
-					mimeType: 'image/png',
-					data: refBase64
-				}
-			});
-			console.log('📐 Added 2:3 reference image for aspect ratio guidance');
-		} catch (err) {
-			console.warn('⚠️ Could not load reference image, continuing without it:', err);
-		}
+		// Add pre-encoded reference image for aspect ratio guidance (~$0.001 cost)
+		contentParts.push({
+			inlineData: {
+				mimeType: 'image/png',
+				data: REFERENCE_IMAGE_BASE64
+			}
+		});
+		console.log('📐 Added 2:3 reference image (350×490, pre-encoded, zero overhead)');
 		
 		// Generate the image (keeping config for future compatibility)
 		const generationConfig = {
