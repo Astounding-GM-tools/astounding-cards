@@ -195,9 +195,9 @@
 					<button class="import-button" onclick={handleImport} disabled={importing}>
 						{#if importing}
 							<div class="button-spinner"></div>
-							Importing...
+							Adding...
 						{:else}
-							💾 Import to Library
+							💾 Add to Collection
 						{/if}
 					</button>
 					<button class="secondary-button" onclick={() => goto('/next')}> Cancel </button>
@@ -222,8 +222,8 @@
 			{:else if imported}
 				<div class="success">
 					<div class="checkmark">✅</div>
-					<h2>🎉 Import Successful!</h2>
-					<p>Deck imported and saved to your library.</p>
+					<h2>🎉 Added to Collection!</h2>
+					<p>Deck saved to your collection.</p>
 					<button class="success-button" onclick={() => goto('/next')}> Open Deck </button>
 				</div>
 			{:else if error}

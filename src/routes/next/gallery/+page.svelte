@@ -297,8 +297,11 @@
 							</div>
 
 							<div class="deck-card-actions">
+								<a href="/{deck.slug}" class="view-button">
+									👁️ View Deck
+								</a>
 								<button class="import-button" onclick={() => importDeck(deck)}>
-									📥 Import Deck
+									💾 Add to Collection
 								</button>
 							</div>
 						</div>
@@ -587,18 +590,39 @@
 
 	.deck-card-actions {
 		margin-top: auto;
+		display: flex;
+		gap: 0.5rem;
+	}
+
+	.view-button,
+	.import-button {
+		flex: 1;
+		padding: 0.75rem;
+		border-radius: 8px;
+		font-weight: 600;
+		text-align: center;
+		text-decoration: none;
+		cursor: pointer;
+		transition: all 0.2s;
+		display: inline-block;
+	}
+
+	.view-button {
+		background: rgba(255, 255, 255, 0.1);
+		border: 1px solid rgba(255, 255, 255, 0.2);
+		color: inherit;
+	}
+
+	.view-button:hover {
+		background: rgba(255, 255, 255, 0.15);
+		border-color: rgba(255, 255, 255, 0.3);
+		transform: translateY(-1px);
 	}
 
 	.import-button {
-		width: 100%;
-		padding: 0.75rem;
 		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 		border: none;
-		border-radius: 8px;
 		color: white;
-		font-weight: 600;
-		cursor: pointer;
-		transition: all 0.2s;
 	}
 
 	.import-button:hover {
