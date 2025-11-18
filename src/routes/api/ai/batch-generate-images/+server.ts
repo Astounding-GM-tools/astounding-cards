@@ -12,7 +12,8 @@
 
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { GEMINI_API_KEY, PUBLIC_R2_PUBLIC_URL } from '$env/static/private';
+import { GEMINI_API_KEY } from '$env/static/private';
+import { PUBLIC_R2_PUBLIC_URL } from '$env/static/public';
 import { GoogleGenAI } from '@google/genai';
 import { supabaseAdmin } from '$lib/server/supabase';
 import { uploadImage, generateImageFileName } from '$lib/server/r2';

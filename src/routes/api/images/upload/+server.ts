@@ -8,7 +8,7 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { uploadImage, generateImageFileName } from '$lib/server/r2';
-import { PUBLIC_R2_PUBLIC_URL } from '$env/static/private';
+import { PUBLIC_R2_PUBLIC_URL } from '$env/static/public';
 
 export const POST: RequestHandler = async ({ request }) => {
 	try {

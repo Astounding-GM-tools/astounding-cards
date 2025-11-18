@@ -9,9 +9,9 @@ import {
 	R2_ACCOUNT_ID,
 	R2_ACCESS_KEY_ID,
 	R2_SECRET_ACCESS_KEY,
-	R2_BUCKET_NAME,
-	PUBLIC_R2_PATH_PREFIX
+	R2_BUCKET_NAME
 } from '$env/static/private';
+import { PUBLIC_R2_PATH_PREFIX } from '$env/static/public';
 
 // Validate environment variables
 if (!R2_ACCOUNT_ID || !R2_ACCESS_KEY_ID || !R2_SECRET_ACCESS_KEY || !R2_BUCKET_NAME) {

@@ -4,6 +4,7 @@
 	import DeckSwitcher from './DeckSwitcher.svelte';
 	import { Library, LogIn, ChevronDown, Coins } from 'lucide-svelte';
 	import type { Deck } from '$lib/next/types/deck.js';
+	import { tokenAmount } from '$lib/next/stores/tokenBalance';
 
 	// Props for flexible header
 	interface Props {
@@ -46,7 +47,7 @@
 	let authenticated = $derived(mockIsAuthenticated ?? $isAuthenticated);
 	let userEmail = $derived(mockUserEmail ?? $user?.email);
 	let deckCount = $derived(mockDeckCount ?? decks.length);
-	let tokenBalance = $derived(mockTokenBalance ?? $user?.tokens ?? 0);
+	let tokenBalance = $derived(mockTokenBalance ?? $tokenAmount);
 
 	// Extract user initial from email
 	function getUserInitial(email?: string): string {

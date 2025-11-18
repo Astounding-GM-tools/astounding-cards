@@ -2,7 +2,7 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { supabaseAdmin } from '$lib/server/supabase';
 import { getUserFromSession } from '$lib/server/auth';
-import { PUBLIC_R2_PATH_PREFIX } from '$env/static/private';
+import { PUBLIC_R2_PATH_PREFIX } from '$env/static/public';
 
 /**
  * POST /api/tokens/dev-add
