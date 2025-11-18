@@ -275,7 +275,6 @@
 <style>
 	.import-page {
 		min-height: 100vh;
-		display: flex;
 		align-items: center;
 		justify-content: center;
 		background: var(--ui-bg, #ffffff);
