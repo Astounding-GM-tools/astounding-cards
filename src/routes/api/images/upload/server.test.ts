@@ -13,7 +13,7 @@ vi.mock('$lib/server/r2', () => ({
 
 // Mock environment variables
 vi.mock('$env/static/private', () => ({
-	R2_PUBLIC_URL: 'https://cdn.example.com'
+	PUBLIC_R2_PUBLIC_URL: 'https://cdn.example.com'
 }));
 
 import { POST } from './+server';

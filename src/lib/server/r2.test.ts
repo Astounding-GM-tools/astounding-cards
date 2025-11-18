@@ -19,7 +19,7 @@ vi.mock('$env/static/private', () => ({
 	R2_ACCESS_KEY_ID: 'test-access-key',
 	R2_SECRET_ACCESS_KEY: 'test-secret-key',
 	R2_BUCKET_NAME: 'test-bucket',
-	R2_PATH_PREFIX: 'test-prefix'
+	PUBLIC_R2_PATH_PREFIX: 'test-prefix'
 }));
 
 import { uploadImage, deleteImage, generateImageFileName } from './r2';

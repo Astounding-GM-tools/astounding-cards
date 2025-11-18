@@ -1,11 +1,14 @@
 <script lang="ts">
-	import '$lib/styles/global.css';
-	import { currentDeck } from '$lib/stores/deck';
-	import { onMount } from 'svelte';
-	import { inject } from '@vercel/analytics';
 	import Toasts from '$lib/components/ui/Toasts.svelte';
+
 	import { getAuthHeaders } from '$lib/utils/auth-helpers';
 	import { refreshTokenBalance } from '$lib/next/stores/tokenBalance';
+
+	import { onMount } from 'svelte';
+	import { inject } from '@vercel/analytics';
+
+	import '$lib/styles/global.css';
+	import { PUBLIC_R2_PATH_PREFIX } from '$env/static/public';
 
 	// Initialize Vercel Web Analytics
 	inject();
@@ -13,6 +16,7 @@
 	// Expose dev helpers to browser console
 	onMount(() => {
 		if (typeof window === 'undefined') return;
+		if (PUBLIC_R2_PATH_PREFIX !== 'dev') return;
 
 		// Define helpers
 		window.devHelpers = {
@@ -61,8 +65,12 @@
 			'%c🛠️ Dev Helpers Available',
 			'font-weight: bold; font-size: 14px; color: #059669;'
 		);
-		console.log('%cAdd tokens:', 'font-weight: bold;', 'await window.devHelpers.addTokens(1000)');
-		console.log('%cCheck balance:', 'font-weight: bold;', 'await window.devHelpers.checkBalance()');
+		console.log('%cAdd tokens:', 'font-weight: bold;', '\nawait window.devHelpers.addTokens(1000)');
+		console.log(
+			'%cCheck balance:',
+			'font-weight: bold;',
+			'\nawait window.devHelpers.checkBalance()'
+		);
 	});
 </script>
 

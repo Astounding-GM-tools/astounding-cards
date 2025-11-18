@@ -2,13 +2,13 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { supabaseAdmin } from '$lib/server/supabase';
 import { getUserFromSession } from '$lib/server/auth';
-import { R2_PATH_PREFIX } from '$env/static/private';
+import { PUBLIC_R2_PATH_PREFIX } from '$env/static/private';
 
 /**
  * POST /api/tokens/dev-add
  *
  * DEV ONLY: Adds tokens to the authenticated user's balance for testing.
- * Only enabled when R2_PATH_PREFIX=dev
+ * Only enabled when PUBLIC_R2_PATH_PREFIX=dev
  *
  * Body: { amount: number }
  *
@@ -32,7 +32,7 @@ import { R2_PATH_PREFIX } from '$env/static/private';
  */
 export const POST: RequestHandler = async ({ request, cookies }) => {
 	// Only allow in dev environment
-	if (R2_PATH_PREFIX !== 'dev') {
+	if (PUBLIC_R2_PATH_PREFIX !== 'dev') {
 		return json({ error: 'This endpoint is only available in dev environment' }, { status: 403 });
 	}
 

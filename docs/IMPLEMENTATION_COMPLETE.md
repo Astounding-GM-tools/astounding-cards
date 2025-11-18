@@ -93,7 +93,7 @@ supabase db push
 - [ ] User account created with tokens (use /api/tokens/dev-add to add tokens)
 - [ ] Authenticated session (login via UI)
 - [ ] R2 bucket configured and accessible
-- [ ] Environment variables set (R2_PUBLIC_URL, GEMINI_API_KEY, etc.)
+- [ ] Environment variables set (PUBLIC_R2_PUBLIC_URL, GEMINI_API_KEY, etc.)
 
 ### Manual Testing
 
@@ -337,11 +337,11 @@ The `sourceImageId` parameter is not yet used by the UI - this will be implement
 
 - Verify R2 credentials (R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, etc.)
 - Check R2 bucket exists and is accessible
-- Verify R2_PATH_PREFIX is correct (dev/prod)
+- Verify PUBLIC_R2_PATH_PREFIX is correct (dev/prod)
 
 ### Images not accessible
 
-- Verify R2_PUBLIC_URL is set correctly
+- Verify PUBLIC_R2_PUBLIC_URL is set correctly
 - Check R2 bucket has public access enabled
 - Test URL directly in browser
 

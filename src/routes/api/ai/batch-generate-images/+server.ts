@@ -12,7 +12,7 @@
 
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { GEMINI_API_KEY, R2_PUBLIC_URL } from '$env/static/private';
+import { GEMINI_API_KEY, PUBLIC_R2_PUBLIC_URL } from '$env/static/private';
 import { GoogleGenAI } from '@google/genai';
 import { supabaseAdmin } from '$lib/server/supabase';
 import { uploadImage, generateImageFileName } from '$lib/server/r2';
@@ -216,16 +216,16 @@ Art style: ${selectedArtStyle}
 
 Visual prompt: ${optimizedPrompt}`;
 
-			// Add nano reference image for portrait aspect ratio (5x7, 1KB)
-			const contentParts: any[] = [
-				{ text: artStyleInstructions },
-				{
-					inlineData: {
-						mimeType: 'image/png',
-						data: REFERENCE_IMAGE_BASE64
+				// Add nano reference image for portrait aspect ratio (5x7, 1KB)
+				const contentParts: any[] = [
+					{ text: artStyleInstructions },
+					{
+						inlineData: {
+							mimeType: 'image/png',
+							data: REFERENCE_IMAGE_BASE64
+						}
 					}
-				}
-			];
+				];
 
 				const imageResponse = await ai.models.generateContent({
 					model: AI_CONFIGS.IMAGE_GENERATION.model,
@@ -252,7 +252,7 @@ Visual prompt: ${optimizedPrompt}`;
 				const extension = mimeType.split('/')[1] || 'png';
 				const fileName = generateImageFileName(card.id || 'unknown', extension);
 				const r2Key = await uploadImage(imageBuffer, fileName, mimeType);
-				const publicUrl = R2_PUBLIC_URL ? `${R2_PUBLIC_URL}/${r2Key}` : r2Key;
+				const publicUrl = PUBLIC_R2_PUBLIC_URL ? `${PUBLIC_R2_PUBLIC_URL}/${r2Key}` : r2Key;
 
 				// Step 4: Save to community_images table
 				const { data: imageRecord, error: dbError } = await supabaseAdmin

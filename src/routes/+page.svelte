@@ -1,27 +1,26 @@
 <script lang="ts">
-	import MobileCardList from '$lib/next/components/page/MobileCardList.svelte';
-	import MainHeader from '$lib/next/components/nav/MainHeader.svelte';
-	import DeckMetadata from '$lib/next/components/nav/DeckMetadata.svelte';
-	import DeckActions from '$lib/next/components/nav/DeckActions.svelte';
-	import Dialog from '$lib/next/components/dialog/Dialog.svelte';
-	import Card from '$lib/next/components/card/Card.svelte';
-	import CardFrontContent from '$lib/next/components/card/CardFrontContent.svelte';
-	import CardBackContent from '$lib/next/components/card/CardBackContent.svelte';
-	import { dialogStore } from '$lib/next/components/dialog/dialogStore.svelte.js';
-	import {
-		CardEditDialog,
-		ImageMigrationDialog
-	} from '$lib/next/components/dialogs/index.js';
-	import AiBatchImageGenerationDialog from '$lib/next/components/dialogs/AiBatchImageGenerationDialog.svelte';
-	import { generateShareUrl } from '$lib/next/utils/shareUrlUtils.js';
-
-	import { nextDeckStore } from '$lib/next/stores/deckStore.svelte.js';
-	import { nextDb } from '$lib/next/stores/database.js';
-	import { nextDevStore } from '$lib/next/stores/devStore.svelte.js';
-	import { importFromCurrentUrl } from '$lib/next/utils/shareUrlUtils.js';
-	import { toasts } from '$lib/stores/toast.js';
-	import { onMount } from 'svelte';
 	import type { ImageStyle } from '$lib/next/types/deck.js';
+
+	import Card from '$lib/next/components/card/Card.svelte';
+	import Dialog from '$lib/next/components/dialog/Dialog.svelte';
+	import MainHeader from '$lib/next/components/nav/MainHeader.svelte';
+	import DeckActions from '$lib/next/components/nav/DeckActions.svelte';
+	import DeckMetadata from '$lib/next/components/nav/DeckMetadata.svelte';
+	import MobileCardList from '$lib/next/components/page/MobileCardList.svelte';
+	import CardBackContent from '$lib/next/components/card/CardBackContent.svelte';
+	import CardFrontContent from '$lib/next/components/card/CardFrontContent.svelte';
+	import AiBatchImageGenerationDialog from '$lib/next/components/dialogs/AiBatchImageGenerationDialog.svelte';
+
+	import { toasts } from '$lib/stores/toast.js';
+	import { nextDb } from '$lib/next/stores/database.js';
+	import { dialogStore } from '$lib/next/components/dialog/dialogStore.svelte.js';
+	import { nextDevStore } from '$lib/next/stores/devStore.svelte.js';
+	import { nextDeckStore } from '$lib/next/stores/deckStore.svelte.js';
+	import { generateShareUrl } from '$lib/next/utils/shareUrlUtils.js';
+	import { importFromCurrentUrl } from '$lib/next/utils/shareUrlUtils.js';
+	import { CardEditDialog, ImageMigrationDialog } from '$lib/next/components/dialogs/index.js';
+
+	import { onMount } from 'svelte';
 
 	let isInitializing = $state(true);
 	let showCardBacks = $state(true);
@@ -39,7 +38,7 @@
 	let cardCount = $derived(cards?.length || 0);
 
 	// Deck switcher state
-	let allDecks = $state<typeof deck[]>([]);
+	let allDecks = $state<(typeof deck)[]>([]);
 
 	// Load all decks for the switcher
 	async function loadAllDecks() {
@@ -117,7 +116,9 @@
 		}
 	}
 
-	async function handleMigrationComplete(migrationData: Record<string, { url: string; metadata: any }>) {
+	async function handleMigrationComplete(
+		migrationData: Record<string, { url: string; metadata: any }>
+	) {
 		try {
 			if (!deck) throw new Error('No deck loaded');
 			const cardUpdates = Object.entries(migrationData).map(([cardId, migration]) => ({
@@ -311,7 +312,7 @@
 		{#snippet metadata()}
 			{#if deck}
 				<DeckMetadata
-					cardCount={cardCount}
+					{cardCount}
 					{imageStyle}
 					onImageStyleChange={handleImageStyleChange}
 					cardBacksVisible={showCardBacks}

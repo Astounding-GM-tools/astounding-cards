@@ -8,7 +8,7 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { uploadImage, generateImageFileName } from '$lib/server/r2';
-import { R2_PUBLIC_URL } from '$env/static/private';
+import { PUBLIC_R2_PUBLIC_URL } from '$env/static/private';
 
 export const POST: RequestHandler = async ({ request }) => {
 	try {
@@ -50,7 +50,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		const key = await uploadImage(buffer, fileName, file.type);
 
 		// Construct full public URL
-		const publicUrl = R2_PUBLIC_URL ? `${R2_PUBLIC_URL}/${key}` : key;
+		const publicUrl = PUBLIC_R2_PUBLIC_URL ? `${PUBLIC_R2_PUBLIC_URL}/${key}` : key;
 
 		// Return success with the key and public URL
 		return json({

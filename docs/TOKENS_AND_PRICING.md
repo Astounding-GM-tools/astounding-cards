@@ -37,7 +37,7 @@ export const TOKEN_COSTS = {
 ## Token Balance API
 
 - GET `/api/tokens/balance` returns the user's balance
-- POST `/api/tokens/dev-add` adds tokens in dev only (guarded by `R2_PATH_PREFIX=dev`)
+- POST `/api/tokens/dev-add` adds tokens in dev only (guarded by `PUBLIC_R2_PATH_PREFIX=dev`)
 
 ## UI
 

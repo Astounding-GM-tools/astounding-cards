@@ -13,7 +13,7 @@
 
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { GEMINI_API_KEY, R2_PUBLIC_URL } from '$env/static/private';
+import { GEMINI_API_KEY, PUBLIC_R2_PUBLIC_URL } from '$env/static/private';
 import { GoogleGenAI } from '@google/genai';
 import { supabaseAdmin } from '$lib/server/supabase';
 import { uploadImage, generateImageFileName } from '$lib/server/r2';
@@ -178,7 +178,7 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 		// Select art style based on theme
 		const selectedArtStyle = ART_STYLES[deckTheme as keyof typeof ART_STYLES] || ART_STYLES.classic;
 
-	const artStyleInstructions = `${IMAGE_GENERATION_CONTEXT}
+		const artStyleInstructions = `${IMAGE_GENERATION_CONTEXT}
 
 IMPORTANT: Generate in PORTRAIT orientation (taller than wide), approximately 2:3 aspect ratio.
 
@@ -212,24 +212,24 @@ Visual prompt: ${optimizedPrompt}`;
 			} catch (err) {
 				console.warn('⚠️ Error fetching existing image:', err);
 				// Continue without the image - not critical
+			}
 		}
-	}
 
-	// Add pre-encoded nano reference image for portrait aspect ratio
-	// 5x7 pixels, 1KB, costs ~$0.0002 per generation
-	contentParts.push({
-		inlineData: {
-			mimeType: 'image/png',
-			data: REFERENCE_IMAGE_BASE64
-		}
-	});
-	console.log('📐 Added nano reference image (5×7, 1KB, 81% smaller!)');
-		
+		// Add pre-encoded nano reference image for portrait aspect ratio
+		// 5x7 pixels, 1KB, costs ~$0.0002 per generation
+		contentParts.push({
+			inlineData: {
+				mimeType: 'image/png',
+				data: REFERENCE_IMAGE_BASE64
+			}
+		});
+		console.log('📐 Added nano reference image (5×7, 1KB, 81% smaller!)');
+
 		// Generate the image (keeping config for future compatibility)
 		const generationConfig = {
 			temperature: AI_CONFIGS.IMAGE_GENERATION.temperature
 		};
-		
+
 		const imageResponse = await ai.models.generateContent({
 			model: AI_CONFIGS.IMAGE_GENERATION.model,
 			contents: contentParts,
@@ -283,7 +283,7 @@ Visual prompt: ${optimizedPrompt}`;
 		const extension = mimeType.split('/')[1] || 'png';
 		const fileName = generateImageFileName(card.id || 'unknown', extension);
 		const r2Key = await uploadImage(imageBuffer, fileName, mimeType);
-		const publicUrl = R2_PUBLIC_URL ? `${R2_PUBLIC_URL}/${r2Key}` : r2Key;
+		const publicUrl = PUBLIC_R2_PUBLIC_URL ? `${PUBLIC_R2_PUBLIC_URL}/${r2Key}` : r2Key;
 
 		console.log(`✅ Uploaded to R2: ${publicUrl}`);
 

@@ -24,7 +24,7 @@
 
 - ✅ **Function**: `uploadImage()` in `src/lib/server/r2.ts`
 - ✅ **Returns**: R2 key (e.g., `dev/cards/abc123.png`)
-- ✅ **Public URL**: Constructed via `R2_PUBLIC_URL` env var
+- ✅ **Public URL**: Constructed via `PUBLIC_R2_PUBLIC_URL` env var
 
 #### Supabase Clients
 
@@ -153,7 +153,7 @@ export async function getUserFromSession(cookies: Cookies): Promise<string | nul
 ```typescript
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { GEMINI_API_KEY, R2_PUBLIC_URL } from '$env/static/private';
+import { GEMINI_API_KEY, PUBLIC_R2_PUBLIC_URL } from '$env/static/private';
 import { GoogleGenAI } from '@google/genai';
 import { supabaseAdmin } from '$lib/server/supabase';
 import { uploadImage, generateImageFileName } from '$lib/server/r2';
@@ -324,7 +324,7 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 		const extension = mimeType.split('/')[1];
 		const fileName = generateImageFileName(card.id || 'unknown', extension);
 		const r2Key = await uploadImage(imageBuffer, fileName, mimeType);
-		const publicUrl = R2_PUBLIC_URL ? `${R2_PUBLIC_URL}/${r2Key}` : r2Key;
+		const publicUrl = PUBLIC_R2_PUBLIC_URL ? `${PUBLIC_R2_PUBLIC_URL}/${r2Key}` : r2Key;
 
 		console.log(`✅ Uploaded to R2: ${publicUrl}`);
 

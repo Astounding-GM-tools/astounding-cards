@@ -10,7 +10,7 @@ import {
 	R2_ACCESS_KEY_ID,
 	R2_SECRET_ACCESS_KEY,
 	R2_BUCKET_NAME,
-	R2_PATH_PREFIX
+	PUBLIC_R2_PATH_PREFIX
 } from '$env/static/private';
 
 // Validate environment variables
@@ -44,7 +44,7 @@ export async function uploadImage(
 	contentType: string
 ): Promise<string> {
 	// Construct path: dev/cards/filename.png or prod/cards/filename.png
-	const pathPrefix = R2_PATH_PREFIX || 'dev';
+	const pathPrefix = PUBLIC_R2_PATH_PREFIX || 'dev';
 	const key = `${pathPrefix}/cards/${fileName}`;
 
 	try {
