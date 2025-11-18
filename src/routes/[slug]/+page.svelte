@@ -16,10 +16,12 @@
 	} from '$lib/next/utils/deckMerging.js';
 	import MergeTool from '$lib/next/components/merge/MergeTool.svelte';
 	import DeckPreview from '$lib/next/components/preview/DeckPreview.svelte';
+	import PrintLayout from '$lib/next/components/print/PrintLayout.svelte';
 	import MainHeader from '$lib/next/components/nav/MainHeader.svelte';
 	import DeckMetadata from '$lib/next/components/nav/DeckMetadata.svelte';
 	import { Copy, Download } from 'lucide-svelte';
 	import type { Deck } from '$lib/next/types/deck.js';
+	import type { Layout } from '$lib/next/types/deck.js';
 	import type { PageData } from './$types';
 
 	// Server-side data
@@ -34,6 +36,12 @@
 	let conflict = $state<DeckConflict | null>(null);
 	let previewDeck = $state<Deck | null>(null);
 	let importedDeck = $state<Deck | null>(null);
+
+	// Print mode state
+	let isPrintMode = $state(false);
+	let layout = $state<Layout>('poker');
+	let showCardBacks = $state(true);
+	let printEventTimeout: ReturnType<typeof setTimeout> | null = null;
 
 	onMount(async () => {
 		// Track shared deck access with Vercel Web Analytics
@@ -97,6 +105,18 @@
 			toasts.error('Failed to load deck preview');
 		} finally {
 			loading = false;
+		}
+
+		// Set up print event listeners
+		if (typeof window !== 'undefined') {
+			window.addEventListener('beforeprint', handleBeforePrint);
+			window.addEventListener('afterprint', handleAfterPrint);
+
+			// Cleanup on component destroy
+			return () => {
+				window.removeEventListener('beforeprint', handleBeforePrint);
+				window.removeEventListener('afterprint', handleAfterPrint);
+			};
 		}
 	});
 
@@ -194,6 +214,42 @@
 		URL.revokeObjectURL(url);
 		toasts.success('📥 Deck exported as JSON');
 	}
+
+	// Print event handlers
+	function handleBeforePrint() {
+		// Clear any pending timeout
+		if (printEventTimeout) {
+			clearTimeout(printEventTimeout);
+			printEventTimeout = null;
+		}
+
+		if (!isPrintMode) {
+			isPrintMode = true;
+		}
+	}
+
+	function handleAfterPrint() {
+		// Clear any existing timeout
+		if (printEventTimeout) {
+			clearTimeout(printEventTimeout);
+		}
+
+		// Use a longer delay to ensure print dialog is fully closed
+		printEventTimeout = setTimeout(() => {
+			isPrintMode = false;
+			printEventTimeout = null;
+		}, 200);
+	}
+
+	// Handle layout change
+	function handleLayoutChange(newLayout: Layout) {
+		layout = newLayout;
+	}
+
+	// Handle card backs toggle
+	function handleCardBacksChange(visible: boolean) {
+		showCardBacks = visible;
+	}
 </script>
 
 <div class="import-page">
@@ -210,11 +266,26 @@
 					cardCount={previewDeck.cards.length}
 					imageCount={countImages(previewDeck)}
 					published={true}
+					cardBacksVisible={showCardBacks}
+					onCardBacksChange={handleCardBacksChange}
 				/>
 			{/snippet}
 
 			{#snippet actions()}
 				<div class="preview-actions">
+					<!-- Layout selector -->
+					<div class="layout-selector">
+						<label for="layout-select">Print Size:</label>
+						<select
+							id="layout-select"
+							bind:value={layout}
+							onchange={() => handleLayoutChange(layout)}
+						>
+							<option value="poker">Poker</option>
+							<option value="tarot">Tarot</option>
+						</select>
+					</div>
+
 					<button class="action-button primary" onclick={handleImport} disabled={importing}>
 						{#if importing}
 							<div class="button-spinner"></div>
@@ -237,9 +308,13 @@
 			{/snippet}
 		</MainHeader>
 
-		<!-- Read-only deck viewer -->
+		<!-- Deck viewer - switches to print layout when printing -->
 		<div class="preview-content">
-			<DeckPreview deck={previewDeck} />
+			{#if isPrintMode}
+				<PrintLayout cards={previewDeck.cards} {layout} {showCardBacks} />
+			{:else}
+				<DeckPreview deck={previewDeck} />
+			{/if}
 		</div>
 	{:else}
 		<!-- Loading/Error states -->
@@ -415,6 +490,37 @@
 		flex-wrap: wrap;
 	}
 
+	.layout-selector {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.5rem 0.75rem;
+		background: var(--ui-hover-bg, #f8fafc);
+		border: 1px solid var(--ui-border, #e2e8f0);
+		border-radius: 6px;
+	}
+
+	.layout-selector label {
+		font-size: 0.875rem;
+		font-weight: 500;
+		color: var(--ui-text, #1a202c);
+		white-space: nowrap;
+	}
+
+	.layout-selector select {
+		padding: 0.25rem 0.5rem;
+		border: 1px solid var(--ui-border, #e2e8f0);
+		border-radius: 4px;
+		background: white;
+		color: var(--ui-text, #1a202c);
+		font-size: 0.875rem;
+		cursor: pointer;
+	}
+
+	.layout-selector select:hover {
+		background: var(--ui-hover-bg, #f8fafc);
+	}
+
 	.action-button {
 		display: inline-flex;
 		align-items: center;
@@ -483,6 +589,12 @@
 
 		.action-button {
 			flex: 1;
+		}
+	}
+
+	@media print {
+		.preview-content {
+			padding: 0;
 		}
 	}
 </style>

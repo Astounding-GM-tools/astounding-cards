@@ -1,14 +1,12 @@
 <script lang="ts">
 	import type { ImageStyle } from '$lib/next/types/deck.js';
 
-	import Card from '$lib/next/components/card/Card.svelte';
 	import Dialog from '$lib/next/components/dialog/Dialog.svelte';
 	import MainHeader from '$lib/next/components/nav/MainHeader.svelte';
 	import DeckActions from '$lib/next/components/nav/DeckActions.svelte';
 	import DeckMetadata from '$lib/next/components/nav/DeckMetadata.svelte';
 	import MobileCardList from '$lib/next/components/page/MobileCardList.svelte';
-	import CardBackContent from '$lib/next/components/card/CardBackContent.svelte';
-	import CardFrontContent from '$lib/next/components/card/CardFrontContent.svelte';
+	import PrintLayout from '$lib/next/components/print/PrintLayout.svelte';
 	import AiBatchImageGenerationDialog from '$lib/next/components/dialogs/AiBatchImageGenerationDialog.svelte';
 
 	import { toasts } from '$lib/stores/toast.js';
@@ -193,17 +191,6 @@
 		toasts.info('Title editing - coming soon!');
 	}
 
-	// Working pagination function (from old PagedCards)
-	function getPagedCards(cards: any[], layout: string) {
-		const cardsPerPage = layout === 'poker' ? 9 : 4;
-		const pages = [];
-
-		for (let i = 0; i < cards.length; i += cardsPerPage) {
-			pages.push(cards.slice(i, i + cardsPerPage));
-		}
-
-		return pages;
-	}
 
 	async function loadSampleData() {
 		try {
@@ -359,43 +346,7 @@
 
 		<!-- Conditional layout based on print mode -->
 		{#if isPrintMode}
-			<!-- Print layout: use working PagedCards component -->
-			<div class="print-layout">
-				{#each getPagedCards(cards, layout) as page, pageIndex}
-					<!-- Front page -->
-					<div
-						class="page"
-						data-layout={layout}
-						class:last-page={!showCardBacks &&
-							pageIndex === getPagedCards(cards, layout).length - 1}
-					>
-						<div class="card-grid">
-							{#each page as card (card.id)}
-								<Card cardId={card.id}>
-									<CardFrontContent {card} />
-								</Card>
-							{/each}
-						</div>
-					</div>
-
-					<!-- Back page (if enabled) -->
-					{#if showCardBacks}
-						<div
-							class="page"
-							data-layout={layout}
-							class:last-page={pageIndex === getPagedCards(cards, layout).length - 1}
-						>
-							<div class="card-grid back-grid">
-								{#each page as card (card.id)}
-									<Card cardId={card.id}>
-										<CardBackContent {card} />
-									</Card>
-								{/each}
-							</div>
-						</div>
-					{/if}
-				{/each}
-			</div>
+			<PrintLayout {cards} {layout} {showCardBacks} />
 		{:else}
 			<!-- Default layout: mobile-friendly card list -->
 			<MobileCardList {cards} {layout} {showCardBacks} />
@@ -410,136 +361,6 @@
 	.deck {
 		margin: 20px auto;
 		position: relative;
-	}
-
-	/* Working print layout CSS (from PagedCards) */
-	.print-layout .page {
-		width: 210mm;
-		height: 297mm;
-		margin: 0 auto 20mm;
-		padding: 10mm;
-		background: white;
-		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-		position: relative;
-		page-break-after: always;
-		box-sizing: border-box;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-	}
-
-	.print-layout .card-grid {
-		width: 100%;
-		height: 100%;
-		display: grid;
-		gap: 0;
-	}
-
-	/* Tarot layout: 2x2 grid */
-	.print-layout .page[data-layout='tarot'] .card-grid {
-		grid-template-columns: repeat(2, 1fr);
-		grid-template-rows: repeat(2, 1fr);
-	}
-
-	/* Poker layout: 3x3 grid */
-	.print-layout .page[data-layout='poker'] .card-grid {
-		grid-template-columns: repeat(3, 1fr);
-		grid-template-rows: repeat(3, 1fr);
-	}
-
-	/* Back page - reverse for double-sided printing */
-	.print-layout .back-grid {
-		direction: rtl;
-	}
-
-	.print-layout .back-grid :global(.card) {
-		direction: ltr;
-	}
-
-	/* Remove page break from last page to prevent blank page */
-	.print-layout .page.last-page {
-		page-break-after: auto !important;
-		margin-bottom: 0 !important;
-	}
-
-	/* Ensure crop marks use border-box sizing in print layout */
-	.print-layout :global(.crop-mark) {
-		box-sizing: border-box !important;
-	}
-
-	@media print {
-		.print-layout .page {
-			width: auto;
-			height: auto;
-			min-height: 100vh;
-			margin: 0;
-			box-shadow: none;
-		}
-
-		/* Ensure last page doesn't create blank page */
-		.print-layout .page.last-page {
-			page-break-after: auto !important;
-		}
-
-		/* CROP MARKS: Show all crop marks that touch page edges - ONLY WHEN PRINTING */
-
-		/* TAROT LAYOUT (2x2 grid) */
-		/* Top edge: cards 1,2 show both top crop marks */
-		.print-layout .page[data-layout='tarot'] :global(.card:nth-child(-n + 2) .crop-mark.top-left),
-		.print-layout .page[data-layout='tarot'] :global(.card:nth-child(-n + 2) .crop-mark.top-right) {
-			display: block;
-		}
-
-		/* Bottom edge: cards 3,4 show both bottom crop marks */
-		.print-layout .page[data-layout='tarot'] :global(.card:nth-child(n + 3) .crop-mark.bottom-left),
-		.print-layout
-			.page[data-layout='tarot']
-			:global(.card:nth-child(n + 3) .crop-mark.bottom-right) {
-			display: block;
-		}
-
-		/* Left edge: cards 1,3 show both left crop marks */
-		.print-layout .page[data-layout='tarot'] :global(.card:nth-child(odd) .crop-mark.top-left),
-		.print-layout .page[data-layout='tarot'] :global(.card:nth-child(odd) .crop-mark.bottom-left) {
-			display: block;
-		}
-
-		/* Right edge: cards 2,4 show both right crop marks */
-		.print-layout .page[data-layout='tarot'] :global(.card:nth-child(even) .crop-mark.top-right),
-		.print-layout
-			.page[data-layout='tarot']
-			:global(.card:nth-child(even) .crop-mark.bottom-right) {
-			display: block;
-		}
-
-		/* POKER LAYOUT (3x3 grid) */
-		/* Top edge: cards 1,2,3 show both top crop marks */
-		.print-layout .page[data-layout='poker'] :global(.card:nth-child(-n + 3) .crop-mark.top-left),
-		.print-layout .page[data-layout='poker'] :global(.card:nth-child(-n + 3) .crop-mark.top-right) {
-			display: block;
-		}
-
-		/* Bottom edge: cards 7,8,9 show both bottom crop marks */
-		.print-layout .page[data-layout='poker'] :global(.card:nth-child(n + 7) .crop-mark.bottom-left),
-		.print-layout
-			.page[data-layout='poker']
-			:global(.card:nth-child(n + 7) .crop-mark.bottom-right) {
-			display: block;
-		}
-
-		/* Left edge: cards 1,4,7 show both left crop marks */
-		.print-layout .page[data-layout='poker'] :global(.card:nth-child(3n + 1) .crop-mark.top-left),
-		.print-layout
-			.page[data-layout='poker']
-			:global(.card:nth-child(3n + 1) .crop-mark.bottom-left) {
-			display: block;
-		}
-
-		/* Right edge: cards 3,6,9 show both right crop marks */
-		.print-layout .page[data-layout='poker'] :global(.card:nth-child(3n) .crop-mark.top-right),
-		.print-layout .page[data-layout='poker'] :global(.card:nth-child(3n) .crop-mark.bottom-right) {
-			display: block;
-		}
 	}
 
 	.loading-overlay {
