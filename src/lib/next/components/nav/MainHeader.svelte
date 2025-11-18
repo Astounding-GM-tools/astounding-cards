@@ -1,32 +1,7 @@
 <script lang="ts">
-	import { nextDeckStore } from '$lib/next/stores/deckStore.svelte.js';
-	import { nextDevStore } from '$lib/next/stores/devStore.svelte.js';
-	import { dialogStore } from '../dialog/dialogStore.svelte.js';
-	import {
-		AiPromptDialog,
-		DeckManagerDialog,
-		CardEditDialog,
-		ImageMigrationDialog
-	} from '../dialogs/index.js';
-	import AiBatchImageGenerationDialog from '../dialogs/AiBatchImageGenerationDialog.svelte';
-	import { generateShareUrl } from '$lib/next/utils/shareUrlUtils.js';
-	import { toasts } from '$lib/stores/toast.js';
-	import BinaryToggle from '../ui/BinaryToggle.svelte';
-	import OverflowMenu from '../ui/OverflowMenu.svelte';
-	import type { Layout } from '../../types/deck.js';
-	import { createEventDispatcher } from 'svelte';
-	import { authStore, user, isAuthenticated } from '$lib/next/stores/auth';
+	import { user, isAuthenticated } from '$lib/next/stores/auth';
 	import AuthDialog from '../dialogs/AuthDialog.svelte';
-	import {
-		Library,
-		User,
-		LogIn,
-		LogOut,
-		FolderOpen,
-		Plus,
-		Share2,
-		Images
-	} from 'lucide-svelte';
+	import { Library, LogIn, ChevronDown, Coins } from 'lucide-svelte';
 
 	// Props for flexible header
 	interface Props {
@@ -34,10 +9,12 @@
 		onTitleEdit?: () => void;
 		metadata?: import('svelte').Snippet;
 		actions?: import('svelte').Snippet;
+		hideGalleryLink?: boolean;
 		// Mock overrides for testing/stories
 		mockIsAuthenticated?: boolean;
 		mockUserEmail?: string;
 		mockDeckCount?: number;
+		mockTokenBalance?: number;
 	}
 
 	let {
@@ -45,15 +22,28 @@
 		onTitleEdit,
 		metadata,
 		actions,
+		hideGalleryLink = false,
 		mockIsAuthenticated,
 		mockUserEmail,
-		mockDeckCount
+		mockDeckCount,
+		mockTokenBalance
 	}: Props = $props();
 
 	// Derived state from store or mocks
 	let authenticated = $derived(mockIsAuthenticated ?? $isAuthenticated);
 	let userEmail = $derived(mockUserEmail ?? $user?.email);
 	let deckCount = $derived(mockDeckCount ?? 0); // TODO: Get from actual deck store
+	let tokenBalance = $derived(mockTokenBalance ?? $user?.tokens ?? 0);
+
+	// Extract user initial from email
+	function getUserInitial(email?: string): string {
+		if (!email) return '?';
+		// Get first letter before @ or space
+		const name = email.split('@')[0];
+		return name.charAt(0).toUpperCase();
+	}
+
+	let userInitial = $derived(getUserInitial(userEmail));
 
 	// Auth dialog state
 	let authDialogOpen = $state(false);
@@ -68,20 +58,6 @@
 	function handleSignIn() {
 		authDialogOpen = true;
 		userMenuOpen = false;
-	}
-
-	async function handleSignOut() {
-		const { error } = await authStore.signOut();
-		if (error) {
-			toasts.error('Failed to sign out');
-		} else {
-			toasts.success('Signed out successfully');
-		}
-		userMenuOpen = false;
-	}
-
-	function toggleUserMenu() {
-		userMenuOpen = !userMenuOpen;
 	}
 
 	function toggleDeckSwitcher() {
@@ -102,24 +78,31 @@
 <header class="app-header">
 	<!-- Row 1: App Navigation & Account -->
 	<div class="header-top-bar">
-		<div class="brand">
-			<!-- TODO: Add favicon.svg here -->
+		<a href="/" class="brand">
+			<svg class="brand-icon" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+				<circle cx="256" cy="256" r="150" fill="white" />
+				<path
+					d="m206.893 18.176-27.23 74.533-84.936-28.235 17.134 83.593-86.297 25.768 51.99 54.76-59.252 48.69 93.805 25.314-72.3 67.283 50.978 13.012-22.8 51.867 60.937-37.405-13.543 86.213 100.975-61.183 39.156 75.894 39.135-61.16 77.744 46.284-2.74-93.998 85.386 35.367-31.36-70.043 48.653 1.272-42.88-52.065 63.88-19.67-63.064-36.73 57.404-72.982-70.96-12.328 66.82-100.553-109.022 44.486 13.414-65.402-71.193 58.504-13.135-65.244-41.22 52.388-55.477-68.23zm52.345 90.98h.047c82.104 0 146.59 52.22 146.59 113.3 0 19.404-9.242 30.604-25.768 41.433-16.525 10.827-40.02 19.56-63.863 30.28l-7.377 3.318 26.863 93.87c-8.333 2.637-17.08 4.926-26.1 6.845l-20.482-46.38-2.753 50.406a329.214 329.214 0 0 1-24.26 2.377l-10.55-51.603-12.626 52.178a292.36 292.36 0 0 1-24.138-1.274l-2.656-49.922-20.033 46.727c-9.805-1.852-19.24-4.285-28.1-7.36l34.276-92.197-6.82-3.953c-19.516-11.314-40.035-21.866-54.97-33.846-14.936-11.98-23.823-24.21-23.823-40.902 0-61.068 64.46-113.278 146.54-113.3zm62.9 55.53c-29.543-.155-56.048 24.43-50.378 65.375 10.284 74.273 136.613 22.558 103.254-32.357-13.756-22.645-33.94-32.915-52.877-33.016zm-140.925.486c-17.51.267-34.493 10.685-42.723 36.69-16.22 51.262 72.746 97.79 95.4 26.2 10.138-32.038-20.812-62.226-50.982-62.884a43.536 43.536 0 0 0-1.695-.006zm3.63 21.062c16.585 0 30.23 13.645 30.23 30.23 0 16.587-13.645 30.23-30.23 30.23-16.583 0-30.23-13.643-30.23-30.23 0-16.584 13.646-30.23 30.23-30.23zm0 18.69c-6.484 0-11.54 5.056-11.54 11.54 0 6.488 5.055 11.544 11.54 11.544 6.487 0 11.544-5.056 11.544-11.543 0-6.487-5.057-11.54-11.543-11.54zm139.764 0c6.486 0 11.543 5.054 11.543 11.54 0 6.488-5.057 11.544-11.543 11.544-6.485 0-11.54-5.056-11.54-11.543 0-6.485 5.055-11.54 11.54-11.54zm-70.613 55.105-22.414 49.923h37.188l-14.774-49.924z"
+					fill="#d0021b"
+				/>
+			</svg>
 			<span class="brand-name">Astounding Cards</span>
-		</div>
+		</a>
 
 		<div class="top-bar-actions">
-			<a href="/next/gallery" class="action-button">
-				<Library size={16} />
-				<span>Gallery</span>
-			</a>
+			{#if !hideGalleryLink}
+				<a href="/gallery" class="top-bar-link">
+					<Library size={14} />
+					<span>Gallery</span>
+				</a>
+			{/if}
 
-			<!-- Auth / Deck Switcher -->
-			{#if authenticated}
-				<!-- Deck Switcher -->
+			<!-- Deck Switcher (show if user has decks) -->
+			{#if deckCount > 0}
 				<div class="deck-switcher-container">
 					<button class="deck-switcher-button" onclick={toggleDeckSwitcher}>
 						<span>{deckCount} {deckCount === 1 ? 'deck' : 'decks'}</span>
-						<span class="caret">⌓</span>
+						<ChevronDown size={12} />
 					</button>
 
 					{#if deckSwitcherOpen}
@@ -129,30 +112,23 @@
 						</div>
 					{/if}
 				</div>
+			{/if}
 
-				<!-- User Menu -->
-				<div class="user-menu-container">
-					<button class="user-button" onclick={toggleUserMenu}>
-						<span class="user-email">{userEmail}</span>
-						<User size={16} />
-					</button>
-
-					{#if userMenuOpen}
-						<div class="user-menu">
-							<div class="user-menu-header">
-								<span class="user-email-full">{userEmail}</span>
-							</div>
-							<button class="user-menu-item" onclick={handleSignOut}>
-								<LogOut size={16} />
-								<span>Sign Out</span>
-							</button>
-						</div>
-					{/if}
+			<!-- Auth Badge / Dashboard Link -->
+			{#if authenticated}
+				<div class="token-balance">
+					<Coins size={14} />
+					<span class="token-amount">{tokenBalance.toLocaleString()}</span>
 				</div>
+
+				<a href="/dashboard" class="user-badge success">
+					<span class="user-initial">{userInitial}</span>
+					<span>Dashboard</span>
+				</a>
 			{:else}
-				<button class="action-button" onclick={handleSignIn}>
-					<LogIn size={16} />
-					<span>Sign In</span>
+				<button class="user-badge warning" onclick={handleSignIn}>
+					<LogIn size={14} />
+					<span>Log in / Sign up <small>(free)</small></span>
 				</button>
 			{/if}
 		</div>
@@ -204,8 +180,8 @@
 <style>
 	.app-header {
 		background: var(--ui-bg, #ffffff);
-		border-bottom: 1px solid var(--ui-border, #e2e8f0);
-		margin-bottom: 1.5rem;
+		margin: 0 auto 1.5rem;
+		max-width: var(--page-max-width);
 	}
 
 	/* Top Bar - App brand + Gallery + Auth */
@@ -213,33 +189,86 @@
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		gap: 1rem;
-		padding: 0.75rem 1rem;
-		background: var(--ui-hover-bg, #f8fafc);
-		border-bottom: 1px solid var(--ui-border, #e2e8f0);
+		gap: 0.75rem;
+		padding: 0 2rem;
 	}
 
 	.brand {
 		display: flex;
 		align-items: center;
+		gap: 0.5rem;
+		text-decoration: none;
+		padding: 0.25rem 0;
+		transition: opacity 0.2s;
+	}
+
+	.brand:hover {
+		opacity: 0.8;
+	}
+
+	.brand-icon {
+		width: 3rem;
+		height: 3rem;
+		display: block;
+		flex-shrink: 0;
 	}
 
 	.brand-name {
-		font-size: 1rem;
+		font-size: 1.425rem;
 		font-weight: 600;
 		color: var(--ui-text, #1a202c);
+		padding-left: 0.1rem;
 	}
 
 	.top-bar-actions {
 		display: flex;
-		gap: 0.75rem;
+		gap: 0.5rem;
 		align-items: center;
+	}
+
+	/* Top bar link style */
+	.top-bar-link {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.375rem;
+		padding: 0.25rem 0.5rem;
+		border-radius: 4px;
+		background: transparent;
+		color: var(--ui-text, #1a202c);
+		font-size: 0.8125rem;
+		text-decoration: none;
+		transition: all 0.2s ease;
+	}
+
+	.top-bar-link:hover {
+		background: var(--ui-bg, #ffffff);
 	}
 
 	/* Row 2: Content Bar - Title + Metadata */
 	.header-content-bar {
-		padding: 1rem;
-		border-top: 1px solid var(--ui-border, #e2e8f0);
+		padding: 1rem 2rem;
+		background: var(--brand);
+		color: var(--header-content-text, white);
+		position: relative;
+
+		&::after,
+		&::before {
+			position: absolute;
+			z-index: -1;
+			top: 0;
+			bottom: 0;
+			background: var(--brand);
+			width: 50vw;
+			display: block;
+			content: '';
+		}
+
+		&::before {
+			left: 50%;
+		}
+		&::after {
+			right: 50%;
+		}
 	}
 
 	.title-row {
@@ -253,7 +282,7 @@
 		font-size: 1.5rem;
 		font-weight: 600;
 		margin: 0;
-		color: var(--ui-text, #1a202c);
+		color: var(--header-content-text, white);
 		line-height: 1.2;
 	}
 
@@ -264,15 +293,15 @@
 		padding: 0.25rem;
 		border: none;
 		background: none;
-		color: var(--ui-muted, #64748b);
+		color: rgba(255, 255, 255, 0.8);
 		cursor: pointer;
 		border-radius: 4px;
 		transition: all 0.2s;
 	}
 
 	.title-edit-button:hover {
-		color: var(--ui-text, #1a202c);
-		background: var(--ui-hover-bg, #f8fafc);
+		color: white;
+		background: rgba(255, 255, 255, 0.1);
 	}
 
 	.metadata-row {
@@ -281,7 +310,6 @@
 		align-items: center;
 		flex-wrap: wrap;
 		font-size: 0.875rem;
-		color: var(--ui-muted, #64748b);
 	}
 
 	/* Row 3: Actions Bar */
@@ -289,97 +317,9 @@
 		display: flex;
 		gap: 0.75rem;
 		align-items: center;
-		padding: 0.75rem 1rem;
-		background: var(--ui-hover-bg, #f8fafc);
-		border-top: 1px solid var(--ui-border, #e2e8f0);
+		justify-content: flex-end;
+		padding: 0.475rem 2rem;
 		flex-wrap: wrap;
-	}
-
-	.action-button {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.5rem;
-		padding: 0.75rem 1rem;
-		border: 1px solid var(--ui-border, #e2e8f0);
-		border-radius: 6px;
-		background: var(--ui-bg, #ffffff);
-		color: var(--ui-text, #1a202c);
-		font-size: 0.875rem;
-		font-weight: 500;
-		cursor: pointer;
-		transition: all 0.2s ease;
-		white-space: nowrap;
-		text-decoration: none;
-	}
-
-	.action-button:hover:not(:disabled) {
-		background: var(--ui-hover-bg, #f8fafc);
-		border-color: var(--button-primary-bg, #3b82f6);
-		transform: translateY(-1px);
-		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-	}
-
-	.action-button.primary {
-		background: var(--button-primary-bg, #3b82f6);
-		color: white;
-		border-color: var(--button-primary-bg, #3b82f6);
-	}
-
-	.action-button.primary:hover:not(:disabled) {
-		background: var(--button-primary-hover-bg, #2563eb);
-		border-color: var(--button-primary-hover-bg, #2563eb);
-	}
-
-	.action-button:disabled {
-		opacity: 0.5;
-		cursor: not-allowed;
-		transform: none;
-		box-shadow: none;
-	}
-
-	.header-controls {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		gap: 1rem;
-		padding-top: 1rem;
-		border-top: 1px solid var(--ui-border, #e2e8f0);
-	}
-
-	.dev-controls {
-		display: flex;
-		gap: 0.5rem;
-		align-items: center;
-	}
-
-	.dev-button {
-		padding: 0.5rem 0.75rem;
-		border: 1px solid var(--ui-border, #e2e8f0);
-		border-radius: 4px;
-		background: var(--ui-bg, #ffffff);
-		color: var(--ui-text, #1a202c);
-		font-size: 0.75rem;
-		cursor: pointer;
-		transition: all 0.2s ease;
-	}
-
-	.dev-button:hover:not(:disabled) {
-		background: var(--ui-hover-bg, #f8fafc);
-	}
-
-	.dev-button.danger {
-		color: var(--toast-error, #dc2626);
-		border-color: var(--toast-error, #dc2626);
-	}
-
-	.dev-button.danger:hover:not(:disabled) {
-		background: var(--toast-error, #dc2626);
-		color: white;
-	}
-
-	.dev-button:disabled {
-		opacity: 0.5;
-		cursor: not-allowed;
 	}
 
 	/* Deck Switcher */
@@ -390,25 +330,19 @@
 	.deck-switcher-button {
 		display: inline-flex;
 		align-items: center;
-		gap: 0.5rem;
-		padding: 0.5rem 0.75rem;
+		gap: 0.25rem;
+		padding: 0.25rem 0.5rem;
 		border: 1px solid var(--ui-border, #e2e8f0);
-		border-radius: 6px;
+		border-radius: 4px;
 		background: var(--ui-bg, #ffffff);
 		color: var(--ui-text, #1a202c);
-		font-size: 0.875rem;
+		font-size: 0.75rem;
 		cursor: pointer;
 		transition: all 0.2s ease;
 	}
 
 	.deck-switcher-button:hover {
-		background: var(--ui-hover-bg, #f8fafc);
 		border-color: var(--button-primary-bg, #3b82f6);
-	}
-
-	.deck-switcher-button .caret {
-		font-size: 1rem;
-		color: var(--ui-muted, #64748b);
 	}
 
 	.deck-switcher-menu {
@@ -432,77 +366,67 @@
 		font-size: 0.875rem;
 	}
 
-	/* Auth UI */
-	.user-menu-container {
-		position: relative;
-	}
-
-	.user-button {
+	/* User Badge */
+	.user-badge {
 		display: inline-flex;
 		align-items: center;
-		gap: 0.5rem;
-		padding: 0.5rem 0.75rem;
-		border: 1px solid var(--ui-border, #e2e8f0);
-		border-radius: 6px;
-		background: var(--ui-bg, #ffffff);
-		color: var(--ui-text, #1a202c);
-		font-size: 0.875rem;
+		gap: 0.375rem;
+		padding: 0.25rem 0.625rem;
+		border-radius: 4px;
+		font-size: 0.8125rem;
+		font-weight: 500;
+		text-decoration: none;
+		border: none;
 		cursor: pointer;
 		transition: all 0.2s ease;
 	}
 
-	.user-button:hover {
-		background: var(--ui-hover-bg, #f8fafc);
-		border-color: var(--button-primary-bg, #3b82f6);
+	.user-badge.success {
+		background: var(--success-bg, #d1fae5);
+		color: var(--success-text, #065f46);
 	}
 
-	.user-email {
-		max-width: 150px;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
+	.user-badge.success:hover {
+		background: #a7f3d0;
 	}
 
-	.user-menu {
-		position: absolute;
-		top: calc(100% + 0.5rem);
-		right: 0;
-		min-width: 200px;
-		background: white;
-		border: 1px solid var(--ui-border, #e2e8f0);
-		border-radius: 6px;
-		box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-		z-index: 100;
+	.user-badge.warning {
+		background: var(--warning-bg, #fef3c7);
+		color: var(--warning-text, #92400e);
 	}
 
-	.user-menu-header {
-		padding: 0.75rem 1rem;
-		border-bottom: 1px solid var(--ui-border, #e2e8f0);
+	.user-badge.warning:hover {
+		background: #fde68a;
 	}
 
-	.user-email-full {
-		font-size: 0.875rem;
-		color: var(--ui-muted, #64748b);
-		word-break: break-all;
-	}
-
-	.user-menu-item {
-		width: 100%;
-		display: flex;
+	.user-initial {
+		display: inline-flex;
 		align-items: center;
-		gap: 0.5rem;
-		padding: 0.75rem 1rem;
-		border: none;
-		background: none;
-		text-align: left;
-		cursor: pointer;
-		font-size: 0.875rem;
-		color: var(--ui-text, #1a202c);
-		transition: background 0.2s;
+		justify-content: center;
+		width: 1.25rem;
+		height: 1.25rem;
+		border-radius: 50%;
+		background: var(--success-text, #065f46);
+		color: white;
+		font-size: 0.625rem;
+		font-weight: 600;
 	}
 
-	.user-menu-item:hover {
-		background: var(--ui-hover-bg, #f8fafc);
+	/* Token Balance */
+	.token-balance {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.375rem;
+		padding: 0.25rem 0.5rem;
+		background: var(--warning-bg, #fef3c7);
+		color: var(--warning-text, #92400e);
+		border-radius: 4px;
+		font-size: 0.8125rem;
+		font-weight: 600;
+	}
+
+	.token-amount {
+		line-height: 1;
 	}
 
 	/* Responsive design */
@@ -537,21 +461,11 @@
 			padding: 0.75rem 0.5rem;
 			gap: 0.5rem;
 		}
-
-		.action-button {
-			padding: 0.5rem 0.75rem;
-			font-size: 0.8125rem;
-		}
 	}
 
 	@media (max-width: 480px) {
 		.page-title {
 			font-size: 1.125rem;
-		}
-
-		.action-button {
-			padding: 0.5rem 0.625rem;
-			font-size: 0.75rem;
 		}
 	}
 </style>

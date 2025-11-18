@@ -1,16 +1,26 @@
 <script lang="ts">
 	import MobileCardList from '$lib/next/components/page/MobileCardList.svelte';
-	import AppHeader from '$lib/next/components/nav/Header.svelte';
+	import MainHeader from '$lib/next/components/nav/MainHeader.svelte';
+	import DeckMetadata from '$lib/next/components/nav/DeckMetadata.svelte';
+	import DeckActions from '$lib/next/components/nav/DeckActions.svelte';
 	import Dialog from '$lib/next/components/dialog/Dialog.svelte';
 	import Card from '$lib/next/components/card/Card.svelte';
 	import CardFrontContent from '$lib/next/components/card/CardFrontContent.svelte';
 	import CardBackContent from '$lib/next/components/card/CardBackContent.svelte';
+	import { dialogStore } from '$lib/next/components/dialog/dialogStore.svelte.js';
+	import {
+		CardEditDialog,
+		ImageMigrationDialog
+	} from '$lib/next/components/dialogs/index.js';
+	import AiBatchImageGenerationDialog from '$lib/next/components/dialogs/AiBatchImageGenerationDialog.svelte';
+	import { generateShareUrl } from '$lib/next/utils/shareUrlUtils.js';
 
 	import { nextDeckStore } from '$lib/next/stores/deckStore.svelte.js';
 	import { nextDevStore } from '$lib/next/stores/devStore.svelte.js';
 	import { importFromCurrentUrl } from '$lib/next/utils/shareUrlUtils.js';
 	import { toasts } from '$lib/stores/toast.js';
 	import { onMount } from 'svelte';
+	import type { ImageStyle } from '$lib/next/types/deck.js';
 
 	let isInitializing = $state(true);
 	let showCardBacks = $state(true);
@@ -22,13 +32,135 @@
 	let cards = $derived(deck?.cards || []);
 	let deckTitle = $derived(deck?.meta.title || 'Sample Deck');
 	let layout = $derived(deck?.meta.layout || 'tarot');
+	let imageStyle = $derived(deck?.meta.imageStyle || 'classic');
 
 	// Simple card count for UI logic
 	let cardCount = $derived(cards?.length || 0);
 
-	// Handle card backs visibility toggle from header
-	function handleCardBacksToggle(event: CustomEvent<boolean>) {
-		showCardBacks = event.detail;
+	// Handler functions for header actions
+	async function handleAddCard() {
+		const newCard = await nextDeckStore.addCard();
+		if (newCard) {
+			dialogStore.setContent(CardEditDialog, { cardId: newCard.id });
+		}
+	}
+
+	async function handleShareDeck() {
+		if (!deck) return;
+		try {
+			const needsMigration = checkImageMigrationNeeded(deck);
+			if (!needsMigration) {
+				const shareUrl = generateShareUrl(deck);
+				await navigator.clipboard.writeText(shareUrl);
+				toasts.success('🔗 Share URL copied to clipboard!');
+			} else {
+				dialogStore.setContent(ImageMigrationDialog, {
+					deck,
+					onMigrationComplete: handleMigrationComplete
+				});
+			}
+		} catch (error) {
+			toasts.error('Failed to share deck');
+		}
+	}
+
+	function checkImageMigrationNeeded(deck: typeof deck): boolean {
+		return deck.cards.some((card) => {
+			if (!card.image && !card.imageBlob) return false;
+			if (card.image && isValidExternalUrl(card.image)) return false;
+			return card.imageBlob || (card.image && !isValidExternalUrl(card.image));
+		});
+	}
+
+	function isValidExternalUrl(url?: string | null): boolean {
+		if (!url) return false;
+		try {
+			const parsedUrl = new URL(url);
+			return (
+				(parsedUrl.protocol === 'http:' || parsedUrl.protocol === 'https:') &&
+				parsedUrl.hostname !== 'localhost' &&
+				parsedUrl.hostname !== '127.0.0.1' &&
+				!parsedUrl.protocol.startsWith('blob:') &&
+				!parsedUrl.protocol.startsWith('data:')
+			);
+		} catch {
+			return false;
+		}
+	}
+
+	async function handleMigrationComplete(migrationData: Record<string, { url: string; metadata: any }>) {
+		try {
+			if (!deck) throw new Error('No deck loaded');
+			const cardUpdates = Object.entries(migrationData).map(([cardId, migration]) => ({
+				cardId,
+				updates: {
+					image: migration.url,
+					imageBlob: null,
+					imageMetadata: migration.metadata
+				}
+			}));
+			const { nextDb } = await import('$lib/next/stores/database.js');
+			const updatedDeck = await nextDb.updateMultipleCards(deck.id, cardUpdates);
+			await nextDeckStore.loadDeck(updatedDeck.id);
+			const freshDeck = await nextDb.getDeck(updatedDeck.id);
+			if (!freshDeck) throw new Error('Failed to fetch updated deck');
+			const shareUrl = generateShareUrl(freshDeck);
+			await navigator.clipboard.writeText(shareUrl);
+			toasts.success('🎉 Images migrated and share URL copied!');
+			dialogStore.close();
+		} catch (error) {
+			toasts.error('Migration complete, but failed to generate share URL');
+		}
+	}
+
+	async function handleExportJson() {
+		if (!deck) return;
+		const json = JSON.stringify(deck, null, 2);
+		const blob = new Blob([json], { type: 'application/json' });
+		const url = URL.createObjectURL(blob);
+		const a = document.createElement('a');
+		a.href = url;
+		a.download = `${deck.meta.title.replace(/[^a-z0-9]/gi, '_')}.json`;
+		a.click();
+		URL.revokeObjectURL(url);
+		toasts.success('Deck exported as JSON');
+	}
+
+	function handlePublish() {
+		toasts.info('Publishing to gallery - coming soon!');
+	}
+
+	function handleGenerateDeck() {
+		toasts.info('Full deck generation - coming soon!');
+	}
+
+	function handleGenerateImages() {
+		dialogStore.setContent(AiBatchImageGenerationDialog);
+	}
+
+	function handleImportCards() {
+		toasts.info('Import cards - coming soon!');
+	}
+
+	function handleDuplicateDeck() {
+		toasts.info('Duplicate deck - coming soon!');
+	}
+
+	function handleDeleteDeck() {
+		toasts.info('Delete deck - coming soon!');
+	}
+
+	function handleCardBacksChange(visible: boolean) {
+		showCardBacks = visible;
+	}
+
+	async function handleImageStyleChange(style: ImageStyle) {
+		await nextDeckStore.updateImageStyle(style);
+	}
+
+	function handleTitleEdit() {
+		// TODO: Open title edit dialog
+		toasts.info('Title editing - coming soon!');
 	}
 
 	// Working pagination function (from old PagedCards)
@@ -137,7 +269,36 @@
 </script>
 
 <section class="deck">
-	<AppHeader on:cardBacksToggle={handleCardBacksToggle} />
+	<MainHeader title={deckTitle} onTitleEdit={handleTitleEdit}>
+		{#snippet metadata()}
+			{#if deck}
+				<DeckMetadata
+					cardCount={cardCount}
+					{imageStyle}
+					onImageStyleChange={handleImageStyleChange}
+					cardBacksVisible={showCardBacks}
+					onCardBacksChange={handleCardBacksChange}
+				/>
+			{/if}
+		{/snippet}
+
+		{#snippet actions()}
+			{#if deck}
+				<DeckActions
+					onAddCard={handleAddCard}
+					onShare={handleShareDeck}
+					onExportJson={handleExportJson}
+					onPublish={handlePublish}
+					onGenerateDeck={handleGenerateDeck}
+					onGenerateImages={handleGenerateImages}
+					onImportCards={handleImportCards}
+					onDuplicateDeck={handleDuplicateDeck}
+					onDeleteDeck={handleDeleteDeck}
+					disabled={nextDeckStore.isLoading}
+				/>
+			{/if}
+		{/snippet}
+	</MainHeader>
 
 	{#if isInitializing}
 		<p>Initializing...</p>

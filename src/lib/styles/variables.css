@@ -29,7 +29,14 @@
 
 @property --page-gap {
 	syntax: '<length>';
-	initial-value: 32px; /* 2rem = 32px */
+	initial-value: 32px;
+	/* 2rem = 32px */
+	inherits: true;
+}
+
+@property --page-max-width {
+	syntax: '<length>';
+	initial-value: 1400px;
 	inherits: true;
 }
 
@@ -64,7 +71,8 @@
 	--card-padding: 3mm;
 	--page-margin: 4mm;
 	--content-gap: 2mm;
-	--page-gap: 32px; /* 2rem = 32px */
+	--page-gap: 32px;
+	/* 2rem = 32px */
 
 	/* Theme colors (for cards) */
 	--content-bg: white;
@@ -82,8 +90,10 @@
 	--body-line-height: 1.2;
 
 	/* Layout constants */
-	--card-width: 63.5mm; /* Poker card width */
-	--card-height: 88.9mm; /* Poker card height */
+	--card-width: 63.5mm;
+	/* Poker card width */
+	--card-height: 88.9mm;
+	/* Poker card height */
 	--card-aspect: calc(var(--card-height) / var(--card-width));
 
 	/* Page styles (for cards) */

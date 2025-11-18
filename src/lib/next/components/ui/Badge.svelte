@@ -83,7 +83,7 @@
 
 	.badge.variant-neutral {
 		background: transparent;
-		color: var(--ui-muted, #64748b);
+		color: currentColor;
 		border: none;
 		padding: 0;
 	}

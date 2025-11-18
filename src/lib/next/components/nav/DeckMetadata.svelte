@@ -2,6 +2,7 @@
 	import type { ImageStyle } from '$lib/next/types/deck.js';
 	import Badge from '../ui/Badge.svelte';
 	import Dropdown from '../ui/Dropdown.svelte';
+	import { Check } from 'lucide-svelte';
 
 	interface Props {
 		cardCount: number;
@@ -34,9 +35,8 @@
 
 	const IMAGE_STYLE_OPTIONS = [
 		{ value: 'classic', label: 'Classic' },
-		{ value: 'ink', label: 'Ink' },
-		{ value: 'watercolor', label: 'Watercolor' },
-		{ value: 'sketch', label: 'Sketch' }
+		{ value: 'inked', label: 'Inked' },
+		{ value: 'modern', label: 'Modern' }
 	];
 
 	function handleCardBacksChange(value: string) {
@@ -92,7 +92,10 @@
 
 	<!-- Published Badge -->
 	{#if published}
-		<Badge variant="success" size="sm" icon="🌍">Published</Badge>
+		<Badge variant="success" size="sm">
+			<Check size={12} />
+			Published
+		</Badge>
 	{/if}
 
 	<!-- Share Count -->

@@ -4,18 +4,19 @@
 	import DeckActions from './DeckActions.svelte';
 
 	let cardBacksVisible = $state(true);
-	let imageStyle = $state<'classic' | 'ink' | 'watercolor' | 'sketch'>('classic');
+	let imageStyle = $state<'classic' | 'inked' | 'modern'>('classic');
 </script>
 
-<MainHeader 
+<MainHeader
 	title="Epic Fantasy Characters"
 	onTitleEdit={() => console.log('Edit title')}
-	mockIsAuthenticated={true}
-	mockUserEmail="dungeonmaster@example.com"
-	mockDeckCount={8}
+		mockIsAuthenticated={true}
+		mockUserEmail="user@example.com"
+		mockDeckCount={8}
+		mockTokenBalance={1200}
 >
 	{#snippet metadata()}
-		<DeckMetadata 
+		<DeckMetadata
 			cardCount={24}
 			{imageStyle}
 			{cardBacksVisible}
@@ -23,8 +24,14 @@
 			imageCount={18}
 			genre="Fantasy"
 			shareCount={42}
-			onImageStyleChange={(style) => { imageStyle = style; console.log('Style:', style); }}
-			onCardBacksChange={(visible) => { cardBacksVisible = visible; console.log('Card backs:', visible); }}
+			onImageStyleChange={(style) => {
+				imageStyle = style;
+				console.log('Style:', style);
+			}}
+			onCardBacksChange={(visible) => {
+				cardBacksVisible = visible;
+				console.log('Card backs:', visible);
+			}}
 		/>
 	{/snippet}
 

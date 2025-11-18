@@ -2,17 +2,12 @@
 	import { nextDeckStore } from '$lib/next/stores/deckStore.svelte.js';
 	import { nextDevStore } from '$lib/next/stores/devStore.svelte.js';
 	import { dialogStore } from '../dialog/dialogStore.svelte.js';
-	import {
-		AiPromptDialog,
-		DeckManagerDialog,
-		CardEditDialog,
-		ImageMigrationDialog
-	} from '../dialogs/index.js';
+	import { DeckManagerDialog, CardEditDialog, ImageMigrationDialog } from '../dialogs/index.js';
 	import AiBatchImageGenerationDialog from '../dialogs/AiBatchImageGenerationDialog.svelte';
 	import { generateShareUrl } from '$lib/next/utils/shareUrlUtils.js';
 	import { toasts } from '$lib/stores/toast.js';
 	import BinaryToggle from '../ui/BinaryToggle.svelte';
-	import type { Layout } from '../../types/deck.js';
+	import type { Deck, Layout } from '../../types/deck.js';
 	import { createEventDispatcher } from 'svelte';
 	import { authStore, user, isAuthenticated } from '$lib/next/stores/auth';
 	import AuthDialog from '../dialogs/AuthDialog.svelte';
@@ -92,7 +87,7 @@
 	}
 
 	// Check if deck has images that need migration
-	function checkImageMigrationNeeded(deck: typeof deck): boolean {
+	function checkImageMigrationNeeded(deck: Deck): boolean {
 		return deck.cards.some((card) => {
 			// Skip cards with no images entirely (they're fine as-is)
 			if (!card.image && !card.imageBlob) {
@@ -287,9 +282,7 @@
 				<button class="action-button" onclick={handleSignIn}> 🔐 Sign In </button>
 			{/if}
 
-			<a href="/next/gallery" class="action-button">
-				🌍 Gallery
-			</a>
+			<a href="/gallery" class="action-button"> 🌍 Gallery </a>
 
 			<button class="action-button primary" onclick={handleManageDecks} disabled={isLoading}>
 				📚 Manage Decks

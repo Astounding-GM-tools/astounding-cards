@@ -16,6 +16,9 @@
 	} from '$lib/next/utils/deckMerging.js';
 	import MergeTool from '$lib/next/components/merge/MergeTool.svelte';
 	import DeckPreview from '$lib/next/components/preview/DeckPreview.svelte';
+	import MainHeader from '$lib/next/components/nav/MainHeader.svelte';
+	import DeckMetadata from '$lib/next/components/nav/DeckMetadata.svelte';
+	import { Copy, Download } from 'lucide-svelte';
 	import type { Deck } from '$lib/next/types/deck.js';
 	import type { PageData } from './$types';
 
@@ -166,12 +169,31 @@
 		importedDeck = null;
 
 		// Go back to the app
-		goto('/next');
+		goto('/');
 	}
 
 	// Extract the slug for display
 	let slug = $derived($page.params.slug || '');
 	let decodedSlug = $derived(decodeURIComponent(slug));
+
+	// Count images in deck
+	function countImages(deck: Deck): number {
+		return deck.cards.filter((card) => card.image || card.imageBlob).length;
+	}
+
+	// Handle download JSON
+	function handleDownloadJson() {
+		if (!previewDeck) return;
+		const json = JSON.stringify(previewDeck, null, 2);
+		const blob = new Blob([json], { type: 'application/json' });
+		const url = URL.createObjectURL(blob);
+		const a = document.createElement('a');
+		a.href = url;
+		a.download = `${previewDeck.meta.title}.json`;
+		a.click();
+		URL.revokeObjectURL(url);
+		toasts.success('📥 Deck exported as JSON');
+	}
 </script>
 
 <div class="import-page">
@@ -182,29 +204,41 @@
 		</div>
 	{:else if previewing && previewDeck}
 		<!-- Preview mode with deck viewer -->
-		<div class="preview-container">
-			<div class="preview-header">
-				<div class="preview-info">
-					<h1>{previewDeck.meta.title}</h1>
-					{#if previewDeck.meta.description}
-						<p class="description">{previewDeck.meta.description}</p>
-					{/if}
-					<p class="card-count">{previewDeck.cards.length} cards</p>
-				</div>
+		<MainHeader title={previewDeck.meta.title}>
+			{#snippet metadata()}
+				<DeckMetadata
+					cardCount={previewDeck.cards.length}
+					imageCount={countImages(previewDeck)}
+					published={true}
+				/>
+			{/snippet}
+
+			{#snippet actions()}
 				<div class="preview-actions">
-					<button class="import-button" onclick={handleImport} disabled={importing}>
+					<button class="action-button primary" onclick={handleImport} disabled={importing}>
 						{#if importing}
 							<div class="button-spinner"></div>
 							Adding...
 						{:else}
-							💾 Add to Collection
+							<Copy size={16} />
+							<span>Add to Collection</span>
 						{/if}
 					</button>
-					<button class="secondary-button" onclick={() => goto('/next')}> Cancel </button>
-				</div>
-			</div>
 
-			<!-- Read-only deck viewer -->
+					<button class="action-button" onclick={handleDownloadJson}>
+						<Download size={16} />
+						<span>Download JSON</span>
+					</button>
+
+					<button class="action-button secondary" onclick={() => goto('/')}>
+						<span>Cancel</span>
+					</button>
+				</div>
+			{/snippet}
+		</MainHeader>
+
+		<!-- Read-only deck viewer -->
+		<div class="preview-content">
 			<DeckPreview deck={previewDeck} />
 		</div>
 	{:else}
@@ -224,14 +258,14 @@
 					<div class="checkmark">✅</div>
 					<h2>🎉 Added to Collection!</h2>
 					<p>Deck saved to your collection.</p>
-					<button class="success-button" onclick={() => goto('/next')}> Open Deck </button>
+					<button class="success-button" onclick={() => goto('/')}> Open Deck </button>
 				</div>
 			{:else if error}
 				<div class="error">
 					<div class="error-icon">❌</div>
 					<h2>Load Failed</h2>
 					<p>{error}</p>
-					<button class="retry-button" onclick={() => goto('/next')}> Go to App </button>
+					<button class="retry-button" onclick={() => goto('/')}> Go to App </button>
 				</div>
 			{/if}
 		</div>
@@ -368,84 +402,29 @@
 		overflow-y: auto;
 	}
 
-	/* Preview container */
-	.preview-container {
-		width: 100%;
-		max-width: 1200px;
+	/* Preview content */
+	.preview-content {
+		max-width: var(--page-max-width);
 		margin: 0 auto;
-		padding: 2rem;
-	}
-
-	.preview-header {
-		display: flex;
-		justify-content: space-between;
-		align-items: flex-start;
-		gap: 2rem;
-		margin-bottom: 2rem;
-		padding-bottom: 1.5rem;
-		border-bottom: 2px solid var(--ui-border, #e2e8f0);
-	}
-
-	.preview-info h1 {
-		margin: 0 0 0.5rem 0;
-		font-size: 2rem;
-		font-weight: 700;
-		color: var(--ui-text, #1a202c);
-	}
-
-	.preview-info .description {
-		margin: 0 0 0.5rem 0;
-		font-size: 1.125rem;
-		color: var(--ui-muted, #64748b);
-		line-height: 1.6;
-	}
-
-	.preview-info .card-count {
-		margin: 0;
-		font-size: 0.875rem;
-		color: var(--ui-muted, #64748b);
-		font-weight: 500;
+		padding: 0 2rem 2rem;
 	}
 
 	.preview-actions {
 		display: flex;
 		gap: 0.75rem;
-		flex-shrink: 0;
+		align-items: center;
+		flex-wrap: wrap;
 	}
 
-	.import-button {
-		padding: 0.75rem 1.5rem;
-		background: var(--button-primary-bg, #3b82f6);
-		color: white;
-		border: none;
-		border-radius: 6px;
-		font-size: 0.875rem;
-		font-weight: 600;
-		cursor: pointer;
-		transition: all 0.2s ease;
-		display: flex;
+	.action-button {
+		display: inline-flex;
 		align-items: center;
 		gap: 0.5rem;
-		white-space: nowrap;
-	}
-
-	.import-button:hover:not(:disabled) {
-		background: var(--button-primary-hover-bg, #2563eb);
-		transform: translateY(-1px);
-		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-	}
-
-	.import-button:disabled {
-		opacity: 0.6;
-		cursor: not-allowed;
-	}
-
-	.secondary-button {
-		padding: 0.75rem 1.5rem;
-		background: var(--ui-hover-bg, #f8fafc);
-		color: var(--ui-text, #1a202c);
-		border: 1px solid var(--ui-border, #e2e8f0);
+		padding: 0.75rem 1rem;
+		border: none;
 		border-radius: 6px;
+		background: var(--brand);
+		color: white;
 		font-size: 0.875rem;
 		font-weight: 500;
 		cursor: pointer;
@@ -453,8 +432,31 @@
 		white-space: nowrap;
 	}
 
-	.secondary-button:hover {
+	.action-button:hover:not(:disabled) {
+		background: #a80116;
+		transform: translateY(-1px);
+		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+	}
+
+	.action-button.primary {
+		background: var(--brand);
+		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+	}
+
+	.action-button.secondary {
+		background: var(--ui-hover-bg, #f8fafc);
+		color: var(--ui-text, #1a202c);
+		border: 1px solid var(--ui-border, #e2e8f0);
+	}
+
+	.action-button.secondary:hover {
 		background: var(--ui-border, #e2e8f0);
+	}
+
+	.action-button:disabled {
+		opacity: 0.6;
+		cursor: not-allowed;
+		transform: none;
 	}
 
 	.button-spinner {
@@ -466,29 +468,22 @@
 		animation: spin 0.8s linear infinite;
 	}
 
-	/* Responsive merge container */
+	/* Responsive */
 	@media (max-width: 640px) {
 		.merge-container {
 			padding: 1rem;
 		}
 
-		.preview-container {
-			padding: 1rem;
-		}
-
-		.preview-header {
-			flex-direction: column;
-			gap: 1rem;
+		.preview-content {
+			padding: 0 1rem 1rem;
 		}
 
 		.preview-actions {
 			width: 100%;
-			flex-direction: column;
 		}
 
-		.import-button,
-		.secondary-button {
-			width: 100%;
+		.action-button {
+			flex: 1;
 		}
 	}
 </style>

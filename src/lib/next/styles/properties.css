@@ -16,6 +16,12 @@
 	inherits: true;
 }
 
+@property --brand {
+	syntax: '<color>';
+	initial-value: #d0021b;
+	inherits: false;
+}
+
 :root {
 	--font-size: 5cqw;
 	--font-title: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;

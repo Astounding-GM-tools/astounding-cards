@@ -1,6 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/svelte';
 import MainHeader from './MainHeader.svelte';
 import DeckPageExample from './MainHeader.DeckPageExample.svelte';
+import GalleryExample from './MainHeader.GalleryExample.svelte';
+import DashboardExample from './MainHeader.DashboardExample.svelte';
+import DeckPreviewExample from './MainHeader.DeckPreviewExample.svelte';
 
 const meta = {
 	title: 'Components/MainHeader',
@@ -24,7 +27,8 @@ export const Authenticated: Story = {
 	args: {
 		mockIsAuthenticated: true,
 		mockUserEmail: 'user@example.com',
-		mockDeckCount: 6
+		mockDeckCount: 6,
+		mockTokenBalance: 1500
 	}
 };
 
@@ -34,7 +38,8 @@ export const WithTitle: Story = {
 		title: 'My Deck',
 		mockIsAuthenticated: true,
 		mockUserEmail: 'user@example.com',
-		mockDeckCount: 3
+		mockDeckCount: 3,
+		mockTokenBalance: 250
 	}
 };
 
@@ -44,32 +49,35 @@ export const EditableTitle: Story = {
 		title: 'Click the edit icon →',
 		onTitleEdit: () => alert('Edit title clicked!'),
 		mockIsAuthenticated: true,
-		mockDeckCount: 5
+		mockDeckCount: 5,
+		mockTokenBalance: 3200
 	}
 };
 
-// Gallery page variant
-export const GalleryPage: Story = {
-	args: {
-		title: 'Gallery',
-		mockIsAuthenticated: false,
-		mockDeckCount: 0
-	}
+// Gallery Page - with search and filters
+export const GalleryPageFull: Story = {
+	render: () => ({
+		Component: GalleryExample
+	})
 };
 
-// Dashboard page variant  
-export const DashboardPage: Story = {
-	args: {
-		title: 'Dashboard',
-		mockIsAuthenticated: true,
-		mockUserEmail: 'user@example.com',
-		mockDeckCount: 12
-	}
+// Dashboard Page - with deck creation actions
+export const DashboardPageFull: Story = {
+	render: () => ({
+		Component: DashboardExample
+	})
 };
 
-// Full Deck Page - with metadata and actions
+// Full Deck Page - with metadata and actions (editing own deck)
 export const DeckPageFull: Story = {
 	render: () => ({
 		Component: DeckPageExample
+	})
+};
+
+// Deck Preview Page - viewing someone else's published deck (read-only)
+export const DeckPreviewPageFull: Story = {
+	render: () => ({
+		Component: DeckPreviewExample
 	})
 };

@@ -6,6 +6,8 @@
 	import { nextDb } from '$lib/next/stores/database.js';
 	import { generateId } from '$lib/next/utils/idUtils.js';
 	import type { Deck } from '$lib/next/types/deck.js';
+	import MainHeader from '$lib/next/components/nav/MainHeader.svelte';
+	import { Search, Filter, TrendingUp } from 'lucide-svelte';
 
 	// State
 	let decks = $state<any[]>([]);
@@ -152,7 +154,7 @@
 			fetch(`/api/decks/${deck.id}/import`, { method: 'POST' }).catch(() => {});
 
 			toasts.success(`✅ Deck imported! Now editing "${importedTitle}"`);
-			goto('/next');
+			goto('/');
 		} catch (err) {
 			console.error('Import error:', err);
 			toasts.error(err instanceof Error ? err.message : 'Failed to import deck');
@@ -177,14 +179,40 @@
 	<title>Deck Gallery - Astounding Cards</title>
 </svelte:head>
 
-<div class="gallery-page">
-	<div class="gallery-header">
-		<div class="header-content">
-			<h1>🌍 Deck Gallery</h1>
-			<p class="subtitle">Discover and import amazing decks created by the community</p>
-		</div>
-	</div>
+<MainHeader title="Gallery" hideGalleryLink={true}>
+	{#snippet actions()}
+		<div class="gallery-actions">
+			<div class="search-box">
+				<Search size={16} />
+				<input
+					type="text"
+					placeholder="Search decks..."
+					bind:value={searchQuery}
+					class="search-input-inline"
+					onkeydown={(e) => e.key === 'Enter' && applyFilters()}
+				/>
+			</div>
 
+			<button
+				class="filter-toggle-button"
+				onclick={() => {
+					/* TODO: toggle sidebar */
+				}}
+			>
+				<Filter size={16} />
+				<span>Filters</span>
+			</button>
+
+			<select bind:value={sortBy} class="sort-select-inline">
+				<option value="recent">Most Recent</option>
+				<option value="popular">Most Popular</option>
+				<option value="imported">Most Imported</option>
+			</select>
+		</div>
+	{/snippet}
+</MainHeader>
+
+<div class="gallery-page">
 	<div class="gallery-container">
 		<!-- Sidebar Filters -->
 		<aside class="filters-sidebar">
@@ -297,9 +325,7 @@
 							</div>
 
 							<div class="deck-card-actions">
-								<a href="/{deck.slug}" class="view-button">
-									👁️ View Deck
-								</a>
+								<a href="/{deck.slug}" class="view-button"> 👁️ View Deck </a>
 								<button class="import-button" onclick={() => importDeck(deck)}>
 									💾 Add to Collection
 								</button>
@@ -327,29 +353,75 @@
 		color: var(--text-primary, #f1f5f9);
 	}
 
-	.gallery-header {
-		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-		padding: 3rem 2rem;
-		text-align: center;
+	/* Gallery Actions (in header) */
+	.gallery-actions {
+		display: flex;
+		gap: 0.75rem;
+		align-items: center;
+		flex-wrap: wrap;
+		width: 100%;
 	}
 
-	.header-content h1 {
-		margin: 0 0 0.5rem 0;
-		font-size: 2.5rem;
-		font-weight: 700;
+	.search-box {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.5rem 0.75rem;
+		background: white;
+		border: 1px solid var(--ui-border, #e2e8f0);
+		border-radius: 6px;
+		flex: 1;
+		min-width: 200px;
 	}
 
-	.subtitle {
-		margin: 0;
-		font-size: 1.125rem;
-		opacity: 0.9;
+	.search-input-inline {
+		border: none;
+		outline: none;
+		background: none;
+		font-size: 0.875rem;
+		flex: 1;
+		color: var(--ui-text, #1a202c);
+	}
+
+	.search-input-inline::placeholder {
+		color: var(--ui-muted, #64748b);
+	}
+
+	.filter-toggle-button {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.5rem 0.75rem;
+		border: 1px solid var(--ui-border, #e2e8f0);
+		border-radius: 6px;
+		background: white;
+		color: var(--ui-text, #1a202c);
+		font-size: 0.875rem;
+		cursor: pointer;
+		transition: all 0.2s ease;
+		white-space: nowrap;
+	}
+
+	.filter-toggle-button:hover {
+		background: var(--ui-hover-bg, #f8fafc);
+		border-color: var(--brand);
+	}
+
+	.sort-select-inline {
+		padding: 0.5rem 0.75rem;
+		border: 1px solid var(--ui-border, #e2e8f0);
+		border-radius: 6px;
+		background: white;
+		color: var(--ui-text, #1a202c);
+		font-size: 0.875rem;
+		cursor: pointer;
 	}
 
 	.gallery-container {
 		display: grid;
 		grid-template-columns: 250px 1fr;
 		gap: 2rem;
-		max-width: 1400px;
+		max-width: var(--page-max-width);
 		margin: 0 auto;
 		padding: 2rem;
 	}

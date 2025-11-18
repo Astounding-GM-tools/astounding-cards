@@ -6,7 +6,7 @@ test.describe('Preview Mode', () => {
 
 	test.beforeEach(async ({ page }) => {
 		devTools = new DevToolsHelper(page);
-		await page.goto('/next');
+		await page.goto('/');
 	});
 
 	test('should show preview without auto-importing', async ({ page, context }) => {
@@ -84,8 +84,8 @@ test.describe('Preview Mode', () => {
 		// Should see success toast
 		await expect(newPage.locator('text=imported to your library')).toBeVisible({ timeout: 5000 });
 
-		// Should redirect to /next
-		await expect(newPage).toHaveURL(/\/next/);
+		// Should redirect to root
+		await expect(newPage).toHaveURL(/\//);
 
 		// Verify deck was imported to database
 		const dbInfo = await newPage.evaluate(() => {
@@ -120,8 +120,8 @@ test.describe('Preview Mode', () => {
 		// Click Cancel
 		await newPage.click('button:has-text("Cancel")');
 
-		// Should navigate to /next
-		await expect(newPage).toHaveURL(/\/next/);
+		// Should navigate to root
+		await expect(newPage).toHaveURL(/\//);
 
 		// Database should still be empty
 		const dbInfo = await newPage.evaluate(() => {

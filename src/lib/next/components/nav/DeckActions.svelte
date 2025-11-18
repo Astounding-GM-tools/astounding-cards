@@ -110,12 +110,31 @@
 </script>
 
 <div class="deck-actions">
-	<!-- Add Card -->
-	{#if onAddCard}
-		<button class="action-button" onclick={onAddCard} {disabled}>
-			<Plus size={16} />
-			<span>Add Card</span>
-		</button>
+	<!-- Generate Dropdown -->
+	{#if onGenerateDeck || onGenerateImages}
+		<div class="dropdown-container">
+			<button
+				class="action-button"
+				class:disabled-visible={!isAuthenticated}
+				onclick={toggleGenerate}
+				{disabled}
+				title={isAuthenticated ? '' : 'Sign in to use AI generation'}
+			>
+				<Wand2 size={16} />
+				<span>Generate</span>
+			</button>
+
+			{#if generateOpen && isAuthenticated}
+				<div class="dropdown-menu">
+					{#if onGenerateDeck}
+						<button class="dropdown-item" onclick={handleGenerateDeck}>Full Deck</button>
+					{/if}
+					{#if onGenerateImages}
+						<button class="dropdown-item" onclick={handleGenerateImages}>Deck Images</button>
+					{/if}
+				</div>
+			{/if}
+		</div>
 	{/if}
 
 	<!-- Share Dropdown -->
@@ -142,31 +161,12 @@
 		</div>
 	{/if}
 
-	<!-- Generate Dropdown -->
-	{#if onGenerateDeck || onGenerateImages}
-		<div class="dropdown-container">
-			<button
-				class="action-button"
-				class:disabled-visible={!isAuthenticated}
-				onclick={toggleGenerate}
-				disabled={disabled}
-				title={isAuthenticated ? '' : 'Sign in to use AI generation'}
-			>
-				<Wand2 size={16} />
-				<span>Generate</span>
-			</button>
-
-			{#if generateOpen && isAuthenticated}
-				<div class="dropdown-menu">
-					{#if onGenerateDeck}
-						<button class="dropdown-item" onclick={handleGenerateDeck}>Full Deck</button>
-					{/if}
-					{#if onGenerateImages}
-						<button class="dropdown-item" onclick={handleGenerateImages}>Deck Images</button>
-					{/if}
-				</div>
-			{/if}
-		</div>
+	<!-- Add Card -->
+	{#if onAddCard}
+		<button class="action-button" onclick={onAddCard} {disabled}>
+			<Plus size={16} />
+			<span>Add Card</span>
+		</button>
 	{/if}
 
 	<!-- Overflow Menu -->
@@ -180,7 +180,7 @@
 <style>
 	.deck-actions {
 		display: flex;
-		gap: 0.75rem;
+		gap: 0.475rem;
 		align-items: center;
 		flex-wrap: wrap;
 	}
@@ -189,11 +189,11 @@
 		display: inline-flex;
 		align-items: center;
 		gap: 0.5rem;
-		padding: 0.75rem 1rem;
-		border: 1px solid var(--ui-border, #e2e8f0);
-		border-radius: 6px;
-		background: var(--ui-bg, #ffffff);
-		color: var(--ui-text, #1a202c);
+		padding: 0.175rem 1rem;
+		border: none;
+		border-radius: 4px;
+		background: var(--brand);
+		color: white;
 		font-size: 0.875rem;
 		font-weight: 500;
 		cursor: pointer;
@@ -202,10 +202,9 @@
 	}
 
 	.action-button:hover:not(:disabled) {
-		background: var(--ui-hover-bg, #f8fafc);
-		border-color: var(--button-primary-bg, #3b82f6);
+		background: #a80116;
 		transform: translateY(-1px);
-		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 	}
 
 	.action-button:disabled {
@@ -223,8 +222,7 @@
 	.action-button.disabled-visible:hover {
 		transform: none;
 		box-shadow: none;
-		background: var(--ui-bg, #ffffff);
-		border-color: var(--ui-border, #e2e8f0);
+		background: var(--brand);
 	}
 
 	/* Dropdowns */

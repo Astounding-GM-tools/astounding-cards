@@ -23,11 +23,11 @@ Card Deck Creator is a **client-side only** application built with SvelteKit. It
 
 ### 3. State Management
 
-- Svelte stores for reactive state
+- Svelte 5 runes mode (`$state`, `$derived`, `$effect`) for reactive state
 - **Canon Update Pattern** (see [CANON_UPDATE_PATTERN.md](./CANON_UPDATE_PATTERN.md) for detailed documentation):
   - Database-first atomic updates
   - Granular loading states for user feedback
-  - Centralized update logic in `canonUpdate.ts`
+  - Centralized update logic in `src/lib/next/stores/deckStore.svelte.ts`
   - No optimistic updates - UI reflects persisted state only
 - Toast notifications for user feedback
 - Optimized to prevent scroll jumps and unnecessary re-renders
@@ -67,11 +67,12 @@ Card Deck Creator is a **client-side only** application built with SvelteKit. It
 
 ## Key Files and Directories
 
-- `/src/lib/stores/deck.ts` - Core data management
-- `/src/lib/stores/canonUpdate.ts` - Canon Update pattern implementation
-- `/src/lib/components/` - UI components
-- `/src/lib/types.ts` - TypeScript definitions
+- `/src/lib/next/stores/deckStore.svelte.ts` - Core deck state management (Canon Update pattern)
+- `/src/lib/next/stores/database.ts` - IndexedDB wrapper with error handling
+- `/src/lib/next/components/` - UI components (card, nav, dialogs, UI)
+- `/src/lib/next/types/` - TypeScript type definitions (deck.ts, card.ts, shareUrl.ts)
 - `/src/lib/themes/` - Theme definitions and styles
+- `/src/routes/+page.svelte` - Main application page
 
 ## Development Guidelines
 

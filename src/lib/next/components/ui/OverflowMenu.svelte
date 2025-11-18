@@ -74,11 +74,11 @@
 	}
 
 	.overflow-menu-button {
-		padding: 0.75rem 1rem;
-		border: 1px solid var(--ui-border, #e2e8f0);
+		padding: 0.5rem 1rem;
+		border: 1px solid var(--brand);
 		border-radius: 6px;
 		background: var(--ui-bg, #ffffff);
-		color: var(--ui-text, #1a202c);
+		color: var(--brand);
 		font-size: 1rem;
 		font-weight: 600;
 		cursor: pointer;

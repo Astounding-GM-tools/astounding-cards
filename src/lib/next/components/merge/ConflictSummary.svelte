@@ -58,7 +58,7 @@
 
 	// Calculate final card count after merge
 	let finalCardCount = $derived(
-		(conflict.existingDeck?.cards?.length || 0) + (cardStats.added || 0) - (cardStats.removed || 0)
+		(conflict.existingDeck?.cards?.length || 0) + (cardStats().added || 0) - (cardStats().removed || 0)
 	);
 </script>
 
@@ -118,24 +118,24 @@
 				</div>
 
 				<div class="card-stats">
-					{#if cardStats.added > 0}
+					{#if cardStats().added > 0}
 						<div class="stat-item added">
 							<span class="stat-icon">➕</span>
-							<span class="stat-text">{cardStats.added} new cards</span>
+							<span class="stat-text">{cardStats().added} new cards</span>
 						</div>
 					{/if}
 
-					{#if cardStats.modified > 0}
+					{#if cardStats().modified > 0}
 						<div class="stat-item modified">
 							<span class="stat-icon">✏️</span>
-							<span class="stat-text">{cardStats.modified} modified cards</span>
+							<span class="stat-text">{cardStats().modified} modified cards</span>
 						</div>
 					{/if}
 
-					{#if cardStats.removed > 0}
+					{#if cardStats().removed > 0}
 						<div class="stat-item removed">
 							<span class="stat-icon">🗑️</span>
-							<span class="stat-text">{cardStats.removed} removed cards</span>
+							<span class="stat-text">{cardStats().removed} removed cards</span>
 						</div>
 					{/if}
 				</div>
