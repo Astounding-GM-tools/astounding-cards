@@ -1,7 +1,9 @@
 <script lang="ts">
 	import { user, isAuthenticated } from '$lib/next/stores/auth';
 	import AuthDialog from '../dialogs/AuthDialog.svelte';
+	import DeckSwitcher from './DeckSwitcher.svelte';
 	import { Library, LogIn, ChevronDown, Coins } from 'lucide-svelte';
+	import type { Deck } from '$lib/next/types/deck.js';
 
 	// Props for flexible header
 	interface Props {
@@ -10,6 +12,12 @@
 		metadata?: import('svelte').Snippet;
 		actions?: import('svelte').Snippet;
 		hideGalleryLink?: boolean;
+		// Deck switcher props
+		showDeckSwitcher?: boolean;
+		decks?: Deck[];
+		currentDeckId?: string;
+		onSelectDeck?: (deckId: string) => void;
+		onNewDeck?: () => void;
 		// Mock overrides for testing/stories
 		mockIsAuthenticated?: boolean;
 		mockUserEmail?: string;
@@ -23,6 +31,11 @@
 		metadata,
 		actions,
 		hideGalleryLink = false,
+		showDeckSwitcher = false,
+		decks = [],
+		currentDeckId,
+		onSelectDeck,
+		onNewDeck,
 		mockIsAuthenticated,
 		mockUserEmail,
 		mockDeckCount,
@@ -32,7 +45,7 @@
 	// Derived state from store or mocks
 	let authenticated = $derived(mockIsAuthenticated ?? $isAuthenticated);
 	let userEmail = $derived(mockUserEmail ?? $user?.email);
-	let deckCount = $derived(mockDeckCount ?? 0); // TODO: Get from actual deck store
+	let deckCount = $derived(mockDeckCount ?? decks.length);
 	let tokenBalance = $derived(mockTokenBalance ?? $user?.tokens ?? 0);
 
 	// Extract user initial from email
@@ -97,8 +110,8 @@
 				</a>
 			{/if}
 
-			<!-- Deck Switcher (show if user has decks) -->
-			{#if deckCount > 0}
+			<!-- Deck Switcher (show if enabled) -->
+			{#if showDeckSwitcher}
 				<div class="deck-switcher-container">
 					<button class="deck-switcher-button" onclick={toggleDeckSwitcher}>
 						<span>{deckCount} {deckCount === 1 ? 'deck' : 'decks'}</span>
@@ -107,8 +120,22 @@
 
 					{#if deckSwitcherOpen}
 						<div class="deck-switcher-menu">
-							<!-- TODO: List of decks + New Deck option -->
-							<div class="menu-placeholder">Deck list goes here</div>
+							<DeckSwitcher
+								decks={decks.map((d) => ({
+									id: d.id,
+									title: d.meta.title,
+									cardCount: d.cards.length
+								}))}
+								{currentDeckId}
+								onSelectDeck={(deckId) => {
+									onSelectDeck?.(deckId);
+									deckSwitcherOpen = false;
+								}}
+								onNewDeck={() => {
+									onNewDeck?.();
+									deckSwitcherOpen = false;
+								}}
+							/>
 						</div>
 					{/if}
 				</div>
@@ -349,21 +376,11 @@
 		position: absolute;
 		top: calc(100% + 0.5rem);
 		right: 0;
-		min-width: 250px;
-		max-height: 400px;
-		overflow-y: auto;
 		background: white;
 		border: 1px solid var(--ui-border, #e2e8f0);
 		border-radius: 6px;
 		box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 		z-index: 100;
-	}
-
-	.menu-placeholder {
-		padding: 1rem;
-		text-align: center;
-		color: var(--ui-muted, #64748b);
-		font-size: 0.875rem;
 	}
 
 	/* User Badge */

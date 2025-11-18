@@ -16,6 +16,7 @@
 	import { generateShareUrl } from '$lib/next/utils/shareUrlUtils.js';
 
 	import { nextDeckStore } from '$lib/next/stores/deckStore.svelte.js';
+	import { nextDb } from '$lib/next/stores/database.js';
 	import { nextDevStore } from '$lib/next/stores/devStore.svelte.js';
 	import { importFromCurrentUrl } from '$lib/next/utils/shareUrlUtils.js';
 	import { toasts } from '$lib/stores/toast.js';
@@ -36,6 +37,34 @@
 
 	// Simple card count for UI logic
 	let cardCount = $derived(cards?.length || 0);
+
+	// Deck switcher state
+	let allDecks = $state<typeof deck[]>([]);
+
+	// Load all decks for the switcher
+	async function loadAllDecks() {
+		try {
+			const decks = await nextDb.getAllDecks();
+			allDecks = decks;
+		} catch (error) {
+			console.error('Failed to load decks:', error);
+		}
+	}
+
+	// Handle deck selection from switcher
+	async function handleSelectDeck(deckId: string) {
+		await nextDeckStore.selectDeck(deckId);
+		await loadAllDecks(); // Refresh deck list
+	}
+
+	// Handle new deck creation from switcher
+	async function handleNewDeck() {
+		const newDeck = await nextDeckStore.createNewDeck();
+		if (newDeck) {
+			await loadAllDecks(); // Refresh deck list
+			toasts.success('✅ New deck created!');
+		}
+	}
 
 	// Handler functions for header actions
 	async function handleAddCard() {
@@ -251,8 +280,9 @@
 		}, 200); // Increased delay
 	}
 
-	onMount(() => {
-		initializePage();
+	onMount(async () => {
+		await initializePage();
+		await loadAllDecks(); // Load decks for switcher
 
 		// Set up print event listeners (no media query - it conflicts)
 		if (typeof window !== 'undefined') {
@@ -269,7 +299,15 @@
 </script>
 
 <section class="deck">
-	<MainHeader title={deckTitle} onTitleEdit={handleTitleEdit}>
+	<MainHeader
+		title={deckTitle}
+		onTitleEdit={handleTitleEdit}
+		showDeckSwitcher={true}
+		decks={allDecks}
+		currentDeckId={deck?.id}
+		onSelectDeck={handleSelectDeck}
+		onNewDeck={handleNewDeck}
+	>
 		{#snippet metadata()}
 			{#if deck}
 				<DeckMetadata
