@@ -1,30 +1,16 @@
-/**
- * Next System Deck Store
- *
- * Implements Canon Update Pattern for the new simplified architecture:
- * - Single current deck focus
- * - Atomic database-first updates
- * - Clean reactive state management
- * - Loading states for better UX
- */
-
-import type { Deck, Layout } from '../types/deck.js';
 import type { Card } from '../types/card.js';
+import type { Deck, Layout } from '../types/deck.js';
+import type { LoadingState, NextDeckStore } from './types.js';
+
 import { nextDb, DatabaseError } from './database.js';
 import { safeCloneCard } from '$lib/utils/clone-utils.ts';
 import { generateKey } from '../utils/idUtils.js';
 import { authenticatedFetch } from '$lib/utils/authenticated-fetch.js';
 
-export interface LoadingState {
-	isLoading: boolean;
-	message: string;
-	operation: string;
-}
-
 /**
  * Create the Next deck store
  */
-function createNextDeckStore() {
+function createNextDeckStore(): NextDeckStore {
 	// Core state
 	let currentDeck = $state<Deck | null>(null);
 	let loadingState = $state<LoadingState>({ isLoading: false, message: '', operation: '' });
@@ -59,7 +45,7 @@ function createNextDeckStore() {
 		/**
 		 * Load a deck by ID
 		 */
-		async loadDeck(deckId: string): Promise<boolean> {
+		async loadDeck(deckId) {
 			this.setLoading(true, 'Loading deck...', 'load-deck');
 			this.clearError();
 
@@ -84,7 +70,7 @@ function createNextDeckStore() {
 		 * Select a deck and persist the selection
 		 * This updates the deck's lastEdited timestamp to ensure it's remembered
 		 */
-		async selectDeck(deckId: string): Promise<boolean> {
+		async selectDeck(deckId) {
 			this.setLoading(true, 'Selecting deck...', 'select-deck');
 			this.clearError();
 
@@ -114,7 +100,7 @@ function createNextDeckStore() {
 		/**
 		 * Create new deck and load it
 		 */
-		async createDeck(title: string): Promise<boolean> {
+		async createDeck(title) {
 			this.setLoading(true, 'Creating deck...', 'create-deck');
 			this.clearError();
 
@@ -133,7 +119,7 @@ function createNextDeckStore() {
 		/**
 		 * Create new deck with default title (convenience function)
 		 */
-		async createNewDeck(): Promise<Deck | null> {
+		async createNewDeck() {
 			this.setLoading(true, 'Creating deck...', 'create-deck');
 			this.clearError();
 
@@ -152,7 +138,7 @@ function createNextDeckStore() {
 		/**
 		 * Update deck metadata (Canon Update Pattern)
 		 */
-		async updateDeckMeta(updates: Partial<Deck['meta']>): Promise<boolean> {
+		async updateDeckMeta(updates) {
 			if (!currentDeck) {
 				this.setError('No deck loaded');
 				return false;
@@ -176,18 +162,14 @@ function createNextDeckStore() {
 		/**
 		 * Update deck layout (Canon Update Pattern)
 		 */
-		async updateLayout(layout: Layout): Promise<boolean> {
+		async updateLayout(layout) {
 			return this.updateDeckMeta({ layout });
 		},
 
 		/**
 		 * Update a card (Canon Update Pattern)
 		 */
-		async updateCard(
-			cardId: string,
-			updates: Partial<Card>,
-			message: string = 'Updating card...'
-		): Promise<boolean> {
+		async updateCard(cardId, updates, message = 'Updating card...') {
 			if (!currentDeck) {
 				this.setError('No deck loaded');
 				return false;
@@ -212,7 +194,7 @@ function createNextDeckStore() {
 		/**
 		 * Add new card to deck
 		 */
-		async addCard(cardData?: Partial<Card>): Promise<Card | null> {
+		async addCard(cardData) {
 			if (!currentDeck) {
 				this.setError('No deck loaded');
 				return null;
@@ -238,7 +220,7 @@ function createNextDeckStore() {
 		/**
 		 * Remove card from deck
 		 */
-		async removeCard(cardId: string): Promise<boolean> {
+		async removeCard(cardId) {
 			if (!currentDeck) {
 				this.setError('No deck loaded');
 				return false;
@@ -262,7 +244,7 @@ function createNextDeckStore() {
 		/**
 		 * Get card by ID from current deck
 		 */
-		getCard(cardId: string): Card | null {
+		getCard(cardId) {
 			if (!currentDeck) return null;
 			return currentDeck.cards.find((c) => c.id === cardId) || null;
 		},
@@ -270,7 +252,7 @@ function createNextDeckStore() {
 		/**
 		 * Duplicate a card
 		 */
-		async duplicateCard(cardId: string): Promise<Card | null> {
+		async duplicateCard(cardId) {
 			const card = this.getCard(cardId);
 			if (!card) {
 				this.setError('Card not found');
@@ -291,7 +273,7 @@ function createNextDeckStore() {
 		/**
 		 * Duplicate current deck with optional new title
 		 */
-		async duplicateDeck(newTitle?: string): Promise<boolean> {
+		async duplicateDeck(newTitle) {
 			if (!currentDeck) {
 				this.setError('No deck loaded');
 				return false;
@@ -315,7 +297,7 @@ function createNextDeckStore() {
 		/**
 		 * Duplicate any deck by ID with optional new title
 		 */
-		async duplicateDeckById(deckId: string, newTitle?: string): Promise<Deck | null> {
+		async duplicateDeckById(deckId, newTitle) {
 			this.setLoading(true, 'Duplicating deck...', 'duplicate-deck-by-id');
 			this.clearError();
 
@@ -335,7 +317,7 @@ function createNextDeckStore() {
 		 * Import a deck from share URL data and save it to database
 		 * This follows the Canon Update Pattern by persisting first, then updating UI
 		 */
-		async importDeck(deck: Deck): Promise<boolean> {
+		async importDeck(deck) {
 			this.setLoading(true, `Importing deck "${deck.meta.title}"...`, 'import-deck');
 			this.clearError();
 
@@ -357,7 +339,7 @@ function createNextDeckStore() {
 		/**
 		 * Load the most recent deck from database
 		 */
-		async loadMostRecent(): Promise<boolean> {
+		async loadMostRecent() {
 			this.setLoading(true, 'Loading most recent deck...', 'load-recent');
 			this.clearError();
 
@@ -382,7 +364,7 @@ function createNextDeckStore() {
 		/**
 		 * Clear current deck (for navigation)
 		 */
-		clearDeck(): void {
+		clearDeck() {
 			currentDeck = null;
 			this.clearError();
 			this.setLoading(false);
@@ -391,7 +373,7 @@ function createNextDeckStore() {
 		/**
 		 * Helper: Set loading state
 		 */
-		setLoading(isLoading: boolean, message: string = '', operation: string = ''): void {
+		setLoading(isLoading, message = '', operation = '') {
 			loadingState = { isLoading, message, operation };
 		},
 
@@ -439,46 +421,46 @@ function createNextDeckStore() {
 			this.setLoading(true, 'Publishing deck...', 'publish-deck');
 			this.clearError();
 
-		try {
-			// Build request body
-			const body: any = {
-				title: currentDeck.meta.title,
-				description: options?.description || '',
-				tags: options?.tags || [],
-				visibility: options?.visibility || 'public',
-				cards: currentDeck.cards,
-				theme: currentDeck.meta.theme
-			};
+			try {
+				// Build request body
+				const body: any = {
+					title: currentDeck.meta.title,
+					description: options?.description || '',
+					tags: options?.tags || [],
+					visibility: options?.visibility || 'public',
+					cards: currentDeck.cards,
+					theme: currentDeck.meta.theme
+				};
 
-			// Include published deck ID for updates
-			if (currentDeck.meta.published_deck_id) {
-				body.deckId = currentDeck.meta.published_deck_id;
-			}
+				// Include published deck ID for updates
+				if (currentDeck.meta.published_deck_id) {
+					body.deckId = currentDeck.meta.published_deck_id;
+				}
 
-			const response = await authenticatedFetch('/api/decks/publish', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify(body)
-			});
-
-			if (!response.ok) {
-				const errorData = await response.json();
-				throw new Error(errorData.message || 'Failed to publish deck');
-			}
-
-			const result = await response.json();
-
-			// Store published deck ID in metadata for future updates
-			if (result.deck.id) {
-				await this.updateDeckMeta({
-					published_deck_id: result.deck.id,
-					published_slug: result.deck.slug
+				const response = await authenticatedFetch('/api/decks/publish', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify(body)
 				});
-			}
 
-			return { success: true, slug: result.deck.slug };
+				if (!response.ok) {
+					const errorData = await response.json();
+					throw new Error(errorData.message || 'Failed to publish deck');
+				}
+
+				const result = await response.json();
+
+				// Store published deck ID in metadata for future updates
+				if (result.deck.id) {
+					await this.updateDeckMeta({
+						published_deck_id: result.deck.id,
+						published_slug: result.deck.slug
+					});
+				}
+
+				return { success: true, slug: result.deck.slug };
 			} catch (err) {
 				const errorMessage = err instanceof Error ? err.message : 'Failed to publish deck';
 				this.setError(errorMessage);

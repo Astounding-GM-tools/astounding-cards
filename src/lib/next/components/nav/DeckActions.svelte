@@ -1,7 +1,8 @@
 <script lang="ts">
-	import { Plus, Share2, Wand2 } from 'lucide-svelte';
-	import OverflowMenu from '../ui/OverflowMenu.svelte';
 	import type { ComponentType } from 'svelte';
+
+	import OverflowMenu from '../ui/OverflowMenu.svelte';
+	import { Plus, Share2, Wand2 } from 'lucide-svelte';
 
 	interface ActionDropdownItem {
 		label: string;
@@ -11,17 +12,19 @@
 	}
 
 	interface Props {
-		onAddCard?: () => void;
-		onShare?: () => void;
-		onExportJson?: () => void;
-		onPublish?: () => void;
-		onGenerateDeck?: () => void;
-		onGenerateImages?: () => void;
-		onImportCards?: () => void;
-		onDuplicateDeck?: () => void;
-		onDeleteDeck?: () => void;
+		onAddCard?: () => void | null;
+		onShare?: () => void | null;
+		onExportJson?: () => void | null;
+		onPublish?: () => void | null;
+		onGenerateDeck?: () => void | null;
+		onGenerateImages?: () => void | null;
+		onImportCards?: () => void | null;
+		onDuplicateDeck?: () => void | null;
+		onDeleteDeck?: () => void | null;
+		onImport?: () => void | null;
 		isAuthenticated?: boolean;
 		disabled?: boolean;
+		importing?: boolean;
 	}
 
 	let {
@@ -34,8 +37,10 @@
 		onImportCards,
 		onDuplicateDeck,
 		onDeleteDeck,
+		onImport,
 		isAuthenticated = false,
-		disabled = false
+		disabled = false,
+		importing = false
 	}: Props = $props();
 
 	// Share dropdown state
@@ -169,6 +174,18 @@
 		</button>
 	{/if}
 
+	<!-- Import/Like Button (for shared decks) -->
+	{#if onImport}
+		<button class="action-button like-button" onclick={onImport} disabled={importing || disabled}>
+			{#if importing}
+				<div class="button-spinner"></div>
+				<span>Adding...</span>
+			{:else}
+				<span>❤️ Like</span>
+			{/if}
+		</button>
+	{/if}
+
 	<!-- Overflow Menu -->
 	{#if overflowItems.length > 0}
 		<OverflowMenu items={overflowItems} />
@@ -223,6 +240,32 @@
 		transform: none;
 		box-shadow: none;
 		background: var(--brand);
+	}
+
+	.action-button.like-button {
+		background: #dc2626;
+	}
+
+	.action-button.like-button:hover:not(:disabled) {
+		background: #b91c1c;
+	}
+
+	.button-spinner {
+		width: 14px;
+		height: 14px;
+		border: 2px solid rgba(255, 255, 255, 0.3);
+		border-top: 2px solid white;
+		border-radius: 50%;
+		animation: spin 0.8s linear infinite;
+	}
+
+	@keyframes spin {
+		0% {
+			transform: rotate(0deg);
+		}
+		100% {
+			transform: rotate(360deg);
+		}
 	}
 
 	/* Dropdowns */

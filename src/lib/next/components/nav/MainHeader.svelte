@@ -181,12 +181,6 @@
 				<span>Generate</span>
 			</button>
 
-			<!-- New Deck button -->
-			<button class="top-bar-link new-deck-button" onclick={handleCreateNewDeck}>
-				<Plus size={14} />
-				<span>New Deck</span>
-			</button>
-
 			<!-- Deck Switcher (show when there are decks) -->
 			{#if shouldShowDeckSwitcher}
 				<div class="deck-switcher-container">
@@ -210,6 +204,12 @@
 						</div>
 					{/if}
 				</div>
+			{:else}
+				<!-- New Deck button -->
+				<button class="top-bar-link new-deck-button" onclick={handleCreateNewDeck}>
+					<Plus size={14} />
+					<span>New Deck</span>
+				</button>
 			{/if}
 
 			<!-- Auth Badge / Dashboard Link -->

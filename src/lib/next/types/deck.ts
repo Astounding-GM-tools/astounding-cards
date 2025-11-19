@@ -9,18 +9,20 @@ export type Theme = 'classic' | 'cordial' | 'scriptorum' | 'cyberdeck';
 
 export type ImageStyle = 'classic' | 'modern' | 'inked';
 
+interface DeckMeta {
+	title: string;
+	description?: string;
+	theme: Theme;
+	imageStyle: ImageStyle;
+	layout: Layout;
+	lastEdited: number;
+	createdAt: number;
+	published_deck_id?: string; // ID of published deck in published_decks table
+	published_slug?: string; // Slug of published deck
+};
+
 export interface Deck {
 	id: string;
-	meta: {
-		title: string;
-		description?: string;
-		theme: Theme;
-		imageStyle: ImageStyle;
-		layout: Layout;
-		lastEdited: number;
-		createdAt: number;
-		published_deck_id?: string; // ID of published deck in published_decks table
-		published_slug?: string; // Slug of published deck
-	};
+	meta: DeckMeta;
 	cards: Card[];
 }

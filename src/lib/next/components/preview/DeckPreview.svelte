@@ -1,8 +1,10 @@
 <script lang="ts">
 	import type { Deck } from '../../types/deck.js';
+
 	import Card from '../card/Card.svelte';
-	import CardFrontContent from '../card/CardFrontContent.svelte';
 	import CardBackContent from '../card/CardBackContent.svelte';
+	import CardFrontContent from '../card/CardFrontContent.svelte';
+
 	import { Pencil } from 'lucide-svelte';
 
 	interface Props {
@@ -11,8 +13,6 @@
 	}
 
 	let { deck, onEdit }: Props = $props();
-
-	// Track which cards are showing back side
 	let showingBack = $state(new Set<string>());
 
 	function toggleCardSide(cardId: string) {

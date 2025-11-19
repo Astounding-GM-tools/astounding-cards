@@ -1,46 +1,48 @@
 <script lang="ts">
+	import type { Deck, Layout } from '$lib/next/types/deck.js';
+	import type { PageData } from './$types';
+
 	import { onMount } from 'svelte';
-	import { goto, replaceState } from '$app/navigation';
-	import { page } from '$app/stores';
 	import { track } from '@vercel/analytics';
-	import { importFromUrl } from '$lib/next/utils/shareUrlUtils.js';
-	import { performThreeLayerMerge } from '$lib/next/utils/threeLayerMerge.js';
-	import { nextDeckStore } from '$lib/next/stores/deckStore.svelte.ts';
+
+	import Dialog from '$lib/next/components/dialog/Dialog.svelte';
+	import MergeTool from '$lib/next/components/merge/MergeTool.svelte';
+	import MainHeader from '$lib/next/components/nav/MainHeader.svelte';
+	import DeckPreview from '$lib/next/components/preview/DeckPreview.svelte';
+	import PrintLayout from '$lib/next/components/print/PrintLayout.svelte';
+	import DeckMetadata from '$lib/next/components/nav/DeckMetadata.svelte';
+	import AiBatchImageGenerationDialog from '$lib/next/components/dialogs/AiBatchImageGenerationDialog.svelte';
+
+	import { page } from '$app/stores';
+	import { user } from '$lib/next/stores/auth';
 	import { nextDb } from '$lib/next/stores/database.js';
 	import { toasts } from '$lib/stores/toast.js';
-	import { user } from '$lib/next/stores/auth';
+	import { dialogStore } from '$lib/next/components/dialog/dialogStore.svelte.js';
+	import { importFromUrl } from '$lib/next/utils/shareUrlUtils.js';
+	import { nextDeckStore } from '$lib/next/stores/deckStore.svelte.ts';
+	import { CardEditDialog } from '$lib/next/components/dialogs/index.js';
+	import { goto, replaceState } from '$app/navigation';
+	import { performThreeLayerMerge } from '$lib/next/utils/threeLayerMerge.js';
 	import {
 		detectDeckConflict,
 		type DeckConflict,
 		type MergeResolution,
 		applyMergeResolution
 	} from '$lib/next/utils/deckMerging.js';
-	import MergeTool from '$lib/next/components/merge/MergeTool.svelte';
-	import DeckPreview from '$lib/next/components/preview/DeckPreview.svelte';
-	import PrintLayout from '$lib/next/components/print/PrintLayout.svelte';
-	import MainHeader from '$lib/next/components/nav/MainHeader.svelte';
-	import DeckMetadata from '$lib/next/components/nav/DeckMetadata.svelte';
-	import Dialog from '$lib/next/components/dialog/Dialog.svelte';
-	import { dialogStore } from '$lib/next/components/dialog/dialogStore.svelte.js';
-	import { CardEditDialog } from '$lib/next/components/dialogs/index.js';
-	import AiBatchImageGenerationDialog from '$lib/next/components/dialogs/AiBatchImageGenerationDialog.svelte';
-	import { Copy, Download, Globe, Heart, ImagePlus } from 'lucide-svelte';
-	import type { Deck } from '$lib/next/types/deck.js';
-	import type { Layout } from '$lib/next/types/deck.js';
-	import type { PageData } from './$types';
+	import DeckActions from '$lib/next/components/nav/DeckActions.svelte';
 
 	// Server-side data
 	let { data }: { data: PageData } = $props();
 
-	let loading = $state(true);
 	let error = $state<string | null>(null);
-	let previewing = $state(false);
-	let importing = $state(false);
-	let imported = $state(false);
-	let showMergeTool = $state(false);
+	let loading = $state(true);
 	let conflict = $state<DeckConflict | null>(null);
+	let imported = $state(false);
+	let importing = $state(false);
+	let previewing = $state(false);
 	let previewDeck = $state<Deck | null>(null);
 	let importedDeck = $state<Deck | null>(null);
+	let showMergeTool = $state(false);
 
 	// Deck sources (for conditional UI logic)
 	let hashDeck = $state<Deck | null>(null);
@@ -142,20 +144,23 @@
 		loadDeckPreview();
 	});
 
-	onMount(async () => {
-		// Track shared deck access with Vercel Web Analytics
-		try {
-			track('shared_deck_accessed', {
-				slug: data.slug,
-				curated: !!data.curatedDeck,
-				timestamp: new Date().toISOString(),
-				referrer: document.referrer || 'direct'
-			});
-		} catch (error) {
-			console.warn('Analytics tracking failed:', error);
-		}
+	onMount(() => {
+		// Run async work in a detached async IIFE so onMount returns cleanup synchronously
+		(async () => {
+			// Track shared deck access with Vercel Web Analytics
+			try {
+				track('shared_deck_accessed', {
+					slug: data.slug,
+					curated: !!data.curatedDeck,
+					timestamp: new Date().toISOString(),
+					referrer: document.referrer || 'direct'
+				});
+			} catch (error) {
+				console.warn('Analytics tracking failed:', error);
+			}
 
-		// Initial load happens via $effect above
+			// Initial load happens via $effect above
+		})();
 
 		// Set up print event listeners
 		if (typeof window !== 'undefined') {
@@ -232,13 +237,11 @@
 		}
 	}
 
-	// Handle merge cancellation
 	function handleMergeCancel() {
 		showMergeTool = false;
 		conflict = null;
 		importedDeck = null;
 
-		// Go back to the app
 		goto('/');
 	}
 
@@ -420,62 +423,27 @@
 			{/snippet}
 
 			{#snippet actions()}
-				<div class="preview-actions">
-					<!-- Layout selector -->
-					<div class="layout-selector">
-						<label for="layout-select">Print Size:</label>
-						<select
-							id="layout-select"
-							bind:value={layout}
-							onchange={() => handleLayoutChange(layout)}
-						>
-							<option value="poker">Poker</option>
-							<option value="tarot">Tarot</option>
-						</select>
-					</div>
+				<DeckActions
+					onShare={handleDownloadJson}
+					onExportJson={handleDownloadJson}
+					onPublish={(!data.curatedDeck && !hashDeck && localDeck) || ownsPublishedDeck ? handlePublish : null}
+					onGenerateImages={(!data.curatedDeck && !hashDeck && localDeck) || ownsPublishedDeck ? handleGenerateImages : null}
+					onImport={(data.curatedDeck || hashDeck) && !ownsPublishedDeck ? handleImport : null}
+					isAuthenticated={!!$user}
+					importing={importing}
+				/>
 
-					<!-- Batch Image Generation button (for local decks or owned published decks) -->
-					{#if (!data.curatedDeck && !hashDeck && localDeck) || ownsPublishedDeck}
-						<button class="action-button" onclick={handleGenerateImages}>
-							<ImagePlus size={16} />
-							<span>Generate Images</span>
-						</button>
-					{/if}
-
-					<!-- Show Publish button for local decks OR owned published decks -->
-					{#if (!data.curatedDeck && !hashDeck && localDeck) || ownsPublishedDeck}
-						<button class="action-button primary" onclick={handlePublish} disabled={publishing}>
-							{#if publishing}
-								<div class="button-spinner"></div>
-								Publishing...
-							{:else}
-								<Globe size={16} />
-								<span>{ownsPublishedDeck || wasPublished ? 'Update Published Version' : 'Publish to Gallery'}</span>
-							{/if}
-						</button>
-					{/if}
-
-					<!-- Show Like/Import button for shared decks (but not your own published decks) -->
-					{#if (data.curatedDeck || hashDeck) && !ownsPublishedDeck}
-						<button class="action-button primary like-button" onclick={handleImport} disabled={importing}>
-							{#if importing}
-								<div class="button-spinner"></div>
-								Adding...
-							{:else}
-								<Heart size={16} />
-								<span>Like & Import</span>
-							{/if}
-						</button>
-					{/if}
-
-					<button class="action-button" onclick={handleDownloadJson}>
-						<Download size={16} />
-						<span>Download JSON</span>
-					</button>
-
-					<button class="action-button secondary" onclick={() => goto('/')}>
-						<span>Cancel</span>
-					</button>
+				<!-- Layout selector (preview/print-specific) -->
+				<div class="layout-selector">
+					<label for="layout-select">Print Size:</label>
+					<select
+						id="layout-select"
+						bind:value={layout}
+						onchange={() => handleLayoutChange(layout)}
+					>
+						<option value="poker">Poker</option>
+						<option value="tarot">Tarot</option>
+					</select>
 				</div>
 			{/snippet}
 		</MainHeader>
@@ -518,6 +486,9 @@
 		</div>
 	{/if}
 </div>
+
+<!-- Dialog system for editing cards -->
+<Dialog />
 
 <style>
 	.import-page {
@@ -655,13 +626,6 @@
 		padding: 0 2rem 2rem;
 	}
 
-	.preview-actions {
-		display: flex;
-		gap: 0.75rem;
-		align-items: center;
-		flex-wrap: wrap;
-	}
-
 	.layout-selector {
 		display: flex;
 		align-items: center;
@@ -693,68 +657,6 @@
 		background: var(--ui-hover-bg, #f8fafc);
 	}
 
-	.action-button {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.5rem;
-		padding: 0.75rem 1rem;
-		border: none;
-		border-radius: 6px;
-		background: var(--brand);
-		color: white;
-		font-size: 0.875rem;
-		font-weight: 500;
-		cursor: pointer;
-		transition: all 0.2s ease;
-		white-space: nowrap;
-	}
-
-	.action-button:hover:not(:disabled) {
-		background: #a80116;
-		transform: translateY(-1px);
-		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-	}
-
-	.action-button.primary {
-		background: var(--brand);
-		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-	}
-
-	/* Heart/Like button - special styling */
-	.action-button.like-button {
-		background: #dc2626;
-		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-	}
-
-	.action-button.like-button:hover:not(:disabled) {
-		background: #b91c1c;
-	}
-
-	.action-button.secondary {
-		background: var(--ui-hover-bg, #f8fafc);
-		color: var(--ui-text, #1a202c);
-		border: 1px solid var(--ui-border, #e2e8f0);
-	}
-
-	.action-button.secondary:hover {
-		background: var(--ui-border, #e2e8f0);
-	}
-
-	.action-button:disabled {
-		opacity: 0.6;
-		cursor: not-allowed;
-		transform: none;
-	}
-
-	.button-spinner {
-		width: 14px;
-		height: 14px;
-		border: 2px solid rgba(255, 255, 255, 0.3);
-		border-top: 2px solid white;
-		border-radius: 50%;
-		animation: spin 0.8s linear infinite;
-	}
-
 	/* Responsive */
 	@media (max-width: 640px) {
 		.merge-container {
@@ -764,14 +666,6 @@
 		.preview-content {
 			padding: 0 1rem 1rem;
 		}
-
-		.preview-actions {
-			width: 100%;
-		}
-
-		.action-button {
-			flex: 1;
-		}
 	}
 
 	@media print {
@@ -780,6 +674,3 @@
 		}
 	}
 </style>
-
-<!-- Dialog system for editing cards -->
-<Dialog />
