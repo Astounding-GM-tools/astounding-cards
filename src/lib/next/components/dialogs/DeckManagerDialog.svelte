@@ -11,7 +11,7 @@
 	import PublishDeckDialog from './PublishDeckDialog.svelte';
 	import type { Deck } from '$lib/next/types/deck.js';
 	import { isAuthenticated } from '$lib/next/stores/auth.js';
-	import { getAuthHeaders } from '$lib/utils/auth-helpers.js';
+	import { authenticatedFetch } from '$lib/utils/authenticated-fetch.js';
 
 	// Local state
 	let availableDecks = $state<Deck[]>([]);

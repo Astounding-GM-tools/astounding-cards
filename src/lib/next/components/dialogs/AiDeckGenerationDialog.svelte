@@ -7,7 +7,7 @@
 	import AuthGatedCtaButton from '../cta/AuthGatedCtaButton.svelte';
 	import { DECK_GENERATION_CTA } from '$lib/config/cta-configs.js';
 	import { calculateDeckGenerationCost, formatTokenBalance } from '$lib/config/token-costs.js';
-	import { getAuthHeaders } from '$lib/utils/auth-helpers.js';
+	import { authenticatedFetch } from '$lib/utils/authenticated-fetch.js';
 	import { importDeckFromJson } from '../../utils/jsonImporter.js';
 	import { nextDb } from '../../stores/database.js';
 	import { goto } from '$app/navigation';
@@ -75,12 +75,10 @@
 
 		try {
 			// Call the API endpoint
-			const authHeaders = getAuthHeaders();
-			const response = await fetch('/api/ai/generate-deck', {
+			const response = await authenticatedFetch('/api/ai/generate-deck', {
 				method: 'POST',
 				headers: {
-					'Content-Type': 'application/json',
-					...authHeaders
+					'Content-Type': 'application/json'
 				},
 				body: JSON.stringify({ prompt, cardCount })
 			});

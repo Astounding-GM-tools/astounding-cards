@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Toasts from '$lib/components/ui/Toasts.svelte';
 
-	import { getAuthHeaders } from '$lib/utils/auth-helpers';
+	import { authenticatedFetch } from '$lib/utils/authenticated-fetch';
 	import { refreshTokenBalance } from '$lib/next/stores/tokenBalance';
 
 	import { onMount } from 'svelte';

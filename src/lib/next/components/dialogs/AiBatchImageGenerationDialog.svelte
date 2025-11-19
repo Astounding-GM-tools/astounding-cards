@@ -8,7 +8,7 @@
 	import AuthGatedCtaButton from '../cta/AuthGatedCtaButton.svelte';
 	import { IMAGE_GENERATION_CTA } from '$lib/config/cta-configs.js';
 	import { TOKEN_COSTS, formatTokenBalance } from '$lib/config/token-costs.js';
-	import { getAuthHeaders } from '$lib/utils/auth-helpers.js';
+	import { authenticatedFetch } from '$lib/utils/authenticated-fetch.js';
 	import { ART_STYLES } from '$lib/ai/prompts/image-generation.js';
 
 	interface Props {
@@ -195,12 +195,10 @@
 
 		try {
 			// Check for each card if an image exists in the selected style
-			const authHeaders = getAuthHeaders();
-			const response = await fetch('/api/ai/check-image-variants', {
+			const response = await authenticatedFetch('/api/ai/check-image-variants', {
 				method: 'POST',
 				headers: {
-					'Content-Type': 'application/json',
-					...authHeaders
+					'Content-Type': 'application/json'
 				},
 				body: JSON.stringify({
 					cards: cards.map((c) => ({
@@ -323,12 +321,10 @@
 
 		try {
 			// Call the API endpoint with full card data (only checked cards)
-			const authHeaders = getAuthHeaders();
-			const response = await fetch('/api/ai/batch-generate-images', {
+			const response = await authenticatedFetch('/api/ai/batch-generate-images', {
 				method: 'POST',
 				headers: {
-					'Content-Type': 'application/json',
-					...authHeaders
+					'Content-Type': 'application/json'
 				},
 				body: JSON.stringify({
 					cards: selectedCards.map((c) => ({

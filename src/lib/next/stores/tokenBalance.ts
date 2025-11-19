@@ -7,7 +7,7 @@
 
 import { writable, derived, get } from 'svelte/store';
 import { isAuthenticated, authLoading } from './auth';
-import { getAuthHeaders } from '$lib/utils/auth-helpers';
+import { authenticatedFetch } from '$lib/utils/authenticated-fetch';
 
 interface TokenBalance {
 	amount: number;
@@ -27,9 +27,7 @@ function createTokenBalanceStore() {
 		update((state) => ({ ...state, loading: true, error: null }));
 
 		try {
-			const response = await fetch('/api/tokens/balance', {
-				headers: getAuthHeaders()
-			});
+			const response = await authenticatedFetch('/api/tokens/balance');
 
 			// 401 is expected when not authenticated - not an error, just reset
 			if (response.status === 401) {

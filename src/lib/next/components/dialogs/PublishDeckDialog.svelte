@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { dialogStore } from '../dialog/dialogStore.svelte.js';
 	import { toasts } from '$lib/stores/toast.js';
-	import { getAuthHeaders } from '$lib/utils/auth-helpers.js';
+	import { authenticatedFetch } from '$lib/utils/authenticated-fetch.js';
 	import type { Deck } from '../../types/deck.js';
 
 	interface Props {
@@ -50,7 +50,7 @@
 		isPublishing = true;
 
 		try {
-			const response = await fetch('/api/decks/publish', {
+			const response = await authenticatedFetch('/api/decks/publish', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
