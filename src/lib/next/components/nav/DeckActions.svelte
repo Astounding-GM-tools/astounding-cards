@@ -27,6 +27,8 @@
 		importing?: boolean;
 		isLiked?: boolean;
 		likeCount?: number;
+		layout?: 'poker' | 'tarot';
+		onLayoutChange?: (layout: 'poker' | 'tarot') => void;
 	}
 
 	let {
@@ -44,7 +46,9 @@
 		disabled = false,
 		importing = false,
 		isLiked = false,
-		likeCount = 0
+		likeCount = 0,
+		layout = 'poker',
+		onLayoutChange
 	}: Props = $props();
 
 	// Share dropdown state
@@ -99,6 +103,11 @@
 	// Overflow menu items
 	let overflowItems = $derived(
 		[
+			onLayoutChange && {
+				label: layout === 'poker' ? '📐 Print: Small' : '📐 Print: Big',
+				onClick: () => onLayoutChange(layout === 'poker' ? 'tarot' : 'poker'),
+				disabled
+			},
 			onImportCards && {
 				label: 'Import Cards',
 				onClick: onImportCards,

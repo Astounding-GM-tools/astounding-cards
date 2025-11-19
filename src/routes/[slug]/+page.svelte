@@ -455,20 +455,9 @@
 					importing={importing}
 					isLiked={localDeck !== null}
 					likeCount={data.curatedDeck?.import_count || 0}
+					layout={layout}
+					onLayoutChange={handleLayoutChange}
 				/>
-
-				<!-- Layout selector (preview/print-specific) -->
-				<div class="layout-selector">
-					<label for="layout-select">Print Size:</label>
-					<select
-						id="layout-select"
-						bind:value={layout}
-						onchange={() => handleLayoutChange(layout)}
-					>
-						<option value="poker">Poker</option>
-						<option value="tarot">Tarot</option>
-					</select>
-				</div>
 			{/snippet}
 		</MainHeader>
 
@@ -637,37 +626,6 @@
 		max-width: var(--page-max-width);
 		margin: 0 auto;
 		padding: 0 2rem 2rem;
-	}
-
-	.layout-selector {
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-		padding: 0.5rem 0.75rem;
-		background: var(--ui-hover-bg, #f8fafc);
-		border: 1px solid var(--ui-border, #e2e8f0);
-		border-radius: 6px;
-	}
-
-	.layout-selector label {
-		font-size: 0.875rem;
-		font-weight: 500;
-		color: var(--ui-text, #1a202c);
-		white-space: nowrap;
-	}
-
-	.layout-selector select {
-		padding: 0.25rem 0.5rem;
-		border: 1px solid var(--ui-border, #e2e8f0);
-		border-radius: 4px;
-		background: white;
-		color: var(--ui-text, #1a202c);
-		font-size: 0.875rem;
-		cursor: pointer;
-	}
-
-	.layout-selector select:hover {
-		background: var(--ui-hover-bg, #f8fafc);
 	}
 
 	/* Responsive */
