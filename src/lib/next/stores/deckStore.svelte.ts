@@ -13,6 +13,7 @@ import type { Card } from '../types/card.js';
 import { nextDb, DatabaseError } from './database.js';
 import { safeCloneCard } from '$lib/utils/clone-utils.ts';
 import { generateKey } from '../utils/idUtils.js';
+import { authenticatedFetch } from '$lib/utils/authenticated-fetch.js';
 
 export interface LoadingState {
 	isLoading: boolean;
@@ -438,30 +439,46 @@ function createNextDeckStore() {
 			this.setLoading(true, 'Publishing deck...', 'publish-deck');
 			this.clearError();
 
-			try {
-				const response = await fetch('/api/decks/publish', {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json'
-					},
-					body: JSON.stringify({
-						deckId: currentDeck.id, // If already published, this will update
-						title: currentDeck.meta.title,
-						description: options?.description || '',
-						tags: options?.tags || [],
-						visibility: options?.visibility || 'public',
-						cards: currentDeck.cards,
-						theme: currentDeck.meta.theme
-					})
+		try {
+			// Build request body
+			const body: any = {
+				title: currentDeck.meta.title,
+				description: options?.description || '',
+				tags: options?.tags || [],
+				visibility: options?.visibility || 'public',
+				cards: currentDeck.cards,
+				theme: currentDeck.meta.theme
+			};
+
+			// Include published deck ID for updates
+			if (currentDeck.meta.published_deck_id) {
+				body.deckId = currentDeck.meta.published_deck_id;
+			}
+
+			const response = await authenticatedFetch('/api/decks/publish', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify(body)
+			});
+
+			if (!response.ok) {
+				const errorData = await response.json();
+				throw new Error(errorData.message || 'Failed to publish deck');
+			}
+
+			const result = await response.json();
+
+			// Store published deck ID in metadata for future updates
+			if (result.deck.id) {
+				await this.updateDeckMeta({
+					published_deck_id: result.deck.id,
+					published_slug: result.deck.slug
 				});
+			}
 
-				if (!response.ok) {
-					const errorData = await response.json();
-					throw new Error(errorData.message || 'Failed to publish deck');
-				}
-
-				const result = await response.json();
-				return { success: true, slug: result.deck.slug };
+			return { success: true, slug: result.deck.slug };
 			} catch (err) {
 				const errorMessage = err instanceof Error ? err.message : 'Failed to publish deck';
 				this.setError(errorMessage);

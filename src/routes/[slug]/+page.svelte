@@ -51,6 +51,11 @@
 		data.curatedDeck && $user?.id && data.curatedDeck.user_id === $user.id
 	);
 
+	// Check if local deck was previously published
+	let wasPublished = $derived(
+		localDeck?.meta?.published_deck_id !== undefined && localDeck?.meta?.published_deck_id !== null
+	);
+
 	// Print mode state
 	let isPrintMode = $state(false);
 	let layout = $state<Layout>('poker');
@@ -445,7 +450,7 @@
 								Publishing...
 							{:else}
 								<Globe size={16} />
-								<span>{ownsPublishedDeck ? 'Update Published Version' : 'Publish to Gallery'}</span>
+								<span>{ownsPublishedDeck || wasPublished ? 'Update Published Version' : 'Publish to Gallery'}</span>
 							{/if}
 						</button>
 					{/if}

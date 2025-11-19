@@ -19,6 +19,8 @@ export interface Deck {
 		layout: Layout;
 		lastEdited: number;
 		createdAt: number;
+		published_deck_id?: string; // ID of published deck in published_decks table
+		published_slug?: string; // Slug of published deck
 	};
 	cards: Card[];
 }
