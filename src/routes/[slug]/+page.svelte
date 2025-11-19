@@ -19,7 +19,7 @@
 	import { dialogStore } from '$lib/next/components/dialog/dialogStore.svelte.js';
 	import { importFromUrl } from '$lib/next/utils/shareUrlUtils.js';
 	import { nextDeckStore } from '$lib/next/stores/deckStore.svelte.ts';
-	import { CardEditDialog } from '$lib/next/components/dialogs/index.js';
+	import { CardEditDialog, DeleteDeckDialog } from '$lib/next/components/dialogs/index.js';
 	import { goto, replaceState } from '$app/navigation';
 	import MergeTool from '$lib/next/components/merge/MergeTool.svelte';
 	import { performThreeLayerMerge } from '$lib/next/utils/threeLayerMerge.js';
@@ -400,6 +400,33 @@
 			toasts.error('Failed to open image generator');
 		}
 	}
+
+	// Handle delete deck - shows confirmation dialog
+	function handleDeleteDeck() {
+		if (!activeDeck) return;
+
+		dialogStore.setContent(DeleteDeckDialog, {
+			deck: activeDeck,
+			onConfirm: async () => {
+				try {
+					// Delete from IndexedDB
+					await nextDb.deleteDeck(activeDeck.id);
+
+					// If this was a published deck that we owned, optionally unpublish
+					// (For now, we just delete locally and navigate away)
+
+					toasts.success(`🗑️ Deck "${activeDeck.meta.title}" deleted`);
+
+					// Navigate to home/dashboard
+					goto('/');
+				} catch (err) {
+					console.error('Failed to delete deck:', err);
+					toasts.error('Failed to delete deck');
+					throw err; // Re-throw to keep dialog open
+				}
+			}
+		});
+	}
 </script>
 
 <div class="import-page">
@@ -423,6 +450,7 @@
 					onPublish={(!data.curatedDeck && !hashDeck && localDeck) || ownsPublishedDeck ? handlePublish : null}
 					onGenerateImages={(!data.curatedDeck && !hashDeck && localDeck) || ownsPublishedDeck ? handleGenerateImages : null}
 					onImport={(data.curatedDeck || hashDeck) && !ownsPublishedDeck ? handleImport : null}
+					onDeleteDeck={localDeck ? handleDeleteDeck : null}
 					isAuthenticated={!!$user}
 					importing={importing}
 					isLiked={localDeck !== null}

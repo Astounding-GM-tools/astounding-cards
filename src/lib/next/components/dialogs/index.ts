@@ -5,6 +5,7 @@ export { default as AiPromptDialog } from './AiPromptDialog.svelte';
 export { default as BatchImageGenerationDialog } from './BatchImageGenerationDialog.svelte';
 export { default as CardEditDialog } from './CardEditDialog.svelte';
 export { default as DeckManagerDialog } from './DeckManagerDialog.svelte';
+export { default as DeleteDeckDialog } from './DeleteDeckDialog.svelte';
 export { default as ImageMigrationDialog } from './ImageMigrationDialog.svelte';
 export { default as JsonImportDialog } from './JsonImportDialog.svelte';
 export { default as MergeToolDialog } from './MergeToolDialog.svelte';
