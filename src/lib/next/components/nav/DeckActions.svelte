@@ -191,11 +191,7 @@
 				<span>Adding...</span>
 			{:else}
 				<Heart size={16} fill={isLiked ? 'currentColor' : 'none'} />
-				{#if likeCount > 0}
-					<span>{likeCount}</span>
-				{:else}
-					<span>Like</span>
-				{/if}
+				<span>{likeCount}</span>
 			{/if}
 		</button>
 	{/if}
