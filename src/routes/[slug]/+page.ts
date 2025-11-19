@@ -25,22 +25,29 @@ export const load: PageLoad = async ({ params, url, fetch }) => {
 		}
 	}
 
-	// Try to fetch published deck by slug (using /api/deck which handles both ID and slug)
-	try {
-		const response = await fetch(`/api/deck/${params.slug}`);
-		if (response.ok) {
-			const data = await response.json();
-			return {
-				slug: params.slug,
-				curatedDeck: data.deck,
-				curatedId: data.deck.id
-			};
+	// Check if slug looks like a UUID (local deck ID) - if so, skip API call
+	// UUIDs follow pattern: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+	const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+	const isLocalDeckId = uuidPattern.test(params.slug);
+
+	// Only try API for published deck slugs (not local UUIDs)
+	if (!isLocalDeckId) {
+		try {
+			const response = await fetch(`/api/deck/${params.slug}`);
+			if (response.ok) {
+				const data = await response.json();
+				return {
+					slug: params.slug,
+					curatedDeck: data.deck,
+					curatedId: data.deck.id
+				};
+			}
+		} catch (error) {
+			console.error('Failed to load published deck:', error);
 		}
-	} catch (error) {
-		console.error('Failed to load published deck:', error);
 	}
 
-	// No deck found, return just the slug (will show URL hash data if present)
+	// Local deck or not found - will check IndexedDB client-side
 	return {
 		slug: params.slug,
 		curatedDeck: null,

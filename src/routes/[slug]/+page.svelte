@@ -8,6 +8,7 @@
 	import { nextDeckStore } from '$lib/next/stores/deckStore.svelte.ts';
 	import { nextDb } from '$lib/next/stores/database.js';
 	import { toasts } from '$lib/stores/toast.js';
+	import { user } from '$lib/next/stores/auth';
 	import {
 		detectDeckConflict,
 		type DeckConflict,
@@ -22,7 +23,8 @@
 	import Dialog from '$lib/next/components/dialog/Dialog.svelte';
 	import { dialogStore } from '$lib/next/components/dialog/dialogStore.svelte.js';
 	import { CardEditDialog } from '$lib/next/components/dialogs/index.js';
-	import { Copy, Download } from 'lucide-svelte';
+	import AiBatchImageGenerationDialog from '$lib/next/components/dialogs/AiBatchImageGenerationDialog.svelte';
+	import { Copy, Download, Globe, Heart, ImagePlus } from 'lucide-svelte';
 	import type { Deck } from '$lib/next/types/deck.js';
 	import type { Layout } from '$lib/next/types/deck.js';
 	import type { PageData } from './$types';
@@ -40,6 +42,15 @@
 	let previewDeck = $state<Deck | null>(null);
 	let importedDeck = $state<Deck | null>(null);
 
+	// Deck sources (for conditional UI logic)
+	let hashDeck = $state<Deck | null>(null);
+	let localDeck = $state<Deck | null>(null);
+
+	// Check if user owns the curated deck (for showing publish/update button)
+	let ownsPublishedDeck = $derived(
+		data.curatedDeck && $user?.id && data.curatedDeck.user_id === $user.id
+	);
+
 	// Print mode state
 	let isPrintMode = $state(false);
 	let layout = $state<Layout>('poker');
@@ -54,18 +65,10 @@
 			: previewDeck
 	);
 
-	onMount(async () => {
-		// Track shared deck access with Vercel Web Analytics
-		try {
-			track('shared_deck_accessed', {
-				slug: data.slug,
-				curated: !!data.curatedDeck,
-				timestamp: new Date().toISOString(),
-				referrer: document.referrer || 'direct'
-			});
-		} catch (error) {
-			console.warn('Analytics tracking failed:', error);
-		}
+	// Load deck function (extracted for reuse)
+	async function loadDeckPreview() {
+		loading = true;
+		error = null;
 
 		try {
 			if (typeof window === 'undefined') {
@@ -80,11 +83,10 @@
 
 			// Layer 2: Hash data from URL (shared modifications)
 			console.log('[Preview] Current URL:', window.location.href);
-			const hashDeck = importFromUrl(window.location.href);
+			hashDeck = importFromUrl(window.location.href);
 			console.log('[Preview] Hash deck:', hashDeck);
 
 			// Layer 3: Local deck from IndexedDB (if exists)
-			let localDeck: Deck | null = null;
 			if (curatedDeck) {
 				// Check if user has a local copy of this curated deck
 				localDeck = await nextDb.getDeck(curatedDeck.id);
@@ -126,6 +128,29 @@
 		} finally {
 			loading = false;
 		}
+	}
+
+	// Watch for slug changes and reload deck
+	$effect(() => {
+		// React to slug changes
+		const currentSlug = data.slug;
+		loadDeckPreview();
+	});
+
+	onMount(async () => {
+		// Track shared deck access with Vercel Web Analytics
+		try {
+			track('shared_deck_accessed', {
+				slug: data.slug,
+				curated: !!data.curatedDeck,
+				timestamp: new Date().toISOString(),
+				referrer: document.referrer || 'direct'
+			});
+		} catch (error) {
+			console.warn('Analytics tracking failed:', error);
+		}
+
+		// Initial load happens via $effect above
 
 		// Set up print event listeners
 		if (typeof window !== 'undefined') {
@@ -164,7 +189,7 @@
 				// Clear the URL hash after successful import
 				replaceState(window.location.pathname, {});
 
-				toasts.success(`🎉 Deck "${previewDeck.meta.title}" imported to your library!`);
+				toasts.success(`❤️ Deck "${previewDeck.meta.title}" liked and added to your collection!`);
 			}
 		} catch (err) {
 			console.error('Import error:', err);
@@ -297,6 +322,77 @@
 			toasts.error('Failed to open editor');
 		}
 	}
+
+	// Handle publish deck
+	let publishing = $state(false);
+	async function handlePublish() {
+		if (!previewDeck) return;
+
+		publishing = true;
+		try {
+			// Determine if this is an update or new publish
+			const isUpdate = ownsPublishedDeck && data.curatedDeck;
+
+			// Load the deck into store if not already loaded
+			const currentDeck = nextDeckStore.deck;
+			const isDeckLoaded = currentDeck && currentDeck.id === previewDeck.id;
+
+			if (!isDeckLoaded) {
+				await nextDeckStore.loadDeck(previewDeck.id);
+			}
+
+			// Publish or update the deck
+			const result = await nextDeckStore.publishDeck({
+				visibility: 'public'
+			});
+
+			if (result.success && result.slug) {
+				if (isUpdate) {
+					toasts.success(`✅ Published version updated! Changes live at /${result.slug}`);
+				} else {
+					toasts.success(`🌍 Deck published! Visible in gallery at /${result.slug}`);
+				}
+			} else {
+				toasts.error(result.error || 'Failed to publish deck');
+			}
+		} catch (err) {
+			console.error('Failed to publish deck:', err);
+			toasts.error('Failed to publish deck');
+		} finally {
+			publishing = false;
+		}
+	}
+
+	// Handle batch image generation - loads deck into store if needed
+	async function handleGenerateImages() {
+		if (!previewDeck) return;
+
+		try {
+			// Check if this deck is already loaded in the store
+			const currentDeck = nextDeckStore.deck;
+			const isDeckLoaded = currentDeck && currentDeck.id === previewDeck.id;
+
+			if (!isDeckLoaded) {
+				// For local decks: load from IndexedDB
+				// For curated/shared decks: import first
+				if (localDeck) {
+					// Local deck - just load it into the store
+					await nextDeckStore.loadDeck(previewDeck.id);
+				} else {
+					// Curated/shared deck - import to IndexedDB first
+					await nextDeckStore.importDeck(previewDeck);
+					replaceState(window.location.pathname, {});
+					toasts.success(`🎉 Deck "${previewDeck.meta.title}" added to your collection!`);
+				}
+			}
+
+			// Now open the batch generation dialog - deck is loaded in store
+			dialogStore.setContent(AiBatchImageGenerationDialog, {});
+		} catch (err) {
+			console.error('Failed to load deck for image generation:', err);
+			toasts.error('Failed to open image generator');
+		}
+	}
 </script>
 
 <div class="import-page">
@@ -333,15 +429,39 @@
 						</select>
 					</div>
 
-					<button class="action-button primary" onclick={handleImport} disabled={importing}>
-						{#if importing}
-							<div class="button-spinner"></div>
-							Adding...
-						{:else}
-							<Copy size={16} />
-							<span>Add to Collection</span>
-						{/if}
-					</button>
+					<!-- Batch Image Generation button (for local decks or owned published decks) -->
+					{#if (!data.curatedDeck && !hashDeck && localDeck) || ownsPublishedDeck}
+						<button class="action-button" onclick={handleGenerateImages}>
+							<ImagePlus size={16} />
+							<span>Generate Images</span>
+						</button>
+					{/if}
+
+					<!-- Show Publish button for local decks OR owned published decks -->
+					{#if (!data.curatedDeck && !hashDeck && localDeck) || ownsPublishedDeck}
+						<button class="action-button primary" onclick={handlePublish} disabled={publishing}>
+							{#if publishing}
+								<div class="button-spinner"></div>
+								Publishing...
+							{:else}
+								<Globe size={16} />
+								<span>{ownsPublishedDeck ? 'Update Published Version' : 'Publish to Gallery'}</span>
+							{/if}
+						</button>
+					{/if}
+
+					<!-- Show Like/Import button for shared decks (but not your own published decks) -->
+					{#if (data.curatedDeck || hashDeck) && !ownsPublishedDeck}
+						<button class="action-button primary like-button" onclick={handleImport} disabled={importing}>
+							{#if importing}
+								<div class="button-spinner"></div>
+								Adding...
+							{:else}
+								<Heart size={16} />
+								<span>Like & Import</span>
+							{/if}
+						</button>
+					{/if}
 
 					<button class="action-button" onclick={handleDownloadJson}>
 						<Download size={16} />
@@ -593,6 +713,16 @@
 	.action-button.primary {
 		background: var(--brand);
 		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+	}
+
+	/* Heart/Like button - special styling */
+	.action-button.like-button {
+		background: #dc2626;
+		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+	}
+
+	.action-button.like-button:hover:not(:disabled) {
+		background: #b91c1c;
 	}
 
 	.action-button.secondary {

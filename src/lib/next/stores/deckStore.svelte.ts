@@ -130,6 +130,25 @@ function createNextDeckStore() {
 		},
 
 		/**
+		 * Create new deck with default title (convenience function)
+		 */
+		async createNewDeck(): Promise<Deck | null> {
+			this.setLoading(true, 'Creating deck...', 'create-deck');
+			this.clearError();
+
+			try {
+				const deck = await nextDb.createDeck('New Deck');
+				currentDeck = deck;
+				return deck;
+			} catch (err) {
+				this.handleError(err, 'Failed to create deck');
+				return null;
+			} finally {
+				this.setLoading(false);
+			}
+		},
+
+		/**
 		 * Update deck metadata (Canon Update Pattern)
 		 */
 		async updateDeckMeta(updates: Partial<Deck['meta']>): Promise<boolean> {
@@ -401,6 +420,54 @@ function createNextDeckStore() {
 				this.setError(err.message);
 			} else {
 				this.setError(fallbackMessage);
+			}
+		},
+
+		/**
+		 * Publish deck to gallery
+		 */
+		async publishDeck(options?: {
+			description?: string;
+			tags?: string[];
+			visibility?: 'public' | 'unlisted';
+		}): Promise<{ success: boolean; slug?: string; error?: string }> {
+			if (!currentDeck) {
+				return { success: false, error: 'No deck loaded' };
+			}
+
+			this.setLoading(true, 'Publishing deck...', 'publish-deck');
+			this.clearError();
+
+			try {
+				const response = await fetch('/api/decks/publish', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify({
+						deckId: currentDeck.id, // If already published, this will update
+						title: currentDeck.meta.title,
+						description: options?.description || '',
+						tags: options?.tags || [],
+						visibility: options?.visibility || 'public',
+						cards: currentDeck.cards,
+						theme: currentDeck.meta.theme
+					})
+				});
+
+				if (!response.ok) {
+					const errorData = await response.json();
+					throw new Error(errorData.message || 'Failed to publish deck');
+				}
+
+				const result = await response.json();
+				return { success: true, slug: result.deck.slug };
+			} catch (err) {
+				const errorMessage = err instanceof Error ? err.message : 'Failed to publish deck';
+				this.setError(errorMessage);
+				return { success: false, error: errorMessage };
+			} finally {
+				this.setLoading(false);
 			}
 		}
 	};

@@ -2,9 +2,16 @@
 	import { user, isAuthenticated } from '$lib/next/stores/auth';
 	import AuthDialog from '../dialogs/AuthDialog.svelte';
 	import DeckSwitcher from './DeckSwitcher.svelte';
-	import { Library, LogIn, ChevronDown, Coins } from 'lucide-svelte';
+	import { Library, LogIn, ChevronDown, Coins, Plus, Sparkles } from 'lucide-svelte';
 	import type { Deck } from '$lib/next/types/deck.js';
 	import { tokenAmount } from '$lib/next/stores/tokenBalance';
+	import { nextDeckStore } from '../../stores/deckStore.svelte';
+	import { toasts } from '$lib/stores/toast';
+	import { goto } from '$app/navigation';
+	import { dialogStore } from '../dialog/dialogStore.svelte';
+	import AiDeckGenerationDialog from '../dialogs/AiDeckGenerationDialog.svelte';
+	import { nextDb } from '../../stores/database';
+	import { onMount } from 'svelte';
 
 	// Props for flexible header
 	interface Props {
@@ -68,6 +75,33 @@
 	// Deck switcher menu state
 	let deckSwitcherOpen = $state(false);
 
+	// Load all local decks for the switcher
+	let allDecks = $state<Deck[]>([]);
+	let activeDeckId = $derived(nextDeckStore.deck?.id || currentDeckId);
+
+	onMount(async () => {
+		// Load all decks from IndexedDB
+		try {
+			const loadedDecks = await nextDb.getAllDecks();
+			allDecks = loadedDecks;
+		} catch (err) {
+			console.error('Failed to load decks:', err);
+		}
+	});
+
+	// Reload decks when the current deck changes (new deck created/loaded)
+	$effect(() => {
+		if (activeDeckId) {
+			// Reload deck list to ensure it's up to date
+			nextDb.getAllDecks().then((loadedDecks) => {
+				allDecks = loadedDecks;
+			});
+		}
+	});
+
+	// Derived: should we show the deck switcher?
+	let shouldShowDeckSwitcher = $derived(showDeckSwitcher || allDecks.length > 0);
+
 	// Auth handlers
 	function handleSignIn() {
 		authDialogOpen = true;
@@ -86,6 +120,36 @@
 		if (!target.closest('.deck-switcher-container')) {
 			deckSwitcherOpen = false;
 		}
+	}
+
+	// Create new deck handler
+	async function handleCreateNewDeck() {
+		const newDeck = await nextDeckStore.createNewDeck();
+		if (newDeck) {
+			toasts.success('✨ New deck created!');
+			// Reload decks list
+			allDecks = await nextDb.getAllDecks();
+			goto(`/${newDeck.id}`);
+		}
+	}
+
+	// Generate deck handler
+	function handleGenerateDeck() {
+		dialogStore.setContent(AiDeckGenerationDialog, {});
+	}
+
+	// Deck switcher handlers
+	async function handleSelectDeck(deckId: string) {
+		deckSwitcherOpen = false;
+		// Load the deck into the store first
+		await nextDeckStore.loadDeck(deckId);
+		// Then navigate to it
+		goto(`/${deckId}`);
+	}
+
+	function handleNewDeckFromSwitcher() {
+		deckSwitcherOpen = false;
+		handleCreateNewDeck();
 	}
 </script>
 
@@ -111,31 +175,37 @@
 				</a>
 			{/if}
 
-			<!-- Deck Switcher (show if enabled) -->
-			{#if showDeckSwitcher}
+			<!-- Generate Deck button -->
+			<button class="top-bar-link generate-button" onclick={handleGenerateDeck}>
+				<Sparkles size={14} />
+				<span>Generate</span>
+			</button>
+
+			<!-- New Deck button -->
+			<button class="top-bar-link new-deck-button" onclick={handleCreateNewDeck}>
+				<Plus size={14} />
+				<span>New Deck</span>
+			</button>
+
+			<!-- Deck Switcher (show when there are decks) -->
+			{#if shouldShowDeckSwitcher}
 				<div class="deck-switcher-container">
 					<button class="deck-switcher-button" onclick={toggleDeckSwitcher}>
-						<span>{deckCount} {deckCount === 1 ? 'deck' : 'decks'}</span>
+						<span>My Decks ({allDecks.length})</span>
 						<ChevronDown size={12} />
 					</button>
 
 					{#if deckSwitcherOpen}
 						<div class="deck-switcher-menu">
 							<DeckSwitcher
-								decks={decks.map((d) => ({
+								decks={allDecks.map((d) => ({
 									id: d.id,
 									title: d.meta.title,
 									cardCount: d.cards.length
 								}))}
-								{currentDeckId}
-								onSelectDeck={(deckId) => {
-									onSelectDeck?.(deckId);
-									deckSwitcherOpen = false;
-								}}
-								onNewDeck={() => {
-									onNewDeck?.();
-									deckSwitcherOpen = false;
-								}}
+								currentDeckId={activeDeckId}
+								onSelectDeck={handleSelectDeck}
+								onNewDeck={handleNewDeckFromSwitcher}
 							/>
 						</div>
 					{/if}
@@ -270,6 +340,33 @@
 
 	.top-bar-link:hover {
 		background: var(--ui-bg, #ffffff);
+	}
+
+	/* New Deck button - same style as link but it's a button */
+	.new-deck-button {
+		border: none;
+		cursor: pointer;
+		font-family: inherit;
+	}
+
+	.new-deck-button:hover {
+		background: var(--ui-hover-bg, #f8fafc);
+	}
+
+	/* Generate button - special AI styling */
+	.generate-button {
+		border: none;
+		cursor: pointer;
+		font-family: inherit;
+		background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+		color: white !important;
+		font-weight: 500;
+	}
+
+	.generate-button:hover {
+		background: linear-gradient(135deg, #059669 0%, #047857 100%);
+		transform: translateY(-1px);
+		box-shadow: 0 2px 4px rgba(5, 150, 105, 0.3);
 	}
 
 	/* Row 2: Content Bar - Title + Metadata */

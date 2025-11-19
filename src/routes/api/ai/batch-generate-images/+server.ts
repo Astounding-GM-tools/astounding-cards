@@ -26,6 +26,7 @@ import {
 	ART_STYLES,
 	createPromptOptimizationRequest
 } from '$lib/ai/prompts/image-generation';
+import { REFERENCE_IMAGE_BASE64 } from '$lib/ai/assets/referenceImage';
 
 const STAGGER_DELAY = 2000; // 2 seconds between generation requests
 
@@ -172,17 +173,15 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 
 		console.log(`✅ Deducted ${totalCost} tokens from user ${userId}`);
 
-		// 8. Generate images with staggering
-		const results: any[] = [];
+		// 8. Generate images with parallel processing and staggered starts
 		const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 		const selectedArtStyle = ART_STYLES[style as keyof typeof ART_STYLES] || ART_STYLES.classic;
 
-		for (let i = 0; i < cardsToGenerate.length; i++) {
-			const card = cardsToGenerate[i];
-
+		// Create generation function for a single card
+		const generateCardImage = async (card: any, index: number) => {
 			try {
 				console.log(
-					`🎨 Generating image ${i + 1}/${cardsToGenerate.length} for card "${card.title}"`
+					`🎨 Generating image ${index + 1}/${cardsToGenerate.length} for card "${card.title}"`
 				);
 
 				// Step 1: Optimize the card content into a visual prompt
@@ -277,29 +276,37 @@ Visual prompt: ${optimizedPrompt}`;
 
 				console.log(`✅ Generated image for "${card.title}"`);
 
-				results.push({
+				return {
 					cardId: card.id,
 					success: true,
 					url: publicUrl,
 					imageId: imageRecord.id,
 					cached: false,
 					cost: TOKEN_COSTS.IMAGE_GENERATION_COMMUNITY
-				});
-
-				// Stagger requests (except for the last one)
-				if (i < cardsToGenerate.length - 1) {
-					await new Promise((resolve) => setTimeout(resolve, STAGGER_DELAY));
-				}
+				};
 			} catch (err) {
 				console.error(`❌ Failed to generate image for card "${card.title}":`, err);
-				results.push({
+				return {
 					cardId: card.id,
 					success: false,
 					error: err instanceof Error ? err.message : 'Unknown error',
 					cached: false
-				});
+				};
 			}
-		}
+		};
+
+		// Start all generations with staggered delays (2 seconds between starts)
+		const generationPromises = cardsToGenerate.map((card, index) => {
+			return new Promise((resolve) => {
+				setTimeout(async () => {
+					const result = await generateCardImage(card, index);
+					resolve(result);
+				}, index * STAGGER_DELAY);
+			});
+		});
+
+		// Wait for all generations to complete
+		const results = await Promise.all(generationPromises);
 
 		// Add cached results
 		results.push(...cachedResults);

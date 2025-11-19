@@ -10,6 +10,7 @@
 	import { getAuthHeaders } from '$lib/utils/auth-helpers.js';
 	import { importDeckFromJson } from '../../utils/jsonImporter.js';
 	import { nextDb } from '../../stores/database.js';
+	import { goto } from '$app/navigation';
 
 	interface Props {
 		// Optional props for testing/stories
@@ -106,7 +107,7 @@
 			// Save the deck to IndexedDB
 			const savedDeck = await nextDb.saveDeck(importResult.deck);
 
-			// Load the deck into the store
+			// Load the deck into the store (this will trigger deck list reload in header)
 			await nextDeckStore.loadDeck(savedDeck.id);
 
 			// Refresh token balance
@@ -118,6 +119,9 @@
 			);
 
 			dialogStore.close();
+
+			// Navigate to the new deck
+			goto(`/${savedDeck.id}`);
 		} catch (error) {
 			console.error('Generation error:', error);
 			toasts.error(error instanceof Error ? error.message : 'Failed to generate deck');

@@ -4,6 +4,7 @@
 	import { toasts } from '$lib/stores/toast.js';
 	import { tokenAmount, tokenBalanceStore } from '../../stores/tokenBalance.js';
 	import { nextDeckStore } from '../../stores/deckStore.svelte.js';
+	import { nextDb } from '../../stores/database.js';
 	import AuthGatedCtaButton from '../cta/AuthGatedCtaButton.svelte';
 	import { IMAGE_GENERATION_CTA } from '$lib/config/cta-configs.js';
 	import { TOKEN_COSTS, formatTokenBalance } from '$lib/config/token-costs.js';
@@ -149,7 +150,7 @@
 
 			for (const card of cards) {
 				const isExternal = !!card.image && !card.imageMetadata?.imageId;
-				const currentStyle = card.imageMetadata?.style || null;
+				const currentStyle = card.imageMetadata?.imageStyle || null;
 
 				// Check if current image's style matches the selected style
 				const styleMatches = currentStyle === selectedStyle;
@@ -183,7 +184,7 @@
 			const isExternal = !!card.image && !card.imageMetadata?.imageId;
 			loadingStatus[card.id] = {
 				currentImageUrl: card.image || null,
-				currentImageStyle: card.imageMetadata?.style || null,
+				currentImageStyle: card.imageMetadata?.imageStyle || null,
 				isExternalImage: isExternal,
 				targetImageUrl: null,
 				targetImageExists: false,
@@ -219,7 +220,7 @@
 				for (const card of cards) {
 					const variantInfo = result.variants[card.id];
 					const isExternal = !!card.image && !card.imageMetadata?.imageId;
-					const currentStyle = card.imageMetadata?.style || null;
+					const currentStyle = card.imageMetadata?.imageStyle || null;
 
 					newStatus[card.id] = {
 						currentImageUrl: card.image || null,
@@ -246,7 +247,7 @@
 					const isExternal = !!card.image && !card.imageMetadata?.imageId;
 					errorStatus[card.id] = {
 						currentImageUrl: card.image || null,
-						currentImageStyle: card.imageMetadata?.style || null,
+						currentImageStyle: card.imageMetadata?.imageStyle || null,
 						isExternalImage: isExternal,
 						targetImageUrl: null,
 						targetImageExists: false,
@@ -266,7 +267,7 @@
 				const isExternal = !!card.image && !card.imageMetadata?.imageId;
 				errorStatus[card.id] = {
 					currentImageUrl: card.image || null,
-					currentImageStyle: card.imageMetadata?.style || null,
+					currentImageStyle: card.imageMetadata?.imageStyle || null,
 					isExternalImage: isExternal,
 					targetImageUrl: null,
 					targetImageExists: false,
@@ -295,11 +296,30 @@
 			return;
 		}
 
+		// IMPORTANT: Capture the deck ID before generation starts
+		// This ensures updates go to the correct deck even if user switches decks
+		const targetDeckId = currentDeck.id;
+
 		isGenerating = true;
 		generationProgress = { current: 0, total: cardsNeedingGeneration };
 		generationStartTime = Date.now();
 		generationElapsedSeconds = 0;
 		const startTime = Date.now();
+
+		// Set isGenerating flag on all selected cards to show spinner on cards
+		for (const card of selectedCards) {
+			await nextDb.updateCard(targetDeckId, card.id, {
+				imageMetadata: {
+					...card.imageMetadata,
+					isGenerating: true
+				}
+			});
+		}
+
+		// Reload deck to show spinners
+		if (nextDeckStore.deck?.id === targetDeckId) {
+			await nextDeckStore.loadDeck(targetDeckId);
+		}
 
 		try {
 			// Call the API endpoint with full card data (only checked cards)
@@ -337,18 +357,26 @@
 
 			// Update cards with generated/cached images AND update thumbnails in real-time
 			let completedCount = 0;
+
 			for (const imageResult of result.results) {
 				if (imageResult.success && imageResult.url) {
-					// Update the card in the deck store
-					await nextDeckStore.updateCard(imageResult.cardId, {
+					// Update the card directly in the database using the captured deck ID
+					// This ensures updates go to the correct deck even if user switches decks
+					await nextDb.updateCard(targetDeckId, imageResult.cardId, {
 						image: imageResult.url,
 						imageMetadata: {
 							imageId: imageResult.imageId,
 							source: 'ai-generation',
 							imageStyle: selectedStyle,
-							addedAt: Date.now()
+							addedAt: Date.now(),
+							isGenerating: false // Clear the generating flag
 						}
 					});
+
+					// Reload deck immediately after each card update to show progressive updates
+					if (nextDeckStore.deck?.id === targetDeckId) {
+						await nextDeckStore.loadDeck(targetDeckId);
+					}
 
 					// Update the thumbnail in the dialog immediately
 					if (!imageResult.cached) {
@@ -387,6 +415,26 @@
 		} catch (error) {
 			console.error('Batch generation error:', error);
 			toasts.error(error instanceof Error ? error.message : 'Failed to generate images');
+
+			// Clear isGenerating flag on all selected cards on error
+			for (const card of selectedCards) {
+				try {
+					await nextDb.updateCard(targetDeckId, card.id, {
+						imageMetadata: {
+							...card.imageMetadata,
+							isGenerating: false
+						}
+					});
+				} catch (err) {
+					console.error('Failed to clear generating flag:', err);
+				}
+			}
+
+			// Reload deck to clear spinners
+			if (nextDeckStore.deck?.id === targetDeckId) {
+				await nextDeckStore.loadDeck(targetDeckId);
+			}
+
 			isGenerating = false;
 			generationProgress = { current: 0, total: 0 };
 		}

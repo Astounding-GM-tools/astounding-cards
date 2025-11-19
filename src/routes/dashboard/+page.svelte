@@ -9,8 +9,8 @@
 	async function handleCreateNewDeck() {
 		const newDeck = await nextDeckStore.createNewDeck();
 		if (newDeck) {
-			toasts.success('✅ New deck created!');
-			goto('/');
+			toasts.success('✨ New deck created!');
+			goto(`/${newDeck.id}`);
 		}
 	}
 

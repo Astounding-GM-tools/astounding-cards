@@ -86,22 +86,36 @@ export const GET: RequestHandler = async ({ url }) => {
 			return json({ error: 'Failed to fetch decks' }, { status: 500 });
 		}
 
-		// Format response with card count
-		const formattedDecks = (decks || []).map((deck) => ({
-			id: deck.id,
-			slug: deck.slug,
-			title: deck.title,
-			description: deck.description,
-			theme: deck.theme,
-			tags: deck.tags,
-			cardCount: Array.isArray(deck.cards) ? deck.cards.length : 0,
-			is_featured: deck.is_featured,
-			is_curated: deck.is_curated,
-			view_count: deck.view_count,
-			import_count: deck.import_count || 0,
-			created_at: deck.created_at,
-			updated_at: deck.updated_at
-		}));
+		// Format response with card count and first card image
+		const formattedDecks = (decks || []).map((deck) => {
+			// Extract first card image (if any card has an image)
+			let firstCardImage: string | null = null;
+			if (Array.isArray(deck.cards) && deck.cards.length > 0) {
+				const cardWithImage = deck.cards.find((card: any) => card.image);
+				if (cardWithImage) {
+					firstCardImage = cardWithImage.image;
+				}
+			}
+
+			return {
+				id: deck.id,
+				slug: deck.slug,
+				title: deck.title,
+				description: deck.description,
+				theme: deck.theme,
+				tags: deck.tags,
+				cardCount: Array.isArray(deck.cards) ? deck.cards.length : 0,
+				firstCardImage, // Add first card image for gallery display
+				is_featured: deck.is_featured,
+				is_curated: deck.is_curated,
+				view_count: deck.view_count,
+				import_count: deck.import_count || 0,
+				like_count: deck.like_count || 0, // Add like count
+				creator_name: deck.creator_name, // Add creator name
+				created_at: deck.created_at,
+				updated_at: deck.updated_at
+			};
+		});
 
 		return json({
 			success: true,
