@@ -19,6 +19,9 @@
 	import PrintLayout from '$lib/next/components/print/PrintLayout.svelte';
 	import MainHeader from '$lib/next/components/nav/MainHeader.svelte';
 	import DeckMetadata from '$lib/next/components/nav/DeckMetadata.svelte';
+	import Dialog from '$lib/next/components/dialog/Dialog.svelte';
+	import { dialogStore } from '$lib/next/components/dialog/dialogStore.svelte.js';
+	import { CardEditDialog } from '$lib/next/components/dialogs/index.js';
 	import { Copy, Download } from 'lucide-svelte';
 	import type { Deck } from '$lib/next/types/deck.js';
 	import type { Layout } from '$lib/next/types/deck.js';
@@ -42,6 +45,14 @@
 	let layout = $state<Layout>('poker');
 	let showCardBacks = $state(true);
 	let printEventTimeout: ReturnType<typeof setTimeout> | null = null;
+
+	// Active deck - switches from previewDeck to store deck after import
+	// This ensures Canon Update reactivity works after editing
+	let activeDeck = $derived(
+		nextDeckStore.deck && previewDeck && nextDeckStore.deck.id === previewDeck.id
+			? nextDeckStore.deck
+			: previewDeck
+	);
 
 	onMount(async () => {
 		// Track shared deck access with Vercel Web Analytics
@@ -80,6 +91,10 @@
 			} else if (hashDeck) {
 				// Check if user has a local copy of the hash deck
 				localDeck = await nextDb.getDeck(hashDeck.id);
+			} else {
+				// No curated or hash deck - try to load from local DB using slug as ID
+				console.log('[Preview] No curated/hash deck, trying local DB with slug:', data.slug);
+				localDeck = await nextDb.getDeck(data.slug);
 			}
 
 			// Perform the three-layer merge for preview
@@ -95,9 +110,14 @@
 				}
 
 				// Keep the hash in URL during preview - we'll clear it after import
+			} else if (localDeck) {
+				// Pure local deck view (navigated directly to /{deck-id})
+				previewDeck = localDeck;
+				previewing = true;
+				console.log('[Preview] Loaded pure local deck:', localDeck);
 			} else {
-				error = 'No deck data found in URL';
-				toasts.error('No deck data found');
+				error = 'No deck data found';
+				toasts.error('Deck not found');
 			}
 		} catch (err) {
 			console.error('Preview error:', err);
@@ -250,6 +270,33 @@
 	function handleCardBacksChange(visible: boolean) {
 		showCardBacks = visible;
 	}
+
+	// Handle edit card - implicitly imports deck if needed
+	async function handleEdit(cardId: string) {
+		if (!previewDeck) return;
+
+		try {
+			// Check if this deck is already loaded in the store
+			const currentDeck = nextDeckStore.deck;
+			const isDeckLoaded = currentDeck && currentDeck.id === previewDeck.id;
+
+			if (!isDeckLoaded) {
+				// Silently import the deck first
+				await nextDeckStore.importDeck(previewDeck);
+
+				// Clear the URL hash since we've now imported
+				replaceState(window.location.pathname, {});
+
+				toasts.success(`🎉 Deck "${previewDeck.meta.title}" added to your collection!`);
+			}
+
+			// Now open the edit dialog - card will exist in store
+			dialogStore.setContent(CardEditDialog, { cardId });
+		} catch (err) {
+			console.error('Failed to import deck for editing:', err);
+			toasts.error('Failed to open editor');
+		}
+	}
 </script>
 
 <div class="import-page">
@@ -258,13 +305,13 @@
 		<div class="merge-container">
 			<MergeTool {conflict} onResolve={handleMergeResolve} onCancel={handleMergeCancel} />
 		</div>
-	{:else if previewing && previewDeck}
+	{:else if previewing && activeDeck}
 		<!-- Preview mode with deck viewer -->
-		<MainHeader title={previewDeck.meta.title}>
+		<MainHeader title={activeDeck.meta.title}>
 			{#snippet metadata()}
 				<DeckMetadata
-					cardCount={previewDeck.cards.length}
-					imageCount={countImages(previewDeck)}
+					cardCount={activeDeck.cards.length}
+					imageCount={countImages(activeDeck)}
 					published={true}
 					cardBacksVisible={showCardBacks}
 					onCardBacksChange={handleCardBacksChange}
@@ -311,9 +358,9 @@
 		<!-- Deck viewer - switches to print layout when printing -->
 		<div class="preview-content">
 			{#if isPrintMode}
-				<PrintLayout cards={previewDeck.cards} {layout} {showCardBacks} />
+				<PrintLayout cards={activeDeck.cards} {layout} {showCardBacks} />
 			{:else}
-				<DeckPreview deck={previewDeck} />
+				<DeckPreview deck={activeDeck} onEdit={handleEdit} />
 			{/if}
 		</div>
 	{:else}
@@ -598,3 +645,6 @@
 		}
 	}
 </style>
+
+<!-- Dialog system for editing cards -->
+<Dialog />

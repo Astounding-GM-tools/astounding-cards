@@ -3,12 +3,14 @@
 	import Card from '../card/Card.svelte';
 	import CardFrontContent from '../card/CardFrontContent.svelte';
 	import CardBackContent from '../card/CardBackContent.svelte';
+	import { Pencil } from 'lucide-svelte';
 
 	interface Props {
 		deck: Deck;
+		onEdit?: (cardId: string) => void;
 	}
 
-	let { deck }: Props = $props();
+	let { deck, onEdit }: Props = $props();
 
 	// Track which cards are showing back side
 	let showingBack = $state(new Set<string>());
@@ -55,6 +57,11 @@
 					>
 						Back
 					</button>
+					{#if onEdit}
+						<button class="edit-button" onclick={() => onEdit(card.id)} title="Edit card">
+							<Pencil size={14} />
+						</button>
+					{/if}
 				</div>
 			</div>
 		{/each}
@@ -134,5 +141,26 @@
 
 	.side-toggle.active:hover {
 		background: var(--button-primary-hover-bg, #2563eb);
+	}
+
+	.edit-button {
+		padding: 0.5rem;
+		background: transparent;
+		color: var(--ui-muted, #64748b);
+		border: 1px solid var(--ui-border, #e2e8f0);
+		border-radius: 4px;
+		cursor: pointer;
+		transition: all 0.2s ease;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		flex: 0 0 auto;
+		width: 36px;
+	}
+
+	.edit-button:hover {
+		background: var(--ui-hover-bg, #f8fafc);
+		color: var(--ui-text, #1e293b);
+		border-color: var(--ui-muted, #64748b);
 	}
 </style>
