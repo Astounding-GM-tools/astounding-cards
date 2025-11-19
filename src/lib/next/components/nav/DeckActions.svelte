@@ -25,6 +25,8 @@
 		isAuthenticated?: boolean;
 		disabled?: boolean;
 		importing?: boolean;
+		isLiked?: boolean;
+		likeCount?: number;
 	}
 
 	let {
@@ -40,7 +42,9 @@
 		onImport,
 		isAuthenticated = false,
 		disabled = false,
-		importing = false
+		importing = false,
+		isLiked = false,
+		likeCount = 0
 	}: Props = $props();
 
 	// Share dropdown state
@@ -176,12 +180,22 @@
 
 	<!-- Import/Like Button (for shared decks) -->
 	{#if onImport}
-		<button class="action-button like-button" onclick={onImport} disabled={importing || disabled}>
+		<button
+			class="action-button like-button"
+			class:liked={isLiked}
+			onclick={onImport}
+			disabled={importing || disabled}
+		>
 			{#if importing}
 				<div class="button-spinner"></div>
 				<span>Adding...</span>
 			{:else}
-				<Heart fill="red" />
+				<Heart size={16} fill={isLiked ? 'currentColor' : 'none'} />
+				{#if likeCount > 0}
+					<span>{likeCount}</span>
+				{:else}
+					<span>Like</span>
+				{/if}
 			{/if}
 		</button>
 	{/if}
@@ -200,6 +214,10 @@
 		gap: 0.475rem;
 		align-items: center;
 		flex-wrap: wrap;
+	}
+
+	.is-liked {
+		fill: var(--brand);
 	}
 
 	.action-button {
@@ -248,6 +266,14 @@
 
 	.action-button.like-button:hover:not(:disabled) {
 		background: #b91c1c;
+	}
+
+	.action-button.like-button.liked {
+		background: #ef4444;
+	}
+
+	.action-button.like-button.liked:hover:not(:disabled) {
+		background: #dc2626;
 	}
 
 	.button-spinner {

@@ -46,6 +46,8 @@
 			onImport={handleImport}
 			isAuthenticated={true}
 			importing={importing}
+			isLiked={false}
+			likeCount={42}
 		/>
 	{/snippet}
 </MainHeader>

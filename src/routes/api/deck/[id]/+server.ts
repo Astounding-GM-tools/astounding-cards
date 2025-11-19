@@ -70,6 +70,8 @@ export const GET: RequestHandler = async ({ params }) => {
 				is_featured: deck.is_featured,
 				is_curated: deck.is_curated,
 				view_count: deck.view_count,
+				import_count: deck.import_count || 0,
+				user_id: deck.user_id,
 				created_at: deck.created_at,
 				updated_at: deck.updated_at,
 				version: deck.version

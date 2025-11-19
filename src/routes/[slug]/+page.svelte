@@ -425,6 +425,8 @@
 					onImport={(data.curatedDeck || hashDeck) && !ownsPublishedDeck ? handleImport : null}
 					isAuthenticated={!!$user}
 					importing={importing}
+					isLiked={localDeck !== null}
+					likeCount={data.curatedDeck?.import_count || 0}
 				/>
 
 				<!-- Layout selector (preview/print-specific) -->

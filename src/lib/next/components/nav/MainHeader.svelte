@@ -16,16 +16,18 @@
 	// Props for flexible header
 	interface Props {
 		title?: string;
-		onTitleEdit?: () => void;
-		metadata?: import('svelte').Snippet;
-		actions?: import('svelte').Snippet;
 		hideGalleryLink?: boolean;
+		onTitleEdit?: () => void;
+		actions?: import('svelte').Snippet;
+		metadata?: import('svelte').Snippet;
+
 		// Deck switcher props
 		showDeckSwitcher?: boolean;
 		decks?: Deck[];
 		currentDeckId?: string;
 		onSelectDeck?: (deckId: string) => void;
 		onNewDeck?: () => void;
+
 		// Mock overrides for testing/stories
 		mockIsAuthenticated?: boolean;
 		mockUserEmail?: string;
@@ -34,20 +36,20 @@
 	}
 
 	let {
+		decks = [],
 		title = 'Astounding Cards',
-		onTitleEdit,
-		metadata,
-		actions,
+		mockUserEmail,
+		mockDeckCount,
+		mockTokenBalance,
+		mockIsAuthenticated,
 		hideGalleryLink = false,
 		showDeckSwitcher = false,
-		decks = [],
 		currentDeckId,
 		onSelectDeck,
 		onNewDeck,
-		mockIsAuthenticated,
-		mockUserEmail,
-		mockDeckCount,
-		mockTokenBalance
+		actions,
+		metadata,
+		onTitleEdit
 	}: Props = $props();
 
 	// Derived state from store or mocks
@@ -234,34 +236,36 @@
 
 	<!-- Row 2: Title + Metadata (flexible via snippets) -->
 	{#if title || metadata}
-		<div class="header-content-bar">
-			{#if title}
-				<div class="title-row">
-					<h1 class="page-title">{title}</h1>
-					{#if onTitleEdit}
-						<button class="title-edit-button" onclick={onTitleEdit} aria-label="Edit title">
-							<svg
-								xmlns="http://www.w3.org/2000/svg"
-								width="16"
-								height="16"
-								viewBox="0 0 24 24"
-								fill="none"
-								stroke="currentColor"
-								stroke-width="2"
-							>
-								<path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
-							</svg>
-						</button>
-					{/if}
-				</div>
-			{/if}
+		<section class="header-content-bar">
+			<div class="header-content-bar_inner">
+				{#if title}
+					<div class="title-row">
+						<h1 class="page-title">{title}</h1>
+						{#if onTitleEdit}
+							<button class="title-edit-button" onclick={onTitleEdit} aria-label="Edit title">
+								<svg
+									xmlns="http://www.w3.org/2000/svg"
+									width="16"
+									height="16"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="2"
+								>
+									<path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+								</svg>
+							</button>
+						{/if}
+					</div>
+				{/if}
 
-			{#if metadata}
-				<div class="metadata-row">
-					{@render metadata()}
-				</div>
-			{/if}
-		</div>
+				{#if metadata}
+					<div class="metadata-row">
+						{@render metadata()}
+					</div>
+				{/if}
+			</div>
+		</section>
 	{/if}
 
 	<!-- Row 3: Actions (flexible via snippet) -->
@@ -278,7 +282,12 @@
 <style>
 	.app-header {
 		background: var(--ui-bg, #ffffff);
-		margin: 0 auto 1.5rem;
+	}
+
+	.header-top-bar,
+	.header-actions-bar {
+		padding: 0 2rem;
+		margin: 0 auto;
 		max-width: var(--page-max-width);
 	}
 
@@ -288,7 +297,6 @@
 		justify-content: space-between;
 		align-items: center;
 		gap: 0.75rem;
-		padding: 0 2rem;
 	}
 
 	.brand {
@@ -375,25 +383,13 @@
 		background: var(--brand);
 		color: var(--header-content-text, white);
 		position: relative;
+		background: var(--brand);
+	}
 
-		&::after,
-		&::before {
-			position: absolute;
-			z-index: -1;
-			top: 0;
-			bottom: 0;
-			background: var(--brand);
-			width: 50vw;
-			display: block;
-			content: '';
-		}
-
-		&::before {
-			left: 50%;
-		}
-		&::after {
-			right: 50%;
-		}
+	.header-content-bar_inner {
+		padding: 0 2rem;
+		margin: 0 auto;
+		max-width: var(--page-max-width);
 	}
 
 	.title-row {
