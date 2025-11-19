@@ -6,7 +6,6 @@
 	import { track } from '@vercel/analytics';
 
 	import Dialog from '$lib/next/components/dialog/Dialog.svelte';
-	import MergeTool from '$lib/next/components/merge/MergeTool.svelte';
 	import MainHeader from '$lib/next/components/nav/MainHeader.svelte';
 	import DeckPreview from '$lib/next/components/preview/DeckPreview.svelte';
 	import PrintLayout from '$lib/next/components/print/PrintLayout.svelte';
@@ -22,6 +21,7 @@
 	import { nextDeckStore } from '$lib/next/stores/deckStore.svelte.ts';
 	import { CardEditDialog } from '$lib/next/components/dialogs/index.js';
 	import { goto, replaceState } from '$app/navigation';
+	import MergeTool from '$lib/next/components/merge/MergeTool.svelte';
 	import { performThreeLayerMerge } from '$lib/next/utils/threeLayerMerge.js';
 	import {
 		detectDeckConflict,
@@ -41,8 +41,6 @@
 	let importing = $state(false);
 	let previewing = $state(false);
 	let previewDeck = $state<Deck | null>(null);
-	let importedDeck = $state<Deck | null>(null);
-	let showMergeTool = $state(false);
 
 	// Deck sources (for conditional UI logic)
 	let hashDeck = $state<Deck | null>(null);
@@ -182,9 +180,12 @@
 		importing = true;
 		try {
 			if (conflict) {
-				// Has conflicts - show merge tool
-				showMergeTool = true;
-				importedDeck = previewDeck;
+				// Has conflicts - show merge tool in dialog
+				dialogStore.setContent(MergeTool, {
+					conflict,
+					onResolve: handleMergeResolve,
+					onCancel: handleMergeCancel
+				});
 				toasts.info(
 					`⚠️ Deck "${previewDeck.meta.title}" has local changes. Please resolve conflicts.`
 				);
@@ -212,7 +213,7 @@
 
 	// Handle merge resolution
 	async function handleMergeResolve(resolution: MergeResolution) {
-		if (!conflict || !importedDeck) return;
+		if (!conflict) return;
 
 		try {
 			// Apply the merge resolution to create the final deck
@@ -224,8 +225,8 @@
 			// Load it into the store
 			await nextDeckStore.loadDeck(mergedDeck.id);
 
-			// Update state
-			showMergeTool = false;
+			// Close dialog and update state
+			dialogStore.close();
 			imported = true;
 			conflict = null;
 
@@ -238,10 +239,8 @@
 	}
 
 	function handleMergeCancel() {
-		showMergeTool = false;
+		dialogStore.close();
 		conflict = null;
-		importedDeck = null;
-
 		goto('/');
 	}
 
@@ -404,12 +403,7 @@
 </script>
 
 <div class="import-page">
-	{#if showMergeTool && conflict}
-		<!-- Full-screen merge tool -->
-		<div class="merge-container">
-			<MergeTool {conflict} onResolve={handleMergeResolve} onCancel={handleMergeCancel} />
-		</div>
-	{:else if previewing && activeDeck}
+	{#if previewing && activeDeck}
 		<!-- Preview mode with deck viewer -->
 		<MainHeader title={activeDeck.meta.title}>
 			{#snippet metadata()}
@@ -608,17 +602,6 @@
 		background: var(--toast-success, #059669);
 	}
 
-	.merge-container {
-		width: 100vw;
-		min-height: 100vh;
-		padding: 2rem;
-		display: flex;
-		align-items: flex-start;
-		justify-content: center;
-		background: var(--ui-bg, #ffffff);
-		overflow-y: auto;
-	}
-
 	/* Preview content */
 	.preview-content {
 		max-width: var(--page-max-width);
@@ -659,10 +642,6 @@
 
 	/* Responsive */
 	@media (max-width: 640px) {
-		.merge-container {
-			padding: 1rem;
-		}
-
 		.preview-content {
 			padding: 0 1rem 1rem;
 		}

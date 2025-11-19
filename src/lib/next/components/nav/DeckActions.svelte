@@ -2,7 +2,7 @@
 	import type { ComponentType } from 'svelte';
 
 	import OverflowMenu from '../ui/OverflowMenu.svelte';
-	import { Plus, Share2, Wand2 } from 'lucide-svelte';
+	import { Heart, Plus, Share2, Wand2 } from 'lucide-svelte';
 
 	interface ActionDropdownItem {
 		label: string;
@@ -12,16 +12,16 @@
 	}
 
 	interface Props {
-		onAddCard?: () => void | null;
-		onShare?: () => void | null;
-		onExportJson?: () => void | null;
-		onPublish?: () => void | null;
-		onGenerateDeck?: () => void | null;
-		onGenerateImages?: () => void | null;
-		onImportCards?: () => void | null;
-		onDuplicateDeck?: () => void | null;
-		onDeleteDeck?: () => void | null;
-		onImport?: () => void | null;
+		onShare?: (() => void) | null;
+		onImport?: (() => void) | null;
+		onAddCard?: (() => void) | null;
+		onPublish?: (() => void) | null;
+		onExportJson?: (() => void) | null;
+		onDeleteDeck?: (() => void) | null;
+		onGenerateDeck?: (() => void) | null;
+		onImportCards?: (() => void) | null;
+		onDuplicateDeck?: (() => void) | null;
+		onGenerateImages?: (() => void) | null;
 		isAuthenticated?: boolean;
 		disabled?: boolean;
 		importing?: boolean;
@@ -181,7 +181,7 @@
 				<div class="button-spinner"></div>
 				<span>Adding...</span>
 			{:else}
-				<span>❤️ Like</span>
+				<Heart fill="red" />
 			{/if}
 		</button>
 	{/if}
