@@ -6,6 +6,44 @@ import { nextDb, DatabaseError } from './database.js';
 import { safeCloneCard } from '$lib/utils/clone-utils.ts';
 import { generateKey } from '../utils/idUtils.js';
 import { authenticatedFetch } from '$lib/utils/authenticated-fetch.js';
+import { get } from 'svelte/store';
+import { nextAuth } from './auth.js';
+
+/**
+ * Sync deck to cloud (user_decks table) if authenticated
+ * This runs in the background after local IndexedDB updates
+ */
+async function syncDeckToCloud(deck: Deck): Promise<void> {
+	try {
+		const authState = get(nextAuth);
+		if (!authState || !authState.user) {
+			return; // Not authenticated, skip sync
+		}
+
+		// Background sync - don't block UI
+		await authenticatedFetch('/api/user-decks', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({
+				id: deck.id,
+				title: deck.meta.title,
+				description: deck.meta.description || '',
+				theme: deck.meta.theme,
+				image_style: deck.meta.imageStyle,
+				layout: deck.meta.layout,
+				cards: deck.cards,
+				tags: [], // TODO: Add tags support if needed
+				is_synced: true,
+				published_deck_id: deck.meta.published_deck_id || null
+			})
+		});
+	} catch (err) {
+		// Log but don't fail - sync is best-effort
+		console.warn('Failed to sync deck to cloud:', err);
+	}
+}
 
 /**
  * Create the Next deck store
@@ -107,6 +145,10 @@ function createNextDeckStore(): NextDeckStore {
 			try {
 				const deck = await nextDb.createDeck(title);
 				currentDeck = deck;
+
+				// Auto-sync to cloud (background, non-blocking)
+				syncDeckToCloud(deck);
+
 				return true;
 			} catch (err) {
 				this.handleError(err, 'Failed to create deck');
@@ -126,6 +168,10 @@ function createNextDeckStore(): NextDeckStore {
 			try {
 				const deck = await nextDb.createDeck('New Deck');
 				currentDeck = deck;
+
+				// Auto-sync to cloud (background, non-blocking)
+				syncDeckToCloud(deck);
+
 				return deck;
 			} catch (err) {
 				this.handleError(err, 'Failed to create deck');
@@ -150,6 +196,10 @@ function createNextDeckStore(): NextDeckStore {
 			try {
 				const updatedDeck = await nextDb.updateDeckMeta(currentDeck.id, updates);
 				currentDeck = updatedDeck; // Canon Update: UI reflects persisted state
+
+				// Auto-sync to cloud (background, non-blocking)
+				syncDeckToCloud(updatedDeck);
+
 				return true;
 			} catch (err) {
 				this.handleError(err, 'Failed to update deck');
@@ -182,6 +232,9 @@ function createNextDeckStore(): NextDeckStore {
 				const updatedDeck = await nextDb.updateCard(currentDeck.id, cardId, updates);
 				currentDeck = updatedDeck; // Canon Update: UI reflects persisted state
 
+				// Auto-sync to cloud (background, non-blocking)
+				syncDeckToCloud(updatedDeck);
+
 				return true;
 			} catch (err) {
 				this.handleError(err, 'Failed to update card');
@@ -206,6 +259,9 @@ function createNextDeckStore(): NextDeckStore {
 			try {
 				const updatedDeck = await nextDb.addCard(currentDeck.id, cardData);
 				currentDeck = updatedDeck; // Canon Update: UI reflects persisted state
+
+				// Auto-sync to cloud (background, non-blocking)
+				syncDeckToCloud(updatedDeck);
 
 				// Return the newly added card
 				return updatedDeck.cards[updatedDeck.cards.length - 1];
@@ -232,6 +288,10 @@ function createNextDeckStore(): NextDeckStore {
 			try {
 				const updatedDeck = await nextDb.removeCard(currentDeck.id, cardId);
 				currentDeck = updatedDeck; // Canon Update: UI reflects persisted state
+
+				// Auto-sync to cloud (background, non-blocking)
+				syncDeckToCloud(updatedDeck);
+
 				return true;
 			} catch (err) {
 				this.handleError(err, 'Failed to remove card');
@@ -407,7 +467,7 @@ function createNextDeckStore(): NextDeckStore {
 		},
 
 		/**
-		 * Publish deck to gallery
+		 * Publish deck to gallery (or update existing published version)
 		 */
 		async publishDeck(options?: {
 			description?: string;
@@ -418,24 +478,19 @@ function createNextDeckStore(): NextDeckStore {
 				return { success: false, error: 'No deck loaded' };
 			}
 
-			this.setLoading(true, 'Publishing deck...', 'publish-deck');
+			const isUpdate = !!currentDeck.meta.published_deck_id;
+			const action = isUpdate ? 'Updating published deck...' : 'Publishing deck...';
+
+			this.setLoading(true, action, 'publish-deck');
 			this.clearError();
 
 			try {
-				// Build request body
-				const body: any = {
-					title: currentDeck.meta.title,
-					description: options?.description || '',
-					tags: options?.tags || [],
-					visibility: options?.visibility || 'public',
-					cards: currentDeck.cards,
-					theme: currentDeck.meta.theme
+				// NEW: Just pass the userDeckId, API will handle the rest
+				const body = {
+					userDeckId: currentDeck.id, // NEW: Just send the ID
+					visibility: options?.visibility || 'public'
+					// API will read from user_decks table
 				};
-
-				// Include published deck ID for updates
-				if (currentDeck.meta.published_deck_id) {
-					body.deckId = currentDeck.meta.published_deck_id;
-				}
 
 				const response = await authenticatedFetch('/api/decks/publish', {
 					method: 'POST',
@@ -453,7 +508,8 @@ function createNextDeckStore(): NextDeckStore {
 				const result = await response.json();
 
 				// Store published deck ID in metadata for future updates
-				if (result.deck.id) {
+				if (result.deck.id && !isUpdate) {
+					// Only update metadata on first publish, not on updates
 					await this.updateDeckMeta({
 						published_deck_id: result.deck.id,
 						published_slug: result.deck.slug
