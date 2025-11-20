@@ -21,6 +21,9 @@
 		actions?: import('svelte').Snippet;
 		metadata?: import('svelte').Snippet;
 
+		// Gallery view indicator
+		isGalleryView?: boolean;
+
 		// Deck switcher props
 		showDeckSwitcher?: boolean;
 		decks?: Deck[];
@@ -43,6 +46,7 @@
 		mockTokenBalance,
 		mockIsAuthenticated,
 		hideGalleryLink = false,
+		isGalleryView = false,
 		showDeckSwitcher = false,
 		currentDeckId,
 		onSelectDeck,
@@ -268,6 +272,9 @@
 				{#if title}
 					<div class="title-row">
 						<h1 class="page-title">{title}</h1>
+						{#if isGalleryView}
+							<span class="gallery-badge">📖 Gallery View</span>
+						{/if}
 						{#if onTitleEdit}
 							<button class="title-edit-button" onclick={onTitleEdit} aria-label="Edit title">
 								<svg
@@ -432,6 +439,18 @@
 		margin: 0;
 		color: var(--header-content-text, white);
 		line-height: 1.2;
+	}
+
+	.gallery-badge {
+		display: inline-flex;
+		align-items: center;
+		padding: 0.25rem 0.75rem;
+		background: rgba(255, 255, 255, 0.25);
+		color: white;
+		font-size: 0.8125rem;
+		font-weight: 500;
+		border-radius: 4px;
+		border: 1px solid rgba(255, 255, 255, 0.3);
 	}
 
 	.title-edit-button {

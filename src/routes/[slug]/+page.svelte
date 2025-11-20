@@ -30,6 +30,10 @@
 		applyMergeResolution
 	} from '$lib/next/utils/deckMerging.js';
 	import DeckActions from '$lib/next/components/nav/DeckActions.svelte';
+	import ActionBar from '$lib/next/components/actions/ActionBar.svelte';
+	import ActionButton from '$lib/next/components/actions/ActionButton.svelte';
+	import { actionButtonContent } from '$lib/next/components/actions/actionButtonContent';
+	import { Share2, Upload, Eye, Heart, Plus, Wand2, BookPlus, BookCheck } from 'lucide-svelte';
 
 	// Server-side data
 	let { data }: { data: PageData } = $props();
@@ -46,14 +50,14 @@
 	let hashDeck = $state<Deck | null>(null);
 	let localDeck = $state<Deck | null>(null);
 
+	// Check if we're in gallery view (either forced with ?gallery=true or viewing a curated deck)
+	let isGalleryView = $derived(
+		$page.url.searchParams.get('gallery') === 'true' || !!data.curatedDeck
+	);
+
 	// Check if user owns the curated deck (for showing publish/update button)
 	let ownsPublishedDeck = $derived(
 		data.curatedDeck && $user?.id && data.curatedDeck.user_id === $user.id
-	);
-
-	// Check if local deck was previously published
-	let wasPublished = $derived(
-		localDeck?.meta?.published_deck_id !== undefined && localDeck?.meta?.published_deck_id !== null
 	);
 
 	// Print mode state
@@ -185,10 +189,23 @@
 	async function handleImport() {
 		if (!previewDeck) return;
 
+		// Check if deck already exists locally
+		if (localDeck) {
+			const confirmed = confirm(
+				`"${previewDeck.meta.title}" is already in your library.\n\n` +
+					`Clicking OK will overwrite your local copy with the gallery version.\n\n` +
+					`To create a separate copy, use the Duplicate Deck feature in your Dashboard instead.`
+			);
+
+			if (!confirmed) {
+				return; // User cancelled
+			}
+		}
+
 		importing = true;
 		try {
-			if (conflict) {
-				// Has conflicts - show merge tool in dialog
+			if (conflict && !localDeck) {
+				// Has conflicts - show merge tool in dialog (but not if we're deliberately overwriting)
 				dialogStore.setContent(MergeTool, {
 					conflict,
 					onResolve: handleMergeResolve,
@@ -198,7 +215,7 @@
 					`⚠️ Deck "${previewDeck.meta.title}" has local changes. Please resolve conflicts.`
 				);
 			} else {
-				// No conflicts - import directly
+				// No conflicts or user confirmed overwrite - import directly
 				await nextDeckStore.importDeck(previewDeck);
 
 				// Switch from preview to success screen
@@ -208,7 +225,13 @@
 				// Clear the URL hash after successful import
 				replaceState(window.location.pathname, {});
 
-				toasts.success(`❤️ Deck "${previewDeck.meta.title}" liked and added to your collection!`);
+				if (localDeck) {
+					toasts.success(
+						`✅ Deck "${previewDeck.meta.title}" updated from gallery version!`
+					);
+				} else {
+					toasts.success(`❤️ Deck "${previewDeck.meta.title}" liked and added to your collection!`);
+				}
 			}
 		} catch (err) {
 			console.error('Import error:', err);
@@ -472,9 +495,33 @@
 
 	// Handle view in gallery - opens published version in new tab
 	function handleViewInGallery() {
-		if (!localDeck?.meta?.published_slug) return;
+		const slug = localDeck?.meta?.published_slug || localDeck?.meta?.published_deck_id;
+		if (!slug) return;
 		// Open in new tab with gallery=true to force gallery view
-		window.open(`/${localDeck.meta.published_slug}?gallery=true`, '_blank');
+		window.open(`/${slug}?gallery=true`, '_blank');
+	}
+
+	// Handle share - copy gallery URL to clipboard
+	async function handleShare() {
+		const slug = isGalleryView
+			? data.slug
+			: activeDeck?.meta?.published_slug || activeDeck?.meta?.published_deck_id;
+
+		if (!slug) {
+			console.error('[Share] No slug found', { isGalleryView, activeDeck: activeDeck?.meta });
+			toasts.error('Cannot share - deck not published');
+			return;
+		}
+
+		const url = `${window.location.origin}/${slug}`;
+
+		try {
+			await navigator.clipboard.writeText(url);
+			toasts.success('🔗 Link copied to clipboard!');
+		} catch (err) {
+			console.error('Failed to copy to clipboard:', err);
+			toasts.error('Failed to copy link');
+		}
 	}
 
 	// Handle delete deck - shows confirmation dialog
@@ -508,7 +555,11 @@
 <div class="import-page">
 	{#if previewing && activeDeck}
 		<!-- Preview mode with deck viewer -->
-		<MainHeader title={activeDeck.meta.title} onTitleEdit={localDeck ? handleTitleEdit : undefined}>
+		<MainHeader
+			title={activeDeck.meta.title}
+			onTitleEdit={localDeck ? handleTitleEdit : undefined}
+			{isGalleryView}
+		>
 			{#snippet metadata()}
 				<DeckMetadata
 					cardCount={activeDeck.cards.length}
@@ -518,31 +569,103 @@
 					onCardBacksChange={handleCardBacksChange}
 				/>
 			{/snippet}
-
-			{#snippet actions()}
-				<DeckActions
-					onAddCard={localDeck ? handleAddCard : null}
-					onShare={handleDownloadJson}
-					onExportJson={handleDownloadJson}
-					onViewInGallery={localDeck?.meta?.published_slug ? handleViewInGallery : null}
-					publishedSlug={localDeck?.meta?.published_slug || null}
-					onPublish={(!data.curatedDeck && !hashDeck && localDeck) || ownsPublishedDeck
-						? handlePublish
-						: null}
-					onGenerateImages={(!data.curatedDeck && !hashDeck && localDeck) || ownsPublishedDeck
-						? handleGenerateImages
-						: null}
-					onImport={(data.curatedDeck || hashDeck) && !ownsPublishedDeck ? handleImport : null}
-					onDeleteDeck={localDeck ? handleDeleteDeck : null}
-					isAuthenticated={!!$user}
-					{importing}
-					isLiked={localDeck !== null}
-					likeCount={data.curatedDeck?.import_count || 0}
-					{layout}
-					onLayoutChange={handleLayoutChange}
-				/>
-			{/snippet}
 		</MainHeader>
+
+		<!-- Action Bar - context-sensitive action buttons -->
+		<ActionBar>
+			{#if isGalleryView}
+				<!-- Gallery view: Like, Add to Library, Share -->
+				<!-- Like button (read-only, shows count) -->
+				<ActionButton
+					icon={Heart}
+					{...actionButtonContent.like}
+					variant="danger"
+					filled={false}
+					disabled
+				/>
+
+				<!-- Add to Library button -->
+				<ActionButton
+					icon={localDeck ? BookCheck : BookPlus}
+					{...(localDeck ? actionButtonContent.removeFromLibrary : actionButtonContent.addToLibrary)}
+					variant={localDeck ? 'success' : 'primary'}
+					onclick={handleImport}
+					disabled={importing}
+				/>
+
+				<!-- Share button -->
+				<ActionButton
+					icon={Share2}
+					{...actionButtonContent.share}
+					variant="primary"
+					onclick={handleShare}
+				/>
+			{:else if localDeck}
+				<!-- Local slug view: Full owner actions -->
+				<!-- Check if published -->
+				{#if activeDeck?.meta?.published_deck_id || activeDeck?.meta?.published_slug}
+					<!-- Published deck actions -->
+					<!-- Like count (read-only for your own deck) -->
+					<ActionButton
+						icon={Heart}
+						title="Likes"
+						subtitle={`${data.curatedDeck?.like_count || 0} likes`}
+						variant="danger"
+						filled={false}
+						disabled
+					/>
+
+					<!-- Republish button (always enabled for now - TODO: detect out-of-sync) -->
+					<ActionButton
+						icon={Upload}
+						{...actionButtonContent.republish}
+						variant="warning"
+						onclick={handlePublish}
+						disabled={publishing}
+					/>
+
+					<ActionButton
+						icon={Eye}
+						{...actionButtonContent.viewPublic}
+						variant="secondary"
+						onclick={handleViewInGallery}
+					/>
+
+					<ActionButton
+						icon={Share2}
+						{...actionButtonContent.share}
+						variant="primary"
+						onclick={handleShare}
+					/>
+				{:else}
+					<!-- Unpublished deck - show publish button -->
+					<ActionButton
+						icon={Upload}
+						{...actionButtonContent.publish}
+						variant="success"
+						onclick={handlePublish}
+						disabled={publishing}
+					/>
+				{/if}
+
+				<!-- Always show generate and add card -->
+				{#if $user}
+					<ActionButton
+						icon={Wand2}
+						{...actionButtonContent.generateImages}
+						variant="success"
+						onclick={handleGenerateImages}
+					/>
+				{/if}
+
+				<ActionButton
+					icon={Plus}
+					{...actionButtonContent.addCard}
+					variant="primary"
+					onclick={handleAddCard}
+				/>
+			{/if}
+		</ActionBar>
 
 		<!-- Deck viewer - switches to print layout when printing -->
 		<div class="preview-content">
