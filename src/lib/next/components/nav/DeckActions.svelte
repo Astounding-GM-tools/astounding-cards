@@ -22,6 +22,8 @@
 		onImportCards?: (() => void) | null;
 		onDuplicateDeck?: (() => void) | null;
 		onGenerateImages?: (() => void) | null;
+		onViewInGallery?: (() => void) | null;
+		publishedSlug?: string | null;
 		isAuthenticated?: boolean;
 		disabled?: boolean;
 		importing?: boolean;
@@ -42,6 +44,8 @@
 		onDuplicateDeck,
 		onDeleteDeck,
 		onImport,
+		onViewInGallery,
+		publishedSlug,
 		isAuthenticated = false,
 		disabled = false,
 		importing = false,
@@ -79,6 +83,11 @@
 
 	function handlePublish() {
 		onPublish?.();
+		shareOpen = false;
+	}
+
+	function handleViewInGallery() {
+		onViewInGallery?.();
 		shareOpen = false;
 	}
 
@@ -171,8 +180,13 @@
 					{#if onExportJson}
 						<button class="dropdown-item" onclick={handleExportJson}>Export JSON</button>
 					{/if}
+					{#if publishedSlug && onViewInGallery}
+						<button class="dropdown-item" onclick={handleViewInGallery}>View in Gallery</button>
+					{/if}
 					{#if onPublish}
-						<button class="dropdown-item" onclick={handlePublish}>Publish to Gallery</button>
+						<button class="dropdown-item" onclick={handlePublish}>
+							{publishedSlug ? 'Update Published' : 'Publish to Gallery'}
+						</button>
 					{/if}
 				</div>
 			{/if}

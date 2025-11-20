@@ -506,12 +506,18 @@ function createNextDeckStore(): NextDeckStore {
 			this.clearError();
 
 			try {
+				// Ensure deck is synced to user_decks first (publish API reads from there)
+				console.log('[Publish] Ensuring deck is synced to cloud before publishing...');
+				await syncDeckToCloud(currentDeck);
+
 				// NEW: Just pass the userDeckId, API will handle the rest
 				const body = {
 					userDeckId: currentDeck.id, // NEW: Just send the ID
 					visibility: options?.visibility || 'public'
 					// API will read from user_decks table
 				};
+
+				console.log('[Publish] Publishing deck:', currentDeck.id);
 
 				const response = await authenticatedFetch('/api/decks/publish', {
 					method: 'POST',

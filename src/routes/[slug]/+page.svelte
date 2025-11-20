@@ -81,6 +81,9 @@
 				return;
 			}
 
+			// Check if ?gallery=true is set to force gallery view (skip loading local)
+			const forceGalleryView = $page.url.searchParams.get('gallery') === 'true';
+
 			// PREPARE PREVIEW (don't import yet)
 			// Layer 1: Curated deck from Supabase (if present)
 			const curatedDeck = data.curatedDeck;
@@ -91,17 +94,22 @@
 			hashDeck = importFromUrl(window.location.href);
 			console.log('[Preview] Hash deck:', hashDeck);
 
-			// Layer 3: Local deck from IndexedDB (if exists)
-			if (curatedDeck) {
-				// Check if user has a local copy of this curated deck
-				localDeck = await nextDb.getDeck(curatedDeck.id);
-			} else if (hashDeck) {
-				// Check if user has a local copy of the hash deck
-				localDeck = await nextDb.getDeck(hashDeck.id);
+			// Layer 3: Local deck from IndexedDB (if exists and not forcing gallery view)
+			if (!forceGalleryView) {
+				if (curatedDeck) {
+					// Check if user has a local copy of this curated deck
+					localDeck = await nextDb.getDeck(curatedDeck.id);
+				} else if (hashDeck) {
+					// Check if user has a local copy of the hash deck
+					localDeck = await nextDb.getDeck(hashDeck.id);
+				} else {
+					// No curated or hash deck - try to load from local DB using slug as ID
+					console.log('[Preview] No curated/hash deck, trying local DB with slug:', data.slug);
+					localDeck = await nextDb.getDeck(data.slug);
+				}
 			} else {
-				// No curated or hash deck - try to load from local DB using slug as ID
-				console.log('[Preview] No curated/hash deck, trying local DB with slug:', data.slug);
-				localDeck = await nextDb.getDeck(data.slug);
+				console.log('[Preview] Gallery view forced - skipping local deck load');
+				localDeck = null;
 			}
 
 			// Perform the three-layer merge for preview
@@ -462,6 +470,13 @@
 		}
 	}
 
+	// Handle view in gallery - opens published version in new tab
+	function handleViewInGallery() {
+		if (!localDeck?.meta?.published_slug) return;
+		// Open in new tab with gallery=true to force gallery view
+		window.open(`/${localDeck.meta.published_slug}?gallery=true`, '_blank');
+	}
+
 	// Handle delete deck - shows confirmation dialog
 	function handleDeleteDeck() {
 		if (!activeDeck) return;
@@ -509,6 +524,8 @@
 					onAddCard={localDeck ? handleAddCard : null}
 					onShare={handleDownloadJson}
 					onExportJson={handleDownloadJson}
+					onViewInGallery={localDeck?.meta?.published_slug ? handleViewInGallery : null}
+					publishedSlug={localDeck?.meta?.published_slug || null}
 					onPublish={(!data.curatedDeck && !hashDeck && localDeck) || ownsPublishedDeck
 						? handlePublish
 						: null}
