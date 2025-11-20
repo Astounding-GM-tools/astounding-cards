@@ -17,31 +17,52 @@ async function syncDeckToCloud(deck: Deck): Promise<void> {
 	try {
 		const authState = get(authStore);
 		if (!authState || !authState.user) {
+			console.log('[Sync] Skipping sync - not authenticated');
 			return; // Not authenticated, skip sync
 		}
 
+		console.log('[Sync] Syncing deck to cloud:', deck.id, deck.meta.title);
+
+		// Strip blobs from cards before sending (blobs can't be serialized to JSON)
+		const cardsForSync = deck.cards.map((card) => {
+			const { imageBlob, ...cardWithoutBlob } = card;
+			return cardWithoutBlob;
+		});
+
+		const payload = {
+			id: deck.id,
+			title: deck.meta.title,
+			description: deck.meta.description || '',
+			theme: deck.meta.theme,
+			image_style: deck.meta.imageStyle,
+			layout: deck.meta.layout,
+			cards: cardsForSync,
+			tags: [], // TODO: Add tags support if needed
+			is_synced: true,
+			published_deck_id: deck.meta.published_deck_id || null
+		};
+
+		console.log('[Sync] Payload:', payload);
+
 		// Background sync - don't block UI
-		await authenticatedFetch('/api/user-decks', {
+		const response = await authenticatedFetch('/api/user-decks', {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json'
 			},
-			body: JSON.stringify({
-				id: deck.id,
-				title: deck.meta.title,
-				description: deck.meta.description || '',
-				theme: deck.meta.theme,
-				image_style: deck.meta.imageStyle,
-				layout: deck.meta.layout,
-				cards: deck.cards,
-				tags: [], // TODO: Add tags support if needed
-				is_synced: true,
-				published_deck_id: deck.meta.published_deck_id || null
-			})
+			body: JSON.stringify(payload)
 		});
+
+		if (!response.ok) {
+			const errorText = await response.text();
+			console.error('[Sync] Failed to sync deck:', response.status, errorText);
+			throw new Error(`Sync failed: ${response.status} ${errorText}`);
+		}
+
+		console.log('[Sync] Successfully synced deck to cloud');
 	} catch (err) {
 		// Log but don't fail - sync is best-effort
-		console.warn('Failed to sync deck to cloud:', err);
+		console.error('[Sync] Failed to sync deck to cloud:', err);
 	}
 }
 

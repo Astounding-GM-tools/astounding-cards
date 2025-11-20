@@ -401,6 +401,67 @@
 		}
 	}
 
+	// Handle add card - implicitly imports deck if needed
+	async function handleAddCard() {
+		if (!previewDeck) return;
+
+		try {
+			// Check if this deck is already loaded in the store
+			const currentDeck = nextDeckStore.deck;
+			const isDeckLoaded = currentDeck && currentDeck.id === previewDeck.id;
+
+			if (!isDeckLoaded) {
+				// Silently import the deck first
+				await nextDeckStore.importDeck(previewDeck);
+
+				// Clear the URL hash since we've now imported
+				replaceState(window.location.pathname, {});
+
+				toasts.success(`🎉 Deck "${previewDeck.meta.title}" added to your collection!`);
+			}
+
+			// Create a new card first, then open dialog to edit it
+			const newCard = await nextDeckStore.addCard({});
+			if (newCard) {
+				dialogStore.setContent(CardEditDialog, { cardId: newCard.id });
+			} else {
+				toasts.error('Failed to create card');
+			}
+		} catch (err) {
+			console.error('Failed to add card:', err);
+			toasts.error('Failed to add card');
+		}
+	}
+
+	// Handle title edit - implicitly imports deck if needed
+	async function handleTitleEdit() {
+		if (!previewDeck) return;
+
+		try {
+			// Check if this deck is already loaded in the store
+			const currentDeck = nextDeckStore.deck;
+			const isDeckLoaded = currentDeck && currentDeck.id === previewDeck.id;
+
+			if (!isDeckLoaded) {
+				// Silently import the deck first
+				await nextDeckStore.importDeck(previewDeck);
+
+				// Clear the URL hash since we've now imported
+				replaceState(window.location.pathname, {});
+			}
+
+			// Prompt for new title
+			const newTitle = prompt('Enter new deck title:', previewDeck.meta.title);
+			if (newTitle && newTitle.trim() !== '' && newTitle !== previewDeck.meta.title) {
+				await nextDeckStore.updateDeckMeta({ title: newTitle.trim() });
+				toasts.success('✏️ Deck title updated');
+			}
+		} catch (err) {
+			console.error('Failed to edit title:', err);
+			toasts.error('Failed to edit title');
+		}
+	}
+
 	// Handle delete deck - shows confirmation dialog
 	function handleDeleteDeck() {
 		if (!activeDeck) return;
@@ -432,7 +493,7 @@
 <div class="import-page">
 	{#if previewing && activeDeck}
 		<!-- Preview mode with deck viewer -->
-		<MainHeader title={activeDeck.meta.title}>
+		<MainHeader title={activeDeck.meta.title} onTitleEdit={localDeck ? handleTitleEdit : undefined}>
 			{#snippet metadata()}
 				<DeckMetadata
 					cardCount={activeDeck.cards.length}
@@ -445,6 +506,7 @@
 
 			{#snippet actions()}
 				<DeckActions
+					onAddCard={localDeck ? handleAddCard : null}
 					onShare={handleDownloadJson}
 					onExportJson={handleDownloadJson}
 					onPublish={(!data.curatedDeck && !hashDeck && localDeck) || ownsPublishedDeck

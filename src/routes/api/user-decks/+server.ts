@@ -69,6 +69,8 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 
 		// Parse request
 		const body = await request.json();
+		console.log('[API] POST /api/user-decks - Body:', JSON.stringify(body, null, 2));
+
 		const {
 			id,
 			title,
@@ -84,14 +86,17 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 
 		// Validate required fields
 		if (!id || typeof id !== 'string') {
+			console.error('[API] Validation error: Deck ID missing or invalid');
 			return error(400, 'Deck ID is required');
 		}
 
 		if (!title || typeof title !== 'string' || title.trim().length === 0) {
+			console.error('[API] Validation error: Title missing or invalid');
 			return error(400, 'Title is required');
 		}
 
 		if (!cards || !Array.isArray(cards)) {
+			console.error('[API] Validation error: Cards missing or not an array');
 			return error(400, 'Cards array is required');
 		}
 
@@ -105,32 +110,42 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 		if (existingDeck) {
 			// Verify ownership
 			if (existingDeck.user_id !== userId) {
+				console.error('[API] Ownership error: Deck belongs to different user');
 				return error(403, 'Cannot sync deck owned by another user');
 			}
 
+			console.log('[API] Updating existing deck:', id);
+
 			// Update existing deck
+			const updatePayload = {
+				title: title.trim(),
+				description: description?.trim() || null,
+				theme: theme || 'classic',
+				image_style: image_style || 'classic',
+				layout: layout || 'poker',
+				cards,
+				tags: tags || [],
+				is_synced: is_synced ?? true,
+				published_deck_id: published_deck_id || null,
+				last_edited: new Date().toISOString()
+			};
+
+			console.log('[API] Update payload:', JSON.stringify(updatePayload, null, 2));
+
 			const { data: updatedDeck, error: updateError } = await supabaseAdmin
 				.from('user_decks')
-				.update({
-					title: title.trim(),
-					description: description?.trim() || null,
-					theme: theme || 'classic',
-					image_style: image_style || 'classic',
-					layout: layout || 'poker',
-					cards,
-					tags: tags || [],
-					is_synced: is_synced ?? true,
-					published_deck_id: published_deck_id || null,
-					last_edited: new Date().toISOString()
-				})
+				.update(updatePayload)
 				.eq('id', id)
 				.select()
 				.single();
 
 			if (updateError) {
-				console.error('Failed to update user deck:', updateError);
+				console.error('[API] Supabase update error:', updateError);
+				console.error('[API] Update payload was:', updatePayload);
 				return error(500, 'Failed to sync deck');
 			}
+
+			console.log('[API] Successfully updated deck');
 
 			return json({
 				success: true,
@@ -140,28 +155,37 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 		}
 
 		// Create new deck
+		console.log('[API] Creating new deck:', id);
+
+		const insertPayload = {
+			id,
+			user_id: userId,
+			title: title.trim(),
+			description: description?.trim() || null,
+			theme: theme || 'classic',
+			image_style: image_style || 'classic',
+			layout: layout || 'poker',
+			cards,
+			tags: tags || [],
+			is_synced: is_synced ?? true,
+			published_deck_id: published_deck_id || null
+		};
+
+		console.log('[API] Insert payload:', JSON.stringify(insertPayload, null, 2));
+
 		const { data: newDeck, error: insertError } = await supabaseAdmin
 			.from('user_decks')
-			.insert({
-				id,
-				user_id: userId,
-				title: title.trim(),
-				description: description?.trim() || null,
-				theme: theme || 'classic',
-				image_style: image_style || 'classic',
-				layout: layout || 'poker',
-				cards,
-				tags: tags || [],
-				is_synced: is_synced ?? true,
-				published_deck_id: published_deck_id || null
-			})
+			.insert(insertPayload)
 			.select()
 			.single();
 
 		if (insertError) {
-			console.error('Failed to create user deck:', insertError);
+			console.error('[API] Supabase insert error:', insertError);
+			console.error('[API] Insert payload was:', insertPayload);
 			return error(500, 'Failed to create deck');
 		}
+
+		console.log('[API] Successfully created deck');
 
 		return json({
 			success: true,
