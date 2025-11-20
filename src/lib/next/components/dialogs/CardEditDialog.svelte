@@ -187,6 +187,31 @@
 		dialogStore.close();
 	}
 
+	async function deleteCard() {
+		if (!card) return;
+
+		const cardTitle = card.title; // Save title before deletion
+		const cardId = card.id; // Save ID before closing dialog
+
+		const confirmed = confirm(
+			`Delete card "${cardTitle}"?\n\nThis action cannot be undone.`
+		);
+
+		if (!confirmed) return;
+
+		// Close dialog FIRST to prevent "card not found" error
+		dialogStore.close();
+
+		// Then delete the card
+		const success = await nextDeckStore.removeCard(cardId);
+
+		if (success) {
+			toasts.success(`🗑️ Card "${cardTitle}" deleted`);
+		} else {
+			toasts.error(`Failed to delete card "${cardTitle}"`);
+		}
+	}
+
 	function resetForm() {
 		if (card) {
 			formData.title = card.title;
@@ -642,6 +667,8 @@
 			</div>
 
 			<div class="dialog-actions">
+				<button class="danger" onclick={deleteCard} disabled={isSaving}> Delete Card </button>
+				<div class="spacer"></div>
 				<button onclick={resetForm} disabled={!hasChanges || isSaving}> Reset </button>
 				<button onclick={cancelChanges} disabled={isSaving}> Cancel </button>
 				<button class="primary" onclick={saveChanges} disabled={!hasChanges || isSaving}>
@@ -1143,6 +1170,20 @@
 
 	.dialog-actions button.primary:hover:not(:disabled) {
 		opacity: 0.9;
+	}
+
+	.dialog-actions button.danger {
+		background: #dc2626;
+		color: white;
+		border-color: #dc2626;
+	}
+
+	.dialog-actions button.danger:hover:not(:disabled) {
+		background: #b91c1c;
+	}
+
+	.dialog-actions .spacer {
+		flex: 1;
 	}
 
 	.dialog-actions button:disabled {
