@@ -7,7 +7,7 @@ import { safeCloneCard } from '$lib/utils/clone-utils.ts';
 import { generateKey } from '../utils/idUtils.js';
 import { authenticatedFetch } from '$lib/utils/authenticated-fetch.js';
 import { get } from 'svelte/store';
-import { nextAuth } from './auth.js';
+import { authStore } from './auth.js';
 
 /**
  * Sync deck to cloud (user_decks table) if authenticated
@@ -15,7 +15,7 @@ import { nextAuth } from './auth.js';
  */
 async function syncDeckToCloud(deck: Deck): Promise<void> {
 	try {
-		const authState = get(nextAuth);
+		const authState = get(authStore);
 		if (!authState || !authState.user) {
 			return; // Not authenticated, skip sync
 		}
