@@ -16,10 +16,10 @@
 	import { user } from '$lib/next/stores/auth';
 	import { nextDb } from '$lib/next/stores/database.js';
 	import { toasts } from '$lib/stores/toast.js';
-	import { dialogStore } from '$lib/next/components/dialog/dialogStore.svelte.js';
+	import { dialogStore } from '$lib/next/components/dialog/dialogStore.svelte.ts';
 	import { importFromUrl } from '$lib/next/utils/shareUrlUtils.js';
 	import { nextDeckStore } from '$lib/next/stores/deckStore.svelte.ts';
-	import { CardEditDialog, DeleteDeckDialog } from '$lib/next/components/dialogs/index.js';
+	import { CardEditDialog, DeleteDeckDialog } from '$lib/next/components/dialogs/';
 	import { goto, replaceState } from '$app/navigation';
 	import MergeTool from '$lib/next/components/merge/MergeTool.svelte';
 	import { performThreeLayerMerge } from '$lib/next/utils/threeLayerMerge.js';
@@ -447,15 +447,19 @@
 				<DeckActions
 					onShare={handleDownloadJson}
 					onExportJson={handleDownloadJson}
-					onPublish={(!data.curatedDeck && !hashDeck && localDeck) || ownsPublishedDeck ? handlePublish : null}
-					onGenerateImages={(!data.curatedDeck && !hashDeck && localDeck) || ownsPublishedDeck ? handleGenerateImages : null}
+					onPublish={(!data.curatedDeck && !hashDeck && localDeck) || ownsPublishedDeck
+						? handlePublish
+						: null}
+					onGenerateImages={(!data.curatedDeck && !hashDeck && localDeck) || ownsPublishedDeck
+						? handleGenerateImages
+						: null}
 					onImport={(data.curatedDeck || hashDeck) && !ownsPublishedDeck ? handleImport : null}
 					onDeleteDeck={localDeck ? handleDeleteDeck : null}
 					isAuthenticated={!!$user}
-					importing={importing}
+					{importing}
 					isLiked={localDeck !== null}
 					likeCount={data.curatedDeck?.import_count || 0}
-					layout={layout}
+					{layout}
 					onLayoutChange={handleLayoutChange}
 				/>
 			{/snippet}

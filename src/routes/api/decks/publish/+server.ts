@@ -4,6 +4,7 @@
  * POST /api/decks/publish
  *
  * Publishes a new deck or updates an existing published deck.
+ * Works with the two-table system: copies from user_decks → published_decks
  * Requires authentication.
  */
 
@@ -33,9 +34,92 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 		}
 
 		// 2. Parse request body
-		const { title, description, tags, visibility, cards, theme, deckId } = await request.json();
+		const {
+			title,
+			description,
+			tags,
+			visibility,
+			cards,
+			theme,
+			image_style,
+			layout,
+			userDeckId, // NEW: ID of the user_deck to publish
+			deckId // LEGACY: published_deck ID for updates
+		} = await request.json();
 
-		// 3. Validate inputs
+		// 3. NEW TWO-TABLE SYSTEM: Check if publishing from user_decks
+		if (userDeckId) {
+			// Fetch the user_deck
+			const { data: userDeck, error: fetchError } = await supabaseAdmin
+				.from('user_decks')
+				.select('*')
+				.eq('id', userDeckId)
+				.eq('user_id', userId)
+				.single();
+
+			if (fetchError || !userDeck) {
+				return error(404, 'User deck not found or access denied');
+			}
+
+			// Check if already published (update case)
+			if (userDeck.published_deck_id) {
+				// UPDATE PUBLISHED VERSION
+				const { data: existingPublished } = await supabaseAdmin
+					.from('published_decks')
+					.select('version, slug')
+					.eq('id', userDeck.published_deck_id)
+					.single();
+
+				if (!existingPublished) {
+					// Published deck was deleted, treat as new publish
+					return await publishNewDeck(userId, userDeck, null);
+				}
+
+				// Update existing published deck with current user_deck data
+				const { data: updatedDeck, error: updateError } = await supabaseAdmin
+					.from('published_decks')
+					.update({
+						title: userDeck.title,
+						description: userDeck.description,
+						tags: userDeck.tags,
+						theme: userDeck.theme,
+						image_style: userDeck.image_style,
+						layout: userDeck.layout,
+						cards: userDeck.cards,
+						visibility: visibility || 'public',
+						version: existingPublished.version + 1
+					})
+					.eq('id', userDeck.published_deck_id)
+					.select()
+					.single();
+
+				if (updateError) {
+					console.error('Failed to update published deck:', updateError);
+					return error(500, 'Failed to update published deck');
+				}
+
+				return json({
+					success: true,
+					deck: {
+						id: updatedDeck.id,
+						slug: updatedDeck.slug,
+						title: updatedDeck.title,
+						description: updatedDeck.description,
+						tags: updatedDeck.tags,
+						visibility: updatedDeck.visibility,
+						version: updatedDeck.version,
+						updated_at: updatedDeck.updated_at
+					},
+					message: 'Published deck updated successfully'
+				});
+			}
+
+			// FIRST PUBLISH - Create new published deck
+			return await publishNewDeck(userId, userDeck, visibility || 'public');
+		}
+
+		// 4. LEGACY PATH: Direct publish without user_deck (backwards compatibility)
+		// Validate inputs
 		if (!title || typeof title !== 'string' || title.trim().length === 0) {
 			return error(400, 'Title is required');
 		}
@@ -52,9 +136,8 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 			return error(400, 'Visibility must be "public" or "unlisted"');
 		}
 
-		// 4. Check if updating existing deck
+		// Check if updating existing published deck (legacy path)
 		if (deckId) {
-			// Verify ownership
 			const { data: existingDeck } = await supabaseAdmin
 				.from('published_decks')
 				.select('id, user_id, slug, version')
@@ -69,7 +152,6 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 				return error(403, 'You do not own this deck');
 			}
 
-			// Update existing deck
 			const { data: updatedDeck, error: updateError } = await supabaseAdmin
 				.from('published_decks')
 				.update({
@@ -79,6 +161,8 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 					visibility: visibility || 'public',
 					cards,
 					theme,
+					image_style: image_style || 'classic',
+					layout: layout || 'poker',
 					version: existingDeck.version + 1
 				})
 				.eq('id', deckId)
@@ -106,39 +190,110 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 			});
 		}
 
-		// 5. Publish new deck
+		// Legacy new publish
 		const slug = generateSlug(title, userId);
-
-		// Check if slug already exists (unlikely but possible)
 		const { data: existingSlug } = await supabaseAdmin
 			.from('published_decks')
 			.select('id')
 			.eq('slug', slug)
 			.single();
 
-		if (existingSlug) {
-			// Add timestamp to make it unique
-			const timestampedSlug = `${slug}-${Date.now()}`;
-			return await createDeck(
-				userId,
-				title,
-				description,
-				tags,
-				visibility,
-				cards,
-				theme,
-				timestampedSlug
-			);
-		}
+		const finalSlug = existingSlug ? `${slug}-${Date.now()}` : slug;
 
-		return await createDeck(userId, title, description, tags, visibility, cards, theme, slug);
+		return await createDeckLegacy(
+			userId,
+			title,
+			description,
+			tags,
+			visibility,
+			cards,
+			theme,
+			image_style,
+			layout,
+			finalSlug
+		);
 	} catch (err) {
 		console.error('Publish deck error:', err);
 		return error(500, err instanceof Error ? err.message : 'Failed to publish deck');
 	}
 };
 
-async function createDeck(
+/**
+ * Publish a new deck from user_decks
+ */
+async function publishNewDeck(
+	userId: string,
+	userDeck: any,
+	visibility: string | null
+): Promise<Response> {
+	const slug = generateSlug(userDeck.title, userId);
+
+	// Check for slug conflicts
+	const { data: existingSlug } = await supabaseAdmin
+		.from('published_decks')
+		.select('id')
+		.eq('slug', slug)
+		.single();
+
+	const finalSlug = existingSlug ? `${slug}-${Date.now()}` : slug;
+
+	// Create published deck
+	const { data: publishedDeck, error: insertError } = await supabaseAdmin
+		.from('published_decks')
+		.insert({
+			user_id: userId,
+			slug: finalSlug,
+			title: userDeck.title,
+			description: userDeck.description,
+			tags: userDeck.tags || [],
+			theme: userDeck.theme,
+			image_style: userDeck.image_style,
+			layout: userDeck.layout,
+			cards: userDeck.cards,
+			visibility: visibility || 'public',
+			source_deck_id: userDeck.id,
+			is_curated: false,
+			is_featured: false
+		})
+		.select()
+		.single();
+
+	if (insertError) {
+		console.error('Failed to create published deck:', insertError);
+		throw new Error('Failed to publish deck');
+	}
+
+	// Link user_deck to published_deck
+	const { error: linkError } = await supabaseAdmin
+		.from('user_decks')
+		.update({ published_deck_id: publishedDeck.id })
+		.eq('id', userDeck.id);
+
+	if (linkError) {
+		console.error('Failed to link user_deck to published_deck:', linkError);
+		// Don't fail the request, just log it
+	}
+
+	return json({
+		success: true,
+		deck: {
+			id: publishedDeck.id,
+			slug: publishedDeck.slug,
+			title: publishedDeck.title,
+			description: publishedDeck.description,
+			tags: publishedDeck.tags,
+			visibility: publishedDeck.visibility,
+			version: publishedDeck.version,
+			created_at: publishedDeck.created_at
+		},
+		message: 'Deck published successfully'
+	});
+}
+
+/**
+ * Legacy function for direct publish (backwards compatibility)
+ */
+async function createDeckLegacy(
 	userId: string,
 	title: string,
 	description: string | undefined,
@@ -146,6 +301,8 @@ async function createDeck(
 	visibility: string | undefined,
 	cards: any[],
 	theme: string,
+	image_style: string | undefined,
+	layout: string | undefined,
 	slug: string
 ) {
 	const { data: newDeck, error: insertError } = await supabaseAdmin
@@ -159,6 +316,8 @@ async function createDeck(
 			visibility: visibility || 'public',
 			cards,
 			theme,
+			image_style: image_style || 'classic',
+			layout: layout || 'poker',
 			is_curated: false,
 			is_featured: false
 		})
