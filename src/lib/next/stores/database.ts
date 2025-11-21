@@ -274,20 +274,14 @@ class NextDatabase {
 		deckId: string,
 		cardUpdates: Array<{ cardId: string; updates: Partial<Card> }>
 	): Promise<Deck> {
-		console.log('[DB] updateMultipleCards called with:', { deckId, cardUpdates });
-
 		const deck = await this.getDeck(deckId);
 		if (!deck) {
 			throw new DatabaseError('Deck not found', 'DECK_NOT_FOUND');
 		}
 
-		console.log('[DB] Current deck before updates:', deck);
-		console.log('[DB] Current first card image:', deck.cards[0]?.image);
-
 		const updatedCards = deck.cards.map((card) => {
 			const update = cardUpdates.find((u) => u.cardId === card.id);
 			if (update) {
-				console.log(`[DB] Updating card ${card.id}:`, { before: card, updates: update.updates });
 				return {
 					...card,
 					...update.updates
@@ -305,15 +299,7 @@ class NextDatabase {
 			}
 		};
 
-		console.log('[DB] Deck after updates (before save):', updatedDeck);
-		console.log('[DB] First card image after updates:', updatedDeck.cards[0]?.image);
-
-		const savedDeck = await this.saveDeck(updatedDeck);
-
-		console.log('[DB] Deck after save:', savedDeck);
-		console.log('[DB] First card image after save:', savedDeck.cards[0]?.image);
-
-		return savedDeck;
+		return this.saveDeck(updatedDeck);
 	}
 
 	/**

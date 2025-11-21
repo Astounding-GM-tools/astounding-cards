@@ -69,7 +69,6 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 
 		// Parse request
 		const body = await request.json();
-		console.log('[API] POST /api/user-decks - Body:', JSON.stringify(body, null, 2));
 
 		const {
 			id,
@@ -114,8 +113,6 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 				return error(403, 'Cannot sync deck owned by another user');
 			}
 
-			console.log('[API] Updating existing deck:', id);
-
 			// Update existing deck
 			const updatePayload = {
 				title: title.trim(),
@@ -145,8 +142,6 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 				return error(500, 'Failed to sync deck');
 			}
 
-			console.log('[API] Successfully updated deck');
-
 			return json({
 				success: true,
 				deck: updatedDeck,
@@ -155,8 +150,6 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 		}
 
 		// Create new deck
-		console.log('[API] Creating new deck:', id);
-
 		const insertPayload = {
 			id,
 			user_id: userId,
@@ -184,8 +177,6 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 			console.error('[API] Insert payload was:', insertPayload);
 			return error(500, 'Failed to create deck');
 		}
-
-		console.log('[API] Successfully created deck');
 
 		return json({
 			success: true,
