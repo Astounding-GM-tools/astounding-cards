@@ -60,6 +60,19 @@
 		data.curatedDeck && $user?.id && data.curatedDeck.user_id === $user.id
 	);
 
+	// Check if local deck has unpublished changes (needs republish)
+	let needsRepublish = $derived.by(() => {
+		if (!localDeck || !localDeck.meta.published_deck_id) return false;
+
+		// Use activeDeck for reactivity - updates automatically when store changes
+		const deck = activeDeck || localDeck;
+
+		// Compare timestamps: has deck been edited since last publish?
+		return deck.meta.lastPublished
+			? deck.meta.lastEdited > deck.meta.lastPublished
+			: true; // Never published but has published_deck_id
+	});
+
 	// Print mode state
 	let isPrintMode = $state(false);
 	let layout = $state<Layout>('poker');
@@ -226,9 +239,7 @@
 				replaceState(window.location.pathname, {});
 
 				if (localDeck) {
-					toasts.success(
-						`✅ Deck "${previewDeck.meta.title}" updated from gallery version!`
-					);
+					toasts.success(`✅ Deck "${previewDeck.meta.title}" updated from gallery version!`);
 				} else {
 					toasts.success(`❤️ Deck "${previewDeck.meta.title}" liked and added to your collection!`);
 				}
@@ -495,9 +506,11 @@
 
 	// Handle view in gallery - opens published version in new tab
 	function handleViewInGallery() {
-		const slug = localDeck?.meta?.published_slug || localDeck?.meta?.published_deck_id;
-		if (!slug) return;
-		// Open in new tab with gallery=true to force gallery view
+		const slug = data.curatedDeck?.slug || localDeck?.meta?.published_slug;
+		if (!slug) {
+			toasts.error('Published version not available. Try refreshing the page.');
+			return;
+		}
 		window.open(`/${slug}?gallery=true`, '_blank');
 	}
 
@@ -505,7 +518,7 @@
 	async function handleShare() {
 		const slug = isGalleryView
 			? data.slug
-			: activeDeck?.meta?.published_slug || activeDeck?.meta?.published_deck_id;
+			: data.curatedDeck?.slug || activeDeck?.meta?.published_slug;
 
 		if (!slug) {
 			console.error('[Share] No slug found', { isGalleryView, activeDeck: activeDeck?.meta });
@@ -587,7 +600,7 @@
 				<!-- Add to Library button -->
 				<ActionButton
 					icon={localDeck ? BookCheck : BookPlus}
-					{...(localDeck ? actionButtonContent.removeFromLibrary : actionButtonContent.addToLibrary)}
+					{...localDeck ? actionButtonContent.removeFromLibrary : actionButtonContent.addToLibrary}
 					variant={localDeck ? 'success' : 'primary'}
 					onclick={handleImport}
 					disabled={importing}
@@ -605,6 +618,18 @@
 				<!-- Check if published -->
 				{#if activeDeck?.meta?.published_deck_id || activeDeck?.meta?.published_slug}
 					<!-- Published deck actions -->
+
+					<!-- Republish button - only show if local changes exist -->
+					{#if needsRepublish}
+						<ActionButton
+							icon={Upload}
+							{...actionButtonContent.republish}
+							variant="warning"
+							onclick={handlePublish}
+							disabled={publishing}
+						/>
+					{/if}
+
 					<!-- Like count (read-only for your own deck) -->
 					<ActionButton
 						icon={Heart}
@@ -613,15 +638,6 @@
 						variant="danger"
 						filled={false}
 						disabled
-					/>
-
-					<!-- Republish button (always enabled for now - TODO: detect out-of-sync) -->
-					<ActionButton
-						icon={Upload}
-						{...actionButtonContent.republish}
-						variant="warning"
-						onclick={handlePublish}
-						disabled={publishing}
 					/>
 
 					<ActionButton

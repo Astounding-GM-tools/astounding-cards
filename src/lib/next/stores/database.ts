@@ -170,12 +170,18 @@ class NextDatabase {
 			throw new DatabaseError('Deck not found', 'DECK_NOT_FOUND');
 		}
 
+		// Don't update lastEdited if we're only updating publish-related metadata
+		// This prevents the publish action from marking the deck as "edited"
+		const isPublishMetadataOnly = Object.keys(updates).every(key =>
+			['lastPublished', 'published_deck_id', 'published_slug'].includes(key)
+		);
+
 		const updatedDeck: Deck = {
 			...deck,
 			meta: {
 				...deck.meta,
 				...updates,
-				lastEdited: Date.now()
+				lastEdited: isPublishMetadataOnly ? deck.meta.lastEdited : Date.now()
 			}
 		};
 

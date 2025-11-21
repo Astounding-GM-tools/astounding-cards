@@ -534,12 +534,19 @@ function createNextDeckStore(): NextDeckStore {
 
 				const result = await response.json();
 
-				// Store published deck ID in metadata for future updates
+				// Update metadata with publish info and timestamp
+				const now = Date.now();
 				if (result.deck.id && !isUpdate) {
-					// Only update metadata on first publish, not on updates
+					// First publish - set all metadata
 					await this.updateDeckMeta({
 						published_deck_id: result.deck.id,
-						published_slug: result.deck.slug
+						published_slug: result.deck.slug,
+						lastPublished: now
+					});
+				} else {
+					// Update publish - only update lastPublished timestamp
+					await this.updateDeckMeta({
+						lastPublished: now
 					});
 				}
 
