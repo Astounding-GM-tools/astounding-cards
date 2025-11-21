@@ -187,44 +187,10 @@ Art style: ${selectedArtStyle}
 
 Visual prompt: ${optimizedPrompt}`;
 
-		// Prepare multi-part content (matches client-side order)
+		// Prepare multi-part content - just the text prompt
+		// Note: Removed reference images to reduce cost (~50% input token savings)
+		// Testing if detailed prompts alone produce good results
 		const contentParts: any[] = [{ text: artStyleInstructions }];
-
-		// Add user's existing card image if available (for style reference)
-		if (existingImageUrl) {
-			try {
-				console.log("📷 Fetching user's existing image for style reference...");
-				const imageResponse = await fetch(existingImageUrl);
-				if (imageResponse.ok) {
-					const imageBuffer = await imageResponse.arrayBuffer();
-					const imageBase64 = Buffer.from(imageBuffer).toString('base64');
-					const mimeType = imageResponse.headers.get('content-type') || 'image/png';
-
-					contentParts.push({
-						inlineData: {
-							mimeType,
-							data: imageBase64
-						}
-					});
-					console.log("✅ Added user's existing image for style reference");
-				} else {
-					console.warn('⚠️ Failed to fetch existing image, continuing without it');
-				}
-			} catch (err) {
-				console.warn('⚠️ Error fetching existing image:', err);
-				// Continue without the image - not critical
-			}
-		}
-
-		// Add pre-encoded nano reference image for portrait aspect ratio
-		// 5x7 pixels, 1KB, costs ~$0.0002 per generation
-		contentParts.push({
-			inlineData: {
-				mimeType: 'image/png',
-				data: REFERENCE_IMAGE_BASE64
-			}
-		});
-		console.log('📐 Added nano reference image (5×7, 1KB, 81% smaller!)');
 
 		// Generate the image (keeping config for future compatibility)
 		const generationConfig = {

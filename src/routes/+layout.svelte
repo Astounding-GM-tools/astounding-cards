@@ -22,9 +22,9 @@
 		window.devHelpers = {
 			async addTokens(amount: number) {
 				try {
-					const response = await fetch('/api/tokens/dev-add', {
+					const response = await authenticatedFetch('/api/tokens/dev-add', {
 						method: 'POST',
-						headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
+						headers: { 'Content-Type': 'application/json' },
 						body: JSON.stringify({ amount })
 					});
 					const result = await response.json();
@@ -43,9 +43,7 @@
 			},
 			async checkBalance() {
 				try {
-					const response = await fetch('/api/tokens/balance', {
-						headers: getAuthHeaders()
-					});
+					const response = await authenticatedFetch('/api/tokens/balance');
 					const result = await response.json();
 					if (result.balance !== undefined) {
 						console.log(`💰 Current balance: ${result.balance} tokens`);

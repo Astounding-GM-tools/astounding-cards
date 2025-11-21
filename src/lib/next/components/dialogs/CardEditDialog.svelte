@@ -60,7 +60,8 @@
 	let imageUrlManager = $state(new ImageUrlManager());
 
 	// Check if card has image for dialog display
-	let hasImage = $derived(!!(formData.imageBlob || formData.imageUrl));
+	// Check both card and formData since formData might not be initialized yet
+	let hasImage = $derived(!!(formData.imageBlob || formData.imageUrl || card?.imageBlob || card?.image));
 
 	// Create preview card with live form data
 	let previewCard = $derived(
@@ -81,6 +82,9 @@
 	// Update form when card changes
 	$effect(() => {
 		if (card) {
+			// Reset initialization flag when card changes
+			isFormInitialized = false;
+
 			formData.title = card.title;
 			formData.subtitle = card.subtitle;
 			formData.description = card.description;

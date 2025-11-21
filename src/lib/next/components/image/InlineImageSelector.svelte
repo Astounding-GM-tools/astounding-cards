@@ -209,15 +209,15 @@
 				{:else if hasError(state)}
 					<div class="status error">❌ {getErrorMessage(state.error)}</div>
 				{:else if hasPreview(state)}
-					<div class="status success">✅ Image ready</div>
+					<div class="status success">✅ OK</div>
 				{:else if existingImageInfo?.status === 'add-image'}
 					<div class="status encouraging">💡 Ready to add</div>
 				{:else if existingImageInfo?.status === 'ready-to-save'}
 					<div class="status warning">⚠️ Remember to save!</div>
 				{:else if existingImageInfo?.status === 'ok'}
-					<div class="status success">✅ Image OK</div>
+					<div class="status success">✅ OK</div>
 				{:else if existingImageInfo?.status === 'ready'}
-					<div class="status success">✅ Image ready</div>
+					<div class="status success">✅ OK</div>
 				{/if}
 
 				{#if hasExistingImage && onToggleLock}
@@ -232,7 +232,7 @@
 				{/if}
 
 				{#if hasExistingImage}
-					<button type="button" class="remove-btn" onclick={handleRemove}> Remove </button>
+					<button type="button" class="unset-btn" onclick={handleRemove}> Unset </button>
 				{/if}
 			</div>
 		</div>
@@ -476,6 +476,24 @@
 	.remove-btn:hover {
 		background: #fed7d7;
 		border-color: #fc8181;
+	}
+
+	.unset-btn {
+		padding: 0.25rem 0.5rem;
+		border: 1px solid #cbd5e0;
+		border-radius: 3px;
+		background: #f7fafc;
+		color: #4a5568;
+		cursor: pointer;
+		font-family: var(--font-body);
+		font-size: 0.75rem;
+		white-space: nowrap;
+		transition: all 0.2s;
+	}
+
+	.unset-btn:hover {
+		background: #edf2f7;
+		border-color: #a0aec0;
 	}
 
 	/* Responsive */
