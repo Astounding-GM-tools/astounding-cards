@@ -281,7 +281,7 @@
 		color: var(--ui-text, #1a202c);
 	}
 
-	/* Gallery Actions (in header) */
+	/* Gallery Actions (in header) - styled like ActionButtons */
 	.gallery-actions {
 		display: flex;
 		gap: 0.75rem;
@@ -293,13 +293,25 @@
 	.search-box {
 		display: flex;
 		align-items: center;
-		gap: 0.5rem;
-		padding: 0.5rem 0.75rem;
+		gap: 0.75rem;
+		padding: 0.75rem 1rem;
 		background: white;
 		border: 1px solid var(--ui-border, #e2e8f0);
 		border-radius: 6px;
 		flex: 1;
 		min-width: 200px;
+		transition: all 0.2s ease;
+	}
+
+	.search-box:focus-within {
+		border-color: var(--button-primary-bg, #3b82f6);
+		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+		transform: translateY(-1px);
+	}
+
+	.search-box :global(svg) {
+		flex-shrink: 0;
+		color: var(--ui-text-secondary, #64748b);
 	}
 
 	.search-input-inline {
@@ -307,22 +319,38 @@
 		outline: none;
 		background: none;
 		font-size: 0.875rem;
+		font-weight: 500;
 		flex: 1;
 		color: var(--ui-text, #1a202c);
+		font-family: inherit;
 	}
 
 	.search-input-inline::placeholder {
-		color: var(--ui-muted, #64748b);
+		color: var(--ui-text-secondary, #64748b);
+		font-weight: 400;
 	}
 
 	.sort-select-inline {
-		padding: 0.5rem 0.75rem;
+		display: flex;
+		align-items: center;
+		padding: 0.75rem 1rem;
 		border: 1px solid var(--ui-border, #e2e8f0);
 		border-radius: 6px;
 		background: white;
 		color: var(--ui-text, #1a202c);
 		font-size: 0.875rem;
+		font-weight: 600;
+		font-family: inherit;
 		cursor: pointer;
+		transition: all 0.2s ease;
+		white-space: nowrap;
+	}
+
+	.sort-select-inline:hover {
+		background: var(--ui-hover-bg, #f8fafc);
+		border-color: var(--button-primary-bg, #3b82f6);
+		transform: translateY(-1px);
+		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 	}
 
 	/* Tags Filter Row */
