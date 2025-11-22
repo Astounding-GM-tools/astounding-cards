@@ -181,18 +181,36 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 
 		const artStyleInstructions = `${IMAGE_GENERATION_CONTEXT}
 
-IMPORTANT: Generate in PORTRAIT orientation (taller than wide), approximately 2:3 aspect ratio.
-
 Art style: ${selectedArtStyle}
 
 Visual prompt: ${optimizedPrompt}`;
 
-		// Prepare multi-part content - just the text prompt
-		// Note: Removed reference images to reduce cost (~50% input token savings)
-		// Testing if detailed prompts alone produce good results
+		// Prepare multi-part content with optional existing image reference
 		const contentParts: any[] = [{ text: artStyleInstructions }];
 
-		// Generate the image (keeping config for future compatibility)
+		// If there's an existing image, include it as reference for consistency
+		if (existingImageUrl) {
+			try {
+				// Fetch the existing image
+				const imageResponse = await fetch(existingImageUrl);
+				const imageBuffer = await imageResponse.arrayBuffer();
+				const base64Image = Buffer.from(imageBuffer).toString('base64');
+				const mimeType = imageResponse.headers.get('content-type') || 'image/png';
+
+				contentParts.push({
+					inlineData: {
+						mimeType,
+						data: base64Image
+					}
+				});
+				console.log('✅ Using existing image as reference for consistency');
+			} catch (err) {
+				console.warn('⚠️ Failed to fetch existing image for reference:', err);
+				// Continue without reference - not critical
+			}
+		}
+
+		// Generate the image
 		const generationConfig = {
 			temperature: AI_CONFIGS.IMAGE_GENERATION.temperature
 		};
@@ -236,14 +254,13 @@ Visual prompt: ${optimizedPrompt}`;
 		console.log('✅ Image generated successfully');
 
 		// 7. Generate embedding (only for originals, not remixes)
-		// TODO: Fix embedding API format - temporarily disabled
+		// Remixes reuse the same semantic prompt, so they inherit the original's embedding
 		let embedding: number[] | null = null;
-		// if (!sourceImageId) {
-		// 	console.log('🧮 Generating embedding for original image...');
-		// 	embedding = await generateEmbedding(optimizedPrompt);
-		// 	console.log('✅ Embedding generated');
-		// }
-		console.log('⚠️ Embedding generation temporarily disabled - will add back later');
+		if (!sourceImageId) {
+			console.log('🧮 Generating embedding for original image...');
+			embedding = await generateEmbedding(optimizedPrompt);
+			console.log('✅ Embedding generated');
+		}
 
 		// 8. Upload to R2
 		const imageBuffer = Buffer.from(base64Data, 'base64');

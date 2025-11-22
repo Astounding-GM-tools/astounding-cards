@@ -17,6 +17,7 @@ import { PUBLIC_R2_PUBLIC_URL } from '$env/static/public';
 import { GoogleGenAI } from '@google/genai';
 import { supabaseAdmin } from '$lib/server/supabase';
 import { uploadImage, generateImageFileName } from '$lib/server/r2';
+import { generateEmbedding } from '$lib/server/embeddings';
 import { getUserFromSession } from '$lib/server/auth';
 import { TOKEN_COSTS } from '$lib/config/token-costs';
 import { AI_CONFIGS } from '$lib/ai/config/models';
@@ -216,16 +217,30 @@ Art style: ${selectedArtStyle}
 
 Visual prompt: ${optimizedPrompt}`;
 
-				// Add nano reference image for portrait aspect ratio (5x7, 1KB)
-				const contentParts: any[] = [
-					{ text: artStyleInstructions },
-					{
-						inlineData: {
-							mimeType: 'image/png',
-							data: REFERENCE_IMAGE_BASE64
-						}
+				// Prepare multi-part content with optional existing image reference
+				const contentParts: any[] = [{ text: artStyleInstructions }];
+
+				// If card has an existing image, include it as reference for consistency
+				if (card.image) {
+					try {
+						// Fetch the existing image
+						const imageResponse = await fetch(card.image);
+						const imageBuffer = await imageResponse.arrayBuffer();
+						const base64Image = Buffer.from(imageBuffer).toString('base64');
+						const mimeType = imageResponse.headers.get('content-type') || 'image/png';
+
+						contentParts.push({
+							inlineData: {
+								mimeType,
+								data: base64Image
+							}
+						});
+						console.log(`✅ Using existing image as reference for card "${card.title}"`);
+					} catch (err) {
+						console.warn(`⚠️ Failed to fetch existing image for card "${card.title}":`, err);
+						// Continue without reference - not critical
 					}
-				];
+				}
 
 				const imageResponse = await ai.models.generateContent({
 					model: AI_CONFIGS.IMAGE_GENERATION.model,
@@ -247,14 +262,23 @@ Visual prompt: ${optimizedPrompt}`;
 				const base64Data = imageData.inlineData.data;
 				const mimeType = imageData.inlineData.mimeType || 'image/png';
 
-				// Step 3: Upload to R2
+				// Step 3: Generate embedding (only for originals, not remixes)
+				// Remixes reuse the same semantic prompt, so they inherit the original's embedding
+				let embedding: number[] | null = null;
+				if (!card._originalImageId) {
+					console.log(`🧮 Generating embedding for "${card.title}"...`);
+					embedding = await generateEmbedding(optimizedPrompt);
+					console.log('✅ Embedding generated');
+				}
+
+				// Step 4: Upload to R2
 				const imageBuffer = Buffer.from(base64Data, 'base64');
 				const extension = mimeType.split('/')[1] || 'png';
 				const fileName = generateImageFileName(card.id || 'unknown', extension);
 				const r2Key = await uploadImage(imageBuffer, fileName, mimeType);
 				const publicUrl = PUBLIC_R2_PUBLIC_URL ? `${PUBLIC_R2_PUBLIC_URL}/${r2Key}` : r2Key;
 
-				// Step 4: Save to community_images table
+				// Step 5: Save to community_images table
 				const { data: imageRecord, error: dbError } = await supabaseAdmin
 					.from('community_images')
 					.insert({
@@ -263,7 +287,7 @@ Visual prompt: ${optimizedPrompt}`;
 						r2_key: r2Key,
 						style,
 						source_image_id: card._originalImageId || null,
-						embedding: null,
+						embedding: embedding ? `[${embedding.join(',')}]` : null,
 						card_title: card.title,
 						cost_tokens: TOKEN_COSTS.IMAGE_GENERATION_COMMUNITY
 					})
