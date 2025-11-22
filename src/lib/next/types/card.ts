@@ -30,4 +30,10 @@ export interface Card {
 	} | null;
 	traits: Trait[];
 	stats: Stat[];
+	// Semantic search embedding (768-dimensional vector from card content)
+	// Used for finding similar images and cards
+	// Regenerated when title/subtitle/description/traits change
+	embedding?: number[] | null;
+	// Hash of content used to generate embedding (for change detection)
+	embeddingContentHash?: string | null;
 }
