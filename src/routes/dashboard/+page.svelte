@@ -15,6 +15,7 @@
 	import JsonImportDialog from '$lib/next/components/dialogs/JsonImportDialog.svelte';
 	import TokenStore from '$lib/next/components/store/TokenStore.svelte';
 	import type { Deck } from '$lib/next/types/deck';
+	import { downloadDeckAsJson } from '$lib/next/utils/jsonExporter';
 
 	// Check if user is authenticated
 	let isAuthenticated = $derived(!!$user);
@@ -23,6 +24,7 @@
 	// Deck list state
 	let userDecks = $state<Deck[]>([]);
 	let isLoadingDecks = $state(true);
+	let isExporting = $state(false);
 
 	// Load user's decks
 	async function loadUserDecks() {
@@ -60,6 +62,21 @@
 		} catch (err) {
 			console.error('Failed to delete deck:', err);
 			toasts.error('Failed to delete deck');
+		}
+	}
+
+	// Export a deck
+	async function handleExport(deck: Deck, includeBlobs: boolean) {
+		if (isExporting) return;
+		isExporting = true;
+		try {
+			await downloadDeckAsJson(deck, includeBlobs);
+			toasts.success('Export started!');
+		} catch (error) {
+			console.error('Export failed:', error);
+			toasts.error('Export failed');
+		} finally {
+			isExporting = false;
 		}
 	}
 
@@ -216,20 +233,40 @@
 							</button>
 
 							<div class="deck-actions">
-								<button
-									class="action-icon-button"
-									onclick={() => handleDuplicateDeck(deck.id)}
-									title="Duplicate deck"
-								>
-									<Copy size={18} />
-								</button>
-								<button
-									class="action-icon-button danger"
-									onclick={() => handleDeleteDeck(deck.id, deck.meta.title)}
-									title="Delete deck"
-								>
-									<Trash2 size={18} />
-								</button>
+								<fieldset class="action-group">
+									<legend>Manage</legend>
+									<button
+										class="action-icon-button"
+										onclick={() => handleDuplicateDeck(deck.id)}
+										title="Duplicate deck"
+									>
+										<Copy size={18} />
+									</button>
+									<button
+										class="action-icon-button danger"
+										onclick={() => handleDeleteDeck(deck.id, deck.meta.title)}
+										title="Delete deck"
+									>
+										<Trash2 size={18} />
+									</button>
+								</fieldset>
+								<fieldset class="action-group">
+									<legend>Backup (JSON export)</legend>
+									<button
+										class="action-text-button"
+										onclick={() => handleExport(deck, false)}
+										disabled={isExporting}
+									>
+										Light (no images)
+									</button>
+									<button
+										class="action-text-button"
+										onclick={() => handleExport(deck, true)}
+										disabled={isExporting}
+									>
+										Full (inline images)
+									</button>
+								</fieldset>
 							</div>
 						</div>
 					{/each}
@@ -425,7 +462,8 @@
 
 	.deck-item {
 		display: flex;
-		align-items: center;
+		flex-direction: column;
+		align-items: stretch;
 		gap: 1rem;
 		background: white;
 		border: 1px solid var(--ui-border, #e2e8f0);
@@ -497,7 +535,27 @@
 
 	.deck-actions {
 		display: flex;
+		flex-wrap: wrap;
+		gap: 0.75rem;
+		border-top: 1px solid var(--ui-border, #e2e8f0);
+		padding-top: 1rem;
+		align-items: flex-start;
+	}
+
+	.action-group {
+		display: flex;
 		gap: 0.5rem;
+		padding: 0;
+		margin: 0;
+		border: none;
+	}
+
+	.action-group legend {
+		font-size: 0.75rem;
+		font-weight: 600;
+		color: var(--ui-muted, #64748b);
+		padding: 0;
+		margin-bottom: 0.5rem;
 	}
 
 	.action-icon-button {
@@ -523,6 +581,74 @@
 		background: rgba(220, 38, 38, 0.1);
 		border-color: #dc2626;
 		color: #dc2626;
+	}
+
+	.action-text-button {
+		padding: 0.5rem 1rem;
+		border: 1px solid var(--ui-border, #e2e8f0);
+		border-radius: 6px;
+		background: white;
+		color: var(--ui-text, #1a202c);
+		font-size: 0.875rem;
+		font-weight: 500;
+		cursor: pointer;
+		transition: all 0.2s ease;
+		white-space: nowrap;
+	}
+
+	.action-text-button:hover {
+		background: var(--ui-hover-bg, #f8fafc);
+		border-color: var(--button-primary-bg, #3b82f6);
+	}
+
+	.action-text-button:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+
+	/* Auth CTA (not authenticated) */
+		position: relative;
+	}
+
+	.more-actions-dropdown {
+		position: absolute;
+		top: 100%;
+		right: 0;
+		background: white;
+		border: 1px solid var(--ui-border, #e2e8f0);
+		border-radius: 6px;
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+		z-index: 10;
+		width: max-content;
+		margin-top: 0.5rem;
+		padding: 0.5rem;
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+	}
+
+	.dropdown-item {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.5rem 1rem;
+		background: none;
+		border: none;
+		cursor: pointer;
+		text-align: left;
+		width: 100%;
+		font-size: 0.875rem;
+		border-radius: 4px;
+		transition: background-color 0.2s;
+	}
+
+	.dropdown-item:hover {
+		background: var(--ui-hover-bg, #f8fafc);
+	}
+
+	.dropdown-item:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
 	}
 
 	/* Auth CTA (not authenticated) */
