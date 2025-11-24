@@ -5,6 +5,13 @@
 	import MainHeader from '$lib/next/components/nav/MainHeader.svelte';
 	import { nextDeckStore } from '$lib/next/stores/deckStore.svelte.js';
 	import { nextDevStore } from '$lib/next/stores/devStore.svelte.js';
+	import {
+		getStarted,
+		howItWorks,
+		joinUss,
+		whatIsAstounding
+	} from '$lib/components/content/content';
+	import Content from '$lib/components/content/Content.svelte';
 
 	let featuredDeckId = $state<string | null>(null);
 	let cardCount = $state(0);
@@ -73,21 +80,16 @@
 	{/if}
 
 	<!-- Marketing Content Placeholders -->
+
 	<section class="content-section">
 		<div class="section-inner">
-			<h2>What is Astounding Cards?</h2>
-			<p class="placeholder">
-				[Marketing content: Explanation of what this is, who it's for, why it's awesome]
-			</p>
+			<Content blocks={whatIsAstounding} />
 		</div>
 	</section>
 
 	<section class="content-section alt">
 		<div class="section-inner">
-			<h2>How It Works</h2>
-			<div class="placeholder">
-				[3-step process with interactive tutorial using real components]
-			</div>
+			<Content blocks={howItWorks} />
 		</div>
 	</section>
 
@@ -100,17 +102,13 @@
 
 	<section class="content-section alt">
 		<div class="section-inner">
-			<h2>Join the Community</h2>
-			<div class="placeholder">[Community features, testimonials, social proof]</div>
+			<Content blocks={joinUss} />
 		</div>
 	</section>
 
 	<section class="content-section">
 		<div class="section-inner">
-			<h2>Get Started</h2>
-			<div class="hero-actions">
-				<button class="cta-primary" onclick={handleCreateDeck}> Create Your First Deck </button>
-			</div>
+			<Content blocks={getStarted} />
 		</div>
 	</section>
 </div>
@@ -119,13 +117,6 @@
 	.landing-page {
 		min-height: 100vh;
 		background: white;
-	}
-
-	.loading {
-		padding: 4rem 2rem;
-		text-align: center;
-		font-size: 1.125rem;
-		color: var(--ui-muted, #64748b);
 	}
 
 	/* Cards hero - just the cards, no embellishments */
@@ -211,14 +202,6 @@
 
 	/* Responsive */
 	@media (max-width: 768px) {
-		.hero h1 {
-			font-size: 2rem;
-		}
-
-		.tagline {
-			font-size: 1rem;
-		}
-
 		.hero-actions {
 			flex-direction: column;
 		}
@@ -226,14 +209,6 @@
 		.cta-primary,
 		.cta-secondary {
 			width: 100%;
-		}
-
-		.deck-preview-container {
-			padding: 1rem;
-		}
-
-		.preview-title {
-			font-size: 1.5rem;
 		}
 	}
 </style>

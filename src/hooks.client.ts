@@ -1,9 +1,14 @@
 import { handleErrorWithSentry, replayIntegration } from '@sentry/sveltekit';
 import * as Sentry from '@sentry/sveltekit';
 
-Sentry.init({
-	dsn: 'https://d8601c45a8868deadac0e821f9620954@o4510420436844544.ingest.de.sentry.io/4510420444250192',
+// Disable Sentry in development environment
+let dsn;
+if (process.env.PUBLIC_R2_PATH_PREFIX !== 'dev') {
+	dsn = 'https://d8601c45a8868deadac0e821f9620954@o4510420436844544.ingest.de.sentry.io/4510420444250192';
+}
 
+Sentry.init({
+	dsn,
 	tracesSampleRate: 1.0,
 
 	// Enable logs to be sent to Sentry
