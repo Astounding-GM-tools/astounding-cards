@@ -20,6 +20,8 @@ interface DeckMeta {
 	lastPublished?: number; // Timestamp of last publish (for detecting unpublished changes)
 	published_deck_id?: string; // ID of published deck in published_decks table
 	published_slug?: string; // Slug of published deck
+	creator_id?: string; // User ID of original creator (for imported decks)
+	creator_name?: string; // Display name of original creator (for imported decks)
 	// Semantic search embedding (768-dimensional vector from deck content)
 	// Aggregated from card embeddings or generated from deck title/description
 	embedding?: number[] | null;

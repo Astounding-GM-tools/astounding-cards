@@ -137,6 +137,16 @@
 	// Import deck
 	async function importDeck(deck: any) {
 		try {
+			// Check if we already have this deck locally
+			const existingLocal = await nextDb.getDeck(deck.id);
+			if (existingLocal) {
+				// Already have it - just load and navigate
+				await nextDeckStore.loadDeck(existingLocal.id);
+				toasts.info(`Deck "${existingLocal.meta.title}" is already in your library`);
+				goto('/');
+				return;
+			}
+
 			// Fetch full deck details with cards
 			const response = await fetch(`/api/deck/${deck.id}`);
 			if (!response.ok) {
@@ -146,20 +156,21 @@
 			const result = await response.json();
 			const fullDeck = result.deck;
 
-			// Create new local deck with imported data
-			const importedTitle = `${fullDeck.title} (Imported)`;
+			// Create new local deck with imported data (keeping original title and ID)
 			const now = Date.now();
 
 			// Create complete deck object
 			const newDeck: Deck = {
-				id: generateId(),
+				id: fullDeck.id, // Keep original ID
 				meta: {
-					title: importedTitle,
+					title: fullDeck.title, // Keep original title
 					theme: fullDeck.theme,
 					imageStyle: fullDeck.imageStyle || 'classic',
 					layout: fullDeck.layout || 'tarot',
 					lastEdited: now,
-					createdAt: now
+					createdAt: now,
+					creator_id: deck.user_id, // Capture creator
+					creator_name: deck.creator_name || 'Unknown'
 				},
 				cards: fullDeck.cards
 			};
@@ -173,7 +184,7 @@
 			// Increment import count (fire and forget)
 			fetch(`/api/decks/${deck.id}/import`, { method: 'POST' }).catch(() => {});
 
-			toasts.success(`✅ Deck imported! Now editing "${importedTitle}"`);
+			toasts.success(`✅ Deck "${fullDeck.title}" imported to your library!`);
 			goto('/');
 		} catch (err) {
 			console.error('Import error:', err);
@@ -261,7 +272,7 @@
 	{:else}
 		<!-- Deck of decks! Each card represents a deck -->
 		<div class="gallery-content">
-			<DeckPreview deck={metaDeck} onEdit={handlePreviewDeck} />
+			<DeckPreview deck={metaDeck} onEdit={handlePreviewDeck} mode="deck" />
 		</div>
 
 		{#if hasMore}

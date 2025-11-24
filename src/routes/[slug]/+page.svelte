@@ -350,12 +350,20 @@
 		if (!previewDeck) return;
 
 		try {
-			// Check if this deck is already loaded in the store
-			const currentDeck = nextDeckStore.deck;
-			const isDeckLoaded = currentDeck && currentDeck.id === previewDeck.id;
+			// Simple logic: Do I have this deck ID locally?
+			const existingLocal = await nextDb.getDeck(previewDeck.id);
 
-			if (!isDeckLoaded) {
-				// Silently import the deck first
+			if (existingLocal) {
+				// I already have this deck - just load it
+				await nextDeckStore.loadDeck(existingLocal.id);
+			} else {
+				// I don't have it - import it (keeping original title)
+				// Capture creator info from published deck if available
+				if (data.curatedDeck) {
+					previewDeck.meta.creator_id = data.curatedDeck.user_id;
+					previewDeck.meta.creator_name = data.curatedDeck.creator_name || 'Unknown';
+				}
+
 				await nextDeckStore.importDeck(previewDeck);
 
 				// Clear the URL hash since we've now imported
@@ -367,7 +375,7 @@
 			// Now open the edit dialog - card will exist in store
 			dialogStore.setContent(CardEditDialog, { cardId });
 		} catch (err) {
-			console.error('Failed to import deck for editing:', err);
+			console.error('Failed to open editor:', err);
 			toasts.error('Failed to open editor');
 		}
 	}

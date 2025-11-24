@@ -87,7 +87,7 @@ describe('Image Generation - API Tests', () => {
 		// Create a minimal 50x70 white PNG in memory
 		const width = 50;
 		const height = 70;
-		
+
 		// Minimal PNG: signature + IHDR + IDAT (white) + IEND
 		const png = Buffer.from([
 			// PNG signature
@@ -110,10 +110,10 @@ describe('Image Generation - API Tests', () => {
 			0x49, 0x45, 0x4e, 0x44,
 			0xae, 0x42, 0x60, 0x82
 		]);
-		
+
 		const tinyBase64 = png.toString('base64');
 		console.log('\n  Tiny PNG:', png.length, 'bytes, base64:', tinyBase64.length, 'chars');
-		
+
 		const contentParts: any[] = [
 			{ text: 'A fantasy elf ranger with silver hair.' },
 			{
@@ -156,7 +156,6 @@ describe('Image Generation - API Tests', () => {
 			contents: contentParts,
 			config: {
 				temperature: 0.7,
-				aspectRatio: '2:3' // Try config parameter
 			}
 		});
 
@@ -205,15 +204,15 @@ describe('Image Generation - API Tests', () => {
 		const tinyImagePath = join(process.cwd(), 'static', 'card-layout-reference-tiny.png');
 		const tinyImageBuffer = readFileSync(tinyImagePath);
 		const tinyBase64 = tinyImageBuffer.toString('base64');
-		
+
 		console.log('\n  Real tiny PNG:', tinyImageBuffer.length, 'bytes, base64:', tinyBase64.length, 'chars');
-		
+
 		const result = await generateImage({
 			model: 'gemini-2.5-flash-image',
 			prompt: 'A fantasy elf ranger with silver hair.',
 			includeReference: false // We'll add it manually
 		});
-		
+
 		// Generate with tiny reference
 		const contentParts: any[] = [
 			{ text: 'A fantasy elf ranger with silver hair.' },
@@ -252,10 +251,10 @@ describe('Image Generation - API Tests', () => {
 		const nanoImagePath = join(process.cwd(), 'static', 'card-layout-reference-nano.png');
 		const nanoImageBuffer = readFileSync(nanoImagePath);
 		const nanoBase64 = nanoImageBuffer.toString('base64');
-		
+
 		console.log('\n  NANO PNG (5x7):', nanoImageBuffer.length, 'bytes, base64:', nanoBase64.length, 'chars');
 		console.log('\n  FULL BASE64 (copy this for constant):\n  ', nanoBase64);
-		
+
 		// Generate with nano reference
 		const contentParts: any[] = [
 			{ text: 'A fantasy elf ranger with silver hair.' },
