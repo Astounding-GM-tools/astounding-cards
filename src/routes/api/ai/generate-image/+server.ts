@@ -14,21 +14,17 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { GEMINI_API_KEY } from '$env/static/private';
-import { PUBLIC_R2_PUBLIC_URL } from '$env/static/public';
 import { GoogleGenAI } from '@google/genai';
 import { supabaseAdmin } from '$lib/server/supabase';
-import { uploadImage, generateImageFileName } from '$lib/server/r2';
-import { generateEmbedding } from '$lib/server/embeddings';
 import { getUserFromSession } from '$lib/server/auth';
 import { TOKEN_COSTS } from '$lib/config/token-costs';
-import { AI_CONFIGS } from '$lib/ai/config/models';
 import {
-	IMAGE_GENERATION_CONTEXT,
-	PROMPT_OPTIMIZATION_CONTEXT,
-	ART_STYLES,
-	createPromptOptimizationRequest
-} from '$lib/ai/prompts/image-generation';
-import { REFERENCE_IMAGE_BASE64 } from '$lib/ai/assets/referenceImage';
+	checkForExistingImage,
+	optimizePrompt,
+	generateImage,
+	uploadAndSaveImage,
+	recordTransaction
+} from '$lib/server/image-generation';
 
 export const POST: RequestHandler = async ({ request, cookies }) => {
 	try {
@@ -60,75 +56,13 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 			return error(400, 'Card must have a title');
 		}
 
-		const style = deckTheme; // Using deckTheme as style
+	const style = deckTheme; // Using deckTheme as style
 
-		// Track the original image ID for proper family linking
-		let originalImageIdForSave: string | null = null;
-
-		// 3. Check for existing remix (if this is a style variant)
-		if (sourceImageId && style) {
-			console.log(
-				`🔍 Checking for existing images: sourceId=${sourceImageId}, targetStyle=${style}`
-			);
-
-			// First, get the source image to understand the family
-			const { data: sourceImage } = await supabaseAdmin
-				.from('community_images')
-				.select('id, style, source_image_id')
-				.eq('id', sourceImageId)
-				.single();
-
-			if (sourceImage) {
-				// If the source image itself is already the right style, return it!
-				if (sourceImage.style === style) {
-					console.log('✅ Source image is already the right style, returning it');
-					const { data: sourceImageData } = await supabaseAdmin
-						.from('community_images')
-						.select('id, url')
-						.eq('id', sourceImageId)
-						.single();
-
-					if (sourceImageData) {
-						return json({
-							success: true,
-							url: sourceImageData.url,
-							imageId: sourceImageData.id,
-							cost: 0,
-							cached: true
-						});
-					}
-				}
-
-				// Find the original (root) image in this family
-				const originalImageId = sourceImage.source_image_id || sourceImage.id;
-				originalImageIdForSave = originalImageId;
-
-				// Look for any image in the family with the target style
-				// This includes checking the original and all its remixes
-				const { data: familyImages } = await supabaseAdmin
-					.from('community_images')
-					.select('id, url, style')
-					.or(`id.eq.${originalImageId},source_image_id.eq.${originalImageId}`)
-					.eq('style', style);
-
-				if (familyImages && familyImages.length > 0) {
-					console.log('✅ Found existing image in family, returning cached result');
-					return json({
-						success: true,
-						url: familyImages[0].url,
-						imageId: familyImages[0].id,
-						cost: 0,
-						cached: true
-					});
-				}
-
-				// No existing image found, will need to generate
-				// But make sure we store the original ID for proper family linking
-				console.log(
-					`🎨 No existing ${style} image in family, will generate with originalId=${originalImageId}`
-				);
-			}
-		}
+	// 3. Check for existing remix (if this is a style variant)
+	const cachedResult = await checkForExistingImage(sourceImageId, style);
+	if (cachedResult) {
+		return json(cachedResult);
+	}
 
 		// 4. Check user balance
 		const cost = TOKEN_COSTS.IMAGE_GENERATION_COMMUNITY;
@@ -142,136 +76,17 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 			return error(402, 'Insufficient tokens');
 		}
 
-		console.log(`🎨 Server-side image generation for "${card.title}" (style: ${style})`);
+	console.log(`🎨 Server-side image generation for "${card.title}" (style: ${style})`);
 
-		const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
+	const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 
-		// Step 1: Optimize the card content into a visual prompt
-		const originalPrompt = createPromptOptimizationRequest(
-			card.title || 'Untitled',
-			card.subtitle || '',
-			card.description || '',
-			deckTheme,
-			card.traits || [],
-			card.stats || []
-		);
+	// Step 1: Optimize prompt
+	const optimizedPrompt = await optimizePrompt(ai, card, style);
 
-		console.log('📝 Step 1: Optimizing prompt...');
-		const optimizationResponse = await ai.models.generateContent({
-			model: AI_CONFIGS.TEXT_GENERATION.model,
-			contents: originalPrompt,
-			config: {
-				systemInstruction: PROMPT_OPTIMIZATION_CONTEXT,
-				temperature: AI_CONFIGS.TEXT_GENERATION.temperature
-			}
-		});
+	// Step 2: Generate image
+	const { base64Data, mimeType } = await generateImage(ai, optimizedPrompt, style, existingImageUrl);
 
-		const optimizedPrompt = optimizationResponse.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
-		if (!optimizedPrompt) {
-			throw new Error('Failed to optimize prompt - no response from Gemini');
-		}
-
-		console.log(`✅ Optimized prompt: "${optimizedPrompt.substring(0, 100)}..."`);
-
-		// Step 2: Generate the image with multi-part request
-		console.log('🎨 Step 2: Generating image...');
-
-		// Select art style based on theme
-		const selectedArtStyle = ART_STYLES[deckTheme as keyof typeof ART_STYLES] || ART_STYLES.classic;
-
-		const artStyleInstructions = `${IMAGE_GENERATION_CONTEXT}
-
-Art style: ${selectedArtStyle}
-
-Visual prompt: ${optimizedPrompt}`;
-
-		// Prepare multi-part content with optional existing image reference
-		const contentParts: any[] = [{ text: artStyleInstructions }];
-
-		// If there's an existing image, include it as reference for consistency
-		if (existingImageUrl) {
-			try {
-				// Fetch the existing image
-				const imageResponse = await fetch(existingImageUrl);
-				const imageBuffer = await imageResponse.arrayBuffer();
-				const base64Image = Buffer.from(imageBuffer).toString('base64');
-				const mimeType = imageResponse.headers.get('content-type') || 'image/png';
-
-				contentParts.push({
-					inlineData: {
-						mimeType,
-						data: base64Image
-					}
-				});
-				console.log('✅ Using existing image as reference for consistency');
-			} catch (err) {
-				console.warn('⚠️ Failed to fetch existing image for reference:', err);
-				// Continue without reference - not critical
-			}
-		}
-
-		// Generate the image
-		const generationConfig = {
-			temperature: AI_CONFIGS.IMAGE_GENERATION.temperature
-		};
-
-		const imageResponse = await ai.models.generateContent({
-			model: AI_CONFIGS.IMAGE_GENERATION.model,
-			contents: contentParts,
-			config: generationConfig
-		});
-
-		// Extract image data from response (matches client-side format)
-		const imageData = imageResponse.candidates?.[0]?.content?.parts?.find(
-			(part: any) => part.inlineData
-		);
-
-		if (!imageData?.inlineData?.data) {
-			console.warn('No image data in response. Received:', imageResponse);
-
-			// Check if this looks like a content filter issue
-			const hasCandidate = imageResponse.candidates?.length > 0;
-			const hasContent = imageResponse.candidates?.[0]?.content;
-
-			if (hasCandidate && !hasContent) {
-				return error(
-					400,
-					'Content filtered - try adjusting the prompt to avoid copyrighted characters or sensitive content'
-				);
-			} else if (hasCandidate && hasContent && !imageData) {
-				return error(
-					400,
-					'Generation completed but no image data returned - possibly content filtered'
-				);
-			} else {
-				return error(500, 'No image data received from Gemini - generation failed');
-			}
-		}
-
-		const base64Data = imageData.inlineData.data;
-		const mimeType = imageData.inlineData.mimeType || 'image/png';
-
-		console.log('✅ Image generated successfully');
-
-		// 7. Generate embedding (only for originals, not remixes)
-		// Remixes reuse the same semantic prompt, so they inherit the original's embedding
-		let embedding: number[] | null = null;
-		if (!sourceImageId) {
-			console.log('🧮 Generating embedding for original image...');
-			embedding = await generateEmbedding(optimizedPrompt);
-			console.log('✅ Embedding generated');
-		}
-
-		// 8. Upload to R2
-		const imageBuffer = Buffer.from(base64Data, 'base64');
-		const extension = mimeType.split('/')[1] || 'png';
-		const fileName = generateImageFileName(card.id || 'unknown', extension);
-		const r2Key = await uploadImage(imageBuffer, fileName, mimeType);
-		const publicUrl = PUBLIC_R2_PUBLIC_URL ? `${PUBLIC_R2_PUBLIC_URL}/${r2Key}` : r2Key;
-
-		console.log(`✅ Uploaded to R2: ${publicUrl}`);
-
-		// 9. Deduct tokens atomically
+	// 7. Deduct tokens atomically
 		const { data: deductSuccess, error: deductError } = await supabaseAdmin.rpc('deduct_tokens', {
 			p_user_id: userId,
 			p_amount: cost
@@ -283,59 +98,32 @@ Visual prompt: ${optimizedPrompt}`;
 			return error(402, 'Failed to deduct tokens - possibly insufficient balance');
 		}
 
-		console.log(`✅ Deducted ${cost} tokens from user ${userId}`);
+	console.log(`✅ Deducted ${cost} tokens from user ${userId}`);
 
-		// 10. Save to community_images table
-		const { data: imageRecord, error: dbError } = await supabaseAdmin
-			.from('community_images')
-			.insert({
-				user_id: userId,
-				url: publicUrl,
-				r2_key: r2Key,
-				style,
-				source_image_id: originalImageIdForSave,
-				embedding: embedding ? `[${embedding.join(',')}]` : null,
-				card_title: card.title,
-				cost_tokens: cost
-			})
-			.select()
-			.single();
+	// 8. Upload to R2 and save to database
+	const { url: publicUrl, imageId } = await uploadAndSaveImage(
+		userId,
+		base64Data,
+		mimeType,
+		card.id || 'unknown',
+		card.title,
+		style,
+		optimizedPrompt,
+		sourceImageId
+	);
 
-		if (dbError) {
-			console.error('❌ Database insert failed:', dbError);
-			// Tokens already deducted - partial failure
-			// TODO: Consider refund or retry logic
-			return error(500, 'Failed to save image record');
-		}
+	// 9. Record transaction
+	await recordTransaction(userId, cost, `AI image generation: ${card.title}`);
 
-		console.log(`✅ Image record saved: ${imageRecord.id}`);
-
-		// 11. Record transaction
-		const { error: txError } = await supabaseAdmin.from('transactions').insert({
-			user_id: userId,
-			type: 'usage',
-			amount_nok: null,
-			credits_delta: -cost,
-			description: `AI image generation: ${card.title}`,
-			status: 'completed'
-		});
-
-		if (txError) {
-			console.error('⚠️ Transaction recording failed:', txError);
-			// Non-critical - image was generated and tokens were deducted
-		}
-
-		console.log('✅ Transaction recorded');
-
-		// 12. Return success with R2 URL
-		return json({
-			success: true,
-			url: publicUrl,
-			imageId: imageRecord.id,
-			cost,
-			cached: false,
-			optimizedPrompt // For debugging/transparency
-		});
+	// 10. Return success
+	return json({
+		success: true,
+		url: publicUrl,
+		imageId,
+		cost,
+		cached: false,
+		optimizedPrompt // For debugging/transparency
+	});
 	} catch (err) {
 		console.error('Image generation API error:', err);
 		return error(500, err instanceof Error ? err.message : 'Failed to generate image');

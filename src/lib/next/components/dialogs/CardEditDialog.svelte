@@ -40,6 +40,7 @@
 
 	// Get the card from store
 	let card = $derived(nextDeckStore.getCard(cardId));
+	let currentDeck = $derived(nextDeckStore.deck);
 
 	// Working state for form (unsaved changes)
 	let formData = $state({
@@ -68,13 +69,13 @@
 		card
 			? {
 					...card,
-					title: formData.title,
-					subtitle: formData.subtitle,
-					description: formData.description,
-					stats: formData.stats,
-					traits: formData.traits,
-					imageBlob: formData.imageBlob,
-					image: formData.imageUrl
+					title: isFormInitialized ? formData.title : card.title,
+					subtitle: isFormInitialized ? formData.subtitle : card.subtitle,
+					description: isFormInitialized ? formData.description : card.description,
+					stats: isFormInitialized ? formData.stats : (card.stats || []),
+					traits: isFormInitialized ? formData.traits : (card.traits || []),
+					imageBlob: isFormInitialized ? formData.imageBlob : (card.imageBlob || null),
+					image: isFormInitialized ? formData.imageUrl : (card.image || null)
 				}
 			: null
 	);
@@ -150,6 +151,7 @@
 	// Check for changes
 	$effect(() => {
 		if (card && isFormInitialized) {
+			const imageChanged = formData.imageUrl !== (card.image || null);
 			hasChanges =
 				formData.title !== card.title ||
 				formData.subtitle !== card.subtitle ||
@@ -157,7 +159,7 @@
 				JSON.stringify(formData.stats) !== JSON.stringify(card.stats) ||
 				JSON.stringify(formData.traits) !== JSON.stringify(card.traits) ||
 				formData.imageBlob !== (card.imageBlob || null) ||
-				formData.imageUrl !== (card.image || null) ||
+				imageChanged ||
 				JSON.stringify(formData.imageMetadata) !== JSON.stringify(card.imageMetadata || null);
 		}
 	});
@@ -386,6 +388,8 @@
 					<legend>Image</legend>
 					<InlineImageSelector
 						cardSize="tarot"
+						card={previewCard}
+						currentStyle={currentDeck?.meta.imageStyle}
 						hasExistingImage={hasImage}
 						existingImageInfo={(() => {
 							const info = getImageDisplayInfo();

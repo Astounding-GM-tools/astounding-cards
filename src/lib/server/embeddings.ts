@@ -22,14 +22,14 @@ export async function generateEmbedding(text: string): Promise<number[]> {
 	const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 
 	try {
-		// embedContent expects requests as an array of content objects
+		// Use embedContent with contents parameter (string or array)
 		const result = await ai.models.embedContent({
 			model: 'text-embedding-004',
-			requests: [{ content: { parts: [{ text }] } }]
+			contents: text
 		});
 
-		// Response is an array when using requests[]
-		const embedding = result.embeddings?.[0];
+		// Extract embedding values (single embedding when contents is a string)
+		const embedding = result.embeddings?.[0] || result.embedding;
 		if (!embedding?.values || embedding.values.length === 0) {
 			throw new Error('No embedding values returned from Gemini');
 		}

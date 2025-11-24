@@ -13,21 +13,18 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { GEMINI_API_KEY } from '$env/static/private';
-import { PUBLIC_R2_PUBLIC_URL } from '$env/static/public';
 import { GoogleGenAI } from '@google/genai';
 import { supabaseAdmin } from '$lib/server/supabase';
-import { uploadImage, generateImageFileName } from '$lib/server/r2';
-import { generateEmbedding } from '$lib/server/embeddings';
 import { getUserFromSession } from '$lib/server/auth';
 import { TOKEN_COSTS } from '$lib/config/token-costs';
-import { AI_CONFIGS } from '$lib/ai/config/models';
 import {
-	IMAGE_GENERATION_CONTEXT,
-	PROMPT_OPTIMIZATION_CONTEXT,
-	ART_STYLES,
-	createPromptOptimizationRequest
-} from '$lib/ai/prompts/image-generation';
-import { REFERENCE_IMAGE_BASE64 } from '$lib/ai/assets/referenceImage';
+	checkForExistingImage,
+	optimizePrompt,
+	generateImage,
+	uploadAndSaveImage,
+	recordTransaction,
+	type CardData
+} from '$lib/server/image-generation';
 
 const STAGGER_DELAY = 2000; // 2 seconds between generation requests
 
@@ -58,73 +55,31 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 
 		console.log(`🚀 Batch image generation: ${cards.length} cards in style: ${style}`);
 
-		// 4. Check which cards already have images in target style (remix detection)
-		const cardsToGenerate: any[] = [];
-		const cachedResults: any[] = [];
+	// 4. Check which cards already have images in target style (remix detection)
+	const cardsToGenerate: any[] = [];
+	const cachedResults: any[] = [];
 
-		for (const card of cards) {
-			// If card doesn't have an image, it definitely needs generation
-			if (!card.imageMetadata?.imageId) {
-				cardsToGenerate.push(card);
-				continue;
-			}
-
-			const sourceImageId = card.imageMetadata.imageId;
-
-			// Get the source image to understand the family
-			const { data: sourceImage } = await supabaseAdmin
-				.from('community_images')
-				.select('id, style, source_image_id, url')
-				.eq('id', sourceImageId)
-				.single();
-
-			if (!sourceImage) {
-				// Source image not found, needs generation
-				cardsToGenerate.push(card);
-				continue;
-			}
-
-			// If the source image itself is already the right style, it's cached
-			if (sourceImage.style === style) {
-				console.log(`✅ Card ${card.id} already has image in style ${style} (cached)`);
-				cachedResults.push({
-					cardId: card.id,
-					success: true,
-					url: sourceImage.url,
-					imageId: sourceImage.id,
-					cached: true,
-					cost: 0
-				});
-				continue;
-			}
-
-			// Find the original (root) image in this family
-			const originalImageId = sourceImage.source_image_id || sourceImage.id;
-
-			// Look for any image in the family with the target style
-			const { data: familyImages } = await supabaseAdmin
-				.from('community_images')
-				.select('id, url, style')
-				.or(`id.eq.${originalImageId},source_image_id.eq.${originalImageId}`)
-				.eq('style', style);
-
-			if (familyImages && familyImages.length > 0) {
-				// Found existing image in target style - cached!
-				console.log(`✅ Card ${card.id} has existing variant in style ${style} (cached)`);
-				cachedResults.push({
-					cardId: card.id,
-					success: true,
-					url: familyImages[0].url,
-					imageId: familyImages[0].id,
-					cached: true,
-					cost: 0
-				});
-			} else {
-				// No existing image in target style, needs generation
-				// Store the originalImageId for linking the new variant
-				cardsToGenerate.push({ ...card, _originalImageId: originalImageId });
-			}
+	for (const card of cards) {
+		// If card doesn't have an image, it definitely needs generation
+		const sourceImageId = card.imageMetadata?.imageId;
+		if (!sourceImageId) {
+			cardsToGenerate.push(card);
+			continue;
 		}
+
+		// Check for existing image in family
+		const cachedResult = await checkForExistingImage(sourceImageId, style);
+		if (cachedResult) {
+			console.log(`✅ Card ${card.id} already has image in style ${style} (cached)`);
+			cachedResults.push({
+				cardId: card.id,
+				...cachedResult
+			});
+		} else {
+			// No existing image in target style, needs generation
+			cardsToGenerate.push(card);
+		}
+	}
 
 		// 5. Calculate total cost (only for cards that need generation)
 		const generationCount = cardsToGenerate.length;
@@ -174,150 +129,55 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 
 		console.log(`✅ Deducted ${totalCost} tokens from user ${userId}`);
 
-		// 8. Generate images with parallel processing and staggered starts
-		const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
-		const selectedArtStyle = ART_STYLES[style as keyof typeof ART_STYLES] || ART_STYLES.classic;
+	// 8. Generate images with parallel processing and staggered starts
+	const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 
-		// Create generation function for a single card
-		const generateCardImage = async (card: any, index: number) => {
-			try {
-				console.log(
-					`🎨 Generating image ${index + 1}/${cardsToGenerate.length} for card "${card.title}"`
-				);
+	// Create generation function for a single card
+	const generateCardImage = async (card: CardData, index: number) => {
+		try {
+			console.log(
+				`🎨 Generating image ${index + 1}/${cardsToGenerate.length} for card "${card.title}"`
+			);
 
-				// Step 1: Optimize the card content into a visual prompt
-				const originalPrompt = createPromptOptimizationRequest(
-					card.title || 'Untitled',
-					card.subtitle || '',
-					card.description || '',
-					style,
-					card.traits || [],
-					card.stats || []
-				);
+			// Step 1: Optimize prompt
+			const optimizedPrompt = await optimizePrompt(ai, card, style);
 
-				const optimizationResponse = await ai.models.generateContent({
-					model: AI_CONFIGS.TEXT_GENERATION.model,
-					contents: originalPrompt,
-					config: {
-						systemInstruction: PROMPT_OPTIMIZATION_CONTEXT,
-						temperature: AI_CONFIGS.TEXT_GENERATION.temperature
-					}
-				});
+			// Step 2: Generate image
+			const { base64Data, mimeType } = await generateImage(ai, optimizedPrompt, style, card.image);
 
-				const optimizedPrompt =
-					optimizationResponse.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
-				if (!optimizedPrompt) {
-					throw new Error('Failed to optimize prompt');
-				}
+			// Step 3: Upload to R2 and save to database
+			const sourceImageId = card.imageMetadata?.imageId || null;
+			const { url: publicUrl, imageId } = await uploadAndSaveImage(
+				userId,
+				base64Data,
+				mimeType,
+				card.id,
+				card.title,
+				style,
+				optimizedPrompt,
+				sourceImageId
+			);
 
-				// Step 2: Generate the image
-				const artStyleInstructions = `${IMAGE_GENERATION_CONTEXT}
+			console.log(`✅ Generated image for "${card.title}"`);
 
-Art style: ${selectedArtStyle}
-
-Visual prompt: ${optimizedPrompt}`;
-
-				// Prepare multi-part content with optional existing image reference
-				const contentParts: any[] = [{ text: artStyleInstructions }];
-
-				// If card has an existing image, include it as reference for consistency
-				if (card.image) {
-					try {
-						// Fetch the existing image
-						const imageResponse = await fetch(card.image);
-						const imageBuffer = await imageResponse.arrayBuffer();
-						const base64Image = Buffer.from(imageBuffer).toString('base64');
-						const mimeType = imageResponse.headers.get('content-type') || 'image/png';
-
-						contentParts.push({
-							inlineData: {
-								mimeType,
-								data: base64Image
-							}
-						});
-						console.log(`✅ Using existing image as reference for card "${card.title}"`);
-					} catch (err) {
-						console.warn(`⚠️ Failed to fetch existing image for card "${card.title}":`, err);
-						// Continue without reference - not critical
-					}
-				}
-
-				const imageResponse = await ai.models.generateContent({
-					model: AI_CONFIGS.IMAGE_GENERATION.model,
-					contents: contentParts,
-					config: {
-						temperature: AI_CONFIGS.IMAGE_GENERATION.temperature
-					}
-				});
-
-				// Extract image data
-				const imageData = imageResponse.candidates?.[0]?.content?.parts?.find(
-					(part: any) => part.inlineData
-				);
-
-				if (!imageData?.inlineData?.data) {
-					throw new Error('No image data received from Gemini');
-				}
-
-				const base64Data = imageData.inlineData.data;
-				const mimeType = imageData.inlineData.mimeType || 'image/png';
-
-				// Step 3: Generate embedding (only for originals, not remixes)
-				// Remixes reuse the same semantic prompt, so they inherit the original's embedding
-				let embedding: number[] | null = null;
-				if (!card._originalImageId) {
-					console.log(`🧮 Generating embedding for "${card.title}"...`);
-					embedding = await generateEmbedding(optimizedPrompt);
-					console.log('✅ Embedding generated');
-				}
-
-				// Step 4: Upload to R2
-				const imageBuffer = Buffer.from(base64Data, 'base64');
-				const extension = mimeType.split('/')[1] || 'png';
-				const fileName = generateImageFileName(card.id || 'unknown', extension);
-				const r2Key = await uploadImage(imageBuffer, fileName, mimeType);
-				const publicUrl = PUBLIC_R2_PUBLIC_URL ? `${PUBLIC_R2_PUBLIC_URL}/${r2Key}` : r2Key;
-
-				// Step 5: Save to community_images table
-				const { data: imageRecord, error: dbError } = await supabaseAdmin
-					.from('community_images')
-					.insert({
-						user_id: userId,
-						url: publicUrl,
-						r2_key: r2Key,
-						style,
-						source_image_id: card._originalImageId || null,
-						embedding: embedding ? `[${embedding.join(',')}]` : null,
-						card_title: card.title,
-						cost_tokens: TOKEN_COSTS.IMAGE_GENERATION_COMMUNITY
-					})
-					.select()
-					.single();
-
-				if (dbError) {
-					throw new Error(`Database insert failed: ${dbError.message}`);
-				}
-
-				console.log(`✅ Generated image for "${card.title}"`);
-
-				return {
-					cardId: card.id,
-					success: true,
-					url: publicUrl,
-					imageId: imageRecord.id,
-					cached: false,
-					cost: TOKEN_COSTS.IMAGE_GENERATION_COMMUNITY
-				};
-			} catch (err) {
-				console.error(`❌ Failed to generate image for card "${card.title}":`, err);
-				return {
-					cardId: card.id,
-					success: false,
-					error: err instanceof Error ? err.message : 'Unknown error',
-					cached: false
-				};
-			}
-		};
+			return {
+				cardId: card.id,
+				success: true,
+				url: publicUrl,
+				imageId,
+				cached: false,
+				cost: TOKEN_COSTS.IMAGE_GENERATION_COMMUNITY
+			};
+		} catch (err) {
+			console.error(`❌ Failed to generate image for card "${card.title}":`, err);
+			return {
+				cardId: card.id,
+				success: false,
+				error: err instanceof Error ? err.message : 'Unknown error',
+				cached: false
+			};
+		}
+	};
 
 		// Start all generations with staggered delays (2 seconds between starts)
 		const generationPromises = cardsToGenerate.map((card, index) => {
@@ -335,27 +195,19 @@ Visual prompt: ${optimizedPrompt}`;
 		// Add cached results
 		results.push(...cachedResults);
 
-		// 9. Record transaction
-		const generatedCount = results.filter((r) => r.success && !r.cached).length;
-		const failedCount = results.filter((r) => !r.success).length;
+	// 9. Record transaction
+	const generatedCount = results.filter((r) => r.success && !r.cached).length;
+	const failedCount = results.filter((r) => !r.success).length;
 
-		const { error: txError } = await supabaseAdmin.from('transactions').insert({
-			user_id: userId,
-			type: 'usage',
-			amount_nok: null,
-			credits_delta: -totalCost,
-			description: `Batch image generation: ${generatedCount} generated, ${cachedResults.length} cached, ${failedCount} failed (style: ${style})`,
-			status: 'completed'
-		});
+	await recordTransaction(
+		userId,
+		totalCost,
+		`Batch image generation: ${generatedCount} generated, ${cachedResults.length} cached, ${failedCount} failed (style: ${style})`
+	);
 
-		if (txError) {
-			console.error('⚠️ Transaction recording failed:', txError);
-		}
-
-		console.log('✅ Transaction recorded');
-		console.log(
-			`📊 Batch complete: ${generatedCount} generated, ${cachedResults.length} cached, ${failedCount} failed`
-		);
+	console.log(
+		`📊 Batch complete: ${generatedCount} generated, ${cachedResults.length} cached, ${failedCount} failed`
+	);
 
 		// 10. Return results
 		return json({

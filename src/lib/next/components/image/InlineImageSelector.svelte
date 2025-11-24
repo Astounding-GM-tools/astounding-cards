@@ -5,6 +5,7 @@
 -->
 <script lang="ts">
 	import type { CardSize } from '$lib/types';
+	import type { Card } from '$lib/next/types/card';
 	import AuthGatedCtaButton from '$lib/next/components/cta/AuthGatedCtaButton.svelte';
 	import { IMAGE_GENERATION_CTA } from '$lib/config/cta-configs';
 	import {
@@ -16,11 +17,12 @@
 		isProcessing,
 		hasError,
 		hasPreview,
-		canSave,
 		cleanupPreviewUrl,
 		type ImageSelectorState
 	} from '$lib/components/ui/ImageSelector.svelte.ts';
 	import { formatTime } from '$lib/next/utils/dateUtils.js';
+	import { dialogStore } from '../dialog/dialogStore.svelte.js';
+	import SimilarImagesDialog from '../dialogs/SimilarImagesDialog.svelte';
 
 	const props = $props();
 	const cardSize = (props.cardSize ?? 'tarot') as CardSize;
@@ -41,35 +43,57 @@
 				message?: string | null;
 		  }
 		| undefined;
+	const card = props.card as Card | undefined;
+	const currentStyle = props.currentStyle as string | undefined;
 
-	let fileInput = $state<HTMLInputElement>();
-	let urlInput = $state<HTMLInputElement>();
-	let state = $state<ImageSelectorState>(initializeImageSelectorState());
+	let fileInput: HTMLInputElement | undefined = $state(undefined);
+	let urlInput: HTMLInputElement | undefined = $state(undefined);
+	let imageState = $state(initializeImageSelectorState() as ImageSelectorState);
+	let showSimilarImages = $state(false);
+
+	function openSimilarImagesDialog() {
+		if (!card) return;
+		showSimilarImages = true;
+	}
+
+	function handleSimilarImageSelected(imageUrl: string, imageId: string, style: string) {
+		if (!onImageChange) {
+			console.error('InlineImageSelector: onImageChange is not defined!');
+			return;
+		}
+
+		// For community images, we don't need to fetch the blob
+		// The image is already hosted on R2, so just pass the URL
+		// Pass null for blob, the URL, and a filename
+		onImageChange(null, imageUrl, `community-${imageId}.png`);
+		
+		showSimilarImages = false;
+	}
 
 	async function handleFile(event: Event) {
 		const file = (event.currentTarget as HTMLInputElement).files?.[0];
 		if (!file) return;
 
-		state = await handleFileChange(state, file, cardSize);
+		imageState = await handleFileChange(imageState, file, cardSize);
 
 		// Auto-save when file is processed
-		if (hasPreview(state) && !hasError(state) && onImageChange) {
-			state = await handleSaveAction(state, {
-				onSave: (blob, sourceUrl) => onImageChange(blob, sourceUrl, state.originalFileName),
+		if (hasPreview(imageState) && !hasError(imageState) && onImageChange) {
+			imageState = await handleSaveAction(imageState, {
+				onSave: (blob, sourceUrl) => onImageChange(blob, sourceUrl, imageState.originalFileName),
 				onClose: () => {}
 			});
 		}
 	}
 
 	async function handleUrl() {
-		if (!state.urlValue) return;
+		if (!imageState.urlValue) return;
 
-		state = await handleUrlLoad(state, cardSize);
+		imageState = await handleUrlLoad(imageState, cardSize);
 
 		// Auto-save when URL is loaded
-		if (hasPreview(state) && !hasError(state) && onImageChange) {
-			state = await handleSaveAction(state, {
-				onSave: (blob, sourceUrl) => onImageChange(blob, sourceUrl, state.originalFileName),
+		if (hasPreview(imageState) && !hasError(imageState) && onImageChange) {
+			imageState = await handleSaveAction(imageState, {
+				onSave: (blob, sourceUrl) => onImageChange(blob, sourceUrl, imageState.originalFileName),
 				onClose: () => {}
 			});
 		}
@@ -82,7 +106,7 @@
 		// Clear the inputs
 		if (fileInput) fileInput.value = '';
 		if (urlInput) urlInput.value = '';
-		state = initializeImageSelectorState();
+		imageState = initializeImageSelectorState();
 	}
 
 	// Helper functions
@@ -117,7 +141,7 @@
 	function getImageSource(): string {
 		// Check if we have a URL in formData from parent component (for existing images)
 		// or if current state has URL value, then it was downloaded
-		if (state.urlValue || state.isFromUrl) {
+		if (imageState.urlValue || imageState.isFromUrl) {
 			return 'downloaded';
 		}
 		return 'uploaded';
@@ -126,32 +150,32 @@
 	// Cleanup preview URL when component is destroyed
 	$effect(() => {
 		return () => {
-			cleanupPreviewUrl(state.previewUrl);
+			cleanupPreviewUrl(imageState.previewUrl);
 		};
 	});
 </script>
 
-<div class="inline-image-selector">
+<section class="inline-image-selector">
 	{#if !hasExistingImage}
 		<!-- Single compact row: URL or File -->
 		<div class="compact-input-row">
 			<input
 				bind:this={urlInput}
-				bind:value={state.urlValue}
+				bind:value={imageState.urlValue}
 				type="url"
 				id="url-input"
 				placeholder="Paste image URL..."
 				oninput={(e) =>
-					(state = updateUrlValue(state, (e.currentTarget as HTMLInputElement).value))}
-				disabled={isProcessing(state)}
+					(imageState = updateUrlValue(imageState, (e.currentTarget as HTMLInputElement).value))}
+				disabled={isProcessing(imageState)}
 			/>
 			<button
 				onclick={handleUrl}
-				disabled={isProcessing(state) || !state.urlValue}
+				disabled={isProcessing(imageState) || !imageState.urlValue}
 				class="load-btn"
 				type="button"
 			>
-				{isProcessing(state) ? '...' : 'Load Image'}
+				{isProcessing(imageState) ? '...' : 'Load Image'}
 			</button>
 			<span class="divider">or</span>
 			<label class="file-btn">
@@ -161,13 +185,22 @@
 					id="file-input"
 					accept="image/*"
 					onchange={handleFile}
-					disabled={isProcessing(state)}
+					disabled={isProcessing(imageState)}
 					hidden
 				/>
 				Choose File
 			</label>
 		</div>
+	{/if}
 
+	<!-- Browse Similar Images Button (always visible if card provided) -->
+	{#if card}
+		<button onclick={openSimilarImagesDialog} class="browse-similar-btn" type="button">
+			🔍 Browse Community Library (Free)
+		</button>
+	{/if}
+
+	{#if !hasExistingImage}
 		<!-- Generate/Select Button (prominent when no image) -->
 		{#if onGenerateImage}
 			<AuthGatedCtaButton config={IMAGE_GENERATION_CTA} onAuthenticatedClick={onGenerateImage} />
@@ -175,15 +208,15 @@
 	{/if}
 
 	<!-- Line 3: File info + Status -->
-	{#if state.originalFileName || existingImageInfo || isProcessing(state) || hasError(state) || hasPreview(state)}
+	{#if imageState.originalFileName || existingImageInfo || isProcessing(imageState) || hasError(imageState) || hasPreview(imageState)}
 		<div class="info-status-line" class:no-image={existingImageInfo?.status === 'add-image'}>
 			<div class="file-info">
-				{#if state.originalFileName}
-					<span class="file-name">{state.originalFileName}</span>
-					{#if state.uploadTime}
+				{#if imageState.originalFileName}
+					<span class="file-name">{imageState.originalFileName}</span>
+					{#if imageState.uploadTime}
 						<span class="upload-time">
 							{getImageSource()}
-							{formatUploadTime(state.uploadTime)}
+							{formatUploadTime(imageState.uploadTime)}
 						</span>
 					{/if}
 				{:else if existingImageInfo}
@@ -204,20 +237,16 @@
 			</div>
 
 			<div class="status-actions">
-				{#if isProcessing(state)}
-					<div class="status processing">⏳ Loading image...</div>
-				{:else if hasError(state)}
-					<div class="status error">❌ {getErrorMessage(state.error)}</div>
-				{:else if hasPreview(state)}
-					<div class="status success">✅ OK</div>
+				{#if isProcessing(imageState)}
+					<span class="status processing">Processing...</span>
+				{:else if hasError(imageState)}
+					<span class="status error">{getErrorMessage(imageState.errorMessage || 'Error')}</span>
 				{:else if existingImageInfo?.status === 'add-image'}
-					<div class="status encouraging">💡 Ready to add</div>
+					<span class="status encouraging">Add an image</span>
 				{:else if existingImageInfo?.status === 'ready-to-save'}
-					<div class="status warning">⚠️ Remember to save!</div>
-				{:else if existingImageInfo?.status === 'ok'}
-					<div class="status success">✅ OK</div>
-				{:else if existingImageInfo?.status === 'ready'}
-					<div class="status success">✅ OK</div>
+					<span class="status warning">Ready to save</span>
+				{:else if hasPreview(imageState) || existingImageInfo?.status === 'ok' || existingImageInfo?.status === 'ready'}
+					<span class="status success">✓</span>
 				{/if}
 
 				{#if hasExistingImage && onToggleLock}
@@ -237,7 +266,21 @@
 			</div>
 		</div>
 	{/if}
-</div>
+</section>
+
+{#if showSimilarImages && card}
+	<div class="similar-images-overlay">
+		<div class="overlay-backdrop" onclick={() => (showSimilarImages = false)}></div>
+		<div class="overlay-content">
+			<SimilarImagesDialog
+				{card}
+				{currentStyle}
+				onImageSelected={handleSimilarImageSelected}
+				onClose={() => (showSimilarImages = false)}
+			/>
+		</div>
+	</div>
+{/if}
 
 <style>
 	.inline-image-selector {
@@ -360,7 +403,6 @@
 	.lock-checkbox span {
 		font-size: 0.875rem;
 		line-height: 1;
-		title: 'Lock image (prevent batch regeneration)';
 	}
 
 	/* Line 3: Info and status line */
@@ -496,6 +538,26 @@
 		border-color: #a0aec0;
 	}
 
+	.browse-similar-btn {
+		width: 100%;
+		padding: 0.75rem 1rem;
+		background: linear-gradient(135deg, #059669 0%, #047857 100%);
+		color: white;
+		border: none;
+		border-radius: 6px;
+		font-weight: 600;
+		font-size: 0.875rem;
+		cursor: pointer;
+		transition: all 0.2s;
+		margin-top: 0.5rem;
+	}
+
+	.browse-similar-btn:hover {
+		background: linear-gradient(135deg, #047857 0%, #065f46 100%);
+		transform: translateY(-1px);
+		box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+	}
+
 	/* Responsive */
 	@media (max-width: 640px) {
 		.compact-input-row {
@@ -517,5 +579,37 @@
 		.status.error {
 			max-width: none;
 		}
+	}
+
+	/* Overlay Styles */
+	.similar-images-overlay {
+		position: fixed;
+		inset: 0;
+		z-index: 10000;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 1rem;
+	}
+
+	.overlay-backdrop {
+		position: absolute;
+		inset: 0;
+		background: rgba(0, 0, 0, 0.5);
+		backdrop-filter: blur(2px);
+	}
+
+	.overlay-content {
+		position: relative;
+		background: white;
+		border-radius: 8px;
+		box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+		width: 100%;
+		max-width: 800px;
+		max-height: 90vh;
+		overflow: hidden;
+		display: flex;
+		flex-direction: column;
+		padding: 1.5rem;
 	}
 </style>
