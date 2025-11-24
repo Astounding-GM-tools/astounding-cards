@@ -7,7 +7,19 @@
 	import { tokenAmount } from '$lib/next/stores/tokenBalance';
 	import { toasts } from '$lib/stores/toast';
 	import { goto } from '$app/navigation';
-	import { Plus, LogOut, UserCircle, Download, Copy, Trash2, ExternalLink } from 'lucide-svelte';
+	import {
+		Plus,
+		LogOut,
+		UserCircle,
+		Download,
+		Copy,
+		Trash2,
+		Sparkles,
+		Edit,
+		GitMerge,
+		BookOpenCheck,
+		LibraryBigIcon
+	} from 'lucide-svelte';
 	import { nextDeckStore } from '$lib/next/stores/deckStore.svelte';
 	import { nextDb } from '$lib/next/stores/database';
 	import { dialogStore } from '$lib/next/components/dialog/dialogStore.svelte';
@@ -16,6 +28,8 @@
 	import TokenStore from '$lib/next/components/store/TokenStore.svelte';
 	import type { Deck } from '$lib/next/types/deck';
 	import { downloadDeckAsJson } from '$lib/next/utils/jsonExporter';
+	import RenameDeckDialog from '$lib/next/components/dialogs/RenameDeckDialog.svelte';
+	import MergeDecksDialog from '$lib/next/components/dialogs/MergeDecksDialog.svelte';
 
 	// Check if user is authenticated
 	let isAuthenticated = $derived(!!$user);
@@ -25,6 +39,7 @@
 	let userDecks = $state<Deck[]>([]);
 	let isLoadingDecks = $state(true);
 	let isExporting = $state(false);
+	let editingDeck = $state<{ id: string; title: string } | null>(null);
 
 	// Load user's decks
 	async function loadUserDecks() {
@@ -62,6 +77,25 @@
 		} catch (err) {
 			console.error('Failed to delete deck:', err);
 			toasts.error('Failed to delete deck');
+		}
+	}
+
+	async function handleMerge(targetDeckId: string, sourceDeckId: string) {
+		try {
+			const sourceDeck = await nextDb.getDeck(sourceDeckId);
+			if (!sourceDeck) {
+				toasts.error('Source deck not found');
+				return;
+			}
+			await nextDb.addCardsToDeck(
+				targetDeckId,
+				sourceDeck.cards.map((c) => ({ ...c, id: crypto.randomUUID() }))
+			);
+			toasts.success('Decks merged!');
+			await loadUserDecks(); // Refresh list
+		} catch (err) {
+			console.error('Failed to merge decks:', err);
+			toasts.error('Failed to merge decks');
 		}
 	}
 
@@ -184,19 +218,47 @@
 						<div>
 							<p class="balance-amount">{tokenBalance.toLocaleString()} tokens</p>
 							<p class="balance-info">
-								Enough for: ~{Math.floor(tokenBalance / 10)} cards and ~{Math.floor(tokenBalance / 100)} images
+								Enough for: ~{Math.floor(tokenBalance / 10)} cards or ~{Math.floor(
+									tokenBalance / 100
+								)} images
 							</p>
 						</div>
+					</div>
+					<div class="coming-soon-banner">
+						<Sparkles size={18} />
+						<span
+							><strong>Coming Soon!</strong> Token purchasing will become available after Lemon Squeezy
+							(hopefully) approves this website.</span
+						>
+					</div>
+
+					<div class="coming-soon-banner information">
+						<BookOpenCheck size={18} />
+						<span
+							><strong>Beta prices!</strong> We are testing the sustainability of our pricing model.
+							It is likely that we will have to increase prices after the beta, but any unspent tokens
+							bought during beta will be retained.</span
+						>
+					</div>
+
+					<div class="coming-soon-banner information">
+						<LibraryBigIcon size={18} />
+						<span
+							><strong>Terms of service</strong>
+							Remember to read the full terms of service, but the most important bit is that Astounding
+							Cards is a <strong>community driven service</strong>: All images generated on the
+							platform becomes accessible to ALL members of the community as part of the Astounding
+							Community Image Library!</span
+						>
 					</div>
 				</div>
 
 				<!-- Divider -->
 				<div class="divider"></div>
-
 				<!-- Buy More -->
 				<div class="token-store-card">
 					<h3 class="store-header">Buy More</h3>
-					<TokenStore compact={true} showComingSoon={true} />
+					<TokenStore compact={true} />
 				</div>
 			</div>
 		</section>
@@ -217,13 +279,16 @@
 			{:else}
 				<div class="deck-list">
 					{#each userDecks as deck}
-						<div class="deck-item">
+						<div class="deck-grid-item">
 							<button class="deck-info" onclick={() => handleOpenDeck(deck.id)}>
 								<div class="deck-header">
 									<h3 class="deck-title">{deck.meta.title}</h3>
-									<span class="deck-cards">{deck.cards.length} cards</span>
 								</div>
 								<div class="deck-meta">
+									<span class="deck-cards">{deck.cards.length} cards</span>
+									<span class="deck-images"
+										>{deck.cards.filter((card) => card.image).length} images</span
+									>
 									<span class="deck-theme">{deck.meta.theme}</span>
 									<span class="deck-layout">{deck.meta.layout}</span>
 									{#if deck.meta.published_slug}
@@ -234,7 +299,33 @@
 
 							<div class="deck-actions">
 								<fieldset class="action-group">
+									<legend>Backup</legend>
+									<button
+										class="action-text-button"
+										onclick={() => handleExport(deck, false)}
+										disabled={isExporting}
+										title="No images"
+									>
+										Light
+									</button>
+									<button
+										class="action-text-button"
+										onclick={() => handleExport(deck, true)}
+										disabled={isExporting}
+										title="Inline images (big file)"
+									>
+										Full
+									</button>
+								</fieldset>
+								<fieldset class="action-group">
 									<legend>Manage</legend>
+									<button
+										class="action-icon-button"
+										onclick={() => (editingDeck = { id: deck.id, title: deck.meta.title })}
+										title="Rename deck"
+									>
+										<Edit size={18} />
+									</button>
 									<button
 										class="action-icon-button"
 										onclick={() => handleDuplicateDeck(deck.id)}
@@ -243,28 +334,23 @@
 										<Copy size={18} />
 									</button>
 									<button
+										class="action-icon-button"
+										onclick={() =>
+											dialogStore.setContent(MergeDecksDialog, {
+												decks: userDecks,
+												currentDeckId: deck.id,
+												onMerge: async (sourceDeckId: string) => handleMerge(deck.id, sourceDeckId)
+											})}
+										title="Merge another deck into this one"
+									>
+										<GitMerge size={18} />
+									</button>
+									<button
 										class="action-icon-button danger"
 										onclick={() => handleDeleteDeck(deck.id, deck.meta.title)}
 										title="Delete deck"
 									>
 										<Trash2 size={18} />
-									</button>
-								</fieldset>
-								<fieldset class="action-group">
-									<legend>Backup (JSON export)</legend>
-									<button
-										class="action-text-button"
-										onclick={() => handleExport(deck, false)}
-										disabled={isExporting}
-									>
-										Light (no images)
-									</button>
-									<button
-										class="action-text-button"
-										onclick={() => handleExport(deck, true)}
-										disabled={isExporting}
-									>
-										Full (inline images)
 									</button>
 								</fieldset>
 							</div>
@@ -276,14 +362,17 @@
 	</div>
 {:else}
 	<!-- Not authenticated - show sign up CTA -->
-	<div class="auth-cta">
+	<section class="auth-cta">
 		<div class="auth-cta-content">
 			<h2>Sign In to Access Your Dashboard</h2>
 			<p>Create an account to manage your decks, publish to the gallery, and use AI features.</p>
 			<button class="cta-button" onclick={handleSignIn}> Sign In or Sign Up </button>
 		</div>
-	</div>
+	</section>
 {/if}
+
+<!-- Dialog system -->
+<Dialog />
 
 <style>
 	.dashboard {
@@ -368,6 +457,34 @@
 		border: 1px solid var(--ui-border, #e2e8f0);
 		border-radius: 8px;
 		padding: 1.5rem;
+	}
+
+	/* Coming Soon Banner */
+	.coming-soon-banner {
+		display: flex;
+		gap: 0.75rem;
+		padding: 0.75rem 1rem;
+		background: linear-gradient(135deg, rgba(251, 191, 36, 0.1) 0%, rgba(251, 191, 36, 0.05) 100%);
+		border: 1px solid #fbbf24;
+		border-radius: 6px;
+		align-items: center;
+		font-size: 0.875rem;
+	}
+
+	.coming-soon-banner :global(svg) {
+		flex-shrink: 0;
+		color: #d97706;
+	}
+
+	.coming-soon-banner strong {
+		color: #92400e;
+	}
+
+	.coming-soon-banner span {
+		color: #78350f;
+	}
+	.coming-soon-banner.information {
+		background: rgba(59, 130, 246, 0.08);
 	}
 
 	.divider {
@@ -457,14 +574,15 @@
 	.deck-list {
 		display: flex;
 		flex-direction: column;
-		gap: 0.75rem;
+		gap: 1rem;
 	}
 
-	.deck-item {
+	.deck-grid-item {
 		display: flex;
-		flex-direction: column;
-		align-items: stretch;
-		gap: 1rem;
+		flex-wrap: wrap;
+		justify-content: space-between;
+		align-items: center;
+		gap: 1.5rem;
 		background: white;
 		border: 1px solid var(--ui-border, #e2e8f0);
 		border-radius: 8px;
@@ -472,13 +590,12 @@
 		transition: all 0.2s;
 	}
 
-	.deck-item:hover {
+	.deck-grid-item:hover {
 		border-color: var(--button-primary-bg, #3b82f6);
 		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 	}
 
 	.deck-info {
-		flex: 1;
 		text-align: left;
 		background: none;
 		border: none;
@@ -487,6 +604,7 @@
 		display: flex;
 		flex-direction: column;
 		gap: 0.5rem;
+		min-width: 50%;
 	}
 
 	.deck-header {
@@ -536,18 +654,18 @@
 	.deck-actions {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 0.75rem;
-		border-top: 1px solid var(--ui-border, #e2e8f0);
-		padding-top: 1rem;
+		gap: 1rem;
 		align-items: flex-start;
+		justify-self: end;
 	}
 
 	.action-group {
 		display: flex;
 		gap: 0.5rem;
-		padding: 0;
+		padding: 0.5rem;
 		margin: 0;
-		border: none;
+		border: 1px solid var(--ui-border, #e2e8f0);
+		border-radius: 6px;
 	}
 
 	.action-group legend {
@@ -556,6 +674,7 @@
 		color: var(--ui-muted, #64748b);
 		padding: 0;
 		margin-bottom: 0.5rem;
+		white-space: nowrap;
 	}
 
 	.action-icon-button {
@@ -575,6 +694,10 @@
 	.action-icon-button:hover {
 		background: var(--ui-hover-bg, #f8fafc);
 		border-color: var(--button-primary-bg, #3b82f6);
+	}
+
+	.action-icon-button.danger {
+		color: #dc2626;
 	}
 
 	.action-icon-button.danger:hover {
@@ -602,51 +725,6 @@
 	}
 
 	.action-text-button:disabled {
-		opacity: 0.5;
-		cursor: not-allowed;
-	}
-
-	/* Auth CTA (not authenticated) */
-		position: relative;
-	}
-
-	.more-actions-dropdown {
-		position: absolute;
-		top: 100%;
-		right: 0;
-		background: white;
-		border: 1px solid var(--ui-border, #e2e8f0);
-		border-radius: 6px;
-		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-		z-index: 10;
-		width: max-content;
-		margin-top: 0.5rem;
-		padding: 0.5rem;
-		display: flex;
-		flex-direction: column;
-		gap: 0.25rem;
-	}
-
-	.dropdown-item {
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-		padding: 0.5rem 1rem;
-		background: none;
-		border: none;
-		cursor: pointer;
-		text-align: left;
-		width: 100%;
-		font-size: 0.875rem;
-		border-radius: 4px;
-		transition: background-color 0.2s;
-	}
-
-	.dropdown-item:hover {
-		background: var(--ui-hover-bg, #f8fafc);
-	}
-
-	.dropdown-item:disabled {
 		opacity: 0.5;
 		cursor: not-allowed;
 	}
@@ -722,6 +800,3 @@
 		}
 	}
 </style>
-
-<!-- Dialog system -->
-<Dialog />

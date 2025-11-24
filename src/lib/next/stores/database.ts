@@ -268,6 +268,27 @@ class NextDatabase {
 	}
 
 	/**
+	 * Add multiple cards to a deck
+	 */
+	async addCardsToDeck(deckId: string, cards: Card[]): Promise<Deck> {
+		const deck = await this.getDeck(deckId);
+		if (!deck) {
+			throw new DatabaseError('Deck not found', 'DECK_NOT_FOUND');
+		}
+
+		const updatedDeck: Deck = {
+			...deck,
+			cards: [...deck.cards, ...cards],
+			meta: {
+				...deck.meta,
+				lastEdited: Date.now()
+			}
+		};
+
+		return this.saveDeck(updatedDeck);
+	}
+
+	/**
 	 * Update multiple cards in the deck (Canon Update Pattern)
 	 */
 	async updateMultipleCards(

@@ -1,15 +1,14 @@
 <script lang="ts">
-	import { ShoppingCart, Sparkles, TrendingDown, Zap } from 'lucide-svelte';
+	import { LightbulbIcon, ShoppingCart, TrendingDown, Zap } from 'lucide-svelte';
 
 	const props = $props<{
 		compact?: boolean; // Whether to show compact version (for dashboard embedding)
-		showComingSoon?: boolean; // Whether to show coming soon banner
 	}>();
 
 	// Pricing configuration (base currency: USD)
-	const PACK_PRICE_USD = 5; // $5 USD per pack
+	const PACK_PRICE_USD = 4.78; // $4.78 USD per pack
 	const TOKENS_PER_PACK = 5000;
-	const BASE_FEE_USD = 0.50; // Lemon Squeezy base fee
+	const BASE_FEE_USD = 0.5; // Lemon Squeezy base fee
 	const FEE_PERCENTAGE = 0.05; // 5%
 
 	// TODO: Get user's currency from settings/locale
@@ -33,9 +32,9 @@
 	let costPerImage = $derived(totalPrice / totalImages);
 
 	// Savings vs single pack
-	const SINGLE_PACK_TOTAL = PACK_PRICE_USD + BASE_FEE_USD + (PACK_PRICE_USD * FEE_PERCENTAGE);
+	const SINGLE_PACK_TOTAL = PACK_PRICE_USD + BASE_FEE_USD + PACK_PRICE_USD * FEE_PERCENTAGE;
 	let savingsPercent = $derived(
-		selectedPacks > 1 ? ((1 - costPerImage / (SINGLE_PACK_TOTAL / 100)) * 100) : 0
+		selectedPacks > 1 ? (1 - costPerImage / (SINGLE_PACK_TOTAL / 100)) * 100 : 0
 	);
 
 	function formatPrice(amount: number): string {
@@ -44,13 +43,6 @@
 </script>
 
 <div class="token-store" class:compact={props.compact}>
-	{#if props.showComingSoon}
-		<div class="coming-soon-banner">
-			<Sparkles size={18} />
-			<span><strong>Coming Soon!</strong> Token purchasing available after Lemon Squeezy approval.</span>
-		</div>
-	{/if}
-
 	<!-- Pack Selector -->
 	<div class="pack-selector">
 		<div class="selector-header">
@@ -73,30 +65,41 @@
 			style="--progress: {((selectedPacks - 1) / 9) * 100}%"
 		/>
 
-		{#if discount > 0}
-			<div class="discount-indicator">
+		<div class="discount-indicator">
+			{#if discount > 0}
 				<TrendingDown size={14} />
-				<span>{(discount * 100).toFixed(0)}% bulk discount • Save {savingsPercent.toFixed(0)}% per image!</span>
-			</div>
-		{/if}
+				<span
+					>{(discount * 100).toFixed(0)}% bulk discount • Save {savingsPercent.toFixed(0)}% per
+					image!</span
+				>
+			{:else}
+				<LightbulbIcon size={12} />
+				<span>Buy more than one Token Pack and get significan discounts!</span>
+			{/if}
+		</div>
 	</div>
 
 	<!-- Price Summary -->
 	<div class="price-summary">
 		<div class="summary-row">
-			<span>{selectedPacks} Token Pack{selectedPacks > 1 ? 's' : ''} ({totalTokens.toLocaleString()} tokens) @ {formatPrice(PACK_PRICE_USD)}</span>
+			<span
+				>{selectedPacks} Token Pack{selectedPacks > 1 ? 's' : ''} ({totalTokens.toLocaleString()} tokens)
+				@ {formatPrice(PACK_PRICE_USD)}</span
+			>
 			<span class="price">{formatPrice(basePrice)}</span>
 		</div>
 
-		{#if discount > 0}
-			<div class="summary-row discount">
-				<span>Bulk Discount ({(discount * 100).toFixed(0)}%)</span>
-				<span class="price">-{formatPrice(basePrice - discountedPrice)}</span>
-			</div>
-		{/if}
+		<div class="summary-row discount">
+			<span>Bulk Discount ({(discount * 100).toFixed(0)}%)</span>
+			<span class="price">-{formatPrice(basePrice - discountedPrice)}</span>
+		</div>
 
 		<div class="summary-row fee">
-			<span>Lemon Squeezy fee ({formatPrice(BASE_FEE_USD)} + {(FEE_PERCENTAGE * 100).toFixed(0)}%)</span>
+			<span
+				>Lemon Squeezy fee ({formatPrice(BASE_FEE_USD)} + {(FEE_PERCENTAGE * 100).toFixed(
+					0
+				)}%)</span
+			>
 			<span class="price">{formatPrice(transactionFee)}</span>
 		</div>
 
@@ -106,7 +109,9 @@
 		</div>
 
 		<div class="value-indicator">
-			<span class="images-count">≈ {totalImages.toLocaleString()} images</span>
+			<span class="images-count"
+				>Enough to generate <strong>{totalImages.toLocaleString()}</strong> images</span
+			>
 			<span class="cost-per">{formatPrice(costPerImage)} per image</span>
 		</div>
 	</div>
@@ -130,31 +135,6 @@
 
 	.token-store.compact {
 		gap: 1rem;
-	}
-
-	/* Coming Soon Banner */
-	.coming-soon-banner {
-		display: flex;
-		gap: 0.75rem;
-		padding: 0.75rem 1rem;
-		background: linear-gradient(135deg, rgba(251, 191, 36, 0.1) 0%, rgba(251, 191, 36, 0.05) 100%);
-		border: 1px solid #fbbf24;
-		border-radius: 6px;
-		align-items: center;
-		font-size: 0.875rem;
-	}
-
-	.coming-soon-banner :global(svg) {
-		flex-shrink: 0;
-		color: #d97706;
-	}
-
-	.coming-soon-banner strong {
-		color: #92400e;
-	}
-
-	.coming-soon-banner span {
-		color: #78350f;
 	}
 
 	/* Pack Selector */
@@ -322,7 +302,6 @@
 	}
 
 	.images-count {
-		font-weight: 600;
 		color: var(--ui-text, #1a202c);
 	}
 
