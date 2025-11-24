@@ -39,7 +39,7 @@
 		"@storybook/sveltekit": "^10.0.7",
 		"@sveltejs/adapter-auto": "^6.0.0",
 		"@sveltejs/adapter-vercel": "^5.8.1",
-		"@sveltejs/kit": "^2.22.0",
+		"@sveltejs/kit": "^2.31.0",
 		"@sveltejs/vite-plugin-svelte": "^6.0.0",
 		"@types/node": "^22",
 		"@vitest/browser": "^3.2.3",
@@ -69,6 +69,7 @@
 	"dependencies": {
 		"@aws-sdk/client-s3": "^3.932.0",
 		"@google/genai": "^1.16.0",
+		"@sentry/sveltekit": "^10.26.0",
 		"@supabase/supabase-js": "^2.81.1",
 		"@vercel/analytics": "^1.5.0",
 		"lucide-svelte": "^0.554.0"
