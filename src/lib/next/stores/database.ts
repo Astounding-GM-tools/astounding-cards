@@ -14,7 +14,7 @@ import type { Deck, Theme, Layout, ImageStyle } from '../types/deck.js';
 import type { Card } from '../types/card.js';
 import { safeDeepClone } from '$lib/utils/clone-utils.js';
 import { generateId, generateKey } from '../utils/idUtils.js';
-import { getSampleCards } from '../data/sampleCards.js';
+import { getNewCardTemplate } from '../data/newCardTemplate.js';
 
 export class DatabaseError extends Error {
 	constructor(
@@ -425,20 +425,19 @@ class NextDatabase {
 
 	/**
 	 * Create default card template
-	 * Uses the first sample card as the single source of truth
+	 * Uses the new card template as the source
 	 */
 	private createDefaultCard(): Card {
-		const sampleCards = getSampleCards();
-		const firstCard = sampleCards[0];
+		const template = getNewCardTemplate();
 
 		return {
 			id: generateKey(),
-			title: firstCard.title || 'New Card',
-			subtitle: firstCard.subtitle || '',
-			description: firstCard.description || '',
-			image: firstCard.image || null,
-			traits: firstCard.traits || [],
-			stats: firstCard.stats || []
+			title: template.title || 'New Card',
+			subtitle: template.subtitle || '',
+			description: template.description || '',
+			image: template.image || null,
+			traits: template.traits || [],
+			stats: template.stats || []
 		};
 	}
 

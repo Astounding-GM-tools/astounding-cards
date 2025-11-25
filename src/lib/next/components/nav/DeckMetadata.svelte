@@ -1,16 +1,15 @@
 <script lang="ts">
 	import Pill from '../ui/Pill.svelte';
-	import { Check } from 'lucide-svelte';
+	import { Check, AlertTriangle } from 'lucide-svelte';
 
 	interface Props {
 		cardCount: number;
-		published?: boolean;
 		imageCount?: number;
-		genre?: string;
-		shareCount?: number;
+		published?: boolean;
+		needsRepublish?: boolean;
 	}
 
-	let { cardCount, published = false, imageCount, genre, shareCount }: Props = $props();
+	let { cardCount, imageCount, published = false, needsRepublish = false }: Props = $props();
 </script>
 
 <div class="deck-metadata">
@@ -28,11 +27,6 @@
 		</Pill>
 	{/if}
 
-	<!-- Genre -->
-	{#if genre}
-		<Pill variant="neutral" size="sm">{genre}</Pill>
-	{/if}
-
 	<!-- Published Badge -->
 	{#if published}
 		<Pill variant="success" size="sm">
@@ -41,11 +35,11 @@
 		</Pill>
 	{/if}
 
-	<!-- Share Count -->
-	{#if shareCount !== undefined && shareCount > 0}
-		<Pill variant="neutral" size="sm">
-			{shareCount}
-			{shareCount === 1 ? 'share' : 'shares'}
+	<!-- Needs Republish Warning -->
+	{#if needsRepublish}
+		<Pill variant="warning" size="sm">
+			{#snippet icon()}<AlertTriangle size={12} />{/snippet}
+			Needs republish
 		</Pill>
 	{/if}
 </div>

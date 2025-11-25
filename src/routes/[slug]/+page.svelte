@@ -673,9 +673,8 @@
 				<DeckMetadata
 					cardCount={activeDeck.cards.length}
 					imageCount={countImages(activeDeck)}
-					published={true}
-					cardBacksVisible={showCardBacks}
-					onCardBacksChange={handleCardBacksChange}
+					published={!!activeDeck.meta.published_deck_id}
+					needsRepublish={needsRepublish}
 				/>
 			{/snippet}
 		</MainHeader>
