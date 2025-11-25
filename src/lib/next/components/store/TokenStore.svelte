@@ -20,6 +20,7 @@
 
 	// State
 	let selectedPacks = $state(1);
+	let acceptedTerms = $state(false);
 
 	// Calculations
 	let basePrice = $derived(selectedPacks * PACK_PRICE_USD);
@@ -116,8 +117,21 @@
 		</div>
 	</div>
 
+	<!-- Terms Acceptance -->
+	<div class="terms-acceptance">
+		<label class="terms-checkbox">
+			<input type="checkbox" bind:checked={acceptedTerms} />
+			<span class="terms-text">
+				I have read and accept the
+				<a href="/terms" target="_blank" rel="noopener noreferrer">Terms of Service</a>, including
+				that AI-generated images become part of the
+				<strong>Community Image Library</strong>.
+			</span>
+		</label>
+	</div>
+
 	<!-- CTA Button -->
-	<button class="purchase-button" disabled={props.showComingSoon}>
+	<button class="purchase-button" disabled={props.showComingSoon || !acceptedTerms}>
 		<ShoppingCart size={20} />
 		<span>Pay {formatPrice(totalPrice)}</span>
 		{#if props.showComingSoon}
@@ -308,6 +322,51 @@
 	.cost-per {
 		color: var(--ui-muted, #64748b);
 		font-weight: 500;
+	}
+
+	/* Terms Acceptance */
+	.terms-acceptance {
+		padding: 1rem;
+		background: var(--ui-bg-secondary, #f9fafb);
+		border: 1px solid var(--ui-border, #e2e8f0);
+		border-radius: 8px;
+		margin-top: 1rem;
+	}
+
+	.terms-checkbox {
+		display: flex;
+		align-items: flex-start;
+		gap: 0.75rem;
+		cursor: pointer;
+		user-select: none;
+	}
+
+	.terms-checkbox input[type='checkbox'] {
+		margin-top: 0.25rem;
+		cursor: pointer;
+		width: 18px;
+		height: 18px;
+		flex-shrink: 0;
+	}
+
+	.terms-text {
+		font-size: 0.875rem;
+		color: var(--text-primary, #2d3748);
+		line-height: 1.5;
+	}
+
+	.terms-text a {
+		color: var(--primary, #3b82f6);
+		text-decoration: none;
+	}
+
+	.terms-text a:hover {
+		text-decoration: underline;
+	}
+
+	.terms-text strong {
+		color: var(--brand, #c90019);
+		font-weight: 600;
 	}
 
 	/* Purchase Button */

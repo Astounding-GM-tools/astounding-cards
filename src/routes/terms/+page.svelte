@@ -96,6 +96,36 @@
 				<li>AI generation consumes tokens from your account balance</li>
 				<li>We do not guarantee the quality or suitability of AI-generated content</li>
 			</ul>
+
+			<h3>Community Image Library</h3>
+			<p>
+				<strong>Important:</strong> Astounding Cards is a community-driven service. By using AI
+				image generation features, you agree that:
+			</p>
+			<ul>
+				<li>
+					<strong
+						>All images generated through our AI tools become part of the Astounding Community Image
+						Library</strong
+					>
+				</li>
+				<li>
+					These images become publicly accessible to all members of the community for use in their
+					decks
+				</li>
+				<li>
+					This sharing model helps reduce costs and fosters a collaborative creative environment
+				</li>
+				<li>
+					You retain ownership of your specific card designs, but generated images are shared
+					resources
+				</li>
+				<li>Do not generate images containing personal, private, or sensitive information</li>
+			</ul>
+			<p>
+				If you require exclusive, private images, you may upload your own images instead of using
+				the AI generation features.
+			</p>
 		</section>
 
 		<section>
