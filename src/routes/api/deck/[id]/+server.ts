@@ -71,7 +71,10 @@ export const GET: RequestHandler = async ({ params }) => {
 				is_curated: deck.is_curated,
 				view_count: deck.view_count,
 				import_count: deck.import_count || 0,
+				remix_count: deck.remix_count || 0,
 				user_id: deck.user_id,
+				source_deck_id: deck.source_deck_id, // Link to original user_deck
+				remix_of: deck.remix_of, // Link to original published deck if this is a remix
 				created_at: deck.created_at,
 				updated_at: deck.updated_at,
 				version: deck.version

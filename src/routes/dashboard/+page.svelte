@@ -18,7 +18,13 @@
 		Edit,
 		GitMerge,
 		BookOpenCheck,
-		LibraryBigIcon
+		LibraryBigIcon,
+		Megaphone,
+		AlertTriangle,
+		Star,
+		Globe,
+		Palette,
+		Calendar
 	} from 'lucide-svelte';
 	import { nextDeckStore } from '$lib/next/stores/deckStore.svelte';
 	import { nextDb } from '$lib/next/stores/database';
@@ -40,6 +46,64 @@
 	let isLoadingDecks = $state(true);
 	let isExporting = $state(false);
 	let editingDeck = $state<{ id: string; title: string } | null>(null);
+
+	// Format date relative to now
+	function formatDateRelative(timestamp: number): string | null {
+		// Validate timestamp
+		if (!timestamp || isNaN(timestamp) || timestamp <= 0) {
+			return null;
+		}
+
+		const now = Date.now();
+		const diff = now - timestamp;
+		const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+		// Handle future dates or very recent (invalid)
+		if (days < 0 || diff < 0) {
+			return null;
+		}
+
+		if (days === 0) return 'Today';
+		if (days === 1) return 'Yesterday';
+		if (days < 7) return `${days} days ago`;
+		if (days < 30) return `${Math.floor(days / 7)} weeks ago`;
+		if (days < 365) return `${Math.floor(days / 30)} months ago`;
+		return `${Math.floor(days / 365)} years ago`;
+	}
+
+	// Get the most relevant date to show (edited if recent, otherwise created)
+	function getMostRelevantDate(deck: Deck): { timestamp: number; label: string } | null {
+		const created = deck.meta.createdAt;
+		const edited = deck.meta.lastEdited;
+
+		// Validate timestamps
+		if (!edited || isNaN(edited) || edited <= 0) {
+			if (!created || isNaN(created) || created <= 0) {
+				return null; // No valid dates
+			}
+			return { timestamp: created, label: 'Created' };
+		}
+
+		// If edited more than 1 day after created, show edited
+		const daysSinceCreation = (edited - created) / (1000 * 60 * 60 * 24);
+		if (daysSinceCreation > 1) {
+			return { timestamp: edited, label: 'Edited' };
+		}
+
+		// Otherwise show created
+		if (created && !isNaN(created) && created > 0) {
+			return { timestamp: created, label: 'Created' };
+		}
+
+		return { timestamp: edited, label: 'Edited' };
+	}
+
+	// Check if deck has unpublished changes
+	function hasUnpublishedChanges(deck: Deck): boolean {
+		if (!deck.meta.published_deck_id) return false;
+		if (!deck.meta.lastPublished) return true; // Published but never synced
+		return deck.meta.lastEdited > deck.meta.lastPublished;
+	}
 
 	// Load user's decks
 	async function loadUserDecks() {
@@ -151,6 +215,42 @@
 
 	function handleImportJson() {
 		dialogStore.setContent(JsonImportDialog, {});
+	}
+
+	// Update deck layout
+	async function handleLayoutChange(deckId: string, newLayout: 'poker' | 'tarot') {
+		try {
+			const deck = await nextDb.getDeck(deckId);
+			if (!deck) return;
+
+			deck.meta.layout = newLayout;
+			deck.meta.lastEdited = Date.now();
+			await nextDb.upsertDeck(deck);
+
+			toasts.success(`Layout updated to ${newLayout === 'poker' ? 'Small' : 'Large'}`);
+			await loadUserDecks(); // Refresh
+		} catch (err) {
+			console.error('Failed to update layout:', err);
+			toasts.error('Failed to update layout');
+		}
+	}
+
+	// Update deck image style
+	async function handleImageStyleChange(deckId: string, newStyle: 'classic' | 'modern' | 'inked') {
+		try {
+			const deck = await nextDb.getDeck(deckId);
+			if (!deck) return;
+
+			deck.meta.imageStyle = newStyle;
+			deck.meta.lastEdited = Date.now();
+			await nextDb.upsertDeck(deck);
+
+			toasts.success(`Image style updated to ${newStyle}`);
+			await loadUserDecks(); // Refresh
+		} catch (err) {
+			console.error('Failed to update image style:', err);
+			toasts.error('Failed to update image style');
+		}
 	}
 </script>
 
@@ -285,19 +385,86 @@
 									<h3 class="deck-title">{deck.meta.title}</h3>
 								</div>
 								<div class="deck-meta">
-									<span class="deck-cards">{deck.cards.length} cards</span>
-									<span class="deck-images"
+									<span class="deck-stat">{deck.cards.length} cards</span>
+									<span class="deck-stat"
 										>{deck.cards.filter((card) => card.image).length} images</span
 									>
-									<span class="deck-theme">{deck.meta.theme}</span>
-									<span class="deck-layout">{deck.meta.layout}</span>
-									{#if deck.meta.published_slug}
-										<span class="deck-published">📢 Published</span>
+									{#if getMostRelevantDate(deck)}
+										{@const dateInfo = getMostRelevantDate(deck)}
+										{@const relativeDate = formatDateRelative(dateInfo.timestamp)}
+										{#if relativeDate}
+											<span
+												class="deck-date"
+												title="{dateInfo.label}: {new Date(dateInfo.timestamp).toLocaleString()}"
+											>
+												<Calendar size={14} />
+												{relativeDate}
+											</span>
+										{/if}
+									{/if}
+									{#if deck.meta.published_deck_id || deck.meta.remix_of === deck.id}
+										<span class="pill-published">
+											<Megaphone size={14} />
+											Published
+										</span>
+										{#if hasUnpublishedChanges(deck)}
+											<span class="pill-warning">
+												<AlertTriangle size={14} />
+												Needs sync
+											</span>
+										{/if}
+									{/if}
+									{#if !deck.meta.creator_id || deck.meta.creator_id === $user?.id}
+										<span class="pill-mine">
+											<Star size={14} />
+											Created by me
+										</span>
+									{:else}
+										<span class="pill-community" title="Created by {deck.meta.creator_name}">
+											<Globe size={14} />
+											Community deck
+										</span>
+									{/if}
+									{#if deck.meta.remix_of && deck.meta.creator_id && deck.meta.creator_id !== $user?.id}
+										<span class="pill-remix">
+											<Palette size={14} />
+											Remix
+										</span>
 									{/if}
 								</div>
 							</button>
 
 							<div class="deck-actions">
+								<fieldset class="action-group">
+									<legend>Card Print Size</legend>
+									<select
+										class="design-select"
+										value={deck.meta.layout}
+										onchange={(e) =>
+											handleLayoutChange(deck.id, e.currentTarget.value as 'poker' | 'tarot')}
+										title="Print size"
+									>
+										<option value="poker">Small</option>
+										<option value="tarot">Large</option>
+									</select>
+								</fieldset>
+								<fieldset class="action-group">
+									<legend>Default Image Style</legend>
+									<select
+										class="design-select"
+										value={deck.meta.imageStyle}
+										onchange={(e) =>
+											handleImageStyleChange(
+												deck.id,
+												e.currentTarget.value as 'classic' | 'modern' | 'inked'
+											)}
+										title="Image style"
+									>
+										<option value="classic">Classic</option>
+										<option value="modern">Modern</option>
+										<option value="inked">Inked</option>
+									</select>
+								</fieldset>
 								<fieldset class="action-group">
 									<legend>Backup</legend>
 									<button
@@ -604,7 +771,7 @@
 		display: flex;
 		flex-direction: column;
 		gap: 0.5rem;
-		min-width: 50%;
+		min-width: 40%;
 	}
 
 	.deck-header {
@@ -621,34 +788,88 @@
 		color: var(--ui-text, #1a202c);
 	}
 
-	.deck-cards {
-		font-size: 0.875rem;
-		color: var(--ui-muted, #64748b);
-		white-space: nowrap;
-	}
-
 	.deck-meta {
 		display: flex;
 		gap: 0.75rem;
 		flex-wrap: wrap;
 		font-size: 0.8125rem;
+		align-items: center;
 	}
 
-	.deck-theme,
-	.deck-layout {
-		padding: 0.25rem 0.5rem;
-		background: var(--ui-hover-bg, #f8fafc);
-		border-radius: 4px;
+	.deck-stat {
+		font-size: 0.875rem;
 		color: var(--ui-muted, #64748b);
-		text-transform: capitalize;
+		white-space: nowrap;
 	}
 
-	.deck-published {
+	.deck-date {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.25rem;
+		font-size: 0.8125rem;
+		color: var(--ui-muted, #64748b);
+		white-space: nowrap;
+	}
+
+	/* Pill styles */
+	.pill-published {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.25rem;
 		padding: 0.25rem 0.5rem;
 		background: rgba(5, 150, 105, 0.1);
 		border-radius: 4px;
 		color: #059669;
 		font-weight: 500;
+		white-space: nowrap;
+	}
+
+	.pill-mine {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.25rem;
+		padding: 0.25rem 0.5rem;
+		background: rgba(59, 130, 246, 0.1);
+		border-radius: 4px;
+		color: #3b82f6;
+		font-weight: 500;
+		white-space: nowrap;
+	}
+
+	.pill-community {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.25rem;
+		padding: 0.25rem 0.5rem;
+		background: rgba(139, 92, 246, 0.1);
+		border-radius: 4px;
+		color: #8b5cf6;
+		font-weight: 500;
+		white-space: nowrap;
+	}
+
+	.pill-remix {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.25rem;
+		padding: 0.25rem 0.5rem;
+		background: rgba(236, 72, 153, 0.1);
+		border-radius: 4px;
+		color: #ec4899;
+		font-weight: 500;
+		white-space: nowrap;
+	}
+
+	.pill-warning {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.25rem;
+		padding: 0.25rem 0.5rem;
+		background: rgba(245, 158, 11, 0.1);
+		border-radius: 4px;
+		color: #f59e0b;
+		font-weight: 500;
+		white-space: nowrap;
 	}
 
 	.deck-actions {
@@ -727,6 +948,31 @@
 	.action-text-button:disabled {
 		opacity: 0.5;
 		cursor: not-allowed;
+	}
+
+	.design-select {
+		padding: 0.5rem 0.75rem;
+		border: 1px solid var(--ui-border, #e2e8f0);
+		border-radius: 6px;
+		background: white;
+		color: var(--ui-text, #1a202c);
+		font-size: 0.875rem;
+		font-weight: 500;
+		font-family: inherit;
+		cursor: pointer;
+		transition: all 0.2s ease;
+		min-width: 90px;
+	}
+
+	.design-select:hover {
+		background: var(--ui-hover-bg, #f8fafc);
+		border-color: var(--button-primary-bg, #3b82f6);
+	}
+
+	.design-select:focus {
+		outline: none;
+		border-color: var(--button-primary-bg, #3b82f6);
+		box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 	}
 
 	/* Auth CTA (not authenticated) */

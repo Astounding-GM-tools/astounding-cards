@@ -62,15 +62,17 @@
 
 	// Check if local deck has unpublished changes (needs republish)
 	let needsRepublish = $derived.by(() => {
-		if (!localDeck || !localDeck.meta.published_deck_id) return false;
+		if (!localDeck) return false;
+
+		// Check if deck is published (either has published_deck_id OR is a re-imported published deck)
+		const isPublished = localDeck.meta.published_deck_id || localDeck.meta.remix_of === localDeck.id;
+		if (!isPublished) return false;
 
 		// Use activeDeck for reactivity - updates automatically when store changes
 		const deck = activeDeck || localDeck;
 
 		// Compare timestamps: has deck been edited since last publish?
-		return deck.meta.lastPublished
-			? deck.meta.lastEdited > deck.meta.lastPublished
-			: true; // Never published but has published_deck_id
+		return deck.meta.lastPublished ? deck.meta.lastEdited > deck.meta.lastPublished : true; // Never published but has published_deck_id
 	});
 
 	// Print mode state
@@ -228,6 +230,18 @@
 					`⚠️ Deck "${previewDeck.meta.title}" has local changes. Please resolve conflicts.`
 				);
 			} else {
+				// Capture creator info, remix lineage, and preserve creation date
+				if (data.curatedDeck) {
+					previewDeck.meta.creator_id = data.curatedDeck.user_id;
+					previewDeck.meta.creator_name = data.curatedDeck.creator_name || 'Unknown';
+					previewDeck.meta.remix_of = data.curatedDeck.id; // Track remix lineage
+
+					// Preserve original creation date if available
+					if (data.curatedDeck.created_at) {
+						previewDeck.meta.createdAt = new Date(data.curatedDeck.created_at).getTime();
+					}
+				}
+
 				// No conflicts or user confirmed overwrite - import directly
 				await nextDeckStore.importDeck(previewDeck);
 
@@ -350,18 +364,64 @@
 		if (!previewDeck) return;
 
 		try {
-			// Simple logic: Do I have this deck ID locally?
-			const existingLocal = await nextDb.getDeck(previewDeck.id);
+			let deckToLoad: string | null = null;
+			let sourceDeck: Deck | null = null;
 
-			if (existingLocal) {
-				// I already have this deck - just load it
-				await nextDeckStore.loadDeck(existingLocal.id);
+			// First, check if this is MY published deck (I have the source)
+			if (data.curatedDeck?.source_deck_id) {
+				// Try to load the source deck
+				sourceDeck = await nextDb.getDeck(data.curatedDeck.source_deck_id);
+				if (sourceDeck) {
+					deckToLoad = sourceDeck.id;
+
+					// Check if local has unpublished changes
+					if (
+						isGalleryView &&
+						sourceDeck.meta.lastPublished &&
+						sourceDeck.meta.lastEdited > sourceDeck.meta.lastPublished
+					) {
+						// Warn user: they're in gallery view but have local changes
+						const proceed = confirm(
+							`⚠️ You have unpublished changes to "${sourceDeck.meta.title}".\n\n` +
+								`Clicking OK will edit your LOCAL version (with your changes).\n\n` +
+								`To edit the published version instead, first publish your changes or revert them.`
+						);
+
+						if (!proceed) {
+							return; // User cancelled
+						}
+					}
+
+					console.log('[Edit] Found source deck, editing my original');
+				}
+			}
+
+			// If no source deck, check if I already imported this deck
+			if (!deckToLoad) {
+				const existingLocal = await nextDb.getDeck(previewDeck.id);
+				if (existingLocal) {
+					deckToLoad = existingLocal.id;
+					console.log('[Edit] Found existing import, editing that');
+				}
+			}
+
+			// If I have a deck to load, load it
+			if (deckToLoad) {
+				await nextDeckStore.loadDeck(deckToLoad);
 			} else {
-				// I don't have it - import it (keeping original title)
-				// Capture creator info from published deck if available
+				// I don't have it - import it (keeping original title and dates)
+				console.log('[Edit] No local copy, importing deck');
+
+				// Capture creator info, remix lineage, and preserve creation date
 				if (data.curatedDeck) {
 					previewDeck.meta.creator_id = data.curatedDeck.user_id;
 					previewDeck.meta.creator_name = data.curatedDeck.creator_name || 'Unknown';
+					previewDeck.meta.remix_of = data.curatedDeck.id; // Track remix lineage
+
+					// Preserve original creation date if available
+					if (data.curatedDeck.created_at) {
+						previewDeck.meta.createdAt = new Date(data.curatedDeck.created_at).getTime();
+					}
 				}
 
 				await nextDeckStore.importDeck(previewDeck);
@@ -623,8 +683,8 @@
 				/>
 			{:else if localDeck}
 				<!-- Local slug view: Full owner actions -->
-				<!-- Check if published -->
-				{#if activeDeck?.meta?.published_deck_id || activeDeck?.meta?.published_slug}
+				<!-- Check if published (has published_deck_id, published_slug, OR is a re-imported published deck) -->
+				{#if activeDeck?.meta?.published_deck_id || activeDeck?.meta?.published_slug || activeDeck?.meta?.remix_of === activeDeck?.id}
 					<!-- Published deck actions -->
 
 					<!-- Republish button - only show if local changes exist -->
@@ -855,7 +915,7 @@
 	.preview-content {
 		max-width: var(--page-max-width);
 		margin: 0 auto;
-		padding: 0 2rem 2rem;
+		padding: 0 1rem 2rem;
 	}
 
 	/* Responsive */

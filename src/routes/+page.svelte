@@ -163,8 +163,11 @@
 				// I already have this deck - just load it
 				await nextDeckStore.loadDeck(existingLocal.id);
 			} else {
-				// I don't have it - import it (keeping original title)
+				// I don't have it - import it (keeping original title and dates)
 				const now = Date.now();
+				const originalCreatedAt = heroDeck.created_at
+					? new Date(heroDeck.created_at).getTime()
+					: now;
 
 				const newDeck: Deck = {
 					id: heroDeck.id, // Keep the original ID!
@@ -174,9 +177,10 @@
 						imageStyle: heroDeck.imageStyle || 'classic',
 						layout: heroDeck.layout || 'poker',
 						lastEdited: now,
-						createdAt: now,
+						createdAt: originalCreatedAt, // Preserve original creation date
 						creator_id: heroDeck.user_id, // Capture creator
-						creator_name: heroDeck.creator_name || 'Unknown'
+						creator_name: heroDeck.creator_name || 'Unknown',
+						remix_of: heroDeck.id // Track remix lineage (published deck ID)
 					},
 					cards: heroDeck.cards
 				};

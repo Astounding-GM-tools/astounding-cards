@@ -22,6 +22,7 @@ interface DeckMeta {
 	published_slug?: string; // Slug of published deck
 	creator_id?: string; // User ID of original creator (for imported decks)
 	creator_name?: string; // Display name of original creator (for imported decks)
+	remix_of?: string; // ID of published deck this was remixed from (for tracking lineage)
 	// Semantic search embedding (768-dimensional vector from deck content)
 	// Aggregated from card embeddings or generated from deck title/description
 	embedding?: number[] | null;

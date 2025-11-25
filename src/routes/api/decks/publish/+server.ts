@@ -252,6 +252,7 @@ async function publishNewDeck(
 			cards: userDeck.cards,
 			visibility: visibility || 'public',
 			source_deck_id: userDeck.id,
+			remix_of: userDeck.remix_of || null, // Track remix lineage
 			is_curated: false,
 			is_featured: false
 		})
@@ -261,6 +262,14 @@ async function publishNewDeck(
 	if (insertError) {
 		console.error('Failed to create published deck:', insertError);
 		throw new Error('Failed to publish deck');
+	}
+
+	// If this is a remix, increment the original deck's remix count
+	if (userDeck.remix_of) {
+		supabaseAdmin.rpc('increment_remix_count', { deck_id: userDeck.remix_of }).then(
+			() => console.log(`Incremented remix count for ${userDeck.remix_of}`),
+			(err) => console.error('Failed to increment remix count:', err)
+		);
 	}
 
 	// Link user_deck to published_deck

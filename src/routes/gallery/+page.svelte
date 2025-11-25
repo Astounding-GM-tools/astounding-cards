@@ -156,8 +156,9 @@
 			const result = await response.json();
 			const fullDeck = result.deck;
 
-			// Create new local deck with imported data (keeping original title and ID)
+			// Create new local deck with imported data (keeping original title, ID, and dates)
 			const now = Date.now();
+			const originalCreatedAt = deck.created_at ? new Date(deck.created_at).getTime() : now;
 
 			// Create complete deck object
 			const newDeck: Deck = {
@@ -168,9 +169,10 @@
 					imageStyle: fullDeck.imageStyle || 'classic',
 					layout: fullDeck.layout || 'tarot',
 					lastEdited: now,
-					createdAt: now,
+					createdAt: originalCreatedAt, // Preserve original creation date
 					creator_id: deck.user_id, // Capture creator
-					creator_name: deck.creator_name || 'Unknown'
+					creator_name: deck.creator_name || 'Unknown',
+					remix_of: deck.id // Track remix lineage (published deck ID)
 				},
 				cards: fullDeck.cards
 			};
