@@ -6,50 +6,50 @@ import type { Card } from '../../types';
  * Verifies imports, types, and component instantiation
  */
 describe('CardMechanicsEditor Component Integration', () => {
-  it('should import all extracted logic functions without errors', async () => {
-    // Verify that all functions can be imported successfully
-    const module = await import('./CardMechanicsEditor.svelte.js');
-    
-    expect(typeof module.createNewMechanic).toBe('function');
-    expect(typeof module.addMechanic).toBe('function');
-    expect(typeof module.removeMechanic).toBe('function');
-    expect(typeof module.canMoveMechanic).toBe('function');
-    expect(typeof module.moveMechanic).toBe('function');
-    expect(typeof module.createUpdatedCard).toBe('function');
-    expect(typeof module.getTypeIcon).toBe('function');
-    expect(typeof module.getTypeName).toBe('function');
-    expect(typeof module.isNumeric).toBe('function');
-    expect(typeof module.hasChanges).toBe('function');
-    expect(typeof module.shouldShowTrackingWarning).toBe('function');
-  });
+	it('should import all extracted logic functions without errors', async () => {
+		// Verify that all functions can be imported successfully
+		const module = await import('./CardMechanicsEditor.svelte.js');
 
-  it('should have correct types for component props', () => {
-    // Create mock card to verify type compatibility
-    const mockCard: Card = {
-      id: 'test-card',
-      name: 'Test Card',
-      role: 'Test Role',
-      image: null,
-      traits: [],
-      secrets: [],
-      desc: 'Test description',
-      type: 'character',
-      mechanics: []
-    };
+		expect(typeof module.createNewMechanic).toBe('function');
+		expect(typeof module.addMechanic).toBe('function');
+		expect(typeof module.removeMechanic).toBe('function');
+		expect(typeof module.canMoveMechanic).toBe('function');
+		expect(typeof module.moveMechanic).toBe('function');
+		expect(typeof module.createUpdatedCard).toBe('function');
+		expect(typeof module.getTypeIcon).toBe('function');
+		expect(typeof module.getTypeName).toBe('function');
+		expect(typeof module.isNumeric).toBe('function');
+		expect(typeof module.hasChanges).toBe('function');
+		expect(typeof module.shouldShowTrackingWarning).toBe('function');
+	});
 
-    // Verify prop types are correct (TypeScript compilation check)
-    const props = {
-      card: mockCard,
-      loading: false,
-      onsave: (card: Card) => {},
-      hasChanges: false,
-      editedCard: mockCard
-    };
+	it('should have correct types for component props', () => {
+		// Create mock card to verify type compatibility
+		const mockCard: Card = {
+			id: 'test-card',
+			name: 'Test Card',
+			role: 'Test Role',
+			image: null,
+			traits: [],
+			secrets: [],
+			desc: 'Test description',
+			type: 'character',
+			mechanics: []
+		};
 
-    expect(props.card).toBeDefined();
-    expect(typeof props.loading).toBe('boolean');
-    expect(typeof props.onsave).toBe('function');
-    expect(typeof props.hasChanges).toBe('boolean');
-    expect(props.editedCard).toBeDefined();
-  });
+		// Verify prop types are correct (TypeScript compilation check)
+		const props = {
+			card: mockCard,
+			loading: false,
+			onsave: (card: Card) => {},
+			hasChanges: false,
+			editedCard: mockCard
+		};
+
+		expect(props.card).toBeDefined();
+		expect(typeof props.loading).toBe('boolean');
+		expect(typeof props.onsave).toBe('function');
+		expect(typeof props.hasChanges).toBe('boolean');
+		expect(props.editedCard).toBeDefined();
+	});
 });

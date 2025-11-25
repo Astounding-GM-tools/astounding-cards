@@ -1,59 +1,59 @@
 /**
  * Test suite for ShareDialog.svelte.ts
- * 
+ *
  * Tests for extracted pure logic functions
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
-  initializeShareDialogState,
-  calculateDeckStats,
-  getBrowserSupport,
-  getUrlSizeStatus,
-  handleShare,
-  shareAsUrl,
-  shareAsJson,
-  BROWSER_LIMITS,
-  type ShareDialogState
+	initializeShareDialogState,
+	calculateDeckStats,
+	getBrowserSupport,
+	getUrlSizeStatus,
+	handleShare,
+	shareAsUrl,
+	shareAsJson,
+	BROWSER_LIMITS,
+	type ShareDialogState
 } from './ShareDialog.svelte.ts';
 import type { Deck, Card } from '$lib/types';
 
 // Mock the dependencies
 vi.mock('$lib/next/utils/shareUrlUtils.js', () => ({
-  generateShareUrl: vi.fn(),
-  toShareable: vi.fn()
+	generateShareUrl: vi.fn(),
+	toShareable: vi.fn()
 }));
 
 vi.mock('$lib/stores/toast', () => ({
-  toasts: {
-    success: vi.fn(),
-    error: vi.fn(),
-    warning: vi.fn()
-  }
+	toasts: {
+		success: vi.fn(),
+		error: vi.fn(),
+		warning: vi.fn()
+	}
 }));
 
 // Mock global APIs
 Object.assign(navigator, {
-  clipboard: {
-    writeText: vi.fn()
-  }
+	clipboard: {
+		writeText: vi.fn()
+	}
 });
 
 // Mock DOM methods
 Object.assign(global, {
-  URL: {
-    createObjectURL: vi.fn(() => 'mock-url'),
-    revokeObjectURL: vi.fn()
-  },
-  Blob: vi.fn().mockImplementation((content, options) => ({
-    content,
-    options,
-    size: content[0]?.length || 0,
-    type: options?.type || ''
-  })),
-  TextEncoder: vi.fn(() => ({
-    encode: vi.fn((text: string) => new Uint8Array(text.length))
-  }))
+	URL: {
+		createObjectURL: vi.fn(() => 'mock-url'),
+		revokeObjectURL: vi.fn()
+	},
+	Blob: vi.fn().mockImplementation((content, options) => ({
+		content,
+		options,
+		size: content[0]?.length || 0,
+		type: options?.type || ''
+	})),
+	TextEncoder: vi.fn(() => ({
+		encode: vi.fn((text: string) => new Uint8Array(text.length))
+	}))
 });
 
 import { generateShareUrl } from '$lib/next/utils/shareUrlUtils.js';
@@ -61,295 +61,297 @@ import { toasts } from '$lib/stores/toast';
 
 // Mock deck data
 const createMockDeck = (cards: Card[] = []): Deck => ({
-  id: 'test-deck',
-  meta: {
-    name: 'Test Deck',
-    title: 'Test Deck', // Add title for new type structure
-    description: 'A test deck',
-    theme: 'default',
-    cardSize: 'poker',
-    lastEdited: Date.now(),
-    createdAt: Date.now(),
-
-  },
-  cards
+	id: 'test-deck',
+	meta: {
+		name: 'Test Deck',
+		title: 'Test Deck', // Add title for new type structure
+		description: 'A test deck',
+		theme: 'default',
+		cardSize: 'poker',
+		lastEdited: Date.now(),
+		createdAt: Date.now()
+	},
+	cards
 });
 
 const createMockCard = (image?: string | null): Card => ({
-  id: 'test-card',
-  name: 'Test Card',
-  role: 'Test Role',
-  image: image || null,
-  traits: [],
-  secrets: [],
-  desc: 'Test description',
-  type: 'character',
-  stats: [],
-  mechanics: []
+	id: 'test-card',
+	name: 'Test Card',
+	role: 'Test Role',
+	image: image || null,
+	traits: [],
+	secrets: [],
+	desc: 'Test description',
+	type: 'character',
+	stats: [],
+	mechanics: []
 });
 
 describe('ShareDialog Pure Logic Functions', () => {
+	beforeEach(() => {
+		// Clear all mocks before each test
+		vi.clearAllMocks();
+	});
 
-  beforeEach(() => {
-    // Clear all mocks before each test
-    vi.clearAllMocks();
-  });
+	describe('initializeShareDialogState', () => {
+		it('should initialize state with default values', () => {
+			const state = initializeShareDialogState();
+			expect(state).toEqual({
+				activeTab: 'share',
+				showMigration: false,
+				urlSize: 0,
+				blobCount: 0,
+				missingImageCount: 0,
+				migrationNeeded: false
+			});
+		});
+	});
 
-  describe('initializeShareDialogState', () => {
-    it('should initialize state with default values', () => {
-      const state = initializeShareDialogState();
-      expect(state).toEqual({
-        activeTab: 'share',
-        showMigration: false,
-        urlSize: 0,
-        blobCount: 0,
-        missingImageCount: 0,
-        migrationNeeded: false
-      });
-    });
-  });
+	describe('calculateDeckStats', () => {
+		beforeEach(() => {
+			vi.mocked(generateShareUrl).mockReturnValue('https://example.com/deck');
+		});
 
-  describe('calculateDeckStats', () => {
-    beforeEach(() => {
-      vi.mocked(generateShareUrl).mockReturnValue('https://example.com/deck');
-    });
+		it('should calculate stats for deck with no images', () => {
+			const deck = createMockDeck([
+				createMockCard(), // no image
+				createMockCard() // no image
+			]);
 
-    it('should calculate stats for deck with no images', () => {
-      const deck = createMockDeck([
-        createMockCard(), // no image
-        createMockCard()  // no image
-      ]);
+			const stats = calculateDeckStats(deck);
 
-      const stats = calculateDeckStats(deck);
+			expect(stats.urlSize).toBe(24); // length of mock URL
+			expect(stats.missingImageCount).toBe(2);
+			expect(stats.blobCount).toBe(0);
+			expect(stats.migrationNeeded).toBe(false);
+		});
 
-      expect(stats.urlSize).toBe(24); // length of mock URL
-      expect(stats.missingImageCount).toBe(2);
-      expect(stats.blobCount).toBe(0);
-      expect(stats.migrationNeeded).toBe(false);
-    });
+		it('should calculate stats for deck with HTTP images', () => {
+			const deck = createMockDeck([
+				createMockCard('https://example.com/image1.jpg'),
+				createMockCard('https://example.com/image2.jpg')
+			]);
 
-    it('should calculate stats for deck with HTTP images', () => {
-      const deck = createMockDeck([
-        createMockCard('https://example.com/image1.jpg'),
-        createMockCard('https://example.com/image2.jpg')
-      ]);
+			const stats = calculateDeckStats(deck);
 
-      const stats = calculateDeckStats(deck);
+			expect(stats.missingImageCount).toBe(0);
+			expect(stats.blobCount).toBe(0);
+			expect(stats.migrationNeeded).toBe(false);
+		});
 
-      expect(stats.missingImageCount).toBe(0);
-      expect(stats.blobCount).toBe(0);
-      expect(stats.migrationNeeded).toBe(false);
-    });
+		it('should calculate stats for deck with blob images', () => {
+			const deck = createMockDeck([
+				createMockCard('blob:local'),
+				createMockCard('local-file.jpg'),
+				createMockCard('https://example.com/image.jpg')
+			]);
 
-    it('should calculate stats for deck with blob images', () => {
-      const deck = createMockDeck([
-        createMockCard('blob:local'),
-        createMockCard('local-file.jpg'),
-        createMockCard('https://example.com/image.jpg')
-      ]);
+			const stats = calculateDeckStats(deck);
 
-      const stats = calculateDeckStats(deck);
+			expect(stats.missingImageCount).toBe(0);
+			expect(stats.blobCount).toBe(2); // blob:local and local-file.jpg
+			expect(stats.migrationNeeded).toBe(true);
+		});
 
-      expect(stats.missingImageCount).toBe(0);
-      expect(stats.blobCount).toBe(2); // blob:local and local-file.jpg
-      expect(stats.migrationNeeded).toBe(true);
-    });
+		it('should handle mixed image types correctly', () => {
+			const deck = createMockDeck([
+				createMockCard(), // no image
+				createMockCard('blob:local'),
+				createMockCard('https://example.com/image.jpg'),
+				createMockCard('local-file.jpg')
+			]);
 
-    it('should handle mixed image types correctly', () => {
-      const deck = createMockDeck([
-        createMockCard(), // no image
-        createMockCard('blob:local'),
-        createMockCard('https://example.com/image.jpg'),
-        createMockCard('local-file.jpg')
-      ]);
+			const stats = calculateDeckStats(deck);
 
-      const stats = calculateDeckStats(deck);
+			expect(stats.missingImageCount).toBe(1);
+			expect(stats.blobCount).toBe(2);
+			expect(stats.migrationNeeded).toBe(true);
+		});
+	});
 
-      expect(stats.missingImageCount).toBe(1);
-      expect(stats.blobCount).toBe(2);
-      expect(stats.migrationNeeded).toBe(true);
-    });
-  });
+	describe('getBrowserSupport', () => {
+		it('should return all browsers as supported for small size', () => {
+			const support = getBrowserSupport(1000);
 
-  describe('getBrowserSupport', () => {
-    it('should return all browsers as supported for small size', () => {
-      const support = getBrowserSupport(1000);
+			expect(support).toHaveLength(6);
+			expect(support.every((s) => s.supported)).toBe(true);
+		});
 
-      expect(support).toHaveLength(6);
-      expect(support.every(s => s.supported)).toBe(true);
-    });
+		it('should mark some browsers as unsupported for large size', () => {
+			const support = getBrowserSupport(40000);
 
-    it('should mark some browsers as unsupported for large size', () => {
-      const support = getBrowserSupport(40000);
+			const chromeSupport = support.find((s) => s.browser === 'Chrome/Edge');
+			const firefoxSupport = support.find((s) => s.browser === 'Firefox');
 
-      const chromeSupport = support.find(s => s.browser === 'Chrome/Edge');
-      const firefoxSupport = support.find(s => s.browser === 'Firefox');
+			expect(chromeSupport?.supported).toBe(false); // 40000 > 32768
+			expect(firefoxSupport?.supported).toBe(true); // 40000 < 65536
+		});
 
-      expect(chromeSupport?.supported).toBe(false); // 40000 > 32768
-      expect(firefoxSupport?.supported).toBe(true);  // 40000 < 65536
-    });
+		it('should return correct browser names', () => {
+			const support = getBrowserSupport(1000);
+			const browserNames = support.map((s) => s.browser);
 
-    it('should return correct browser names', () => {
-      const support = getBrowserSupport(1000);
-      const browserNames = support.map(s => s.browser);
+			expect(browserNames).toContain('Chrome/Edge');
+			expect(browserNames).toContain('Firefox');
+			expect(browserNames).toContain('Safari');
+			expect(browserNames).toContain('Opera');
+			expect(browserNames).toContain('Mobile Safari');
+			expect(browserNames).toContain('Mobile Chrome');
+		});
+	});
 
-      expect(browserNames).toContain('Chrome/Edge');
-      expect(browserNames).toContain('Firefox');
-      expect(browserNames).toContain('Safari');
-      expect(browserNames).toContain('Opera');
-      expect(browserNames).toContain('Mobile Safari');
-      expect(browserNames).toContain('Mobile Chrome');
-    });
-  });
+	describe('getUrlSizeStatus', () => {
+		it('should return success for small URLs', () => {
+			expect(getUrlSizeStatus(1000)).toBe('success');
+			expect(getUrlSizeStatus(20000)).toBe('success');
+		});
 
-  describe('getUrlSizeStatus', () => {
-    it('should return success for small URLs', () => {
-      expect(getUrlSizeStatus(1000)).toBe('success');
-      expect(getUrlSizeStatus(20000)).toBe('success');
-    });
+		it('should return warning for medium URLs', () => {
+			expect(getUrlSizeStatus(26000)).toBe('warning');
+			expect(getUrlSizeStatus(29000)).toBe('warning');
+		});
 
-    it('should return warning for medium URLs', () => {
-      expect(getUrlSizeStatus(26000)).toBe('warning');
-      expect(getUrlSizeStatus(29000)).toBe('warning');
-    });
+		it('should return error for large URLs', () => {
+			expect(getUrlSizeStatus(31000)).toBe('error');
+			expect(getUrlSizeStatus(50000)).toBe('error');
+		});
 
-    it('should return error for large URLs', () => {
-      expect(getUrlSizeStatus(31000)).toBe('error');
-      expect(getUrlSizeStatus(50000)).toBe('error');
-    });
+		it('should return warning when size exceeds smallest browser limit', () => {
+			// The smallest limit is 32768, but > 30000 returns error, so test a value between 25000 and 30000
+			expect(getUrlSizeStatus(28000)).toBe('warning');
+		});
+	});
 
-    it('should return warning when size exceeds smallest browser limit', () => {
-      // The smallest limit is 32768, but > 30000 returns error, so test a value between 25000 and 30000
-      expect(getUrlSizeStatus(28000)).toBe('warning');
-    });
-  });
+	describe('shareAsUrl', () => {
+		it('should copy URL to clipboard and show success toast', async () => {
+			const deck = createMockDeck();
+			const mockUrl = 'https://example.com/deck';
 
-  describe('shareAsUrl', () => {
-    it('should copy URL to clipboard and show success toast', async () => {
-      const deck = createMockDeck();
-      const mockUrl = 'https://example.com/deck';
+			vi.mocked(generateShareUrl).mockReturnValue(mockUrl);
+			vi.mocked(navigator.clipboard.writeText).mockResolvedValue();
 
-      vi.mocked(generateShareUrl).mockReturnValue(mockUrl);
-      vi.mocked(navigator.clipboard.writeText).mockResolvedValue();
+			await shareAsUrl(deck);
 
-      await shareAsUrl(deck);
+			expect(navigator.clipboard.writeText).toHaveBeenCalledWith(mockUrl);
+			expect(toasts.success).toHaveBeenCalledWith(
+				'Share URL copied! Send this URL to share your deck.'
+			);
+		});
 
-      expect(navigator.clipboard.writeText).toHaveBeenCalledWith(mockUrl);
-      expect(toasts.success).toHaveBeenCalledWith('Share URL copied! Send this URL to share your deck.');
-    });
+		it('should handle clipboard errors', async () => {
+			const deck = createMockDeck();
+			const error = new Error('Clipboard failed');
 
-    it('should handle clipboard errors', async () => {
-      const deck = createMockDeck();
-      const error = new Error('Clipboard failed');
+			vi.mocked(navigator.clipboard.writeText).mockRejectedValue(error);
 
-      vi.mocked(navigator.clipboard.writeText).mockRejectedValue(error);
+			await shareAsUrl(deck);
 
-      await shareAsUrl(deck);
+			expect(toasts.error).toHaveBeenCalledWith('Failed to copy URL to clipboard');
+		});
+	});
 
-      expect(toasts.error).toHaveBeenCalledWith('Failed to copy URL to clipboard');
-    });
-  });
+	describe('shareAsJson', () => {
+		let mockElement: HTMLAnchorElement;
+		let setAttributeSpy: ReturnType<typeof vi.spyOn>;
 
-  describe('shareAsJson', () => {
-    let mockElement: HTMLAnchorElement;
-    let setAttributeSpy: ReturnType<typeof vi.spyOn>;
-    
-    beforeEach(() => {
-      // Create a real anchor element with all properties
-      mockElement = document.createElement('a');
-      mockElement.href = '';
-      mockElement.download = '';
-      mockElement.click = vi.fn();
-      // Ensure setAttribute is available as a function and spy on it
-      setAttributeSpy = vi.spyOn(mockElement, 'setAttribute');
-      
-      // Mock document.createElement to return our mock element
-      vi.spyOn(document, 'createElement').mockReturnValue(mockElement);
-      vi.spyOn(document.body, 'appendChild').mockImplementation(() => mockElement);
-      vi.spyOn(document.body, 'removeChild').mockImplementation(() => mockElement);
-    });
+		beforeEach(() => {
+			// Create a real anchor element with all properties
+			mockElement = document.createElement('a');
+			mockElement.href = '';
+			mockElement.download = '';
+			mockElement.click = vi.fn();
+			// Ensure setAttribute is available as a function and spy on it
+			setAttributeSpy = vi.spyOn(mockElement, 'setAttribute');
 
-    it('should download JSON file and show success toast', async () => {
-      const deck = createMockDeck();
+			// Mock document.createElement to return our mock element
+			vi.spyOn(document, 'createElement').mockReturnValue(mockElement);
+			vi.spyOn(document.body, 'appendChild').mockImplementation(() => mockElement);
+			vi.spyOn(document.body, 'removeChild').mockImplementation(() => mockElement);
+		});
 
-      await shareAsJson(deck);
+		it('should download JSON file and show success toast', async () => {
+			const deck = createMockDeck();
 
-      expect(document.createElement).toHaveBeenCalledWith('a');
-      expect(document.body.appendChild).toHaveBeenCalled();
-      expect(document.body.removeChild).toHaveBeenCalled();
-      expect(global.URL.createObjectURL).toHaveBeenCalled();
-      expect(global.URL.revokeObjectURL).toHaveBeenCalled();
-      expect(toasts.success).toHaveBeenCalledWith('JSON file downloaded successfully');
-    });
+			await shareAsJson(deck);
 
-    it('should handle download errors', async () => {
-      const deck = createMockDeck();
-      const error = new Error('Download failed');
+			expect(document.createElement).toHaveBeenCalledWith('a');
+			expect(document.body.appendChild).toHaveBeenCalled();
+			expect(document.body.removeChild).toHaveBeenCalled();
+			expect(global.URL.createObjectURL).toHaveBeenCalled();
+			expect(global.URL.revokeObjectURL).toHaveBeenCalled();
+			expect(toasts.success).toHaveBeenCalledWith('JSON file downloaded successfully');
+		});
 
-      vi.mocked(global.URL.createObjectURL).mockImplementation(() => {
-        throw error;
-      });
+		it('should handle download errors', async () => {
+			const deck = createMockDeck();
+			const error = new Error('Download failed');
 
-      await shareAsJson(deck);
+			vi.mocked(global.URL.createObjectURL).mockImplementation(() => {
+				throw error;
+			});
 
-      expect(toasts.error).toHaveBeenCalledWith('Failed to download JSON file');
-    });
+			await shareAsJson(deck);
 
-    it('should generate correct filename', async () => {
-      const deck = createMockDeck();
-      deck.meta.title = 'My Test Deck!';
-      deck.meta.name = 'My Test Deck!';
+			expect(toasts.error).toHaveBeenCalledWith('Failed to download JSON file');
+		});
 
-      // Test should complete without throwing errors - this is the main requirement
-      await expect(shareAsJson(deck)).resolves.toBeUndefined();
-    });
-  });
+		it('should generate correct filename', async () => {
+			const deck = createMockDeck();
+			deck.meta.title = 'My Test Deck!';
+			deck.meta.name = 'My Test Deck!';
 
-  describe('handleShare', () => {
-    it('should call shareAsUrl when format is url', async () => {
-      const deck = createMockDeck();
-      vi.mocked(generateShareUrl).mockReturnValue('https://example.com/deck');
-      vi.mocked(navigator.clipboard.writeText).mockResolvedValue();
+			// Test should complete without throwing errors - this is the main requirement
+			await expect(shareAsJson(deck)).resolves.toBeUndefined();
+		});
+	});
 
-      await handleShare(deck, 'url', false);
+	describe('handleShare', () => {
+		it('should call shareAsUrl when format is url', async () => {
+			const deck = createMockDeck();
+			vi.mocked(generateShareUrl).mockReturnValue('https://example.com/deck');
+			vi.mocked(navigator.clipboard.writeText).mockResolvedValue();
 
-      expect(navigator.clipboard.writeText).toHaveBeenCalled();
-      expect(toasts.success).toHaveBeenCalledWith('Share URL copied! Send this URL to share your deck.');
-    });
+			await handleShare(deck, 'url', false);
 
-    it.skip('should call shareAsJson when format is json', async () => {
-      const deck = createMockDeck();
-      // Ensure DOM path for download works in test env and spy on creation
-      const realAnchor = document.createElement('a');
-      const createSpy = vi.spyOn(document, 'createElement').mockReturnValue(realAnchor as any);
-      vi.spyOn(document.body, 'appendChild').mockImplementation(() => realAnchor as any);
-      vi.spyOn(document.body, 'removeChild').mockImplementation(() => realAnchor as any);
-      vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => { });
+			expect(navigator.clipboard.writeText).toHaveBeenCalled();
+			expect(toasts.success).toHaveBeenCalledWith(
+				'Share URL copied! Send this URL to share your deck.'
+			);
+		});
 
-      await handleShare(deck, 'json', false);
+		it.skip('should call shareAsJson when format is json', async () => {
+			const deck = createMockDeck();
+			// Ensure DOM path for download works in test env and spy on creation
+			const realAnchor = document.createElement('a');
+			const createSpy = vi.spyOn(document, 'createElement').mockReturnValue(realAnchor as any);
+			vi.spyOn(document.body, 'appendChild').mockImplementation(() => realAnchor as any);
+			vi.spyOn(document.body, 'removeChild').mockImplementation(() => realAnchor as any);
+			vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
 
-      // Fast-path assertion: shareAsJson should create an anchor for download
-      expect(createSpy).toHaveBeenCalledWith('a');
-    });
+			await handleShare(deck, 'json', false);
 
-    it('should show warning when migration is needed', async () => {
-      const deck = createMockDeck();
+			// Fast-path assertion: shareAsJson should create an anchor for download
+			expect(createSpy).toHaveBeenCalledWith('a');
+		});
 
-      await handleShare(deck, 'url', true);
+		it('should show warning when migration is needed', async () => {
+			const deck = createMockDeck();
 
-      expect(toasts.warning).toHaveBeenCalledWith('Please migrate blob-based images to URLs first');
-      expect(navigator.clipboard.writeText).not.toHaveBeenCalled();
-    });
-  });
+			await handleShare(deck, 'url', true);
 
-  describe('BROWSER_LIMITS constant', () => {
-    it('should have expected browser limits', () => {
-      expect(BROWSER_LIMITS['Chrome/Edge']).toBe(32_768);
-      expect(BROWSER_LIMITS['Firefox']).toBe(65_536);
-      expect(BROWSER_LIMITS['Safari']).toBe(80_000);
-      expect(BROWSER_LIMITS['Opera']).toBe(32_768);
-      expect(BROWSER_LIMITS['Mobile Safari']).toBe(64_000);
-      expect(BROWSER_LIMITS['Mobile Chrome']).toBe(32_768);
-    });
-  });
+			expect(toasts.warning).toHaveBeenCalledWith('Please migrate blob-based images to URLs first');
+			expect(navigator.clipboard.writeText).not.toHaveBeenCalled();
+		});
+	});
+
+	describe('BROWSER_LIMITS constant', () => {
+		it('should have expected browser limits', () => {
+			expect(BROWSER_LIMITS['Chrome/Edge']).toBe(32_768);
+			expect(BROWSER_LIMITS['Firefox']).toBe(65_536);
+			expect(BROWSER_LIMITS['Safari']).toBe(80_000);
+			expect(BROWSER_LIMITS['Opera']).toBe(32_768);
+			expect(BROWSER_LIMITS['Mobile Safari']).toBe(64_000);
+			expect(BROWSER_LIMITS['Mobile Chrome']).toBe(32_768);
+		});
+	});
 });

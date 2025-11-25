@@ -15,21 +15,21 @@
 
 /* Core Theme Colors */
 @property --theme-primary {
-  syntax: '<color>';
-  initial-value: #000000;
-  inherits: true;
+	syntax: '<color>';
+	initial-value: #000000;
+	inherits: true;
 }
 
 @property --theme-secondary {
-  syntax: '<color>';
-  initial-value: #333333;
-  inherits: true;
+	syntax: '<color>';
+	initial-value: #333333;
+	inherits: true;
 }
 
 @property --theme-accent {
-  syntax: '<color>';
-  initial-value: #666666;
-  inherits: true;
+	syntax: '<color>';
+	initial-value: #666666;
+	inherits: true;
 }
 
 /* Background Behavior:
@@ -39,364 +39,382 @@
  *   both on screen (over images) and in print
  */
 @property --theme-background {
-  syntax: '<color>';
-  initial-value: transparent;
-  inherits: true;
+	syntax: '<color>';
+	initial-value: transparent;
+	inherits: true;
 }
 
 @property --theme-text {
-  syntax: '<color>';
-  initial-value: #000000;
-  inherits: true;
+	syntax: '<color>';
+	initial-value: #000000;
+	inherits: true;
 }
 
 /* Typography */
 @property --body-line-height {
-  syntax: '<number>';
-  initial-value: 1.2;
-  inherits: true;
+	syntax: '<number>';
+	initial-value: 1.2;
+	inherits: true;
 }
 
 @property --theme-title-font {
-  syntax: '*';
-  initial-value: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  inherits: true;
+	syntax: '*';
+	initial-value:
+		system-ui,
+		-apple-system,
+		BlinkMacSystemFont,
+		'Segoe UI',
+		Roboto,
+		sans-serif;
+	inherits: true;
 }
 
 @property --theme-body-font {
-  syntax: '*';
-  initial-value: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  inherits: true;
+	syntax: '*';
+	initial-value:
+		system-ui,
+		-apple-system,
+		BlinkMacSystemFont,
+		'Segoe UI',
+		Roboto,
+		sans-serif;
+	inherits: true;
 }
 
 @property --theme-title-weight {
-  syntax: '<number>';
-  initial-value: 700;
-  inherits: true;
+	syntax: '<number>';
+	initial-value: 700;
+	inherits: true;
 }
 
 @property --theme-body-weight {
-  syntax: '<number>';
-  initial-value: 400;
-  inherits: true;
+	syntax: '<number>';
+	initial-value: 400;
+	inherits: true;
 }
 
 /* Typography Sizes */
 @property --title-font-size {
-  syntax: '<length-percentage>';
-  initial-value: 22px;
-  inherits: true;
+	syntax: '<length-percentage>';
+	initial-value: 22px;
+	inherits: true;
 }
 
 @property --role-font-size {
-  syntax: '<length-percentage>';
-  initial-value: 16px;
-  inherits: true;
+	syntax: '<length-percentage>';
+	initial-value: 16px;
+	inherits: true;
 }
 
 @property --desc-font-size {
-  syntax: '<length-percentage>';
-  initial-value: 14px;
-  inherits: true;
+	syntax: '<length-percentage>';
+	initial-value: 14px;
+	inherits: true;
 }
 
 @property --trait-font-size {
-  syntax: '<length-percentage>';
-  initial-value: 14px;
-  inherits: true;
+	syntax: '<length-percentage>';
+	initial-value: 14px;
+	inherits: true;
 }
 
 @property --base-font-size {
-  syntax: '<length-percentage>';
-  initial-value: 14px;
-  inherits: true;
+	syntax: '<length-percentage>';
+	initial-value: 14px;
+	inherits: true;
 }
 
 /* Frame Style */
 @property --frame-style {
-  syntax: 'solid | double | dashed | dotted | none';
-  initial-value: solid;
-  inherits: true;
+	syntax: 'solid | double | dashed | dotted | none';
+	initial-value: solid;
+	inherits: true;
 }
 
 @property --frame-width {
-  syntax: '<length>';
-  initial-value: 1px;
-  inherits: true;
+	syntax: '<length>';
+	initial-value: 1px;
+	inherits: true;
 }
 
 @property --frame-opacity {
-  syntax: '<number>';
-  initial-value: 1;
-  inherits: true;
+	syntax: '<number>';
+	initial-value: 1;
+	inherits: true;
 }
 
 /* Divider Style */
 @property --divider-style {
-  syntax: 'solid | double | dashed | dotted | none';
-  initial-value: solid;
-  inherits: true;
+	syntax: 'solid | double | dashed | dotted | none';
+	initial-value: solid;
+	inherits: true;
 }
 
 @property --divider-width {
-  syntax: '<length>';
-  initial-value: 1px;
-  inherits: true;
+	syntax: '<length>';
+	initial-value: 1px;
+	inherits: true;
 }
 
 @property --divider-opacity {
-  syntax: '<number>';
-  initial-value: 0.5;
-  inherits: true;
+	syntax: '<number>';
+	initial-value: 0.5;
+	inherits: true;
 }
 
 /* Text Alignment */
 @property --title-text-align {
-  syntax: 'left | center | right';
-  initial-value: center;
-  inherits: true;
+	syntax: 'left | center | right';
+	initial-value: center;
+	inherits: true;
 }
 
 @property --role-text-align {
-  syntax: 'left | center | right';
-  initial-value: center;
-  inherits: true;
+	syntax: 'left | center | right';
+	initial-value: center;
+	inherits: true;
 }
 
 @property --desc-text-align {
-  syntax: 'left | center | right';
-  initial-value: left;
-  inherits: true;
+	syntax: 'left | center | right';
+	initial-value: left;
+	inherits: true;
 }
 
 /* Decorative Elements */
 @property --show-corner-flourish {
-  syntax: '<integer>';
-  initial-value: 1;
-  inherits: true;
+	syntax: '<integer>';
+	initial-value: 1;
+	inherits: true;
 }
 
 @property --show-dividers {
-  syntax: '<integer>';
-  initial-value: 1;
-  inherits: true;
+	syntax: '<integer>';
+	initial-value: 1;
+	inherits: true;
 }
 
 @property --show-frame {
-  syntax: '<integer>';
-  initial-value: 1;
-  inherits: true;
+	syntax: '<integer>';
+	initial-value: 1;
+	inherits: true;
 }
 
 @property --show-texture {
-  syntax: '<integer>';
-  initial-value: 0;
-  inherits: true;
+	syntax: '<integer>';
+	initial-value: 0;
+	inherits: true;
 }
 
 /* Flourish System */
 @property --flourish-color {
-  syntax: '<color>';
-  initial-value: #000000;
-  inherits: true;
+	syntax: '<color>';
+	initial-value: #000000;
+	inherits: true;
 }
 
 @property --flourish-opacity {
-  syntax: '<number>';
-  initial-value: 0.8;
-  inherits: true;
+	syntax: '<number>';
+	initial-value: 0.8;
+	inherits: true;
 }
 
 @property --flourish-aspect {
-  syntax: '<number>';
-  initial-value: 1;
-  inherits: true;
+	syntax: '<number>';
+	initial-value: 1;
+	inherits: true;
 }
 
 /* Portrait Flourishes */
 @property --portrait-flourish-opacity {
-  syntax: '<number>';
-  initial-value: 0.6;
-  inherits: true;
+	syntax: '<number>';
+	initial-value: 0.6;
+	inherits: true;
 }
 
 @property --portrait-flourish-aspect {
-  syntax: '<number>';
-  initial-value: 1;
-  inherits: true;
+	syntax: '<number>';
+	initial-value: 1;
+	inherits: true;
 }
 
 /* Content Flourishes */
 @property --content-flourish-opacity {
-  syntax: '<number>';
-  initial-value: 0.2;
-  inherits: true;
+	syntax: '<number>';
+	initial-value: 0.2;
+	inherits: true;
 }
 
 @property --content-flourish-aspect {
-  syntax: '<number>';
-  initial-value: 1;
-  inherits: true;
+	syntax: '<number>';
+	initial-value: 1;
+	inherits: true;
 }
 
 /* Content Box Style */
 @property --content-box-radius {
-  syntax: '<length>';
-  initial-value: 2px;
-  inherits: true;
+	syntax: '<length>';
+	initial-value: 2px;
+	inherits: true;
 }
 
 @property --content-box-border-width {
-  syntax: '<length>';
-  initial-value: 0px;
-  inherits: true;
+	syntax: '<length>';
+	initial-value: 0px;
+	inherits: true;
 }
 
 @property --content-box-shadow {
-  syntax: '*';
-  initial-value: none;
-  inherits: true;
+	syntax: '*';
+	initial-value: none;
+	inherits: true;
 }
 
 /* Role-specific Typography */
 @property --role-font-family {
-  syntax: '*';
-  initial-value: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  inherits: true;
+	syntax: '*';
+	initial-value:
+		system-ui,
+		-apple-system,
+		BlinkMacSystemFont,
+		'Segoe UI',
+		Roboto,
+		sans-serif;
+	inherits: true;
 }
 
 /* Theme Text Colors */
 @property --theme-text-faded {
-  syntax: '<color>';
-  initial-value: #666666;
-  inherits: true;
+	syntax: '<color>';
+	initial-value: #666666;
+	inherits: true;
 }
 
 /* Content Box Style */
 @property --content-box-bg {
-  syntax: '<color>';
-  initial-value: #ffffff;
-  inherits: true;
+	syntax: '<color>';
+	initial-value: #ffffff;
+	inherits: true;
 }
 
 /* Flourish Positioning System */
 @property --flourish-content-opacity {
-  syntax: '<number>';
-  initial-value: 0.8;
-  inherits: true;
+	syntax: '<number>';
+	initial-value: 0.8;
+	inherits: true;
 }
 
 @property --flourish-content-size {
-  syntax: '<length>';
-  initial-value: 32px;
-  inherits: true;
+	syntax: '<length>';
+	initial-value: 32px;
+	inherits: true;
 }
 
 @property --flourish-content-top-left-opacity {
-  syntax: '<number>';
-  initial-value: 0.8;
-  inherits: true;
+	syntax: '<number>';
+	initial-value: 0.8;
+	inherits: true;
 }
 
 @property --flourish-content-top-right-opacity {
-  syntax: '<number>';
-  initial-value: 0.8;
-  inherits: true;
+	syntax: '<number>';
+	initial-value: 0.8;
+	inherits: true;
 }
 
 @property --flourish-content-bottom-left-opacity {
-  syntax: '<number>';
-  initial-value: 0.8;
-  inherits: true;
+	syntax: '<number>';
+	initial-value: 0.8;
+	inherits: true;
 }
 
 @property --flourish-content-bottom-right-opacity {
-  syntax: '<number>';
-  initial-value: 0.8;
-  inherits: true;
+	syntax: '<number>';
+	initial-value: 0.8;
+	inherits: true;
 }
 
 @property --flourish-content-top-left-size {
-  syntax: '<length>';
-  initial-value: 32px;
-  inherits: true;
+	syntax: '<length>';
+	initial-value: 32px;
+	inherits: true;
 }
 
 @property --flourish-content-top-right-size {
-  syntax: '<length>';
-  initial-value: 32px;
-  inherits: true;
+	syntax: '<length>';
+	initial-value: 32px;
+	inherits: true;
 }
 
 @property --flourish-content-bottom-left-size {
-  syntax: '<length>';
-  initial-value: 32px;
-  inherits: true;
+	syntax: '<length>';
+	initial-value: 32px;
+	inherits: true;
 }
 
 @property --flourish-content-bottom-right-size {
-  syntax: '<length>';
-  initial-value: 32px;
-  inherits: true;
+	syntax: '<length>';
+	initial-value: 32px;
+	inherits: true;
 }
 
 /* Portrait Flourish Positioning */
 @property --flourish-portrait-opacity {
-  syntax: '<number>';
-  initial-value: 0.8;
-  inherits: true;
+	syntax: '<number>';
+	initial-value: 0.8;
+	inherits: true;
 }
 
 @property --flourish-portrait-size {
-  syntax: '<length>';
-  initial-value: 32px;
-  inherits: true;
+	syntax: '<length>';
+	initial-value: 32px;
+	inherits: true;
 }
 
 @property --flourish-portrait-top-left-opacity {
-  syntax: '<number>';
-  initial-value: 0.8;
-  inherits: true;
+	syntax: '<number>';
+	initial-value: 0.8;
+	inherits: true;
 }
 
 @property --flourish-portrait-top-right-opacity {
-  syntax: '<number>';
-  initial-value: 0.8;
-  inherits: true;
+	syntax: '<number>';
+	initial-value: 0.8;
+	inherits: true;
 }
 
 @property --flourish-portrait-bottom-left-opacity {
-  syntax: '<number>';
-  initial-value: 0.8;
-  inherits: true;
+	syntax: '<number>';
+	initial-value: 0.8;
+	inherits: true;
 }
 
 @property --flourish-portrait-bottom-right-opacity {
-  syntax: '<number>';
-  initial-value: 0.8;
-  inherits: true;
+	syntax: '<number>';
+	initial-value: 0.8;
+	inherits: true;
 }
 
 @property --flourish-portrait-top-left-size {
-  syntax: '<length>';
-  initial-value: 32px;
-  inherits: true;
+	syntax: '<length>';
+	initial-value: 32px;
+	inherits: true;
 }
 
 @property --flourish-portrait-top-right-size {
-  syntax: '<length>';
-  initial-value: 32px;
-  inherits: true;
+	syntax: '<length>';
+	initial-value: 32px;
+	inherits: true;
 }
 
 @property --flourish-portrait-bottom-left-size {
-  syntax: '<length>';
-  initial-value: 32px;
-  inherits: true;
+	syntax: '<length>';
+	initial-value: 32px;
+	inherits: true;
 }
 
 @property --flourish-portrait-bottom-right-size {
-  syntax: '<length>';
-  initial-value: 32px;
-  inherits: true;
-} 
+	syntax: '<length>';
+	initial-value: 32px;
+	inherits: true;
+}

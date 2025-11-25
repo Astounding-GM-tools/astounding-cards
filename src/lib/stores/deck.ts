@@ -28,226 +28,225 @@ export const currentDeck = writable<Deck | null>(null);
 export const currentDeckId = writable<string | null>(null);
 
 export async function saveCurrentDeck() {
-    const deck = get(currentDeck);
-    if (deck) {
-        try {
-            await putDeck(deck);
-        } catch (e) {
-            const error = e instanceof Error ? e.message : String(e);
-            toasts.error(`Failed to save deck: ${error}`);
-        }
-    }
+	const deck = get(currentDeck);
+	if (deck) {
+		try {
+			await putDeck(deck);
+		} catch (e) {
+			const error = e instanceof Error ? e.message : String(e);
+			toasts.error(`Failed to save deck: ${error}`);
+		}
+	}
 }
 
 // Add new card to current deck
 export async function addCard() {
-  const deck = get(currentDeck);
-  if (!deck) return;
+	const deck = get(currentDeck);
+	if (!deck) return;
 
-  if (browser) {
-    const currentSize = new TextEncoder().encode(deckToUrl(deck)).length;
-    if (currentSize > 30000) {
-      toasts.error('URL size limit approaching. Consider creating a new deck.');
-      return;
-    }
-  }
+	if (browser) {
+		const currentSize = new TextEncoder().encode(deckToUrl(deck)).length;
+		if (currentSize > 30000) {
+			toasts.error('URL size limit approaching. Consider creating a new deck.');
+			return;
+		}
+	}
 
-  const newCard: Card = {
-    id: crypto.randomUUID(),
-    name: "New Card",
-    role: "Role",
-    image: null,
-    imageBlob: undefined,
-    traits: ["Notable: Add a distinctive feature", "Property: Add a key characteristic"],
-    secrets: ["Hidden: Add a concealed aspect", "Plot: Add a story element"],
-    desc: "Add a description",
-    type: "character",
-    stat: { type: "character", value: "" }
-  };
+	const newCard: Card = {
+		id: crypto.randomUUID(),
+		name: 'New Card',
+		role: 'Role',
+		image: null,
+		imageBlob: undefined,
+		traits: ['Notable: Add a distinctive feature', 'Property: Add a key characteristic'],
+		secrets: ['Hidden: Add a concealed aspect', 'Plot: Add a story element'],
+		desc: 'Add a description',
+		type: 'character',
+		stat: { type: 'character', value: '' }
+	};
 
-  const newDeck: Deck = {
-    ...deck,
-    meta: {
-      ...deck.meta,
-      lastEdited: Date.now()
-    },
-    cards: [...deck.cards, newCard]
-  };
+	const newDeck: Deck = {
+		...deck,
+		meta: {
+			...deck.meta,
+			lastEdited: Date.now()
+		},
+		cards: [...deck.cards, newCard]
+	};
 
-  currentDeck.set(newDeck);
-  try {
-    await putDeck(newDeck);
-  } catch(e) {
-      const error = e instanceof Error ? e.message : String(e);
-      toasts.error(`Failed to save new card: ${error}`);
-  };
+	currentDeck.set(newDeck);
+	try {
+		await putDeck(newDeck);
+	} catch (e) {
+		const error = e instanceof Error ? e.message : String(e);
+		toasts.error(`Failed to save new card: ${error}`);
+	}
 }
 
 // Remove cards from current deck
 export async function deleteCards(deckId: string, cardIds: string[]) {
-    const deck = await getDeck(deckId);
-    if (!deck) {
-        toasts.error('Deck not found');
-        return;
-    }
+	const deck = await getDeck(deckId);
+	if (!deck) {
+		toasts.error('Deck not found');
+		return;
+	}
 
-    const updatedDeck = {
-        ...deck,
-        meta: {
-            ...deck.meta,
-            lastEdited: Date.now()
-        },
-        cards: deck.cards.filter(c => !cardIds.includes(c.id))
-    };
+	const updatedDeck = {
+		...deck,
+		meta: {
+			...deck.meta,
+			lastEdited: Date.now()
+		},
+		cards: deck.cards.filter((c) => !cardIds.includes(c.id))
+	};
 
-    await putDeck(updatedDeck);
+	await putDeck(updatedDeck);
 
-    if (get(currentDeck)?.id === deckId) {
-        currentDeck.set(updatedDeck);
-    }
+	if (get(currentDeck)?.id === deckId) {
+		currentDeck.set(updatedDeck);
+	}
 }
 
 export async function deleteDeck(deckId: string) {
-    const current = get(currentDeck);
-    if (current?.id === deckId) {
-        currentDeckId.set(null);
-    }
-    await dbDeleteDeck(deckId);
+	const current = get(currentDeck);
+	if (current?.id === deckId) {
+		currentDeckId.set(null);
+	}
+	await dbDeleteDeck(deckId);
 }
 
 // URL serialization
 export function deckToUrl(deck: Deck): string {
-    if(!browser) return "";
-    const data = JSON.stringify(deck);
-    return `${window.location.origin}?deck=${encodeURIComponent(data)}`;
+	if (!browser) return '';
+	const data = JSON.stringify(deck);
+	return `${window.location.origin}?deck=${encodeURIComponent(data)}`;
 }
 
 export function deckFromUrl(url: URL): Deck | null {
-  try {
-    const data = url.searchParams.get('deck');
-    if (!data) return null;
-    
-    const deck = JSON.parse(decodeURIComponent(data));
-    
-    const errors = validateDeck(deck);
-    if (errors.length > 0) {
-      toasts.error(`Invalid deck data in URL: ${errors.map(e => e.message).join(', ')}`);
-      return null;
-    }
-    
-    return deck;
-  } catch (error) {
-    toasts.error('Invalid deck data in URL');
-    return null;
-  }
+	try {
+		const data = url.searchParams.get('deck');
+		if (!data) return null;
+
+		const deck = JSON.parse(decodeURIComponent(data));
+
+		const errors = validateDeck(deck);
+		if (errors.length > 0) {
+			toasts.error(`Invalid deck data in URL: ${errors.map((e) => e.message).join(', ')}`);
+			return null;
+		}
+
+		return deck;
+	} catch (error) {
+		toasts.error('Invalid deck data in URL');
+		return null;
+	}
 }
 
 export function setCurrentDeckId(id: string | null) {
-  currentDeckId.set(id);
+	currentDeckId.set(id);
 }
 
 // Duplicate an existing deck with all cards and images
 export async function duplicateDeck(deck: Deck, newName?: string): Promise<Deck> {
-  const newDeck: Deck = {
-    id: crypto.randomUUID(), // New UUID for the deck
-    meta: {
-      name: newName || `${deck.meta.name} (Copy)`,
-      theme: deck.meta.theme,
-      cardSize: deck.meta.cardSize,
-      lastEdited: Date.now(),
-      createdAt: Date.now()
-    },
-    cards: deck.cards.map(card => {
-      // Explicitly build card object to avoid DataCloneError with spread operators
-      return {
-        id: crypto.randomUUID(), // New UUID for each card
-        name: card.name,
-        role: card.role,
-        image: card.image,
-        imageBlob: card.imageBlob, // Preserves images in duplicated cards
-        traits: [...card.traits], // Deep copy arrays
-        secrets: [...card.secrets], // Deep copy arrays
-        desc: card.desc,
-        type: card.type,
-        theme: card.theme,
-        stats: card.stats ? [...card.stats] : undefined, // Deep copy new stats array
-        stat: card.stat ? structuredClone(card.stat) : undefined, // Legacy
-        gameStats: card.gameStats ? structuredClone(card.gameStats) : undefined
-      };
-    })
-  };
+	const newDeck: Deck = {
+		id: crypto.randomUUID(), // New UUID for the deck
+		meta: {
+			name: newName || `${deck.meta.name} (Copy)`,
+			theme: deck.meta.theme,
+			cardSize: deck.meta.cardSize,
+			lastEdited: Date.now(),
+			createdAt: Date.now()
+		},
+		cards: deck.cards.map((card) => {
+			// Explicitly build card object to avoid DataCloneError with spread operators
+			return {
+				id: crypto.randomUUID(), // New UUID for each card
+				name: card.name,
+				role: card.role,
+				image: card.image,
+				imageBlob: card.imageBlob, // Preserves images in duplicated cards
+				traits: [...card.traits], // Deep copy arrays
+				secrets: [...card.secrets], // Deep copy arrays
+				desc: card.desc,
+				type: card.type,
+				theme: card.theme,
+				stats: card.stats ? [...card.stats] : undefined, // Deep copy new stats array
+				stat: card.stat ? structuredClone(card.stat) : undefined, // Legacy
+				gameStats: card.gameStats ? structuredClone(card.gameStats) : undefined
+			};
+		})
+	};
 
-  await putDeck(newDeck, true); // Allow empty decks when duplicating
-  return newDeck;
+	await putDeck(newDeck, true); // Allow empty decks when duplicating
+	return newDeck;
 }
-
 
 // Copy cards to a deck
 export async function copyCardsTo(
-  cards: Card[],
-  targetDeckId: string | 'new',
-  newDeckName?: string
+	cards: Card[],
+	targetDeckId: string | 'new',
+	newDeckName?: string
 ): Promise<Deck> {
-  let finalTargetDeckId = targetDeckId;
-  let createdNewDeck = false;
-  
-  // Create new deck if needed
-  if (targetDeckId === 'new') {
-    const newDeck: Deck = {
-      id: crypto.randomUUID(),
-      meta: {
-        name: newDeckName || 'New Deck',
-        theme: 'classic',
-        cardSize: 'poker',
-        lastEdited: Date.now(),
-        createdAt: Date.now()
-      },
-      cards: []
-    };
-    finalTargetDeckId = newDeck.id;
-    await putDeck(newDeck, true);
-    createdNewDeck = true;
-  }
+	let finalTargetDeckId = targetDeckId;
+	let createdNewDeck = false;
 
-  // Load target deck
-  const targetDeck = await getDeck(finalTargetDeckId);
-  if (!targetDeck) throw new Error('Target deck not found');
+	// Create new deck if needed
+	if (targetDeckId === 'new') {
+		const newDeck: Deck = {
+			id: crypto.randomUUID(),
+			meta: {
+				name: newDeckName || 'New Deck',
+				theme: 'classic',
+				cardSize: 'poker',
+				lastEdited: Date.now(),
+				createdAt: Date.now()
+			},
+			cards: []
+		};
+		finalTargetDeckId = newDeck.id;
+		await putDeck(newDeck, true);
+		createdNewDeck = true;
+	}
 
-  // Copy cards with new IDs (using explicit property assignment to avoid DataCloneError)
-  const copiedCards = cards.map(card => {
-    return {
-      id: crypto.randomUUID(),
-      name: card.name,
-      role: card.role,
-      image: card.image,
-      imageBlob: card.imageBlob, // Include imageBlob for copying images
-      traits: [...card.traits],
-      secrets: [...card.secrets],
-      desc: card.desc,
-      type: card.type,
-      theme: card.theme,
-      stats: card.stats ? [...card.stats] : undefined, // Deep copy new stats array
-      stat: card.stat ? structuredClone(card.stat) : undefined, // Legacy
-      gameStats: card.gameStats ? structuredClone(card.gameStats) : undefined
-    };
-  });
+	// Load target deck
+	const targetDeck = await getDeck(finalTargetDeckId);
+	if (!targetDeck) throw new Error('Target deck not found');
 
-  // Add to target deck
-  const updatedDeck = {
-    ...targetDeck,
-    meta: {
-      ...targetDeck.meta,
-      lastEdited: Date.now()
-    },
-    cards: [...targetDeck.cards, ...copiedCards]
-  };
+	// Copy cards with new IDs (using explicit property assignment to avoid DataCloneError)
+	const copiedCards = cards.map((card) => {
+		return {
+			id: crypto.randomUUID(),
+			name: card.name,
+			role: card.role,
+			image: card.image,
+			imageBlob: card.imageBlob, // Include imageBlob for copying images
+			traits: [...card.traits],
+			secrets: [...card.secrets],
+			desc: card.desc,
+			type: card.type,
+			theme: card.theme,
+			stats: card.stats ? [...card.stats] : undefined, // Deep copy new stats array
+			stat: card.stat ? structuredClone(card.stat) : undefined, // Legacy
+			gameStats: card.gameStats ? structuredClone(card.gameStats) : undefined
+		};
+	});
 
-  await putDeck(updatedDeck);
-  
-  // Refresh deck list if we created a new deck
-  if (createdNewDeck) {
-    await deckList.load();
-  }
-  
-  return updatedDeck;
+	// Add to target deck
+	const updatedDeck = {
+		...targetDeck,
+		meta: {
+			...targetDeck.meta,
+			lastEdited: Date.now()
+		},
+		cards: [...targetDeck.cards, ...copiedCards]
+	};
+
+	await putDeck(updatedDeck);
+
+	// Refresh deck list if we created a new deck
+	if (createdNewDeck) {
+		await deckList.load();
+	}
+
+	return updatedDeck;
 }

@@ -1,363 +1,411 @@
 <script lang="ts">
-    import MobileCardList from '$lib/next/components/page/MobileCardList.svelte';
-    import AppHeader from '$lib/next/components/nav/Header.svelte';
-    import Dialog from '$lib/next/components/dialog/Dialog.svelte';
-    import Card from '$lib/next/components/card/Card.svelte';
-    import CardFrontContent from '$lib/next/components/card/CardFrontContent.svelte';
-    import CardBackContent from '$lib/next/components/card/CardBackContent.svelte';
+	import { onMount } from 'svelte';
+	import { goto } from '$app/navigation';
+	import DeckViewer from '$lib/next/components/page/DeckViewer.svelte';
+	import DeckPreview from '$lib/next/components/preview/DeckPreview.svelte';
+	import MainHeader from '$lib/next/components/nav/MainHeader.svelte';
+	import Dialog from '$lib/next/components/dialog/Dialog.svelte';
+	import { dialogStore } from '$lib/next/components/dialog/dialogStore.svelte.js';
+	import { CardEditDialog } from '$lib/next/components/dialogs/index.js';
+	import { nextDeckStore } from '$lib/next/stores/deckStore.svelte.js';
+	import { nextDevStore } from '$lib/next/stores/devStore.svelte.js';
+	import { nextDb } from '$lib/next/stores/database.js';
+	import { toasts } from '$lib/stores/toast.js';
+	import { generateId } from '$lib/next/utils/idUtils.js';
+	import {
+		getStarted,
+		howItWorks,
+		joinUss,
+		whatIsAstounding
+	} from '$lib/components/content/content';
+	import Content from '$lib/components/content/Content.svelte';
+	import type { Deck } from '$lib/next/types/deck';
+	import { deckToCard } from '$lib/next/utils/deckToCard';
 
-    import { nextDeckStore } from '$lib/next/stores/deckStore.svelte.js';
-    import { nextDevStore } from '$lib/next/stores/devStore.svelte.js';
-    import { importFromCurrentUrl } from '$lib/next/utils/shareUrlUtils.js';
-    import { toasts } from '$lib/stores/toast.js';
-    import { onMount } from 'svelte';
+	let heroDeck = $state<any | null>(null); // Most liked deck from API
+	let featuredDecksData = $state<any[]>([]); // Top 4-8 most liked decks (excluding #1)
+	let isLoadingHero = $state(true);
+	let isLoadingFeatured = $state(true);
 
-    let isInitializing = $state(true);
-    let showCardBacks = $state(true);
-    let isPrintMode = $state(false);
-    let printEventTimeout: number | null = null;
+	// Transform featured decks into a "meta-deck" - a deck where each card represents a deck!
+	let featuredDecksMeta = $derived<Deck>({
+		id: 'featured',
+		meta: {
+			title: 'Featured Decks',
+			theme: 'classic',
+			imageStyle: 'classic',
+			layout: 'poker',
+			lastEdited: Date.now(),
+			createdAt: Date.now()
+		},
+		cards: featuredDecksData.map((deck) => deckToCard(deck))
+	});
 
-    // Get deck and derived state
-    let deck = $derived(nextDeckStore.deck);
-    let cards = $derived(deck?.cards || []);
-    let deckTitle = $derived(deck?.meta.title || 'Sample Deck');
-    let layout = $derived(deck?.meta.layout || 'tarot');
-    
-    // Simple card count for UI logic
-    let cardCount = $derived(cards?.length || 0);
-    
-    // Handle card backs visibility toggle from header
-    function handleCardBacksToggle(event: CustomEvent<boolean>) {
-        showCardBacks = event.detail;
-    }
-    
-    
-    // Working pagination function (from old PagedCards)
-    function getPagedCards(cards: any[], layout: string) {
-        const cardsPerPage = layout === 'poker' ? 9 : 4;
-        const pages = [];
-        
-        for (let i = 0; i < cards.length; i += cardsPerPage) {
-            pages.push(cards.slice(i, i + cardsPerPage));
-        }
-        
-        return pages;
-    }
+	// Transform API deck to Deck type with limited cards
+	let heroDeckPreview = $derived<Deck | null>(
+		heroDeck
+			? {
+					id: heroDeck.id,
+					meta: {
+						title: heroDeck.title,
+						theme: heroDeck.theme,
+						imageStyle: heroDeck.imageStyle || 'classic',
+						layout: heroDeck.layout || 'poker',
+						lastEdited: new Date(heroDeck.updated_at).getTime(),
+						createdAt: new Date(heroDeck.created_at).getTime()
+					},
+					cards: heroDeck.cards.slice(0, 4) // Only first 4 cards for hero
+				}
+			: null
+	);
 
-    async function loadSampleData() {
-        try {
-            return await nextDevStore.setupTestEnvironment();
-        } catch (error) {
-            console.error('Error loading sample data:', error);
-            return false;
-        }
-    }
+	async function loadHeroDeck() {
+		try {
+			const response = await fetch('/api/decks/featured?limit=1');
+			if (!response.ok) {
+				throw new Error('Failed to load featured deck');
+			}
 
-    async function initializePage() {
-        try {
-            // First priority: Check if there's a share URL to import
-            const importedDeck = importFromCurrentUrl();
-            if (importedDeck) {
-                await nextDeckStore.loadDeck(importedDeck);
-                toasts.success(`🎉 Deck "${importedDeck.meta.title}" imported from URL!`);
-                // Clear the URL hash to prevent re-importing
-                // Commented out to preserve URL during merge workflow
-                // if (typeof window !== 'undefined') {
-                //     window.history.replaceState({}, '', window.location.pathname);
-                // }
-                isInitializing = false;
-                return;
-            }
-            
-            // Check if we already have a deck loaded
-            if (nextDeckStore.deck) {
-                isInitializing = false;
-                return;
-            }
-            
-            // Second priority: Load the most recent deck from database
-            const hasExistingDeck = await nextDeckStore.loadMostRecent();
-            
-            // Last resort: Create sample data if no existing deck
-            if (!hasExistingDeck) {
-                const success = await loadSampleData();
-                if (!success) {
-                    console.warn('Failed to load sample data, but continuing...');
-                }
-            }
-            
-        } catch (error) {
-            console.error('Error during page initialization:', error);
-            toasts.error('Failed to initialize page');
-        } finally {
-            // Always set initializing to false, regardless of success/failure
-            isInitializing = false;
-        }
-    }
+			const result = await response.json();
+			if (result.decks && result.decks.length > 0) {
+				heroDeck = result.decks[0];
+			} else {
+				// Fallback: load user's most recent deck
+				await loadLocalFallbackDeck();
+			}
+		} catch (error) {
+			console.error('Failed to load hero deck:', error);
+			// Fallback: load user's most recent deck
+			await loadLocalFallbackDeck();
+		} finally {
+			isLoadingHero = false;
+		}
+	}
 
-    // Print event handlers for layout switching
-    function handleBeforePrint() {
-        // Clear any pending timeout
-        if (printEventTimeout) {
-            clearTimeout(printEventTimeout);
-            printEventTimeout = null;
-        }
-        
-        if (!isPrintMode) {
-            isPrintMode = true;
-        }
-    }
-    
-    function handleAfterPrint() {
-        // Clear any existing timeout
-        if (printEventTimeout) {
-            clearTimeout(printEventTimeout);
-        }
-        
-        // Use a longer delay to ensure print dialog is fully closed
-        printEventTimeout = setTimeout(() => {
-            isPrintMode = false;
-            printEventTimeout = null;
-        }, 200); // Increased delay
-    }
-    
-    onMount(() => {
-        initializePage();
-        
-        // Set up print event listeners (no media query - it conflicts)
-        if (typeof window !== 'undefined') {
-            window.addEventListener('beforeprint', handleBeforePrint);
-            window.addEventListener('afterprint', handleAfterPrint);
-            
-            
-            // Cleanup on component destroy
-            return () => {
-                window.removeEventListener('beforeprint', handleBeforePrint);
-                window.removeEventListener('afterprint', handleAfterPrint);
-            };
-        }
-    });
+	async function loadLocalFallbackDeck() {
+		try {
+			let deck = nextDeckStore.deck;
+
+			if (!deck) {
+				const hasExisting = await nextDeckStore.loadMostRecent();
+				if (!hasExisting) {
+					await nextDevStore.setupTestEnvironment();
+					deck = nextDeckStore.deck;
+				} else {
+					deck = nextDeckStore.deck;
+				}
+			}
+
+			if (deck) {
+				// Transform local deck to API format
+				heroDeck = {
+					id: deck.id,
+					slug: deck.id,
+					title: deck.meta.title,
+					theme: deck.meta.theme,
+					imageStyle: deck.meta.imageStyle,
+					layout: deck.meta.layout,
+					cards: deck.cards,
+					like_count: 0,
+					created_at: new Date(deck.meta.createdAt).toISOString(),
+					updated_at: new Date(deck.meta.lastEdited).toISOString()
+				};
+			}
+		} catch (error) {
+			console.error('Failed to load fallback deck:', error);
+		}
+	}
+
+	async function loadFeaturedDecks() {
+		try {
+			// Exclude the hero deck if we have one
+			const excludeParam = heroDeck ? `&exclude=${heroDeck.id}` : '';
+			const response = await fetch(`/api/decks/featured?limit=8${excludeParam}`);
+
+			if (!response.ok) {
+				throw new Error('Failed to load featured decks');
+			}
+
+			const result = await response.json();
+			if (result.decks && result.decks.length > 0) {
+				featuredDecksData = result.decks;
+			}
+		} catch (error) {
+			console.error('Failed to load featured decks:', error);
+		} finally {
+			isLoadingFeatured = false;
+		}
+	}
+
+	function handleViewFullDeck() {
+		if (heroDeck) {
+			goto(`/${heroDeck.slug}`);
+		}
+	}
+
+	function handlePreviewDeck(deckId: string) {
+		// Find the deck by ID in featuredDecksData
+		const deck = featuredDecksData.find((d) => d.id === deckId);
+		if (deck) {
+			goto(`/${deck.slug}`);
+		}
+	}
+
+	async function handleEditHeroCard(cardId: string) {
+		// Import the deck silently if needed and open the card editor
+		if (!heroDeck) return;
+
+		try {
+			// Simple logic: Do I have this deck ID locally?
+			const existingLocal = await nextDb.getDeck(heroDeck.id);
+
+			if (existingLocal) {
+				// I already have this deck - just load it
+				await nextDeckStore.loadDeck(existingLocal.id);
+			} else {
+				// I don't have it - import it (keeping original title and dates)
+				const now = Date.now();
+				const originalCreatedAt = heroDeck.created_at
+					? new Date(heroDeck.created_at).getTime()
+					: now;
+
+				const newDeck: Deck = {
+					id: heroDeck.id, // Keep the original ID!
+					meta: {
+						title: heroDeck.title, // Keep original title!
+						theme: heroDeck.theme,
+						imageStyle: heroDeck.imageStyle || 'classic',
+						layout: heroDeck.layout || 'poker',
+						lastEdited: now,
+						createdAt: originalCreatedAt, // Preserve original creation date
+						creator_id: heroDeck.user_id, // Capture creator
+						creator_name: heroDeck.creator_name || 'Unknown',
+						remix_of: heroDeck.id // Track remix lineage (published deck ID)
+					},
+					cards: heroDeck.cards
+				};
+
+				// Save to database
+				await nextDb.upsertDeck(newDeck);
+
+				// Load the deck
+				await nextDeckStore.loadDeck(newDeck.id);
+
+				// Show toast on first import
+				toasts.success(`✅ Deck imported to your library!`);
+			}
+
+			// Find the card in the deck by matching the original cardId
+			const deck = nextDeckStore.deck;
+			if (deck) {
+				const cardIndex = heroDeck.cards.findIndex((c: any) => c.id === cardId);
+				if (cardIndex !== -1 && deck.cards[cardIndex]) {
+					// Open the card editor with the corresponding card
+					dialogStore.setContent(CardEditDialog, { cardId: deck.cards[cardIndex].id });
+				}
+			}
+		} catch (err) {
+			console.error('Edit error:', err);
+			toasts.error(err instanceof Error ? err.message : 'Failed to open editor');
+		}
+	}
+
+	async function handleCreateDeck() {
+		try {
+			const newDeck = await nextDeckStore.createNewDeck();
+			if (newDeck) {
+				goto(`/${newDeck.id}`);
+			}
+		} catch (error) {
+			console.error('Failed to create deck:', error);
+		}
+	}
+
+	onMount(async () => {
+		await loadHeroDeck();
+		await loadFeaturedDecks(); // Load after hero so we can exclude it
+	});
 </script>
 
-<section class="deck">
-    <AppHeader on:cardBacksToggle={handleCardBacksToggle} />
-    
-    
-    {#if isInitializing}
-        <p>Initializing...</p>
-    {:else if nextDeckStore.error}
-        <p style="color: red;">❌ {nextDeckStore.error}</p>
-    {:else if !deck && nextDeckStore.isLoading}
-        <p>⏳ {nextDeckStore.loadingMessage}</p>
-    {:else if cardCount === 0}
-        <p>No cards found. <button onclick={() => nextDevStore.setupTestEnvironment()}>Load Sample Data</button></p>
-    {:else if deck}
-        <!-- Show loading indicator but keep content visible during updates -->
-        {#if nextDeckStore.isLoading}
-            <div class="loading-overlay">⏳ {nextDeckStore.loadingMessage}</div>
-        {/if}
-        
-        <!-- Conditional layout based on print mode -->
-        {#if isPrintMode}
-            <!-- Print layout: use working PagedCards component -->
-            <div class="print-layout">
-                {#each getPagedCards(cards, layout) as page, pageIndex}
-                    <!-- Front page -->
-                    <div class="page" data-layout={layout} class:last-page={!showCardBacks && pageIndex === getPagedCards(cards, layout).length - 1}>
-                        <div class="card-grid">
-                            {#each page as card (card.id)}
-                                <Card cardId={card.id}>
-                                    <CardFrontContent {card} />
-                                </Card>
-                            {/each}
-                        </div>
-                    </div>
-                    
-                    <!-- Back page (if enabled) -->
-                    {#if showCardBacks}
-                        <div class="page" data-layout={layout} class:last-page={pageIndex === getPagedCards(cards, layout).length - 1}>
-                            <div class="card-grid back-grid">
-                                {#each page as card (card.id)}
-                                    <Card cardId={card.id}>
-                                        <CardBackContent {card} />
-                                    </Card>
-                                {/each}
-                            </div>
-                        </div>
-                    {/if}
-                {/each}
-            </div>
-        {:else}
-            <!-- Default layout: mobile-friendly card list -->
-            <MobileCardList
-                {cards}
-                {layout}
-                {showCardBacks}
-            />
-        {/if}
-    {/if}
-</section>
+<MainHeader title="Astounding Cards" />
 
-<!-- Dialog system for editing cards -->
+<div class="landing-page">
+	<!-- Hero Section: Most Liked Deck -->
+	{#if isLoadingHero}
+		<div class="cards-hero">
+			<div class="loading-state">Loading featured deck...</div>
+		</div>
+	{:else if heroDeckPreview}
+		<div class="cards-hero">
+			<DeckPreview deck={heroDeckPreview} onEdit={handleEditHeroCard} />
+		</div>
+
+		<div class="hero-actions">
+			<button class="cta-primary" onclick={handleViewFullDeck}>
+				View Full Deck ({heroDeck?.cardCount || heroDeck?.cards?.length || 0} cards)
+			</button>
+			<button class="cta-secondary" onclick={handleCreateDeck}> Create Your Own </button>
+		</div>
+	{/if}
+
+	<!-- Marketing Content Placeholders -->
+
+	<section class="content-section">
+		<div class="section-inner">
+			<Content blocks={whatIsAstounding} />
+		</div>
+	</section>
+
+	<section class="content-section alt">
+		<div class="section-inner">
+			<Content blocks={howItWorks} />
+		</div>
+	</section>
+
+	<section class="content-section">
+		<div class="section-inner">
+			<h2>Popular Decks</h2>
+			{#if isLoadingFeatured}
+				<div class="loading-state">Loading popular decks...</div>
+			{:else if featuredDecksData.length > 0}
+				<div class="featured-decks-container">
+					<DeckPreview deck={featuredDecksMeta} onEdit={handlePreviewDeck} mode="deck" />
+				</div>
+			{:else}
+				<div class="empty-state">
+					<p>No published decks yet. Be the first to share your creation!</p>
+				</div>
+			{/if}
+		</div>
+	</section>
+
+	<section class="content-section alt">
+		<div class="section-inner">
+			<Content blocks={joinUss} />
+		</div>
+	</section>
+
+	<section class="content-section">
+		<div class="section-inner">
+			<Content blocks={getStarted} />
+		</div>
+	</section>
+</div>
+
 <Dialog />
 
 <style>
-    .deck {
-        margin: 20px auto;
-        position: relative;
-    }
-    
-    
-    /* Working print layout CSS (from PagedCards) */
-    .print-layout .page {
-        width: 210mm;
-        height: 297mm;
-        margin: 0 auto 20mm;
-        padding: 10mm;
-        background: white;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        position: relative;
-        page-break-after: always;
-        box-sizing: border-box;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    
-    .print-layout .card-grid {
-        width: 100%;
-        height: 100%;
-        display: grid;
-        gap: 0;
-    }
-    
-    /* Tarot layout: 2x2 grid */
-    .print-layout .page[data-layout="tarot"] .card-grid {
-        grid-template-columns: repeat(2, 1fr);
-        grid-template-rows: repeat(2, 1fr);
-    }
-    
-    /* Poker layout: 3x3 grid */
-    .print-layout .page[data-layout="poker"] .card-grid {
-        grid-template-columns: repeat(3, 1fr);
-        grid-template-rows: repeat(3, 1fr);
-    }
-    
-    /* Back page - reverse for double-sided printing */
-    .print-layout .back-grid {
-        direction: rtl;
-    }
-    
-    .print-layout .back-grid :global(.card) {
-        direction: ltr;
-    }
-    
-    /* Remove page break from last page to prevent blank page */
-    .print-layout .page.last-page {
-        page-break-after: auto !important;
-        margin-bottom: 0 !important;
-    }
-    
-    /* Ensure crop marks use border-box sizing in print layout */
-    .print-layout :global(.crop-mark) {
-        box-sizing: border-box !important;
-    }
-    
-    @media print {
-        .print-layout .page {
-            width: auto;
-            height: auto;
-            min-height: 100vh;
-            margin: 0;
-            box-shadow: none;
-        }
-        
-        /* Ensure last page doesn't create blank page */
-        .print-layout .page.last-page {
-            page-break-after: auto !important;
-        }
-        
-        /* CROP MARKS: Show all crop marks that touch page edges - ONLY WHEN PRINTING */
-        
-        /* TAROT LAYOUT (2x2 grid) */
-        /* Top edge: cards 1,2 show both top crop marks */
-        .print-layout .page[data-layout="tarot"] :global(.card:nth-child(-n+2) .crop-mark.top-left),
-        .print-layout .page[data-layout="tarot"] :global(.card:nth-child(-n+2) .crop-mark.top-right) {
-            display: block;
-        }
-        
-        /* Bottom edge: cards 3,4 show both bottom crop marks */
-        .print-layout .page[data-layout="tarot"] :global(.card:nth-child(n+3) .crop-mark.bottom-left),
-        .print-layout .page[data-layout="tarot"] :global(.card:nth-child(n+3) .crop-mark.bottom-right) {
-            display: block;
-        }
-        
-        /* Left edge: cards 1,3 show both left crop marks */
-        .print-layout .page[data-layout="tarot"] :global(.card:nth-child(odd) .crop-mark.top-left),
-        .print-layout .page[data-layout="tarot"] :global(.card:nth-child(odd) .crop-mark.bottom-left) {
-            display: block;
-        }
-        
-        /* Right edge: cards 2,4 show both right crop marks */
-        .print-layout .page[data-layout="tarot"] :global(.card:nth-child(even) .crop-mark.top-right),
-        .print-layout .page[data-layout="tarot"] :global(.card:nth-child(even) .crop-mark.bottom-right) {
-            display: block;
-        }
-        
-        /* POKER LAYOUT (3x3 grid) */
-        /* Top edge: cards 1,2,3 show both top crop marks */
-        .print-layout .page[data-layout="poker"] :global(.card:nth-child(-n+3) .crop-mark.top-left),
-        .print-layout .page[data-layout="poker"] :global(.card:nth-child(-n+3) .crop-mark.top-right) {
-            display: block;
-        }
-        
-        /* Bottom edge: cards 7,8,9 show both bottom crop marks */
-        .print-layout .page[data-layout="poker"] :global(.card:nth-child(n+7) .crop-mark.bottom-left),
-        .print-layout .page[data-layout="poker"] :global(.card:nth-child(n+7) .crop-mark.bottom-right) {
-            display: block;
-        }
-        
-        /* Left edge: cards 1,4,7 show both left crop marks */
-        .print-layout .page[data-layout="poker"] :global(.card:nth-child(3n+1) .crop-mark.top-left),
-        .print-layout .page[data-layout="poker"] :global(.card:nth-child(3n+1) .crop-mark.bottom-left) {
-            display: block;
-        }
-        
-        /* Right edge: cards 3,6,9 show both right crop marks */
-        .print-layout .page[data-layout="poker"] :global(.card:nth-child(3n) .crop-mark.top-right),
-        .print-layout .page[data-layout="poker"] :global(.card:nth-child(3n) .crop-mark.bottom-right) {
-            display: block;
-        }
-    }
-    
-    .loading-overlay {
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: rgba(0, 0, 0, 0.8);
-        color: white;
-        padding: 8px 16px;
-        border-radius: 4px;
-        z-index: 1000;
-        font-size: 14px;
-    }
-    :global(.page), :global(.page *) {
-        box-sizing: border-box;
-    }
+	.landing-page {
+		min-height: 100vh;
+		background: white;
+	}
 
-    :global(body) {
-        margin: 0;
-        padding: 0;
-    }
-    
-    /* Print styles - hide header when printing */
-    @media print {
-        :global(.app-header) {
-            display: none !important;
-        }
-        
-        .deck {
-            margin: 0;
-        }
-    }
+	/* Cards hero - just the cards, no embellishments */
+	.cards-hero {
+		padding: 2rem;
+		max-width: 1400px;
+		margin: 0 auto;
+	}
+
+	.cards-hero :global(.deck-preview) {
+		margin: 0 auto;
+	}
+
+	/* CTAs */
+	.hero-actions {
+		display: flex;
+		gap: 1rem;
+		justify-content: center;
+		padding: 2rem;
+		max-width: 1400px;
+		margin: 0 auto;
+	}
+
+	.cta-primary,
+	.cta-secondary {
+		padding: 1rem 2rem;
+		font-size: 1rem;
+		font-weight: 500;
+		border-radius: 6px;
+		border: none;
+		cursor: pointer;
+		transition: all 0.15s ease;
+	}
+
+	.cta-primary {
+		background: var(--ui-text, #1e293b);
+		color: white;
+	}
+
+	.cta-primary:hover {
+		background: var(--ui-muted, #64748b);
+	}
+
+	.cta-secondary {
+		background: white;
+		color: var(--ui-text, #1e293b);
+		border: 2px solid var(--ui-border, #e2e8f0);
+	}
+
+	.cta-secondary:hover {
+		border-color: var(--ui-text, #1e293b);
+	}
+
+	/* Content Sections */
+	.content-section {
+		padding: 4rem 2rem;
+	}
+
+	.content-section.alt {
+		background: var(--ui-hover-bg, #f8fafc);
+	}
+
+	.section-inner {
+		max-width: 1200px;
+		margin: 0 auto;
+	}
+
+	.content-section h2 {
+		font-size: 2.5rem;
+		margin: 0 0 1.5rem;
+		text-align: center;
+		color: var(--ui-text, #1e293b);
+	}
+
+	.placeholder {
+		padding: 3rem;
+		background: var(--ui-border, #e2e8f0);
+		border-radius: 8px;
+		text-align: center;
+		color: var(--ui-muted, #64748b);
+		font-style: italic;
+	}
+
+	.loading-state {
+		padding: 3rem;
+		text-align: center;
+		color: var(--ui-muted, #64748b);
+	}
+
+	.empty-state {
+		padding: 3rem;
+		text-align: center;
+		color: var(--ui-muted, #64748b);
+	}
+
+	.featured-decks-container {
+		margin-top: 2rem;
+	}
+
+	/* Responsive */
+	@media (max-width: 768px) {
+		.hero-actions {
+			flex-direction: column;
+		}
+
+		.cta-primary,
+		.cta-secondary {
+			width: 100%;
+		}
+	}
 </style>

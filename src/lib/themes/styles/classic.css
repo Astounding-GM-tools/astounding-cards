@@ -1,82 +1,82 @@
 /* Classic Theme - Clean, minimalist design focused on readability */
 /* This theme uses all default values as defined in properties.css */
-[data-theme="classic"] {
-  /* Theme Colors */
-  --theme-primary: #000000;
-  --theme-secondary: #333333;
-  --theme-accent: #666666;
-  --theme-text: #000000;
-  --theme-background: white;  /* White background for print */
-  --theme-text-faded: #666666;
+[data-theme='classic'] {
+	/* Theme Colors */
+	--theme-primary: #000000;
+	--theme-secondary: #333333;
+	--theme-accent: #666666;
+	--theme-text: #000000;
+	--theme-background: white; /* White background for print */
+	--theme-text-faded: #666666;
 
-  /* Typography */
-  --theme-title-font: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --theme-body-font: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --theme-title-weight: 700;
-  --theme-body-weight: 400;
+	/* Typography */
+	--theme-title-font: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+	--theme-body-font: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+	--theme-title-weight: 700;
+	--theme-body-weight: 400;
 
-  /* Text Alignment */
-  --title-text-align: center;
-  --role-text-align: center;
-  --desc-text-align: left;
+	/* Text Alignment */
+	--title-text-align: center;
+	--role-text-align: center;
+	--desc-text-align: left;
 
-  /* Decorative Elements */
-  --show-corner-flourish: 1;
-  --show-dividers: 1;
-  --show-frame: 1;
-  --show-texture: 0;
+	/* Decorative Elements */
+	--show-corner-flourish: 1;
+	--show-dividers: 1;
+	--show-frame: 1;
+	--show-texture: 0;
 
-  /* Frame Style */
-  --frame-style: solid;
-  --frame-width: 1px;
-  --frame-opacity: 0.8;
+	/* Frame Style */
+	--frame-style: solid;
+	--frame-width: 1px;
+	--frame-opacity: 0.8;
 
-  /* Divider Style */
-  --divider-style: solid;
-  --divider-width: 1px;
-  --divider-opacity: 0.4;
+	/* Divider Style */
+	--divider-style: solid;
+	--divider-width: 1px;
+	--divider-opacity: 0.4;
 
-  /* Flourish System */
-  --flourish-color: currentColor;
-  --flourish-opacity: 0.4;          /* Even more subtle for classic */
-  --flourish-size: 1.25rem;         /* Much smaller base size */
-  --flourish-aspect: 1;
+	/* Flourish System */
+	--flourish-color: currentColor;
+	--flourish-opacity: 0.4; /* Even more subtle for classic */
+	--flourish-size: 1.25rem; /* Much smaller base size */
+	--flourish-aspect: 1;
 
-  /* Portrait Flourishes */
-  --portrait-flourish-size: min(25%, 3rem);  /* Significantly smaller */
-  --portrait-flourish-opacity: 0.3;          /* Very subtle */
-  --portrait-flourish-aspect: 1;
+	/* Portrait Flourishes */
+	--portrait-flourish-size: min(25%, 3rem); /* Significantly smaller */
+	--portrait-flourish-opacity: 0.3; /* Very subtle */
+	--portrait-flourish-aspect: 1;
 
-  /* Content Flourishes */
-  --content-flourish-size: 1rem;    /* Minimal size */
-  --content-flourish-opacity: 0.2;  /* Very subtle */
-  --content-flourish-aspect: 1;
+	/* Content Flourishes */
+	--content-flourish-size: 1rem; /* Minimal size */
+	--content-flourish-opacity: 0.2; /* Very subtle */
+	--content-flourish-aspect: 1;
 
-  /* Individual Flourish Controls */
-  --flourish-content-top-left-opacity: var(--content-flourish-opacity);
-  --flourish-content-top-right-opacity: var(--content-flourish-opacity);
-  --flourish-content-bottom-left-opacity: var(--content-flourish-opacity);
-  --flourish-content-bottom-right-opacity: var(--content-flourish-opacity);
+	/* Individual Flourish Controls */
+	--flourish-content-top-left-opacity: var(--content-flourish-opacity);
+	--flourish-content-top-right-opacity: var(--content-flourish-opacity);
+	--flourish-content-bottom-left-opacity: var(--content-flourish-opacity);
+	--flourish-content-bottom-right-opacity: var(--content-flourish-opacity);
 
-  --flourish-portrait-top-left-opacity: var(--portrait-flourish-opacity);
-  --flourish-portrait-top-right-opacity: var(--portrait-flourish-opacity);
-  --flourish-portrait-bottom-left-opacity: var(--portrait-flourish-opacity);
-  --flourish-portrait-bottom-right-opacity: var(--portrait-flourish-opacity);
+	--flourish-portrait-top-left-opacity: var(--portrait-flourish-opacity);
+	--flourish-portrait-top-right-opacity: var(--portrait-flourish-opacity);
+	--flourish-portrait-bottom-left-opacity: var(--portrait-flourish-opacity);
+	--flourish-portrait-bottom-right-opacity: var(--portrait-flourish-opacity);
 
-  /* Content Box Style */
-  --content-box-radius: 2mm;
-  --content-box-border-width: 1px;
-  --content-box-shadow: none;
-  --content-box-bg: white;
+	/* Content Box Style */
+	--content-box-radius: 2mm;
+	--content-box-border-width: 1px;
+	--content-box-shadow: none;
+	--content-box-bg: white;
 
-  /* Typography Sizes */
-  --title-font-size: 32px;  /* 2em */
-  --role-font-size: 22px;  /* 1.4em */
-  --trait-font-size: 18px; /* 1.1em */
-  --base-font-size: 16px;  /* 1cqw */
+	/* Typography Sizes */
+	--title-font-size: 32px; /* 2em */
+	--role-font-size: 22px; /* 1.4em */
+	--trait-font-size: 18px; /* 1.1em */
+	--base-font-size: 16px; /* 1cqw */
 }
 
 /* Apply divider opacity to traits */
-[data-theme="classic"] .traits {
-  opacity: var(--divider-opacity);
-} 
+[data-theme='classic'] .traits {
+	opacity: var(--divider-opacity);
+}

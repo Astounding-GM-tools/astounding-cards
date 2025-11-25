@@ -6,13 +6,17 @@
  * @returns HTML string with formatted traits
  */
 export function formatTraits(traits: string[]): string {
-  return traits?.map(trait => {
-    const [label, ...rest] = trait.split(':');
-    if (rest.length > 0) {
-      return `<strong class="trait-label">${label.trim()}:</strong> ${rest.join(':').trim()}`;
-    }
-    return trait;
-  }).join('\n') || '';
+	return (
+		traits
+			?.map((trait) => {
+				const [label, ...rest] = trait.split(':');
+				if (rest.length > 0) {
+					return `<strong class="trait-label">${label.trim()}:</strong> ${rest.join(':').trim()}`;
+				}
+				return trait;
+			})
+			.join('\n') || ''
+	);
 }
 
 /**
@@ -21,11 +25,11 @@ export function formatTraits(traits: string[]): string {
  * @returns Array of trait strings
  */
 export function parseTraits(html: string): string[] {
-  return html
-    .replace(/<strong[^>]*>|<\/strong>/g, '')
-    .split('\n')
-    .map(s => s.trim())
-    .filter(s => s.length > 0);
+	return html
+		.replace(/<strong[^>]*>|<\/strong>/g, '')
+		.split('\n')
+		.map((s) => s.trim())
+		.filter((s) => s.length > 0);
 }
 
 /**
@@ -34,13 +38,17 @@ export function parseTraits(html: string): string[] {
  * @returns HTML string with formatted secrets
  */
 export function formatSecrets(secrets: string[]): string {
-  return secrets?.map(secret => {
-    const [label, ...rest] = secret.split(':');
-    if (rest.length > 0) {
-      return `<strong class="secret-label">${label.trim()}:</strong> ${rest.join(':').trim()}`;
-    }
-    return secret;
-  }).join('\n') || '';
+	return (
+		secrets
+			?.map((secret) => {
+				const [label, ...rest] = secret.split(':');
+				if (rest.length > 0) {
+					return `<strong class="secret-label">${label.trim()}:</strong> ${rest.join(':').trim()}`;
+				}
+				return secret;
+			})
+			.join('\n') || ''
+	);
 }
 
 /**
@@ -49,11 +57,11 @@ export function formatSecrets(secrets: string[]): string {
  * @returns Array of secret strings
  */
 export function parseSecrets(html: string): string[] {
-  return html
-    .replace(/<strong[^>]*>|<\/strong>/g, '')
-    .split('\n')
-    .map(s => s.trim())
-    .filter(s => s.length > 0);
+	return html
+		.replace(/<strong[^>]*>|<\/strong>/g, '')
+		.split('\n')
+		.map((s) => s.trim())
+		.filter((s) => s.length > 0);
 }
 
 /**
@@ -63,7 +71,7 @@ export function parseSecrets(html: string): string[] {
  * @returns Updated traits array
  */
 export function addTrait(traits: string[], newTrait: string = 'Label: Description'): string[] {
-  return [...(traits || []), newTrait];
+	return [...(traits || []), newTrait];
 }
 
 /**
@@ -73,5 +81,5 @@ export function addTrait(traits: string[], newTrait: string = 'Label: Descriptio
  * @returns Updated secrets array
  */
 export function addSecret(secrets: string[], newSecret: string = 'Label: Description'): string[] {
-  return [...(secrets || []), newSecret];
+	return [...(secrets || []), newSecret];
 }

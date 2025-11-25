@@ -4,20 +4,20 @@ import type { Deck, CardSize } from '$lib/types';
  * State interface for DeckSelector component
  */
 export interface DeckSelectorState {
-  showThemeSelect: boolean;
-  showNewDeckDialog: boolean;
-  newDeckName: string;
+	showThemeSelect: boolean;
+	showNewDeckDialog: boolean;
+	newDeckName: string;
 }
 
 /**
  * Creates initial state for the DeckSelector component
  */
 export function createDeckSelectorState(): DeckSelectorState {
-  return {
-    showThemeSelect: false,
-    showNewDeckDialog: false,
-    newDeckName: ''
-  };
+	return {
+		showThemeSelect: false,
+		showNewDeckDialog: false,
+		newDeckName: ''
+	};
 }
 
 /**
@@ -27,18 +27,18 @@ export function createDeckSelectorState(): DeckSelectorState {
  * @param handlers Object with callback functions
  */
 export function handleDeckDialogKeydown(
-  event: KeyboardEvent,
-  newDeckName: string,
-  handlers: {
-    onEnter: () => void;
-    onEscape: () => void;
-  }
+	event: KeyboardEvent,
+	newDeckName: string,
+	handlers: {
+		onEnter: () => void;
+		onEscape: () => void;
+	}
 ) {
-  if (event.key === 'Enter' && newDeckName.trim()) {
-    handlers.onEnter();
-  } else if (event.key === 'Escape') {
-    handlers.onEscape();
-  }
+	if (event.key === 'Enter' && newDeckName.trim()) {
+		handlers.onEnter();
+	} else if (event.key === 'Escape') {
+		handlers.onEscape();
+	}
 }
 
 /**
@@ -47,17 +47,17 @@ export function handleDeckDialogKeydown(
  * @returns A new deck object
  */
 export function createNewDeckObject(name: string): Deck {
-  return {
-    id: crypto.randomUUID(),
-    meta: {
-      name: name.trim(),
-      theme: 'classic',
-      cardSize: 'poker' as CardSize,
-      lastEdited: Date.now(),
-      createdAt: Date.now()
-    },
-    cards: []  // Initialize with empty array of cards
-  };
+	return {
+		id: crypto.randomUUID(),
+		meta: {
+			name: name.trim(),
+			theme: 'classic',
+			cardSize: 'poker' as CardSize,
+			lastEdited: Date.now(),
+			createdAt: Date.now()
+		},
+		cards: [] // Initialize with empty array of cards
+	};
 }
 
 /**
@@ -66,7 +66,7 @@ export function createNewDeckObject(name: string): Deck {
  * @returns Sorted array of decks
  */
 export function sortDecksByLastEdited(decks: Deck[]): Deck[] {
-  return [...decks].sort((a, b) => b.meta.lastEdited - a.meta.lastEdited);
+	return [...decks].sort((a, b) => b.meta.lastEdited - a.meta.lastEdited);
 }
 
 /**
@@ -75,9 +75,9 @@ export function sortDecksByLastEdited(decks: Deck[]): Deck[] {
  * @returns Display information for the card size
  */
 export function getCardSizeInfo(cardSize: CardSize): string {
-  return cardSize === 'poker' 
-    ? 'Standard playing card size, 9 cards per page'
-    : 'Larger cards with more readable text, 4 cards per page';
+	return cardSize === 'poker'
+		? 'Standard playing card size, 9 cards per page'
+		: 'Larger cards with more readable text, 4 cards per page';
 }
 
 /**
@@ -86,11 +86,11 @@ export function getCardSizeInfo(cardSize: CardSize): string {
  * @returns Updated state with dialog reset
  */
 export function resetNewDeckDialog(state: DeckSelectorState): DeckSelectorState {
-  return {
-    ...state,
-    showNewDeckDialog: false,
-    newDeckName: ''
-  };
+	return {
+		...state,
+		showNewDeckDialog: false,
+		newDeckName: ''
+	};
 }
 
 /**
@@ -99,10 +99,10 @@ export function resetNewDeckDialog(state: DeckSelectorState): DeckSelectorState 
  * @returns Updated state with dialog opened
  */
 export function openNewDeckDialog(state: DeckSelectorState): DeckSelectorState {
-  return {
-    ...state,
-    showNewDeckDialog: true
-  };
+	return {
+		...state,
+		showNewDeckDialog: true
+	};
 }
 
 /**
@@ -112,10 +112,10 @@ export function openNewDeckDialog(state: DeckSelectorState): DeckSelectorState {
  * @returns Updated state
  */
 export function setThemeSelectVisible(state: DeckSelectorState, show: boolean): DeckSelectorState {
-  return {
-    ...state,
-    showThemeSelect: show
-  };
+	return {
+		...state,
+		showThemeSelect: show
+	};
 }
 
 /**
@@ -125,8 +125,8 @@ export function setThemeSelectVisible(state: DeckSelectorState, show: boolean): 
  * @returns Updated state
  */
 export function updateNewDeckName(state: DeckSelectorState, name: string): DeckSelectorState {
-  return {
-    ...state,
-    newDeckName: name
-  };
+	return {
+		...state,
+		newDeckName: name
+	};
 }

@@ -10,180 +10,226 @@
 
 /* Card dimensions and spacing */
 @property --card-padding {
-  syntax: '<length>';
-  initial-value: 3mm;
-  inherits: true;
+	syntax: '<length>';
+	initial-value: 3mm;
+	inherits: true;
 }
 
 @property --page-margin {
-  syntax: '<length>';
-  initial-value: 4mm;
-  inherits: true;
+	syntax: '<length>';
+	initial-value: 4mm;
+	inherits: true;
 }
 
 @property --content-gap {
-  syntax: '<length>';
-  initial-value: 2mm;
-  inherits: true;
+	syntax: '<length>';
+	initial-value: 2mm;
+	inherits: true;
 }
 
 @property --page-gap {
-  syntax: '<length>';
-  initial-value: 32px;  /* 2rem = 32px */
-  inherits: true;
+	syntax: '<length>';
+	initial-value: 32px;
+	/* 2rem = 32px */
+	inherits: true;
+}
+
+@property --page-max-width {
+	syntax: '<length>';
+	initial-value: 1400px;
+	inherits: true;
 }
 
 /* Theme-specific colors (for cards only) */
 @property --content-bg {
-  syntax: '<color>';
-  initial-value: white;
-  inherits: true;
+	syntax: '<color>';
+	initial-value: white;
+	inherits: true;
 }
 
 @property --content-text {
-  syntax: '<color>';
-  initial-value: black;
-  inherits: true;
+	syntax: '<color>';
+	initial-value: black;
+	inherits: true;
 }
 
 @property --content-opacity {
-  syntax: '<number>';
-  initial-value: 1;
-  inherits: true;
+	syntax: '<number>';
+	initial-value: 1;
+	inherits: true;
 }
 
 @property --border-color {
-  syntax: '<color>';
-  initial-value: #ddd;
-  inherits: true;
+	syntax: '<color>';
+	initial-value: #ddd;
+	inherits: true;
 }
 
 /* Base theme variables */
 :root {
-  /* Layout */
-  --card-padding: 3mm;
-  --page-margin: 4mm;
-  --content-gap: 2mm;
-  --page-gap: 32px;  /* 2rem = 32px */
-  
-  /* Theme colors (for cards) */
-  --content-bg: white;
-  --content-text: black;
-  --content-opacity: 1;
-  --border-color: #ddd;
-  
-  /* Typography */
-  --base-font-size: 14px;
-  --title-font-size: 22px;
-  --role-font-size: 16px;
-  --desc-font-size: 14px;
-  --trait-font-size: 14px;
-  --ui-font-size: 14px;
-  --body-line-height: 1.2;
+	/* Layout */
+	--card-padding: 3mm;
+	--page-margin: 4mm;
+	--content-gap: 2mm;
+	--page-gap: 32px;
+	/* 2rem = 32px */
 
-  /* Layout constants */
-  --card-width: 63.5mm;  /* Poker card width */
-  --card-height: 88.9mm; /* Poker card height */
-  --card-aspect: calc(var(--card-height) / var(--card-width));
+	/* Theme colors (for cards) */
+	--content-bg: white;
+	--content-text: black;
+	--content-opacity: 1;
+	--border-color: #ddd;
 
-  /* Page styles (for cards) */
-  --page-bg: white;
-  --page-shadow: 0 0 10px rgba(0,0,0,0.1);
+	/* Typography */
+	--base-font-size: 14px;
+	--title-font-size: 22px;
+	--role-font-size: 16px;
+	--desc-font-size: 14px;
+	--trait-font-size: 14px;
+	--ui-font-size: 14px;
+	--body-line-height: 1.2;
 
-  /* UI styles (constant, not affected by theme) */
-  --ui-bg: white;
-  --ui-border: #e0e0e0;
-  --ui-hover-bg: #f5f5f5;
-  --ui-active-bg: #e0e0e0;
-  --ui-text: #333;
-  --ui-muted: #666;
-  
-  /* UI Typography */
-  --ui-font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --ui-font-size: 0.9rem;
-  --ui-title-size: 1.2rem;
-  
-  /* Theme Typography (default values) */
-  --theme-title-font: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --theme-body-font: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --theme-title-weight: 700;
-  --theme-body-weight: 400;
-  --role-font-family: var(--theme-body-font);
-  
-  /* Layout constants */
-  --ui-spacing: 0.75rem;
+	/* Layout constants */
+	--card-width: 63.5mm;
+	/* Poker card width */
+	--card-height: 88.9mm;
+	/* Poker card height */
+	--card-aspect: calc(var(--card-height) / var(--card-width));
 
-  /* Button styles (constant) */
-  --button-bg: white;
-  --button-text: #333;
-  --button-border: #e0e0e0;
-  --button-hover-bg: #f5f5f5;
-  --button-active-bg: #e0e0e0;
-  --button-primary-bg: #1976d2;
-  --button-primary-text: white;
-  --button-primary-hover: #1565c0;
+	/* Page styles (for cards) */
+	--page-bg: white;
+	--page-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 
-  /* Toast styles (constant) */
-  --toast-bg: white;
-  --toast-text: #333;
-  --toast-success: #4caf50;
-  --toast-error: #f44336;
-  --toast-info: #2196f3;
-  --toast-warning: #ff9800;
+	/* UI styles (constant, not affected by theme) */
+	--ui-bg: white;
+	--ui-border: #e0e0e0;
+	--ui-hover-bg: #f5f5f5;
+	--ui-active-bg: #e0e0e0;
+	--ui-text: #333;
+	--ui-muted: #666;
 
-  /* Dialog styles (constant) */
-  --dialog-bg: white;
-  --dialog-border: #e0e0e0;
-  --dialog-shadow: 0 4px 6px rgba(0,0,0,0.1);
-  --dialog-overlay: rgba(0,0,0,0.5);
+	/* UI Typography */
+	--ui-font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+	--ui-font-size: 0.9rem;
+	--ui-title-size: 1.2rem;
+
+	/* Theme Typography (default values) */
+	--theme-title-font: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+	--theme-body-font: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+	--theme-title-weight: 700;
+	--theme-body-weight: 400;
+	--role-font-family: var(--theme-body-font);
+
+	/* Layout constants */
+	--ui-spacing: 0.75rem;
+
+	/* Button styles (constant) */
+	--button-bg: white;
+	--button-text: #333;
+	--button-border: #e0e0e0;
+	--button-hover-bg: #f5f5f5;
+	--button-active-bg: #e0e0e0;
+	--button-primary-bg: #1976d2;
+	--button-primary-text: white;
+	--button-primary-hover: #1565c0;
+
+	/* Toast styles (constant) */
+	--toast-bg: white;
+	--toast-text: #333;
+	--toast-success: #4caf50;
+	--toast-error: #f44336;
+	--toast-info: #2196f3;
+	--toast-warning: #ff9800;
+
+	/* Alert/Notification variants (used across InfoBox, Pill, ActionButton, Toast) */
+	/* Success - Green */
+	--alert-success: #16a34a;
+	--alert-success-bg: rgba(34, 197, 94, 0.08);
+	--alert-success-border: rgba(34, 197, 94, 0.3);
+	--alert-success-text: #166534;
+	--alert-success-text-strong: #14532d;
+
+	/* Info - Blue */
+	--alert-info: #2563eb;
+	--alert-info-bg: rgba(59, 130, 246, 0.08);
+	--alert-info-border: rgba(59, 130, 246, 0.3);
+	--alert-info-text: #1e40af;
+	--alert-info-text-strong: #1e3a8a;
+
+	/* Warning - Amber/Yellow */
+	--alert-warning: #d97706;
+	--alert-warning-bg: linear-gradient(135deg, rgba(251, 191, 36, 0.1) 0%, rgba(251, 191, 36, 0.05) 100%);
+	--alert-warning-border: #fbbf24;
+	--alert-warning-text: #78350f;
+	--alert-warning-text-strong: #92400e;
+
+	/* Danger - Red */
+	--alert-danger: #dc2626;
+	--alert-danger-bg: rgba(239, 68, 68, 0.08);
+	--alert-danger-border: rgba(239, 68, 68, 0.3);
+	--alert-danger-text: #991b1b;
+	--alert-danger-text-strong: #7f1d1d;
+
+	/* Neutral - Gray */
+	--alert-neutral: #64748b;
+	--alert-neutral-bg: rgba(148, 163, 184, 0.08);
+	--alert-neutral-border: rgba(148, 163, 184, 0.3);
+	--alert-neutral-text: #475569;
+	--alert-neutral-text-strong: #334155;
+
+	/* Dialog styles (constant) */
+	--dialog-bg: white;
+	--dialog-border: #e0e0e0;
+	--dialog-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+	--dialog-overlay: rgba(0, 0, 0, 0.5);
 }
 
 /* Theme overrides - ONLY affect card-specific variables */
-:root[data-theme="artNouveau"] {
-  --content-bg: #F8F4E9;
-  --content-text: #2C2C2C;
-  --border-color: #2C5530;
+:root[data-theme='artNouveau'] {
+	--content-bg: #f8f4e9;
+	--content-text: #2c2c2c;
+	--border-color: #2c5530;
 }
 
-:root[data-theme="bauhaus"] {
-  --content-bg: #FFFFFF;
-  --content-text: #000000;
-  --border-color: #1E56B8;
+:root[data-theme='bauhaus'] {
+	--content-bg: #ffffff;
+	--content-text: #000000;
+	--border-color: #1e56b8;
 }
 
-:root[data-theme="medieval"] {
-  --content-bg: #F4E4BC;
-  --content-text: #2C1810;
-  --border-color: #8B0000;
+:root[data-theme='medieval'] {
+	--content-bg: #f4e4bc;
+	--content-text: #2c1810;
+	--border-color: #8b0000;
 }
 
-:root[data-theme="elfin"] {
-  --content-bg: #F5F9F2;
-  --content-text: #2C3E50;
-  --border-color: #4B6B55;
+:root[data-theme='elfin'] {
+	--content-bg: #f5f9f2;
+	--content-text: #2c3e50;
+	--border-color: #4b6b55;
 }
 
-:root[data-theme="cyberpunk"] {
-  --content-bg: #0D0221;
-  --content-text: #FFFFFF;
-  --content-opacity: 0.8;
-  --border-color: #FF0055;
+:root[data-theme='cyberpunk'] {
+	--content-bg: #0d0221;
+	--content-text: #ffffff;
+	--content-opacity: 0.8;
+	--border-color: #ff0055;
 }
 
-:root[data-theme="corporate"] {
-  --content-bg: #FFFFFF;
-  --content-text: #212121;
-  --border-color: #1A237E;
+:root[data-theme='corporate'] {
+	--content-bg: #ffffff;
+	--content-text: #212121;
+	--border-color: #1a237e;
 }
 
-:root[data-theme="tradingCard"] {
-  --content-bg: #F5F5F5;
-  --content-text: #212121;
-  --border-color: #1B5E20;
+:root[data-theme='tradingCard'] {
+	--content-bg: #f5f5f5;
+	--content-text: #212121;
+	--border-color: #1b5e20;
 }
 
-:root[data-theme="vintage"] {
-  --content-bg: #FFFDE7;
-  --content-text: #212121;
-  --border-color: #F57C00;
-} 
+:root[data-theme='vintage'] {
+	--content-bg: #fffde7;
+	--content-text: #212121;
+	--border-color: #f57c00;
+}

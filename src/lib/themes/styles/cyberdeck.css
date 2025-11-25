@@ -1,86 +1,86 @@
 /* Cyberdeck Theme - High-tech aesthetic with digital elements */
-[data-theme="cyberdeck"] {
-  /* Theme Colors */
-  --theme-primary: #00b341;     /* Darker matrix green for better print contrast */
-  --theme-secondary: #1a1a1a;   /* Dark gray instead of pure black */
-  --theme-accent: #0098b8;      /* Darker neon blue for better print contrast */
-  --theme-text: #1a1a1a;        /* Dark gray text */
-  --theme-background: white;     /* White background for print */
-  --theme-text-faded: #4d4d4d;  /* Medium gray for secondary text */
+[data-theme='cyberdeck'] {
+	/* Theme Colors */
+	--theme-primary: #00b341; /* Darker matrix green for better print contrast */
+	--theme-secondary: #1a1a1a; /* Dark gray instead of pure black */
+	--theme-accent: #0098b8; /* Darker neon blue for better print contrast */
+	--theme-text: #1a1a1a; /* Dark gray text */
+	--theme-background: white; /* White background for print */
+	--theme-text-faded: #4d4d4d; /* Medium gray for secondary text */
 
-  /* Typography */
-  --theme-title-font: Orbitron, sans-serif;
-  --theme-body-font: "Share Tech Mono", monospace;
-  --theme-title-weight: 700;
-  --theme-body-weight: 400;
-  --role-font-family: var(--theme-title-font);  /* Use Orbitron for roles too */
+	/* Typography */
+	--theme-title-font: Orbitron, sans-serif;
+	--theme-body-font: 'Share Tech Mono', monospace;
+	--theme-title-weight: 700;
+	--theme-body-weight: 400;
+	--role-font-family: var(--theme-title-font); /* Use Orbitron for roles too */
 
-  /* Text Alignment */
-  --title-text-align: right;
-  --role-text-align: right;
-  --desc-text-align: left;
+	/* Text Alignment */
+	--title-text-align: right;
+	--role-text-align: right;
+	--desc-text-align: left;
 
-  /* Decorative Elements */
-  --show-corner-flourish: 1;
-  --show-dividers: 1;
-  --show-frame: 1;
-  --show-texture: 0;
+	/* Decorative Elements */
+	--show-corner-flourish: 1;
+	--show-dividers: 1;
+	--show-frame: 1;
+	--show-texture: 0;
 
-  /* Frame Style */
-  --frame-style: solid;
-  --frame-width: 1px;          /* Thinner border for less ink */
-  --frame-opacity: 0.8;
+	/* Frame Style */
+	--frame-style: solid;
+	--frame-width: 1px; /* Thinner border for less ink */
+	--frame-opacity: 0.8;
 
-  /* Divider Style */
-  --divider-style: solid;
-  --divider-width: 1px;
-  --divider-opacity: 0.4;
+	/* Divider Style */
+	--divider-style: solid;
+	--divider-width: 1px;
+	--divider-opacity: 0.4;
 
-  /* Flourish System */
-  --flourish-color: var(--theme-primary);
-  --flourish-opacity: 0.6;      /* Reduced opacity for less ink */
-  --flourish-size: 2.5rem;
-  --flourish-aspect: 1;
+	/* Flourish System */
+	--flourish-color: var(--theme-primary);
+	--flourish-opacity: 0.6; /* Reduced opacity for less ink */
+	--flourish-size: 2.5rem;
+	--flourish-aspect: 1;
 
-  /* Portrait Flourishes */
-  --portrait-flourish-size: min(35%, 5rem);
-  --portrait-flourish-opacity: 0.4;  /* Reduced opacity for less ink */
-  --portrait-flourish-aspect: 1;
+	/* Portrait Flourishes */
+	--portrait-flourish-size: min(35%, 5rem);
+	--portrait-flourish-opacity: 0.4; /* Reduced opacity for less ink */
+	--portrait-flourish-aspect: 1;
 
-  /* Content Flourishes */
-  --content-flourish-size: 2rem;
-  --content-flourish-opacity: 0.3;   /* Reduced opacity for less ink */
-  --content-flourish-aspect: 1;
+	/* Content Flourishes */
+	--content-flourish-size: 2rem;
+	--content-flourish-opacity: 0.3; /* Reduced opacity for less ink */
+	--content-flourish-aspect: 1;
 
-  /* Individual Flourish Controls */
-  --flourish-content-top-left-opacity: var(--content-flourish-opacity);
-  --flourish-content-top-right-opacity: var(--content-flourish-opacity);
-  --flourish-content-bottom-left-opacity: var(--content-flourish-opacity);
-  --flourish-content-bottom-right-opacity: var(--content-flourish-opacity);
+	/* Individual Flourish Controls */
+	--flourish-content-top-left-opacity: var(--content-flourish-opacity);
+	--flourish-content-top-right-opacity: var(--content-flourish-opacity);
+	--flourish-content-bottom-left-opacity: var(--content-flourish-opacity);
+	--flourish-content-bottom-right-opacity: var(--content-flourish-opacity);
 
-  --flourish-portrait-top-left-opacity: var(--portrait-flourish-opacity);
-  --flourish-portrait-top-right-opacity: var(--portrait-flourish-opacity);
-  --flourish-portrait-bottom-left-opacity: var(--portrait-flourish-opacity);
-  --flourish-portrait-bottom-right-opacity: var(--portrait-flourish-opacity);
+	--flourish-portrait-top-left-opacity: var(--portrait-flourish-opacity);
+	--flourish-portrait-top-right-opacity: var(--portrait-flourish-opacity);
+	--flourish-portrait-bottom-left-opacity: var(--portrait-flourish-opacity);
+	--flourish-portrait-bottom-right-opacity: var(--portrait-flourish-opacity);
 
-  /* Content Box Style */
-  --content-box-radius: 0;
-  --content-box-border-width: 1px;    /* Thinner border for less ink */
-  --content-box-shadow: none;         /* Removed shadow for print */
-  --content-box-bg: white;           /* White background for print */
+	/* Content Box Style */
+	--content-box-radius: 0;
+	--content-box-border-width: 1px; /* Thinner border for less ink */
+	--content-box-shadow: none; /* Removed shadow for print */
+	--content-box-bg: white; /* White background for print */
 
-  /* Typography Sizes */
-  --title-font-size: 29px;  /* 1.8em */
-  --role-font-size: 19px;  /* 1.2em */
-  --trait-font-size: 16px; /* 1em */
-  --base-font-size: 16px;  /* 1cqw */
+	/* Typography Sizes */
+	--title-font-size: 29px; /* 1.8em */
+	--role-font-size: 19px; /* 1.2em */
+	--trait-font-size: 16px; /* 1em */
+	--base-font-size: 16px; /* 1cqw */
 }
 
 /* Title and role width overrides */
-[data-theme="cyberdeck"] .content h2.title {
-  max-width: 100%;
+[data-theme='cyberdeck'] .content h2.title {
+	max-width: 100%;
 }
 
-[data-theme="cyberdeck"] .content .role {
-  max-width: 100%;
-} 
+[data-theme='cyberdeck'] .content .role {
+	max-width: 100%;
+}

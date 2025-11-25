@@ -12,15 +12,22 @@ import { MechanicType } from '../../types';
  * @returns The corresponding emoji icon
  */
 export function getTypeIcon(type: MechanicType): string {
-  switch (type) {
-    case MechanicType.DEFENSE: return '🛡️';
-    case MechanicType.INITIATIVE: return '⚡';
-    case MechanicType.MOVEMENT: return '👟';
-    case MechanicType.ATTACK: return '⚔️';
-    case MechanicType.HEALTH: return '❤️';
-    case MechanicType.RESOURCE: return '📦';
-    default: return '📋';
-  }
+	switch (type) {
+		case MechanicType.DEFENSE:
+			return '🛡️';
+		case MechanicType.INITIATIVE:
+			return '⚡';
+		case MechanicType.MOVEMENT:
+			return '👟';
+		case MechanicType.ATTACK:
+			return '⚔️';
+		case MechanicType.HEALTH:
+			return '❤️';
+		case MechanicType.RESOURCE:
+			return '📦';
+		default:
+			return '📋';
+	}
 }
 
 /**
@@ -29,14 +36,14 @@ export function getTypeIcon(type: MechanicType): string {
  * @returns True if the value is numeric
  */
 export function isNumeric(value: string | number): boolean {
-  if (typeof value === 'number') {
-    return true;
-  }
-  // Handle empty string and whitespace-only strings as non-numeric
-  if (typeof value === 'string' && value.trim() === '') {
-    return false;
-  }
-  return !isNaN(Number(value));
+	if (typeof value === 'number') {
+		return true;
+	}
+	// Handle empty string and whitespace-only strings as non-numeric
+	if (typeof value === 'string' && value.trim() === '') {
+		return false;
+	}
+	return !isNaN(Number(value));
 }
 
 /**
@@ -46,7 +53,7 @@ export function isNumeric(value: string | number): boolean {
  * @returns True if tracking boxes should be shown
  */
 export function shouldShowTrackingBoxes(mechanic: CardMechanic): boolean {
-  return mechanic.tracked && isNumeric(mechanic.value) && Number(mechanic.value) <= 30;
+	return mechanic.tracked && isNumeric(mechanic.value) && Number(mechanic.value) <= 30;
 }
 
 /**
@@ -56,7 +63,7 @@ export function shouldShowTrackingBoxes(mechanic: CardMechanic): boolean {
  * @returns Array of indices from 0 to count-1
  */
 export function renderTrackingBoxes(count: number): number[] {
-  return Array.from({ length: Math.max(0, Math.min(count, 30)) }, (_, i) => i);
+	return Array.from({ length: Math.max(0, Math.min(count, 30)) }, (_, i) => i);
 }
 
 /**
@@ -65,18 +72,18 @@ export function renderTrackingBoxes(count: number): number[] {
  * @returns Object indicating which action to take
  */
 export function getAddStatsAction(hasMechanics: boolean): {
-  shouldShowTemplate: boolean;
-  shouldOpenEditor: boolean;
+	shouldShowTemplate: boolean;
+	shouldOpenEditor: boolean;
 } {
-  if (hasMechanics) {
-    return {
-      shouldShowTemplate: false,
-      shouldOpenEditor: true
-    };
-  } else {
-    return {
-      shouldShowTemplate: true,
-      shouldOpenEditor: false
-    };
-  }
+	if (hasMechanics) {
+		return {
+			shouldShowTemplate: false,
+			shouldOpenEditor: true
+		};
+	} else {
+		return {
+			shouldShowTemplate: true,
+			shouldOpenEditor: false
+		};
+	}
 }

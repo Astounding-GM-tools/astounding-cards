@@ -1,5 +1,5 @@
 export interface HeaderProps {
-    title: string;
-    subtitle: string;
-    back?: boolean;
+	title: string;
+	subtitle: string;
+	back?: boolean;
 }
