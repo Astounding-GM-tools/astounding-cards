@@ -56,9 +56,11 @@
 		};
 
 		// Show hints in console
+		console.log(
 			'%c🛠️ Dev Helpers Available',
 			'font-weight: bold; font-size: 14px; color: #059669;'
 		);
+		console.log(
 			'%cCheck balance:',
 			'font-weight: bold;',
 			'\nawait window.devHelpers.checkBalance()'

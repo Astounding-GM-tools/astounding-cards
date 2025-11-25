@@ -25,9 +25,18 @@
 		created_at: string;
 	}
 
+	interface SelectedVariant {
+		imageUrl: string;
+		imageId: string;
+		style: string;
+	}
+
 	let searchResults = $state<SearchResult[]>([]);
 	let isLoading = $state(true);
 	let previewUrl = $state<string | null>(null);
+
+	// Track selected variant for each result (by original_id)
+	let selectedVariants = $state<Record<string, SelectedVariant>>({});
 
 	// Load similar images on mount
 	$effect(() => {
@@ -43,7 +52,7 @@
 				body: JSON.stringify({
 					card: props.card,
 					preferredStyle: props.currentStyle,
-					limit: 10
+					limit: 12 // Changed from 10 to fit grid better
 				})
 			});
 
@@ -56,6 +65,35 @@
 
 			const data = await response.json();
 			searchResults = data.results || [];
+
+			// Initialize selected variants to use deck's preferred style or original
+			searchResults.forEach(result => {
+				// Try to find a variant matching the deck's current style
+				const preferredVariant = result.variants?.find(v => v.style === props.currentStyle);
+
+				if (preferredVariant) {
+					// Use the preferred style variant
+					selectedVariants[result.original_id] = {
+						imageUrl: preferredVariant.url,
+						imageId: preferredVariant.id,
+						style: preferredVariant.style
+					};
+				} else if (result.original_style === props.currentStyle) {
+					// Original matches preferred style
+					selectedVariants[result.original_id] = {
+						imageUrl: result.original_url,
+						imageId: result.original_id,
+						style: result.original_style
+					};
+				} else {
+					// Default to original
+					selectedVariants[result.original_id] = {
+						imageUrl: result.original_url,
+						imageId: result.original_id,
+						style: result.original_style
+					};
+				}
+			});
 		} catch (err) {
 			console.error('Failed to load similar images:', err);
 			toasts.error(err instanceof Error ? err.message : 'Failed to load similar images');
@@ -72,9 +110,16 @@
 		}
 	}
 
-	function handleUseImage(imageUrl: string, imageId: string, style: string) {
-		props.onImageSelected(imageUrl, imageId, style);
-		closeDialog();
+	function handleUseImage(originalId: string) {
+		const selected = selectedVariants[originalId];
+		if (selected) {
+			props.onImageSelected(selected.imageUrl, selected.imageId, selected.style);
+			closeDialog();
+		}
+	}
+
+	function selectVariant(originalId: string, imageUrl: string, imageId: string, style: string) {
+		selectedVariants[originalId] = { imageUrl, imageId, style };
 	}
 
 	function openPreview(url: string) {
@@ -83,6 +128,18 @@
 
 	function closePreview() {
 		previewUrl = null;
+	}
+
+	function getDisplayUrl(result: SearchResult): string {
+		return selectedVariants[result.original_id]?.imageUrl || result.original_url;
+	}
+
+	function getDisplayStyle(result: SearchResult): string {
+		return selectedVariants[result.original_id]?.style || result.original_style;
+	}
+
+	function isVariantSelected(originalId: string, variantId: string): boolean {
+		return selectedVariants[originalId]?.imageId === variantId;
 	}
 </script>
 
@@ -109,33 +166,58 @@
 			<div class="results-grid">
 				{#each searchResults as result}
 					<div class="result-card">
+						<!-- Square image preview showing currently selected variant -->
 						<button
 							class="image-preview"
-							onclick={() => openPreview(result.original_url)}
+							onclick={() => openPreview(getDisplayUrl(result))}
 							type="button"
 						>
-							<img src={result.original_url} alt="" />
-							<div class="style-badge">{result.original_style}</div>
+							<img src={getDisplayUrl(result)} alt="" />
+							<div class="style-badge">{getDisplayStyle(result)}</div>
 						</button>
 
-						{#if result.variants && result.variants.length > 0}
-							<div class="variants">
+						<!-- Style variants selection -->
+						<div class="variants">
+							<!-- Original style button -->
+							<button
+								class="variant-chip"
+								class:selected={isVariantSelected(result.original_id, result.original_id)}
+								onclick={() =>
+									selectVariant(
+										result.original_id,
+										result.original_url,
+										result.original_id,
+										result.original_style
+									)}
+								type="button"
+							>
+								{result.original_style}
+							</button>
+
+							<!-- Variant style buttons -->
+							{#if result.variants && result.variants.length > 0}
 								{#each result.variants as variant}
 									<button
 										class="variant-chip"
-										onclick={() => openPreview(variant.url)}
+										class:selected={isVariantSelected(result.original_id, variant.id)}
+										onclick={() =>
+											selectVariant(result.original_id, variant.url, variant.id, variant.style)}
 										type="button"
 									>
 										{variant.style}
 									</button>
 								{/each}
-							</div>
-						{/if}
+							{/if}
+
+							<!-- Show "No variants" if only one style available -->
+							{#if !result.variants || result.variants.length === 0}
+								<span class="no-variants">No variants</span>
+							{/if}
+						</div>
 
 						<button
 							class="use-button"
-							onclick={() =>
-								handleUseImage(result.original_url, result.original_id, result.original_style)}
+							onclick={() => handleUseImage(result.original_id)}
 							type="button"
 						>
 							Use This Image
@@ -238,7 +320,7 @@
 	.image-preview {
 		position: relative;
 		width: 100%;
-		aspect-ratio: 2 / 3;
+		aspect-ratio: 1 / 1; /* Square instead of portrait */
 		border: 2px solid #e2e8f0;
 		border-radius: 8px;
 		overflow: hidden;
@@ -257,7 +339,7 @@
 	.image-preview img {
 		width: 100%;
 		height: 100%;
-		object-fit: cover;
+		object-fit: contain; /* Contain instead of cover to show full square image */
 	}
 
 	.style-badge {
@@ -277,6 +359,8 @@
 		display: flex;
 		flex-wrap: wrap;
 		gap: 0.5rem;
+		min-height: 2rem; /* Consistent height even with "No variants" */
+		align-items: center;
 	}
 
 	.variant-chip {
@@ -294,6 +378,23 @@
 	.variant-chip:hover {
 		background: #e2e8f0;
 		border-color: #94a3b8;
+	}
+
+	.variant-chip.selected {
+		background: var(--brand, #c90019);
+		color: white;
+		border-color: var(--brand, #c90019);
+	}
+
+	.variant-chip.selected:hover {
+		background: #a80116;
+		border-color: #a80116;
+	}
+
+	.no-variants {
+		font-size: 0.75rem;
+		color: var(--ui-muted, #94a3b8);
+		font-style: italic;
 	}
 
 	.use-button {
