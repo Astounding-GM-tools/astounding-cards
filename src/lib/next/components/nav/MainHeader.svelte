@@ -2,7 +2,16 @@
 	import { user, isAuthenticated, authStore } from '$lib/next/stores/auth';
 	import AuthDialog from '../dialogs/AuthDialog.svelte';
 	import DeckSwitcher from './DeckSwitcher.svelte';
-	import { Library, LogIn, ChevronDown, Coins, Plus, Sparkles, LogOut } from 'lucide-svelte';
+	import {
+		Library,
+		LogIn,
+		ChevronDown,
+		Coins,
+		Plus,
+		Sparkles,
+		LogOut,
+		Pencil
+	} from 'lucide-svelte';
 	import type { Deck } from '$lib/next/types/deck.js';
 	import { tokenAmount } from '$lib/next/stores/tokenBalance';
 	import { nextDeckStore } from '../../stores/deckStore.svelte';
@@ -277,17 +286,7 @@
 						{/if}
 						{#if onTitleEdit}
 							<button class="title-edit-button" onclick={onTitleEdit} aria-label="Edit title">
-								<svg
-									xmlns="http://www.w3.org/2000/svg"
-									width="16"
-									height="16"
-									viewBox="0 0 24 24"
-									fill="none"
-									stroke="currentColor"
-									stroke-width="2"
-								>
-									<path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
-								</svg>
+								<Pencil size={16} />
 							</button>
 						{/if}
 					</div>

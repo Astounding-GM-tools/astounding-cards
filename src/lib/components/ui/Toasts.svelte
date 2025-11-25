@@ -1,57 +1,86 @@
 <script lang="ts">
 	import { toasts, type Toast } from '$lib/stores/toast';
 	import { fly } from 'svelte/transition';
-	import { handleToastKeydown, createRemoveHandler, TOAST_ANIMATION } from './Toasts.svelte.ts';
+	import InfoBox from '$lib/next/components/ui/InfoBox.svelte';
+	import { TOAST_ANIMATION } from './Toasts.svelte.ts';
+	import { CheckCircle, Info, AlertTriangle, XCircle, Loader2 } from 'lucide-svelte';
+
+	// Map toast types to InfoBox variants and icons
+	function getToastVariant(type: Toast['type']): 'success' | 'info' | 'warning' | 'danger' {
+		if (type === 'loading') return 'info';
+		if (type === 'error') return 'danger';
+		return type as 'success' | 'info' | 'warning';
+	}
+
+	function getToastIcon(type: Toast['type']) {
+		switch (type) {
+			case 'success':
+				return CheckCircle;
+			case 'info':
+				return Info;
+			case 'warning':
+				return AlertTriangle;
+			case 'error':
+				return XCircle;
+			case 'loading':
+				return Loader2;
+			default:
+				return Info;
+		}
+	}
+
+	function handleDismiss(id: string) {
+		toasts.remove(id);
+	}
 </script>
 
 <div class="toast-container" role="status" aria-live="polite">
 	{#each $toasts as toast (toast.id)}
-		<button
-			class="toast {toast.type}"
-			class:dismissible={toast.dismissible !== false}
-			transition:fly={TOAST_ANIMATION}
-			on:click={toast.dismissible !== false
-				? createRemoveHandler(toasts.remove, toast.id)
-				: undefined}
-			on:keydown={toast.dismissible !== false
-				? (e) => handleToastKeydown(e, createRemoveHandler(toasts.remove, toast.id))
-				: undefined}
-			type="button"
-			disabled={toast.dismissible === false}
-		>
-			<div class="toast-content">
-				{#if toast.type === 'loading'}
-					<div class="spinner" aria-label="Loading" role="status"></div>
-				{/if}
+		<div class="toast-wrapper" transition:fly={TOAST_ANIMATION}>
+			<InfoBox
+				variant={getToastVariant(toast.type)}
+				icon={getToastIcon(toast.type)}
+				dismissible={toast.dismissible !== false}
+				onDismiss={() => handleDismiss(toast.id)}
+				class="toast-infobox {toast.type === 'loading' ? 'loading' : ''}"
+			>
 				{toast.message}
-			</div>
-		</button>
+			</InfoBox>
+		</div>
 	{/each}
 </div>
 
 <style>
-	.toast.loading {
-		background: var(--toast-info);
-		color: white;
-		cursor: default;
+	.toast-container {
+		position: fixed;
+		top: 1rem;
+		right: 1rem;
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+		z-index: 1000;
+		pointer-events: none;
+		max-width: 400px;
 	}
 
-	.toast.loading:hover {
-		opacity: 0.95; /* Less opacity change for non-dismissible */
+	.toast-wrapper {
+		pointer-events: auto;
 	}
 
-	.toast:not(.dismissible) {
-		cursor: default;
+	/* Override InfoBox for toasts */
+	:global(.toast-infobox) {
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+		transition: all 0.2s ease;
 	}
 
-	.spinner {
-		width: 16px;
-		height: 16px;
-		border: 2px solid rgba(255, 255, 255, 0.3);
-		border-top: 2px solid white;
-		border-radius: 50%;
+	:global(.toast-infobox:hover) {
+		box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+		transform: translateY(-1px);
+	}
+
+	/* Loading spinner animation */
+	:global(.toast-infobox.loading .info-box-icon svg) {
 		animation: toast-spinner-spin 1s linear infinite;
-		flex-shrink: 0;
 	}
 
 	@keyframes toast-spinner-spin {
@@ -60,6 +89,20 @@
 		}
 		100% {
 			transform: rotate(360deg);
+		}
+	}
+
+	@media print {
+		.toast-container {
+			display: none;
+		}
+	}
+
+	@media (max-width: 640px) {
+		.toast-container {
+			left: 1rem;
+			right: 1rem;
+			max-width: none;
 		}
 	}
 </style>

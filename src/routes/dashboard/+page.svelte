@@ -3,6 +3,8 @@
 	import MainHeader from '$lib/next/components/nav/MainHeader.svelte';
 	import ActionBar from '$lib/next/components/actions/ActionBar.svelte';
 	import ActionButton from '$lib/next/components/actions/ActionButton.svelte';
+	import Pill from '$lib/next/components/ui/Pill.svelte';
+	import InfoBox from '$lib/next/components/ui/InfoBox.svelte';
 	import { authStore, user } from '$lib/next/stores/auth';
 	import { tokenAmount } from '$lib/next/stores/tokenBalance';
 	import { toasts } from '$lib/stores/toast';
@@ -24,7 +26,8 @@
 		Star,
 		Globe,
 		Palette,
-		Calendar
+		Calendar,
+		CircleUser
 	} from 'lucide-svelte';
 	import { nextDeckStore } from '$lib/next/stores/deckStore.svelte';
 	import { nextDb } from '$lib/next/stores/database';
@@ -293,7 +296,7 @@
 			<h2 class="section-title">Profile</h2>
 			<div class="profile-card">
 				<div class="profile-info">
-					<UserCircle size={48} />
+					<CircleUser size={48} />
 					<div class="profile-details">
 						<p class="profile-name">{$user?.email || 'User'}</p>
 						<p class="profile-email">{$user?.email || ''}</p>
@@ -324,33 +327,24 @@
 							</p>
 						</div>
 					</div>
-					<div class="coming-soon-banner">
-						<Sparkles size={18} />
-						<span
-							><strong>Coming Soon!</strong> Token purchasing will become available after Lemon Squeezy
-							(hopefully) approves this website.</span
-						>
-					</div>
+					<InfoBox variant="warning" icon={Sparkles}>
+						<strong>Coming Soon!</strong> Token purchasing will become available after Lemon Squeezy
+						(hopefully) approves this website.
+					</InfoBox>
 
-					<div class="coming-soon-banner information">
-						<BookOpenCheck size={18} />
-						<span
-							><strong>Beta prices!</strong> We are testing the sustainability of our pricing model.
-							It is likely that we will have to increase prices after the beta, but any unspent tokens
-							bought during beta will be retained.</span
-						>
-					</div>
+					<InfoBox variant="info" icon={BookOpenCheck}>
+						<strong>Beta prices!</strong> We are testing the sustainability of our pricing model.
+						It is likely that we will have to increase prices after the beta, but any unspent tokens
+						bought during beta will be retained.
+					</InfoBox>
 
-					<div class="coming-soon-banner information">
-						<LibraryBigIcon size={18} />
-						<span
-							><strong>Terms of service</strong>
-							Remember to read the full terms of service, but the most important bit is that Astounding
-							Cards is a <strong>community driven service</strong>: All images generated on the
-							platform becomes accessible to ALL members of the community as part of the Astounding
-							Community Image Library!</span
-						>
-					</div>
+					<InfoBox variant="info" icon={LibraryBigIcon}>
+						<strong>Terms of service</strong>
+						Remember to read the full terms of service, but the most important bit is that Astounding
+						Cards is a <strong>community driven service</strong>: All images generated on the
+						platform becomes accessible to ALL members of the community as part of the Astounding
+						Community Image Library!
+					</InfoBox>
 				</div>
 
 				<!-- Divider -->
@@ -393,43 +387,34 @@
 										{@const dateInfo = getMostRelevantDate(deck)}
 										{@const relativeDate = formatDateRelative(dateInfo.timestamp)}
 										{#if relativeDate}
-											<span
-												class="deck-date"
+											<Pill
+												variant="info"
+												icon={Calendar}
 												title="{dateInfo.label}: {new Date(dateInfo.timestamp).toLocaleString()}"
 											>
-												<Calendar size={14} />
 												{relativeDate}
-											</span>
+											</Pill>
 										{/if}
 									{/if}
 									{#if deck.meta.published_deck_id || deck.meta.remix_of === deck.id}
-										<span class="pill-published">
-											<Megaphone size={14} />
-											Published
-										</span>
+										<Pill variant="published" icon={Megaphone}>Published</Pill>
 										{#if hasUnpublishedChanges(deck)}
-											<span class="pill-warning">
-												<AlertTriangle size={14} />
-												Needs sync
-											</span>
+											<Pill variant="warning" icon={AlertTriangle}>Needs sync</Pill>
 										{/if}
 									{/if}
 									{#if !deck.meta.creator_id || deck.meta.creator_id === $user?.id}
-										<span class="pill-mine">
-											<Star size={14} />
-											Created by me
-										</span>
+										<Pill variant="mine" icon={Star}>Created by me</Pill>
 									{:else}
-										<span class="pill-community" title="Created by {deck.meta.creator_name}">
-											<Globe size={14} />
+										<Pill
+											variant="community"
+											icon={Globe}
+											title="Created by {deck.meta.creator_name}"
+										>
 											Community deck
-										</span>
+										</Pill>
 									{/if}
 									{#if deck.meta.remix_of && deck.meta.creator_id && deck.meta.creator_id !== $user?.id}
-										<span class="pill-remix">
-											<Palette size={14} />
-											Remix
-										</span>
+										<Pill variant="remix" icon={Palette}>Remix</Pill>
 									{/if}
 								</div>
 							</button>
@@ -626,33 +611,6 @@
 		padding: 1.5rem;
 	}
 
-	/* Coming Soon Banner */
-	.coming-soon-banner {
-		display: flex;
-		gap: 0.75rem;
-		padding: 0.75rem 1rem;
-		background: linear-gradient(135deg, rgba(251, 191, 36, 0.1) 0%, rgba(251, 191, 36, 0.05) 100%);
-		border: 1px solid #fbbf24;
-		border-radius: 6px;
-		align-items: center;
-		font-size: 0.875rem;
-	}
-
-	.coming-soon-banner :global(svg) {
-		flex-shrink: 0;
-		color: #d97706;
-	}
-
-	.coming-soon-banner strong {
-		color: #92400e;
-	}
-
-	.coming-soon-banner span {
-		color: #78350f;
-	}
-	.coming-soon-banner.information {
-		background: rgba(59, 130, 246, 0.08);
-	}
 
 	.divider {
 		width: 1px;
@@ -799,76 +757,6 @@
 	.deck-stat {
 		font-size: 0.875rem;
 		color: var(--ui-muted, #64748b);
-		white-space: nowrap;
-	}
-
-	.deck-date {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.25rem;
-		font-size: 0.8125rem;
-		color: var(--ui-muted, #64748b);
-		white-space: nowrap;
-	}
-
-	/* Pill styles */
-	.pill-published {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.25rem;
-		padding: 0.25rem 0.5rem;
-		background: rgba(5, 150, 105, 0.1);
-		border-radius: 4px;
-		color: #059669;
-		font-weight: 500;
-		white-space: nowrap;
-	}
-
-	.pill-mine {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.25rem;
-		padding: 0.25rem 0.5rem;
-		background: rgba(59, 130, 246, 0.1);
-		border-radius: 4px;
-		color: #3b82f6;
-		font-weight: 500;
-		white-space: nowrap;
-	}
-
-	.pill-community {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.25rem;
-		padding: 0.25rem 0.5rem;
-		background: rgba(139, 92, 246, 0.1);
-		border-radius: 4px;
-		color: #8b5cf6;
-		font-weight: 500;
-		white-space: nowrap;
-	}
-
-	.pill-remix {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.25rem;
-		padding: 0.25rem 0.5rem;
-		background: rgba(236, 72, 153, 0.1);
-		border-radius: 4px;
-		color: #ec4899;
-		font-weight: 500;
-		white-space: nowrap;
-	}
-
-	.pill-warning {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.25rem;
-		padding: 0.25rem 0.5rem;
-		background: rgba(245, 158, 11, 0.1);
-		border-radius: 4px;
-		color: #f59e0b;
-		font-weight: 500;
 		white-space: nowrap;
 	}
 

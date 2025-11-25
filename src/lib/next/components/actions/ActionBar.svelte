@@ -19,7 +19,7 @@
 		display: flex;
 		flex-direction: row;
 		gap: 0.75rem;
-		padding: 1rem 2rem;
+		padding: 1rem;
 		flex-wrap: wrap;
 		align-items: center;
 		max-width: var(--page-max-width);

@@ -43,10 +43,10 @@ function createToastStore() {
 
 	return {
 		subscribe,
-		success: (msg: string, timeout?: number) => addToast(msg, 'success', timeout),
-		info: (msg: string, timeout?: number) => addToast(msg, 'info', timeout),
-		warning: (msg: string, timeout?: number) => addToast(msg, 'warning', timeout),
-		error: (msg: string, timeout?: number) => addToast(msg, 'error', timeout),
+		success: (msg: string, timeout = 5000) => addToast(msg, 'success', timeout), // Auto-dismiss after 5s
+		info: (msg: string, timeout = 5000) => addToast(msg, 'info', timeout), // Auto-dismiss after 5s
+		warning: (msg: string, timeout = 0) => addToast(msg, 'warning', timeout), // Manual dismiss
+		error: (msg: string, timeout = 0) => addToast(msg, 'error', timeout), // Manual dismiss
 		loading: (msg: string) => addToast(msg, 'loading', 0, false), // No timeout, not dismissible
 		remove: removeToast,
 		update: updateToast
