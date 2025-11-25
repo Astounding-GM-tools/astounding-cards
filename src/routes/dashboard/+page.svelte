@@ -50,6 +50,10 @@
 	let isExporting = $state(false);
 	let editingDeck = $state<{ id: string; title: string } | null>(null);
 
+	// Email consent state
+	let emailConsent = $state(false);
+	let isLoadingConsent = $state(true);
+
 	// Format date relative to now
 	function formatDateRelative(timestamp: number): string | null {
 		// Validate timestamp
@@ -121,6 +125,50 @@
 		}
 	}
 
+	// Load email consent preference
+	async function loadEmailConsent() {
+		if (!$user?.id) return;
+
+		isLoadingConsent = true;
+		try {
+			const { supabase } = await import('$lib/supabaseClient');
+			const { data, error } = await supabase
+				.from('users')
+				.select('email_consent')
+				.eq('id', $user.id)
+				.single();
+
+			if (error) throw error;
+			emailConsent = data?.email_consent ?? false;
+		} catch (err) {
+			console.error('Failed to load email consent:', err);
+		} finally {
+			isLoadingConsent = false;
+		}
+	}
+
+	// Update email consent preference
+	async function handleEmailConsentChange() {
+		if (!$user?.id) return;
+
+		try {
+			const { supabase } = await import('$lib/supabaseClient');
+			const { error } = await supabase
+				.from('users')
+				.update({ email_consent: emailConsent })
+				.eq('id', $user.id);
+
+			if (error) throw error;
+
+			toasts.success(emailConsent ? 'Email notifications enabled' : 'Email notifications disabled');
+		} catch (err) {
+			console.error('Failed to update email consent:', err);
+			toasts.error('Failed to update preference');
+			// Revert the checkbox
+			emailConsent = !emailConsent;
+		}
+	}
+
 	// Duplicate a deck
 	async function handleDuplicateDeck(deckId: string) {
 		try {
@@ -186,10 +234,11 @@
 		goto(`/${deckId}`);
 	}
 
-	// Load decks when authenticated
+	// Load decks and email consent when authenticated
 	$effect(() => {
 		if (isAuthenticated) {
 			loadUserDecks();
+			loadEmailConsent();
 		}
 	});
 
@@ -303,6 +352,24 @@
 				<button class="edit-button" onclick={() => toasts.info('Profile editing coming soon!')}>
 					Edit Profile
 				</button>
+			</div>
+
+			<!-- Email Preferences -->
+			<div class="email-preferences">
+				<label class="checkbox-label">
+					<input
+						type="checkbox"
+						bind:checked={emailConsent}
+						onchange={handleEmailConsentChange}
+						disabled={isLoadingConsent}
+					/>
+					<span class="checkbox-text">
+						Send me product updates, community highlights, and service notifications
+						<a href="/privacy" target="_blank" rel="noopener noreferrer" class="privacy-link"
+							>(Privacy Policy)</a
+						>
+					</span>
+				</label>
 			</div>
 		</section>
 
@@ -533,6 +600,17 @@
 	</section>
 {/if}
 
+<footer class="site-footer">
+	<div class="footer-content">
+		<div class="footer-links">
+			<a href="/privacy">Privacy Policy</a>
+			<span>•</span>
+			<a href="/terms">Terms of Service</a>
+		</div>
+		<p class="footer-copyright">© {new Date().getFullYear()} Astounding Cards</p>
+	</div>
+</footer>
+
 <!-- Dialog system -->
 <Dialog />
 
@@ -608,6 +686,52 @@
 	.edit-button:hover {
 		background: var(--ui-hover-bg, #f8fafc);
 		border-color: var(--button-primary-bg, #3b82f6);
+	}
+
+	/* Email Preferences */
+	.email-preferences {
+		margin-top: 1rem;
+		padding: 1rem;
+		background: var(--ui-bg-secondary, #f9fafb);
+		border: 1px solid var(--ui-border, #e2e8f0);
+		border-radius: 8px;
+	}
+
+	.checkbox-label {
+		display: flex;
+		align-items: flex-start;
+		gap: 0.75rem;
+		cursor: pointer;
+		user-select: none;
+	}
+
+	.checkbox-label input[type='checkbox'] {
+		margin-top: 0.25rem;
+		cursor: pointer;
+		width: 16px;
+		height: 16px;
+		flex-shrink: 0;
+	}
+
+	.checkbox-label input[type='checkbox']:disabled {
+		cursor: not-allowed;
+		opacity: 0.5;
+	}
+
+	.checkbox-text {
+		font-size: 0.875rem;
+		color: var(--text-primary, #2d3748);
+		line-height: 1.5;
+	}
+
+	.privacy-link {
+		color: var(--primary, #3b82f6);
+		text-decoration: none;
+		font-size: 0.8125rem;
+	}
+
+	.privacy-link:hover {
+		text-decoration: underline;
 	}
 
 	/* Tokens Container (horizontal layout) */
@@ -918,6 +1042,49 @@
 		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 	}
 
+	.site-footer {
+		margin-top: 4rem;
+		padding: 2rem 1rem;
+		border-top: 1px solid var(--ui-border, #e2e8f0);
+		background: var(--ui-bg-secondary, #f9fafb);
+	}
+
+	.footer-content {
+		max-width: 1200px;
+		margin: 0 auto;
+		text-align: center;
+	}
+
+	.footer-links {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.75rem;
+		margin-bottom: 0.75rem;
+		font-size: 0.875rem;
+	}
+
+	.footer-links a {
+		color: var(--text-secondary, #64748b);
+		text-decoration: none;
+		transition: color 0.2s;
+	}
+
+	.footer-links a:hover {
+		color: var(--primary, #3b82f6);
+		text-decoration: underline;
+	}
+
+	.footer-links span {
+		color: var(--ui-border, #e2e8f0);
+	}
+
+	.footer-copyright {
+		font-size: 0.8rem;
+		color: var(--text-muted, #94a3b8);
+		margin: 0;
+	}
+
 	/* Responsive */
 	@media (max-width: 768px) {
 		.dashboard {
@@ -940,6 +1107,10 @@
 
 		.divider {
 			display: none;
+		}
+
+		.site-footer {
+			margin-top: 2rem;
 		}
 	}
 </style>

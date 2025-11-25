@@ -207,6 +207,12 @@
 						</button>
 					{/if}
 				</div>
+
+				<div class="legal-links">
+					<a href="/privacy" target="_blank" rel="noopener noreferrer">Privacy Policy</a>
+					<span>•</span>
+					<a href="/terms" target="_blank" rel="noopener noreferrer">Terms of Service</a>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -387,6 +393,29 @@
 	}
 
 	.link-button:hover {
+		text-decoration: underline;
+	}
+
+	.legal-links {
+		margin-top: 1.5rem;
+		padding-top: 1rem;
+		border-top: 1px solid #e5e7eb;
+		text-align: center;
+		font-size: 0.75rem;
+		color: #6b7280;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.5rem;
+	}
+
+	.legal-links a {
+		color: #6b7280;
+		text-decoration: none;
+	}
+
+	.legal-links a:hover {
+		color: #3b82f6;
 		text-decoration: underline;
 	}
 </style>

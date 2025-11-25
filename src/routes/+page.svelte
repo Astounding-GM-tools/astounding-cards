@@ -290,6 +290,17 @@
 			<Content blocks={getStarted} />
 		</div>
 	</section>
+
+	<footer class="site-footer">
+		<div class="footer-content">
+			<div class="footer-links">
+				<a href="/privacy">Privacy Policy</a>
+				<span>•</span>
+				<a href="/terms">Terms of Service</a>
+			</div>
+			<p class="footer-copyright">© {new Date().getFullYear()} Astounding Cards</p>
+		</div>
+	</footer>
 </div>
 
 <Dialog />
@@ -397,6 +408,49 @@
 		margin-top: 2rem;
 	}
 
+	.site-footer {
+		margin-top: 4rem;
+		padding: 2rem 1rem;
+		border-top: 1px solid var(--ui-border, #e2e8f0);
+		background: var(--ui-bg-secondary, #f9fafb);
+	}
+
+	.footer-content {
+		max-width: 1200px;
+		margin: 0 auto;
+		text-align: center;
+	}
+
+	.footer-links {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.75rem;
+		margin-bottom: 0.75rem;
+		font-size: 0.875rem;
+	}
+
+	.footer-links a {
+		color: var(--text-secondary, #64748b);
+		text-decoration: none;
+		transition: color 0.2s;
+	}
+
+	.footer-links a:hover {
+		color: var(--primary, #3b82f6);
+		text-decoration: underline;
+	}
+
+	.footer-links span {
+		color: var(--ui-border, #e2e8f0);
+	}
+
+	.footer-copyright {
+		font-size: 0.8rem;
+		color: var(--text-muted, #94a3b8);
+		margin: 0;
+	}
+
 	/* Responsive */
 	@media (max-width: 768px) {
 		.hero-actions {
@@ -406,6 +460,10 @@
 		.cta-primary,
 		.cta-secondary {
 			width: 100%;
+		}
+
+		.site-footer {
+			margin-top: 2rem;
 		}
 	}
 </style>
