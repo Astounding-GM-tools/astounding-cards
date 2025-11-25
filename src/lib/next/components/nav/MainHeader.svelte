@@ -2,16 +2,7 @@
 	import { user, isAuthenticated, authStore } from '$lib/next/stores/auth';
 	import AuthDialog from '../dialogs/AuthDialog.svelte';
 	import DeckSwitcher from './DeckSwitcher.svelte';
-	import {
-		Library,
-		LogIn,
-		ChevronDown,
-		Coins,
-		Plus,
-		Sparkles,
-		LogOut,
-		Pencil
-	} from 'lucide-svelte';
+	import { Library, LogIn, ChevronDown, Coins, Plus, Sparkles, Pencil } from 'lucide-svelte';
 	import type { Deck } from '$lib/next/types/deck.js';
 	import { tokenAmount } from '$lib/next/stores/tokenBalance';
 	import { nextDeckStore } from '../../stores/deckStore.svelte';
@@ -84,9 +75,6 @@
 	// Auth dialog state
 	let authDialogOpen = $state(false);
 
-	// User menu state
-	let userMenuOpen = $state(false);
-
 	// Deck switcher menu state
 	let deckSwitcherOpen = $state(false);
 
@@ -120,18 +108,6 @@
 	// Auth handlers
 	function handleSignIn() {
 		authDialogOpen = true;
-		userMenuOpen = false;
-	}
-
-	function toggleUserMenu() {
-		userMenuOpen = !userMenuOpen;
-	}
-
-	async function handleLogOut() {
-		userMenuOpen = false;
-		await authStore.signOut();
-		toasts.success('Logged out successfully');
-		goto('/');
 	}
 
 	function toggleDeckSwitcher() {
@@ -140,9 +116,6 @@
 
 	function handleClickOutside(event: MouseEvent) {
 		const target = event.target as HTMLElement;
-		if (!target.closest('.user-menu-container')) {
-			userMenuOpen = false;
-		}
 		if (!target.closest('.deck-switcher-container')) {
 			deckSwitcherOpen = false;
 		}
@@ -245,26 +218,10 @@
 					<span class="token-amount">{tokenBalance.toLocaleString()}</span>
 				</div>
 
-				<div class="user-menu-container">
-					<button class="user-badge success" onclick={toggleUserMenu}>
-						<span class="user-initial">{userInitial}</span>
-						<span>Dashboard</span>
-						<ChevronDown size={12} />
-					</button>
-
-					{#if userMenuOpen}
-						<div class="user-menu">
-							<a href="/dashboard" class="user-menu-item">
-								<Library size={14} />
-								<span>Dashboard</span>
-							</a>
-							<button class="user-menu-item" onclick={handleLogOut}>
-								<LogOut size={14} />
-								<span>Log Out</span>
-							</button>
-						</div>
-					{/if}
-				</div>
+				<a href="/dashboard" class="user-badge success">
+					<span class="user-initial">{userInitial}</span>
+					<span>Dashboard</span>
+				</a>
 			{:else}
 				<button class="user-badge warning" onclick={handleSignIn}>
 					<LogIn size={14} />
@@ -520,45 +477,6 @@
 		border-radius: 6px;
 		box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 		z-index: 100;
-	}
-
-	/* User Menu */
-	.user-menu-container {
-		position: relative;
-	}
-
-	.user-menu {
-		position: absolute;
-		top: calc(100% + 0.5rem);
-		right: 0;
-		background: white;
-		border: 1px solid var(--ui-border, #e2e8f0);
-		border-radius: 6px;
-		box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-		z-index: 100;
-		min-width: 160px;
-		overflow: hidden;
-	}
-
-	.user-menu-item {
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-		padding: 0.625rem 0.875rem;
-		width: 100%;
-		border: none;
-		background: none;
-		color: var(--ui-text, #1a202c);
-		font-size: 0.875rem;
-		text-decoration: none;
-		cursor: pointer;
-		transition: background 0.2s ease;
-		font-family: inherit;
-		text-align: left;
-	}
-
-	.user-menu-item:hover {
-		background: var(--ui-hover-bg, #f8fafc);
 	}
 
 	/* User Badge */

@@ -282,12 +282,7 @@
 		>
 			{#snippet icon()}<Download size={20} />{/snippet}
 		</ActionButton>
-		<ActionButton
-			title="Log Out"
-			subtitle="Sign out"
-			variant="secondary"
-			onclick={handleLogOut}
-		>
+		<ActionButton title="Log Out" subtitle="Sign out" variant="danger" onclick={handleLogOut}>
 			{#snippet icon()}<LogOut size={20} />{/snippet}
 		</ActionButton>
 	</ActionBar>
