@@ -10,6 +10,7 @@
 	import { TOKEN_COSTS, formatTokenBalance } from '$lib/config/token-costs.js';
 	import { authenticatedFetch } from '$lib/utils/authenticated-fetch.js';
 	import { ART_STYLES } from '$lib/ai/prompts/image-generation.js';
+	import TokenStoreDialog from './TokenStoreDialog.svelte';
 
 	interface Props {
 		// Optional props for testing/stories
@@ -136,6 +137,10 @@
 			checkImageVariants();
 		}
 	});
+
+	function handleBuyTokens() {
+		dialogStore.setContent(TokenStoreDialog, {});
+	}
 
 	// Check if images exist in the selected style
 	async function checkImageVariants() {
@@ -627,7 +632,7 @@
 								You have <strong>{formatTokenBalance(userTokenBalance)}</strong> ❌<br />
 								You need <strong>{totalCost} tokens</strong> to generate these images.
 							</p>
-							<button class="buy-tokens-btn" onclick={() => console.log('Buy tokens')}>
+							<button class="buy-tokens-btn" onclick={handleBuyTokens}>
 								💰 Buy More Tokens
 							</button>
 						{/if}

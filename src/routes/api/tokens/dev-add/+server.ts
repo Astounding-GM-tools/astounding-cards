@@ -77,7 +77,6 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 			return json({ error: 'Failed to update balance' }, { status: 500 });
 		}
 
-		console.log(`[DEV] Added ${amount} tokens to user ${userId}. New balance: ${newCredits}`);
 
 		return json({
 			success: true,

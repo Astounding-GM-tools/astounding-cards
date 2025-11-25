@@ -30,7 +30,6 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 			return error(400, 'Style is required and must be a string');
 		}
 
-		console.log(`🔍 Checking image variants for ${cards.length} cards in style: ${style}`);
 
 		// 4. Check each card for existing image in the target style
 		const variants: Record<string, { exists: boolean; url: string | null; imageId?: string }> = {};
@@ -103,7 +102,6 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 		const existingCount = Object.values(variants).filter((v) => v.exists).length;
 		const needsGenerationCount = Object.values(variants).filter((v) => !v.exists).length;
 
-		console.log(
 			`✅ Variant check complete: ${existingCount} exist, ${needsGenerationCount} need generation`
 		);
 

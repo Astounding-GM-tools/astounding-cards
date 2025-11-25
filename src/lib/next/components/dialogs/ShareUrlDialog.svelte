@@ -74,8 +74,6 @@
 				throw new Error('Deck not found in database');
 			}
 
-			console.log('[ShareURL] Generating from fresh deck');
-			console.log('[ShareURL] First card image:', freshDeck.cards[0]?.image);
 
 			// Generate share URL with hash format using fresh data
 			shareUrl = createShareUrl(freshDeck);
@@ -119,19 +117,15 @@
 				}
 			}));
 
-			console.log('[Migration] Updating cards:', cardUpdates);
 
 			// Use the next database system to update multiple cards atomically
 			const updatedDeck = await nextDb.updateMultipleCards(deck.id, cardUpdates);
 
-			console.log('[Migration] Updated deck:', updatedDeck);
-			console.log('[Migration] First card image:', updatedDeck.cards[0]?.image);
 
 			// IMPORTANT: Update the deck store if this is the active deck
 			// This ensures the current editing session has the new image URLs
 			const currentDeck = nextDeckStore.deck;
 			if (currentDeck && currentDeck.id === updatedDeck.id) {
-				console.log('[Migration] Reloading deck in store');
 				await nextDeckStore.loadDeck(updatedDeck.id);
 			}
 

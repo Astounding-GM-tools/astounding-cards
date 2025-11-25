@@ -26,11 +26,9 @@
 			shareCount={42}
 			onImageStyleChange={(style) => {
 				imageStyle = style;
-				console.log('Style:', style);
 			}}
 			onCardBacksChange={(visible) => {
 				cardBacksVisible = visible;
-				console.log('Card backs:', visible);
 			}}
 		/>
 	{/snippet}

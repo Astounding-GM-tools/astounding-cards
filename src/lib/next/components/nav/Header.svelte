@@ -124,7 +124,6 @@
 	async function handleMigrationComplete(
 		migrationData: Record<string, { url: string; metadata: any }>
 	) {
-		console.log('[Header] handleMigrationComplete called with:', migrationData);
 
 		try {
 			if (!deck) {
@@ -141,7 +140,6 @@
 				}
 			}));
 
-			console.log('[Header] Updating cards with migrationData:', cardUpdates);
 
 			// Import the nextDb to update the deck
 			const { nextDb } = await import('$lib/next/stores/database.js');
@@ -149,12 +147,10 @@
 			// Update the deck in the database
 			const updatedDeck = await nextDb.updateMultipleCards(deck.id, cardUpdates);
 
-			console.log('[Header] Deck updated, reloading in store');
 
 			// Reload the deck in the store to reflect changes
 			await nextDeckStore.loadDeck(updatedDeck.id);
 
-			console.log('[Header] Generating share URL from updated deck');
 
 			// Migration complete - generate URL from fresh data and copy to clipboard
 			const freshDeck = await nextDb.getDeck(updatedDeck.id);

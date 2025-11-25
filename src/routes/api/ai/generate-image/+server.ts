@@ -76,7 +76,6 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 			return error(402, 'Insufficient tokens');
 		}
 
-	console.log(`🎨 Server-side image generation for "${card.title}" (style: ${style})`);
 
 	const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 
@@ -98,7 +97,6 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 			return error(402, 'Failed to deduct tokens - possibly insufficient balance');
 		}
 
-	console.log(`✅ Deducted ${cost} tokens from user ${userId}`);
 
 	// 8. Upload to R2 and save to database
 	const { url: publicUrl, imageId } = await uploadAndSaveImage(

@@ -9,6 +9,8 @@
 	import { getAccessToken } from '$lib/utils/auth-helpers.js';
 	import type { Card } from '../../types/card.js';
 	import type { ImageStyle } from '../../types/deck.js';
+	import TokenStoreDialog from './TokenStoreDialog.svelte';
+	import AuthDialog from './AuthDialog.svelte';
 
 	interface Props {
 		card: Card;
@@ -38,6 +40,16 @@
 	const canGenerate = $derived(isUserAuthenticated && canAffordGeneration);
 
 	const imageStyles = getImageStyles();
+
+	function handleBuyTokens() {
+		dialogStore.setContent(TokenStoreDialog, {});
+	}
+
+	let authDialogOpen = $state(false);
+
+	function handleLogin() {
+		authDialogOpen = true;
+	}
 
 	async function generateImage() {
 		isGenerating = true;
@@ -228,7 +240,7 @@
 								Generating this image will cost <strong>{generationCost} tokens</strong>
 								(you have <strong>{formatTokenBalance(userTokenBalance)}</strong> ❌)
 							</p>
-							<button class="buy-tokens-btn" onclick={() => console.log('Buy tokens')}>
+							<button class="buy-tokens-btn" onclick={handleBuyTokens}>
 								💰 Buy More Tokens
 							</button>
 						{/if}
@@ -240,7 +252,7 @@
 			{#if !isUserAuthenticated}
 				<div class="auth-gate">
 					<p>🔒 Please log in to generate images</p>
-					<button class="primary-button" onclick={() => console.log('Login')}>Login</button>
+					<button class="primary-button" onclick={handleLogin}>Login</button>
 				</div>
 			{/if}
 		{/if}
@@ -582,3 +594,5 @@
 		font-weight: 500;
 	}
 </style>
+
+<AuthDialog bind:open={authDialogOpen} />

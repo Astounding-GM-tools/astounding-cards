@@ -17,7 +17,6 @@ async function syncDeckToCloud(deck: Deck): Promise<void> {
 	try {
 		const authState = get(authStore);
 		if (!authState || !authState.user) {
-			console.log('[Sync] Skipping sync - not authenticated');
 			return; // Not authenticated, skip sync
 		}
 
@@ -501,7 +500,6 @@ function createNextDeckStore(): NextDeckStore {
 
 			try {
 				// Ensure deck is synced to user_decks first (publish API reads from there)
-				console.log('[Publish] Ensuring deck is synced to cloud before publishing...');
 				await syncDeckToCloud(currentDeck);
 
 				// NEW: Just pass the userDeckId, API will handle the rest
@@ -511,7 +509,6 @@ function createNextDeckStore(): NextDeckStore {
 					// API will read from user_decks table
 				};
 
-				console.log('[Publish] Publishing deck:', currentDeck.id);
 
 				const response = await authenticatedFetch('/api/decks/publish', {
 					method: 'POST',

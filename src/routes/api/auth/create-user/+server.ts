@@ -31,7 +31,6 @@ export const POST: RequestHandler = async ({ request }) => {
 			return error(500, 'Failed to create user record');
 		}
 
-		console.log(`✅ Created user record for ${email} with ${NEW_USER_WELCOME_BONUS} tokens`);
 
 		return json({
 			success: true,

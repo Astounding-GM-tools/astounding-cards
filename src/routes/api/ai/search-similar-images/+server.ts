@@ -37,8 +37,6 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 			}
 
 			// Generate embedding from card data
-			console.log(`🔍 Generating embedding for card \"${card.title}\"`);
-			console.log(card);
 
 			// TODO: The above log is an empty card:
 
@@ -79,7 +77,6 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 			return error(400, 'Invalid embedding (must be 768-dimensional vector)');
 		}
 
-		console.log(`🔍 Searching for similar images (preferred style: ${preferredStyle || 'any'})`);
 
 		// 5. Call Supabase search function
 		const { data, error: searchError } = await supabaseAdmin.rpc('search_similar_images', {
@@ -95,7 +92,6 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 
 		// 6. Format results
 		const results = data || [];
-		console.log(`✅ Found ${results.length} similar images`);
 
 		return json({
 			success: true,

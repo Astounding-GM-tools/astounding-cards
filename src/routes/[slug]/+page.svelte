@@ -116,12 +116,9 @@
 			// PREPARE PREVIEW (don't import yet)
 			// Layer 1: Curated deck from Supabase (if present)
 			const curatedDeck = data.curatedDeck;
-			console.log('[Preview] Curated deck:', curatedDeck);
 
 			// Layer 2: Hash data from URL (shared modifications)
-			console.log('[Preview] Current URL:', window.location.href);
 			hashDeck = importFromUrl(window.location.href);
-			console.log('[Preview] Hash deck:', hashDeck);
 
 			// Layer 3: Local deck from IndexedDB (if exists and not forcing gallery view)
 			if (!forceGalleryView) {
@@ -133,11 +130,9 @@
 					localDeck = await nextDb.getDeck(hashDeck.id);
 				} else {
 					// No curated or hash deck - try to load from local DB using slug as ID
-					console.log('[Preview] No curated/hash deck, trying local DB with slug:', data.slug);
 					localDeck = await nextDb.getDeck(data.slug);
 				}
 			} else {
-				console.log('[Preview] Gallery view forced - skipping local deck load');
 				localDeck = null;
 			}
 
@@ -158,7 +153,6 @@
 				// Pure local deck view (navigated directly to /{deck-id})
 				previewDeck = localDeck;
 				previewing = true;
-				console.log('[Preview] Loaded pure local deck:', localDeck);
 			} else {
 				error = 'No deck data found';
 				toasts.error('Deck not found');
@@ -410,7 +404,6 @@
 						}
 					}
 
-					console.log('[Edit] Found source deck, editing my original');
 				}
 			}
 
@@ -419,7 +412,6 @@
 				const existingLocal = await nextDb.getDeck(previewDeck.id);
 				if (existingLocal) {
 					deckToLoad = existingLocal.id;
-					console.log('[Edit] Found existing import, editing that');
 				}
 			}
 
@@ -435,7 +427,6 @@
 				}
 			} else {
 				// I don't have it - import it (keeping original title and dates)
-				console.log('[Edit] No local copy, importing deck');
 
 				// Capture creator info, remix lineage, and preserve creation date
 				if (data.curatedDeck) {

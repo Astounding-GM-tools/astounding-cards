@@ -53,7 +53,6 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 			return error(402, 'Insufficient tokens');
 		}
 
-		console.log(
 			`🚀 Server-side deck generation: "${prompt.substring(0, 50)}..." (${cardCount} cards, ${cost} tokens)`
 		);
 
@@ -64,7 +63,6 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 			return error(500, result.error || 'Failed to generate deck');
 		}
 
-		console.log(`✅ Deck generated with ${result.deck.deck.cards.length} cards`);
 
 		// 6. Deduct tokens atomically
 		const { data: deductSuccess, error: deductError } = await supabaseAdmin.rpc('deduct_tokens', {
@@ -77,7 +75,6 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 			return error(402, 'Failed to deduct tokens - possibly insufficient balance');
 		}
 
-		console.log(`✅ Deducted ${cost} tokens from user ${userId}`);
 
 		// 7. Record transaction
 		const { error: txError } = await supabaseAdmin.from('transactions').insert({
@@ -94,7 +91,6 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 			// Non-critical - deck was generated and tokens were deducted
 		}
 
-		console.log('✅ Transaction recorded');
 
 		// 8. Return success with deck data
 		return json({

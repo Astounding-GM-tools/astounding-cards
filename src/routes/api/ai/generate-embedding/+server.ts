@@ -34,12 +34,10 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 			return error(400, 'Text is too long (max 10,000 characters)');
 		}
 
-		console.log(`🧮 Generating embedding for text (${text.length} chars)`);
 
 		// 4. Generate embedding
 		const embedding = await generateEmbedding(text);
 
-		console.log(`✅ Embedding generated (${embedding.length} dimensions)`);
 
 		// 5. Return embedding
 		return json({

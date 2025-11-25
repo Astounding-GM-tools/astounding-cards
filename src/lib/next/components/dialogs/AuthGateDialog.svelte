@@ -10,13 +10,11 @@
 
 	function handleSignUp() {
 		// TODO: Navigate to sign up flow
-		console.log('Sign up clicked');
 		dialogStore.close();
 	}
 
 	function handleLogIn() {
 		// TODO: Navigate to log in flow
-		console.log('Log in clicked');
 		dialogStore.close();
 	}
 </script>

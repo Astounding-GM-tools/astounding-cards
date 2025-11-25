@@ -267,7 +267,7 @@ async function publishNewDeck(
 	// If this is a remix, increment the original deck's remix count
 	if (userDeck.remix_of) {
 		supabaseAdmin.rpc('increment_remix_count', { deck_id: userDeck.remix_of }).then(
-			() => console.log(`Incremented remix count for ${userDeck.remix_of}`),
+			() => {}, // Success - no action needed
 			(err) => console.error('Failed to increment remix count:', err)
 		);
 	}

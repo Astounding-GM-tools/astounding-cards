@@ -11,6 +11,7 @@
 	import { importDeckFromJson } from '../../utils/jsonImporter.js';
 	import { nextDb } from '../../stores/database.js';
 	import { goto } from '$app/navigation';
+	import TokenStoreDialog from './TokenStoreDialog.svelte';
 
 	interface Props {
 		// Optional props for testing/stories
@@ -62,6 +63,10 @@
 	function useExample(example: (typeof examplePrompts)[number]) {
 		prompt = example.prompt;
 		showExamples = false;
+	}
+
+	function handleBuyTokens() {
+		dialogStore.setContent(TokenStoreDialog, {});
 	}
 
 	async function generateDeck() {
@@ -227,7 +232,7 @@
 							You have <strong>{formatTokenBalance(userTokenBalance)}</strong> ❌ You need
 							<strong>{generationCost} tokens</strong> to generate this deck.
 						</p>
-						<button class="buy-tokens-btn" onclick={() => console.log('Buy tokens')}>
+						<button class="buy-tokens-btn" onclick={handleBuyTokens}>
 							💰 Buy More Tokens
 						</button>
 					{/if}

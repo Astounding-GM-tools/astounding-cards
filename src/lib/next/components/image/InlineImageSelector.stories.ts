@@ -22,10 +22,8 @@ export const NoImage: Story = {
 		cardSize: 'tarot',
 		hasExistingImage: false,
 		onImageChange: (blob, sourceUrl, filename) => {
-			console.log('Image changed:', { blob, sourceUrl, filename });
 		},
 		onGenerateImage: () => {
-			console.log('Generate AI image clicked');
 		}
 	}
 };
@@ -43,13 +41,10 @@ export const WithUploadedImage: Story = {
 		},
 		imageLocked: false,
 		onRemoveImage: () => {
-			console.log('Remove image clicked');
 		},
 		onGenerateImage: () => {
-			console.log('Generate AI image clicked');
 		},
 		onToggleLock: (locked) => {
-			console.log('Lock toggled:', locked);
 		}
 	}
 };
@@ -67,13 +62,10 @@ export const WithDownloadedImage: Story = {
 		},
 		imageLocked: false,
 		onRemoveImage: () => {
-			console.log('Remove image clicked');
 		},
 		onGenerateImage: () => {
-			console.log('Generate AI image clicked');
 		},
 		onToggleLock: (locked) => {
-			console.log('Lock toggled:', locked);
 		}
 	}
 };
@@ -91,13 +83,10 @@ export const LockedImage: Story = {
 		},
 		imageLocked: true,
 		onRemoveImage: () => {
-			console.log('Remove image clicked');
 		},
 		onGenerateImage: () => {
-			console.log('Generate AI image clicked');
 		},
 		onToggleLock: (locked) => {
-			console.log('Lock toggled:', locked);
 		}
 	}
 };
@@ -108,7 +97,6 @@ export const NotAuthenticated: Story = {
 		cardSize: 'tarot',
 		hasExistingImage: false,
 		onGenerateImage: () => {
-			console.log('Generate AI image clicked');
 		}
 	}
 };
@@ -124,10 +112,8 @@ export const AddImageEncouragement: Story = {
 			message: 'Cards look better with images!'
 		},
 		onImageChange: (blob, sourceUrl, filename) => {
-			console.log('Image changed:', { blob, sourceUrl, filename });
 		},
 		onGenerateImage: () => {
-			console.log('Generate AI image clicked');
 		}
 	}
 };
@@ -145,13 +131,10 @@ export const ReadyToSave: Story = {
 		},
 		imageLocked: false,
 		onRemoveImage: () => {
-			console.log('Remove image clicked');
 		},
 		onGenerateImage: () => {
-			console.log('Generate AI image clicked');
 		},
 		onToggleLock: (locked) => {
-			console.log('Lock toggled:', locked);
 		}
 	}
 };

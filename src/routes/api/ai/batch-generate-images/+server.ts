@@ -53,7 +53,6 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 			return error(400, 'Style is required');
 		}
 
-		console.log(`🚀 Batch image generation: ${cards.length} cards in style: ${style}`);
 
 	// 4. Check which cards already have images in target style (remix detection)
 	const cardsToGenerate: any[] = [];
@@ -70,7 +69,6 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 		// Check for existing image in family
 		const cachedResult = await checkForExistingImage(sourceImageId, style);
 		if (cachedResult) {
-			console.log(`✅ Card ${card.id} already has image in style ${style} (cached)`);
 			cachedResults.push({
 				cardId: card.id,
 				...cachedResult
@@ -85,13 +83,11 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 		const generationCount = cardsToGenerate.length;
 		const totalCost = generationCount * TOKEN_COSTS.IMAGE_GENERATION_COMMUNITY;
 
-		console.log(
 			`💰 Cost calculation: ${generationCount} to generate, ${cachedResults.length} cached = ${totalCost} tokens`
 		);
 
 		// If everything is cached, return early
 		if (generationCount === 0) {
-			console.log('✅ All images cached, no generation needed');
 			return json({
 				success: true,
 				results: cachedResults,
@@ -127,7 +123,6 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 			return error(402, 'Failed to deduct tokens - possibly insufficient balance');
 		}
 
-		console.log(`✅ Deducted ${totalCost} tokens from user ${userId}`);
 
 	// 8. Generate images with parallel processing and staggered starts
 	const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
@@ -135,7 +130,6 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 	// Create generation function for a single card
 	const generateCardImage = async (card: CardData, index: number) => {
 		try {
-			console.log(
 				`🎨 Generating image ${index + 1}/${cardsToGenerate.length} for card "${card.title}"`
 			);
 
@@ -158,7 +152,6 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 				sourceImageId
 			);
 
-			console.log(`✅ Generated image for "${card.title}"`);
 
 			return {
 				cardId: card.id,
@@ -205,7 +198,6 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 		`Batch image generation: ${generatedCount} generated, ${cachedResults.length} cached, ${failedCount} failed (style: ${style})`
 	);
 
-	console.log(
 		`📊 Batch complete: ${generatedCount} generated, ${cachedResults.length} cached, ${failedCount} failed`
 	);
 

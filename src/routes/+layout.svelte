@@ -29,9 +29,7 @@
 					});
 					const result = await response.json();
 					if (result.success) {
-						console.log(`✅ ${result.message}`);
 						await refreshTokenBalance();
-						console.log('🔄 Token balance refreshed in UI');
 					} else {
 						console.error('❌ Failed to add tokens:', result.error);
 					}
@@ -46,7 +44,6 @@
 					const response = await authenticatedFetch('/api/tokens/balance');
 					const result = await response.json();
 					if (result.balance !== undefined) {
-						console.log(`💰 Current balance: ${result.balance} tokens`);
 					} else {
 						console.error('❌ Failed to fetch balance:', result.error);
 					}
@@ -59,12 +56,9 @@
 		};
 
 		// Show hints in console
-		console.log(
 			'%c🛠️ Dev Helpers Available',
 			'font-weight: bold; font-size: 14px; color: #059669;'
 		);
-		console.log('%cAdd tokens:', 'font-weight: bold;', '\nawait window.devHelpers.addTokens(1000)');
-		console.log(
 			'%cCheck balance:',
 			'font-weight: bold;',
 			'\nawait window.devHelpers.checkBalance()'

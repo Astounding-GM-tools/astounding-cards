@@ -247,16 +247,12 @@
 	}
 
 	async function completeMigration() {
-		console.log('[ImageMigration] completeMigration called');
-		console.log('[ImageMigration] Migration items:', migrationItems);
 
 		try {
 			const migrationData: Record<string, { url: string; metadata: any }> = {};
 
 			for (const item of migrationItems) {
-				console.log('[ImageMigration] Processing item:', item);
 				if (item.isValid && item.newUrl) {
-					console.log('[ImageMigration] Item is valid, adding to migrationData');
 					// Update metadata to reflect the URL migration
 					const updatedMetadata = {
 						...item.card.imageMetadata,
@@ -274,17 +270,14 @@
 				}
 			}
 
-			console.log('[ImageMigration] Final migrationData:', migrationData);
 
 			const validCount = Object.keys(migrationData).length;
 
 			if (validCount === 0) {
-				console.log('[ImageMigration] No valid URLs found');
 				toasts.error('No valid URLs to apply');
 				return;
 			}
 
-			console.log('[ImageMigration] Calling onMigrationComplete with:', migrationData);
 			// Call the completion callback with both URLs and metadata
 			onMigrationComplete?.(migrationData);
 

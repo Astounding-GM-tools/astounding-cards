@@ -127,7 +127,6 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 				last_edited: new Date().toISOString()
 			};
 
-			console.log('[API] Update payload:', JSON.stringify(updatePayload, null, 2));
 
 			const { data: updatedDeck, error: updateError } = await supabaseAdmin
 				.from('user_decks')
@@ -164,7 +163,6 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 			published_deck_id: published_deck_id || null
 		};
 
-		console.log('[API] Insert payload:', JSON.stringify(insertPayload, null, 2));
 
 		const { data: newDeck, error: insertError } = await supabaseAdmin
 			.from('user_decks')
@@ -289,7 +287,6 @@ export const DELETE: RequestHandler = async ({ request, cookies, url }) => {
 			// Note: We're NOT deleting the published deck automatically
 			// The published deck remains in gallery as a snapshot
 			// This is intentional - published decks can outlive their source
-			console.log(
 				`Deleting user_deck ${deckId} which is linked to published_deck ${existingDeck.published_deck_id}`
 			);
 		}
