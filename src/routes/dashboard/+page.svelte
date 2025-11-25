@@ -403,7 +403,7 @@
 										{/if}
 									{/if}
 									{#if deck.meta.published_deck_id || deck.meta.remix_of === deck.id}
-										<Pill variant="published">
+										<Pill variant="success">
 											{#snippet icon()}<Megaphone size={14} />{/snippet}
 											Published
 										</Pill>
@@ -415,18 +415,18 @@
 										{/if}
 									{/if}
 									{#if !deck.meta.creator_id || deck.meta.creator_id === $user?.id}
-										<Pill variant="mine">
+										<Pill variant="info">
 											{#snippet icon()}<Star size={14} />{/snippet}
 											Created by me
 										</Pill>
 									{:else}
-										<Pill variant="community" title="Created by {deck.meta.creator_name}">
+										<Pill variant="info" title="Created by {deck.meta.creator_name}">
 											{#snippet icon()}<Globe size={14} />{/snippet}
 											Community deck
 										</Pill>
 									{/if}
 									{#if deck.meta.remix_of && deck.meta.creator_id && deck.meta.creator_id !== $user?.id}
-										<Pill variant="remix">
+										<Pill variant="info">
 											{#snippet icon()}<Palette size={14} />{/snippet}
 											Remix
 										</Pill>

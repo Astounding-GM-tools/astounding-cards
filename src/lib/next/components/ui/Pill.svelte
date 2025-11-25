@@ -2,23 +2,23 @@
 	import type { Snippet } from 'svelte';
 	import type { AlertVariant } from '$lib/next/types/ui';
 
-	// Pill-specific variants extend AlertVariant
-	type PillVariant = AlertVariant | 'published' | 'mine' | 'community' | 'remix' | 'default';
-
 	interface Props {
-		variant?: PillVariant;
+		variant?: AlertVariant;
+		size?: 'sm' | 'md';
 		icon?: Snippet;
 		title?: string;
 		class?: string;
 		children?: Snippet;
 	}
 
-	let { variant = 'default', icon, title, class: className, children }: Props = $props();
+	let { variant = 'info', size = 'md', icon, title, class: className, children }: Props = $props();
 </script>
 
-<span class="pill pill-{variant} {className}" {title}>
+<span class="pill pill-{variant} pill-{size} {className}" {title}>
 	{#if icon}
-		{@render icon()}
+		<span class="pill-icon">
+			{@render icon()}
+		</span>
 	{/if}
 	{#if children}
 		{@render children()}
@@ -33,49 +33,56 @@
 		padding: 0.25rem 0.5rem;
 		border-radius: 4px;
 		font-weight: 500;
-		font-size: 0.875rem;
 		white-space: nowrap;
+		line-height: 1.2;
 	}
 
-	/* Published - green */
-	.pill-published {
-		background: rgba(5, 150, 105, 0.1);
-		color: #059669;
+	/* Sizes */
+	.pill-sm {
+		font-size: 0.75rem;
+		padding: 0.125rem 0.375rem;
 	}
 
-	/* Warning - orange */
-	.pill-warning {
-		background: rgba(234, 88, 12, 0.1);
-		color: #ea580c;
+	.pill-md {
+		font-size: 0.875rem;
+		padding: 0.25rem 0.5rem;
 	}
 
-	/* Mine - blue */
-	.pill-mine {
-		background: rgba(59, 130, 246, 0.1);
-		color: #3b82f6;
+	.pill-icon {
+		display: inline-flex;
+		align-items: center;
+		font-size: 1em;
 	}
 
-	/* Community - purple */
-	.pill-community {
-		background: rgba(147, 51, 234, 0.1);
-		color: #9333ea;
-	}
-
-	/* Remix - pink */
-	.pill-remix {
-		background: rgba(236, 72, 153, 0.1);
-		color: #ec4899;
-	}
-
-	/* Info - gray/neutral */
+	/* AlertVariant: info - blue/gray */
 	.pill-info {
-		background: rgba(100, 116, 139, 0.1);
-		color: #64748b;
+		background: var(--info-bg, #dbeafe);
+		color: var(--info-text, #1e40af);
 	}
 
-	/* Default - minimal styling */
-	.pill-default {
-		background: var(--ui-border, #e2e8f0);
-		color: var(--ui-text, #1a202c);
+	/* AlertVariant: warning - orange */
+	.pill-warning {
+		background: var(--warning-bg, #fef3c7);
+		color: var(--warning-text, #92400e);
+	}
+
+	/* AlertVariant: success - green */
+	.pill-success {
+		background: var(--success-bg, #d1fae5);
+		color: var(--success-text, #065f46);
+	}
+
+	/* AlertVariant: danger - red */
+	.pill-danger {
+		background: var(--error-bg, #fee2e2);
+		color: var(--error-text, #991b1b);
+	}
+
+	/* AlertVariant: neutral - transparent */
+	.pill-neutral {
+		background: transparent;
+		color: currentColor;
+		border: none;
+		padding: 0;
 	}
 </style>

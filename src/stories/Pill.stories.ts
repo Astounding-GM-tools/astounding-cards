@@ -1,14 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/svelte';
 import Pill from '$lib/next/components/ui/Pill.svelte';
-import {
-	Megaphone,
-	AlertTriangle,
-	Star,
-	Globe,
-	Palette,
-	Calendar,
-	Heart
-} from 'lucide-svelte';
+import { Check, AlertTriangle, Info as InfoIcon, XCircle } from 'lucide-svelte';
 
 const meta = {
 	title: 'Components/Pill',
@@ -17,8 +9,13 @@ const meta = {
 	argTypes: {
 		variant: {
 			control: 'select',
-			options: ['published', 'warning', 'mine', 'community', 'remix', 'info', 'default'],
-			description: 'Visual style variant'
+			options: ['info', 'warning', 'success', 'danger', 'neutral'],
+			description: 'AlertVariant type for consistent styling'
+		},
+		size: {
+			control: 'select',
+			options: ['sm', 'md'],
+			description: 'Size variant (sm = 0.75rem, md = 0.875rem)'
 		},
 		title: {
 			control: 'text',
@@ -30,26 +27,15 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
+export const Info: Story = {
 	args: {
-		variant: 'default'
+		variant: 'info',
+		icon: InfoIcon
 	},
 	render: (args) => ({
 		Component: Pill,
 		props: args,
-		children: 'Default Pill'
-	})
-};
-
-export const Published: Story = {
-	args: {
-		variant: 'published',
-		icon: Megaphone
-	},
-	render: (args) => ({
-		Component: Pill,
-		props: args,
-		children: 'Published'
+		children: '2 days ago'
 	})
 };
 
@@ -65,59 +51,44 @@ export const Warning: Story = {
 	})
 };
 
-export const Mine: Story = {
+export const Success: Story = {
 	args: {
-		variant: 'mine',
-		icon: Star
+		variant: 'success',
+		icon: Check
 	},
 	render: (args) => ({
 		Component: Pill,
 		props: args,
-		children: 'Created by me'
+		children: 'Published'
 	})
 };
 
-export const Community: Story = {
+export const Danger: Story = {
 	args: {
-		variant: 'community',
-		icon: Globe,
-		title: 'Created by Jane Doe'
+		variant: 'danger',
+		icon: XCircle
 	},
 	render: (args) => ({
 		Component: Pill,
 		props: args,
-		children: 'Community deck'
+		children: 'Error'
 	})
 };
 
-export const Remix: Story = {
+export const Neutral: Story = {
 	args: {
-		variant: 'remix',
-		icon: Palette
+		variant: 'neutral'
 	},
 	render: (args) => ({
 		Component: Pill,
 		props: args,
-		children: 'Remix'
-	})
-};
-
-export const Info: Story = {
-	args: {
-		variant: 'info',
-		icon: Calendar,
-		title: 'Created: January 1, 2025'
-	},
-	render: (args) => ({
-		Component: Pill,
-		props: args,
-		children: '2 days ago'
+		children: 'Neutral'
 	})
 };
 
 export const WithoutIcon: Story = {
 	args: {
-		variant: 'published'
+		variant: 'success'
 	},
 	render: (args) => ({
 		Component: Pill,
@@ -128,13 +99,26 @@ export const WithoutIcon: Story = {
 
 export const LongText: Story = {
 	args: {
-		variant: 'community',
-		icon: Globe
+		variant: 'info',
+		icon: InfoIcon
 	},
 	render: (args) => ({
 		Component: Pill,
 		props: args,
 		children: 'This is a longer pill with more text'
+	})
+};
+
+export const SmallSize: Story = {
+	args: {
+		variant: 'success',
+		size: 'sm',
+		icon: Check
+	},
+	render: (args) => ({
+		Component: Pill,
+		props: args,
+		children: 'Small'
 	})
 };
 
@@ -144,20 +128,22 @@ export const AllVariants: Story = {
 		props: {},
 		// Create a wrapper component to show all variants
 		template: `
-			<div style="display: flex; flex-direction: column; gap: 1rem; max-width: 400px;">
+			<div style="display: flex; flex-direction: column; gap: 1rem; max-width: 600px;">
+				<h3 style="margin: 0; font-size: 0.875rem; font-weight: 600; color: #64748b;">All Variants (Medium)</h3>
 				<div style="display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;">
-					<Pill variant="published" icon={Megaphone}>Published</Pill>
-					<Pill variant="warning" icon={AlertTriangle}>Needs sync</Pill>
-					<Pill variant="mine" icon={Star}>Created by me</Pill>
+					<Pill variant="info" icon={InfoIcon}>Info</Pill>
+					<Pill variant="warning" icon={AlertTriangle}>Warning</Pill>
+					<Pill variant="success" icon={Check}>Success</Pill>
+					<Pill variant="danger" icon={XCircle}>Danger</Pill>
+					<Pill variant="neutral">Neutral</Pill>
 				</div>
+				<h3 style="margin: 1rem 0 0 0; font-size: 0.875rem; font-weight: 600; color: #64748b;">All Variants (Small)</h3>
 				<div style="display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;">
-					<Pill variant="community" icon={Globe} title="Created by Jane">Community deck</Pill>
-					<Pill variant="remix" icon={Palette}>Remix</Pill>
-					<Pill variant="info" icon={Calendar}>2 days ago</Pill>
-				</div>
-				<div style="display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;">
-					<Pill variant="default">Default</Pill>
-					<Pill variant="info" icon={Heart}>42 likes</Pill>
+					<Pill variant="info" size="sm" icon={InfoIcon}>Info</Pill>
+					<Pill variant="warning" size="sm" icon={AlertTriangle}>Warning</Pill>
+					<Pill variant="success" size="sm" icon={Check}>Success</Pill>
+					<Pill variant="danger" size="sm" icon={XCircle}>Danger</Pill>
+					<Pill variant="neutral" size="sm">Neutral</Pill>
 				</div>
 			</div>
 		`
