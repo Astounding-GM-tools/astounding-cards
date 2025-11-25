@@ -65,17 +65,20 @@
 
 	.toast-wrapper {
 		pointer-events: auto;
-	}
-
-	/* Override InfoBox for toasts */
-	:global(.toast-infobox) {
+		background: white;
+		border-radius: 6px;
 		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 		transition: all 0.2s ease;
 	}
 
-	:global(.toast-infobox:hover) {
+	.toast-wrapper:hover {
 		box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
 		transform: translateY(-1px);
+	}
+
+	/* Override InfoBox for toasts */
+	:global(.toast-infobox) {
+		box-shadow: none; /* Remove shadow, wrapper has it */
 	}
 
 	/* Loading spinner animation */

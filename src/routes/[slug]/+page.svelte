@@ -184,6 +184,14 @@
 				console.warn('Analytics tracking failed:', error);
 			}
 
+			// Check if we need to auto-open the card editor
+			const editCardId = $page.url.searchParams.get('editCard');
+			if (editCardId && localDeck) {
+				// Wait a tick for the deck to be fully loaded
+				await new Promise((resolve) => setTimeout(resolve, 100));
+				dialogStore.setContent(CardEditDialog, { cardId: editCardId });
+			}
+
 			// Initial load happens via $effect above
 		})();
 
@@ -253,9 +261,9 @@
 				replaceState(window.location.pathname, {});
 
 				if (localDeck) {
-					toasts.success(`✅ Deck "${previewDeck.meta.title}" updated from gallery version!`);
+					toasts.success(`Deck "${previewDeck.meta.title}" updated from gallery version!`);
 				} else {
-					toasts.success(`❤️ Deck "${previewDeck.meta.title}" liked and added to your collection!`);
+					toasts.success(`Deck "${previewDeck.meta.title}" liked and added to your collection!`);
 				}
 			}
 		} catch (err) {
@@ -408,6 +416,13 @@
 			// If I have a deck to load, load it
 			if (deckToLoad) {
 				await nextDeckStore.loadDeck(deckToLoad);
+
+				// If we're in gallery view, redirect to local deck page
+				if (isGalleryView) {
+					toasts.info('Switched to editing your local version');
+					goto(`/${deckToLoad}?editCard=${cardId}`);
+					return;
+				}
 			} else {
 				// I don't have it - import it (keeping original title and dates)
 				console.log('[Edit] No local copy, importing deck');
@@ -426,13 +441,16 @@
 
 				await nextDeckStore.importDeck(previewDeck);
 
-				// Clear the URL hash since we've now imported
-				replaceState(window.location.pathname, {});
-
-				toasts.success(`🎉 Deck "${previewDeck.meta.title}" added to your collection!`);
+				// Navigate to the imported deck's page
+				const importedDeckId = nextDeckStore.deck?.id;
+				if (importedDeckId) {
+					toasts.success(`Deck "${previewDeck.meta.title}" added to your collection!`);
+					goto(`/${importedDeckId}?editCard=${cardId}`);
+					return;
+				}
 			}
 
-			// Now open the edit dialog - card will exist in store
+			// Now open the edit dialog - card will exist in store (only if not redirecting)
 			dialogStore.setContent(CardEditDialog, { cardId });
 		} catch (err) {
 			console.error('Failed to open editor:', err);
@@ -465,9 +483,9 @@
 
 			if (result.success && result.slug) {
 				if (isUpdate) {
-					toasts.success(`✅ Published version updated! Changes live at /${result.slug}`);
+					toasts.success(`Published version updated! Changes live at /${result.slug}`);
 				} else {
-					toasts.success(`🌍 Deck published! Visible in gallery at /${result.slug}`);
+					toasts.success(`Deck published! Visible in gallery at /${result.slug}`);
 				}
 			} else {
 				toasts.error(result.error || 'Failed to publish deck');
@@ -499,7 +517,7 @@
 					// Curated/shared deck - import to IndexedDB first
 					await nextDeckStore.importDeck(previewDeck);
 					replaceState(window.location.pathname, {});
-					toasts.success(`🎉 Deck "${previewDeck.meta.title}" added to your collection!`);
+					toasts.success(`Deck "${previewDeck.meta.title}" added to your collection!`);
 				}
 			}
 
@@ -527,7 +545,7 @@
 				// Clear the URL hash since we've now imported
 				replaceState(window.location.pathname, {});
 
-				toasts.success(`🎉 Deck "${previewDeck.meta.title}" added to your collection!`);
+				toasts.success(`Deck "${previewDeck.meta.title}" added to your collection!`);
 			}
 
 			// Create a new card first, then open dialog to edit it
@@ -564,7 +582,7 @@
 			const newTitle = prompt('Enter new deck title:', previewDeck.meta.title);
 			if (newTitle && newTitle.trim() !== '' && newTitle !== previewDeck.meta.title) {
 				await nextDeckStore.updateDeckMeta({ title: newTitle.trim() });
-				toasts.success('✏️ Deck title updated');
+				toasts.success('Deck title updated');
 			}
 		} catch (err) {
 			console.error('Failed to edit title:', err);
@@ -619,7 +637,7 @@
 					// If this was a published deck that we owned, optionally unpublish
 					// (For now, we just delete locally and navigate away)
 
-					toasts.success(`🗑️ Deck "${activeDeck.meta.title}" deleted`);
+					toasts.success(`Deck "${activeDeck.meta.title}" deleted`);
 
 					// Navigate to home/dashboard
 					goto('/');

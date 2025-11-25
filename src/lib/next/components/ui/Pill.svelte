@@ -1,20 +1,14 @@
 <script lang="ts">
-	import type { ComponentType } from 'svelte';
+	import type { Snippet } from 'svelte';
 
-	type PillVariant =
-		| 'published'
-		| 'warning'
-		| 'mine'
-		| 'community'
-		| 'remix'
-		| 'info'
-		| 'default';
+	type PillVariant = 'published' | 'warning' | 'mine' | 'community' | 'remix' | 'info' | 'default';
 
 	interface Props {
 		variant?: PillVariant;
-		icon?: ComponentType;
+		icon?: Snippet;
 		title?: string;
 		class?: string;
+		children?: import('svelte').Snippet;
 	}
 
 	let { variant = 'default', icon: Icon, title, class: className, children }: Props = $props();
@@ -24,7 +18,9 @@
 	{#if Icon}
 		<Icon size={14} />
 	{/if}
-	{@render children?.()}
+	{#if children}
+		{@render children()}
+	{/if}
 </span>
 
 <style>
