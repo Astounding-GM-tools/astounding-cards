@@ -1,0 +1,48 @@
+# Supabase CLI Configuration
+# This file is used to manage your Supabase project locally and in CI/CD
+
+[project]
+# Project name shown in CLI
+name = "astounding-cards"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public"]
+
+[db]
+port = 54322
+shadow_port = 54320
+major_version = 15
+
+[studio]
+enabled = true
+port = 54323
+
+[inbucket]
+enabled = false
+
+[auth]
+enabled = true
+# IMPORTANT: Keep this in sync with your Supabase Auth settings
+site_url = "http://localhost:5173"
+additional_redirect_urls = ["https://localhost:5173"]
+jwt_expiry = 3600
+enable_signup = true
+
+[auth.email]
+enable_signup = true
+double_confirm_changes = true
+enable_confirmations = false
+
+# Local development overrides
+[local]
+# Port your local server is running on
+port = 54321
+
+# Migration settings
+[db.pooler]
+enabled = false
+
+# Remote connections (for db push/pull)
+# Note: You'll link to specific projects using `supabase link`
