@@ -267,26 +267,29 @@
 	<!-- Action Bar for authenticated users -->
 	<ActionBar>
 		<ActionButton
-			icon={Plus}
 			title="New Deck"
 			subtitle="Create blank deck"
 			variant="primary"
 			onclick={handleCreateNewDeck}
-		/>
+		>
+			{#snippet icon()}<Plus size={20} />{/snippet}
+		</ActionButton>
 		<ActionButton
-			icon={Download}
 			title="Import Deck"
 			subtitle="From JSON file"
 			variant="secondary"
 			onclick={handleImportJson}
-		/>
+		>
+			{#snippet icon()}<Download size={20} />{/snippet}
+		</ActionButton>
 		<ActionButton
-			icon={LogOut}
 			title="Log Out"
 			subtitle="Sign out"
 			variant="secondary"
 			onclick={handleLogOut}
-		/>
+		>
+			{#snippet icon()}<LogOut size={20} />{/snippet}
+		</ActionButton>
 	</ActionBar>
 
 	<!-- Dashboard Sections -->
@@ -327,18 +330,21 @@
 							</p>
 						</div>
 					</div>
-					<InfoBox variant="warning" icon={Sparkles}>
+					<InfoBox variant="warning">
+						{#snippet icon()}<Sparkles size={18} />{/snippet}
 						<strong>Coming Soon!</strong> Token purchasing will become available after Lemon Squeezy
 						(hopefully) approves this website.
 					</InfoBox>
 
-					<InfoBox variant="info" icon={BookOpenCheck}>
-						<strong>Beta prices!</strong> We are testing the sustainability of our pricing model.
-						It is likely that we will have to increase prices after the beta, but any unspent tokens
-						bought during beta will be retained.
+					<InfoBox variant="info">
+						{#snippet icon()}<BookOpenCheck size={18} />{/snippet}
+						<strong>Beta prices!</strong> We are testing the sustainability of our pricing model. It
+						is likely that we will have to increase prices after the beta, but any unspent tokens bought
+						during beta will be retained.
 					</InfoBox>
 
-					<InfoBox variant="info" icon={LibraryBigIcon}>
+					<InfoBox variant="info">
+						{#snippet icon()}<LibraryBigIcon size={18} />{/snippet}
 						<strong>Terms of service</strong>
 						Remember to read the full terms of service, but the most important bit is that Astounding
 						Cards is a <strong>community driven service</strong>: All images generated on the
@@ -389,32 +395,41 @@
 										{#if relativeDate}
 											<Pill
 												variant="info"
-												icon={Calendar}
-												title="{dateInfo.label}: {new Date(dateInfo.timestamp).toLocaleString()}"
+												title="{dateInfo?.label}: {new Date(dateInfo?.timestamp).toLocaleString()}"
 											>
+												{#snippet icon()}<Calendar size={14} />{/snippet}
 												{relativeDate}
 											</Pill>
 										{/if}
 									{/if}
 									{#if deck.meta.published_deck_id || deck.meta.remix_of === deck.id}
-										<Pill variant="published" icon={Megaphone}>Published</Pill>
+										<Pill variant="published">
+											{#snippet icon()}<Megaphone size={14} />{/snippet}
+											Published
+										</Pill>
 										{#if hasUnpublishedChanges(deck)}
-											<Pill variant="warning" icon={AlertTriangle}>Needs sync</Pill>
+											<Pill variant="warning">
+												{#snippet icon()}<AlertTriangle size={14} />{/snippet}
+												Needs sync
+											</Pill>
 										{/if}
 									{/if}
 									{#if !deck.meta.creator_id || deck.meta.creator_id === $user?.id}
-										<Pill variant="mine" icon={Star}>Created by me</Pill>
+										<Pill variant="mine">
+											{#snippet icon()}<Star size={14} />{/snippet}
+											Created by me
+										</Pill>
 									{:else}
-										<Pill
-											variant="community"
-											icon={Globe}
-											title="Created by {deck.meta.creator_name}"
-										>
+										<Pill variant="community" title="Created by {deck.meta.creator_name}">
+											{#snippet icon()}<Globe size={14} />{/snippet}
 											Community deck
 										</Pill>
 									{/if}
 									{#if deck.meta.remix_of && deck.meta.creator_id && deck.meta.creator_id !== $user?.id}
-										<Pill variant="remix" icon={Palette}>Remix</Pill>
+										<Pill variant="remix">
+											{#snippet icon()}<Palette size={14} />{/snippet}
+											Remix
+										</Pill>
 									{/if}
 								</div>
 							</button>
@@ -610,7 +625,6 @@
 		border-radius: 8px;
 		padding: 1.5rem;
 	}
-
 
 	.divider {
 		width: 1px;

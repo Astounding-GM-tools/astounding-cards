@@ -5,28 +5,11 @@
 	import { TOAST_ANIMATION } from './Toasts.svelte.ts';
 	import { CheckCircle, Info, AlertTriangle, XCircle, Loader2 } from 'lucide-svelte';
 
-	// Map toast types to InfoBox variants and icons
+	// Map toast types to InfoBox variants
 	function getToastVariant(type: Toast['type']): 'success' | 'info' | 'warning' | 'danger' {
 		if (type === 'loading') return 'info';
 		if (type === 'error') return 'danger';
 		return type as 'success' | 'info' | 'warning';
-	}
-
-	function getToastIcon(type: Toast['type']) {
-		switch (type) {
-			case 'success':
-				return CheckCircle;
-			case 'info':
-				return Info;
-			case 'warning':
-				return AlertTriangle;
-			case 'error':
-				return XCircle;
-			case 'loading':
-				return Loader2;
-			default:
-				return Info;
-		}
 	}
 
 	function handleDismiss(id: string) {
@@ -39,11 +22,23 @@
 		<div class="toast-wrapper" transition:fly={TOAST_ANIMATION}>
 			<InfoBox
 				variant={getToastVariant(toast.type)}
-				icon={getToastIcon(toast.type)}
 				dismissible={toast.dismissible !== false}
 				onDismiss={() => handleDismiss(toast.id)}
 				class="toast-infobox {toast.type === 'loading' ? 'loading' : ''}"
 			>
+				{#snippet icon()}
+					{#if toast.type === 'success'}
+						<CheckCircle size={18} />
+					{:else if toast.type === 'info'}
+						<Info size={18} />
+					{:else if toast.type === 'warning'}
+						<AlertTriangle size={18} />
+					{:else if toast.type === 'error'}
+						<XCircle size={18} />
+					{:else if toast.type === 'loading'}
+						<Loader2 size={18} />
+					{/if}
+				{/snippet}
 				{toast.message}
 			</InfoBox>
 		</div>

@@ -1,22 +1,24 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
+	import type { AlertVariant } from '$lib/next/types/ui';
 
-	type PillVariant = 'published' | 'warning' | 'mine' | 'community' | 'remix' | 'info' | 'default';
+	// Pill-specific variants extend AlertVariant
+	type PillVariant = AlertVariant | 'published' | 'mine' | 'community' | 'remix' | 'default';
 
 	interface Props {
 		variant?: PillVariant;
 		icon?: Snippet;
 		title?: string;
 		class?: string;
-		children?: import('svelte').Snippet;
+		children?: Snippet;
 	}
 
-	let { variant = 'default', icon: Icon, title, class: className, children }: Props = $props();
+	let { variant = 'default', icon, title, class: className, children }: Props = $props();
 </script>
 
 <span class="pill pill-{variant} {className}" {title}>
-	{#if Icon}
-		<Icon size={14} />
+	{#if icon}
+		{@render icon()}
 	{/if}
 	{#if children}
 		{@render children()}

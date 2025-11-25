@@ -141,6 +141,42 @@
 	--toast-info: #2196f3;
 	--toast-warning: #ff9800;
 
+	/* Alert/Notification variants (used across InfoBox, Pill, ActionButton, Toast) */
+	/* Success - Green */
+	--alert-success: #16a34a;
+	--alert-success-bg: rgba(34, 197, 94, 0.08);
+	--alert-success-border: rgba(34, 197, 94, 0.3);
+	--alert-success-text: #166534;
+	--alert-success-text-strong: #14532d;
+
+	/* Info - Blue */
+	--alert-info: #2563eb;
+	--alert-info-bg: rgba(59, 130, 246, 0.08);
+	--alert-info-border: rgba(59, 130, 246, 0.3);
+	--alert-info-text: #1e40af;
+	--alert-info-text-strong: #1e3a8a;
+
+	/* Warning - Amber/Yellow */
+	--alert-warning: #d97706;
+	--alert-warning-bg: linear-gradient(135deg, rgba(251, 191, 36, 0.1) 0%, rgba(251, 191, 36, 0.05) 100%);
+	--alert-warning-border: #fbbf24;
+	--alert-warning-text: #78350f;
+	--alert-warning-text-strong: #92400e;
+
+	/* Danger - Red */
+	--alert-danger: #dc2626;
+	--alert-danger-bg: rgba(239, 68, 68, 0.08);
+	--alert-danger-border: rgba(239, 68, 68, 0.3);
+	--alert-danger-text: #991b1b;
+	--alert-danger-text-strong: #7f1d1d;
+
+	/* Neutral - Gray */
+	--alert-neutral: #64748b;
+	--alert-neutral-bg: rgba(148, 163, 184, 0.08);
+	--alert-neutral-border: rgba(148, 163, 184, 0.3);
+	--alert-neutral-text: #475569;
+	--alert-neutral-text-strong: #334155;
+
 	/* Dialog styles (constant) */
 	--dialog-bg: white;
 	--dialog-border: #e0e0e0;

@@ -125,10 +125,6 @@
 			margin: 0;
 		}
 
-		.preview-content {
-			padding: 0;
-		}
-
 		.print-layout .page {
 			margin: 0;
 			padding: 10mm; /* Keep padding so crop marks stay visible */
@@ -141,8 +137,6 @@
 		}
 
 		/* Hide all headers when printing */
-		:global(header),
-		:global([class*='header']),
 		:global(.app-header) {
 			display: none !important;
 		}

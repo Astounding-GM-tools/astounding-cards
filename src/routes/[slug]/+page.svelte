@@ -11,6 +11,7 @@
 	import PrintLayout from '$lib/next/components/print/PrintLayout.svelte';
 	import DeckMetadata from '$lib/next/components/nav/DeckMetadata.svelte';
 	import AiBatchImageGenerationDialog from '$lib/next/components/dialogs/AiBatchImageGenerationDialog.svelte';
+	import InfoBox from '$lib/next/components/ui/InfoBox.svelte';
 
 	import { page } from '$app/stores';
 	import { user } from '$lib/next/stores/auth';
@@ -24,16 +25,25 @@
 	import MergeTool from '$lib/next/components/merge/MergeTool.svelte';
 	import { performThreeLayerMerge } from '$lib/next/utils/threeLayerMerge.js';
 	import {
-		detectDeckConflict,
 		type DeckConflict,
 		type MergeResolution,
 		applyMergeResolution
 	} from '$lib/next/utils/deckMerging.js';
-	import DeckActions from '$lib/next/components/nav/DeckActions.svelte';
 	import ActionBar from '$lib/next/components/actions/ActionBar.svelte';
 	import ActionButton from '$lib/next/components/actions/ActionButton.svelte';
 	import { actionButtonContent } from '$lib/next/components/actions/actionButtonContent';
-	import { Share2, Upload, Eye, Heart, Plus, Wand2, BookPlus, BookCheck } from 'lucide-svelte';
+	import {
+		Share2,
+		Upload,
+		Eye,
+		Heart,
+		Plus,
+		WandSparkles,
+		BookPlus,
+		BookCheck,
+		CircleCheck,
+		CircleX
+	} from 'lucide-svelte';
 
 	// Server-side data
 	let { data }: { data: PageData } = $props();
@@ -65,7 +75,8 @@
 		if (!localDeck) return false;
 
 		// Check if deck is published (either has published_deck_id OR is a re-imported published deck)
-		const isPublished = localDeck.meta.published_deck_id || localDeck.meta.remix_of === localDeck.id;
+		const isPublished =
+			localDeck.meta.published_deck_id || localDeck.meta.remix_of === localDeck.id;
 		if (!isPublished) return false;
 
 		// Use activeDeck for reactivity - updates automatically when store changes
@@ -675,30 +686,30 @@
 			{#if isGalleryView}
 				<!-- Gallery view: Like, Add to Library, Share -->
 				<!-- Like button (read-only, shows count) -->
-				<ActionButton
-					icon={Heart}
-					{...actionButtonContent.like}
-					variant="danger"
-					filled={false}
-					disabled
-				/>
+				<ActionButton {...actionButtonContent.like} variant="danger" filled={false} disabled>
+					{#snippet icon()}<Heart size={20} />{/snippet}
+				</ActionButton>
 
 				<!-- Add to Library button -->
 				<ActionButton
-					icon={localDeck ? BookCheck : BookPlus}
 					{...localDeck ? actionButtonContent.removeFromLibrary : actionButtonContent.addToLibrary}
 					variant={localDeck ? 'success' : 'primary'}
 					onclick={handleImport}
 					disabled={importing}
-				/>
+				>
+					{#snippet icon()}
+						{#if localDeck}
+							<BookCheck size={20} />
+						{:else}
+							<BookPlus size={20} />
+						{/if}
+					{/snippet}
+				</ActionButton>
 
 				<!-- Share button -->
-				<ActionButton
-					icon={Share2}
-					{...actionButtonContent.share}
-					variant="primary"
-					onclick={handleShare}
-				/>
+				<ActionButton {...actionButtonContent.share} variant="primary" onclick={handleShare}>
+					{#snippet icon()}<Share2 size={20} />{/snippet}
+				</ActionButton>
 			{:else if localDeck}
 				<!-- Local slug view: Full owner actions -->
 				<!-- Check if published (has published_deck_id, published_slug, OR is a re-imported published deck) -->
@@ -708,64 +719,63 @@
 					<!-- Republish button - only show if local changes exist -->
 					{#if needsRepublish}
 						<ActionButton
-							icon={Upload}
 							{...actionButtonContent.republish}
 							variant="warning"
 							onclick={handlePublish}
 							disabled={publishing}
-						/>
+						>
+							{#snippet icon()}<Upload size={20} />{/snippet}
+						</ActionButton>
 					{/if}
 
 					<!-- Like count (read-only for your own deck) -->
 					<ActionButton
-						icon={Heart}
 						title="Likes"
 						subtitle={`${data.curatedDeck?.like_count || 0} likes`}
 						variant="danger"
 						filled={false}
 						disabled
-					/>
+					>
+						{#snippet icon()}<Heart size={20} />{/snippet}
+					</ActionButton>
 
 					<ActionButton
-						icon={Eye}
 						{...actionButtonContent.viewPublic}
 						variant="secondary"
 						onclick={handleViewInGallery}
-					/>
+					>
+						{#snippet icon()}<Eye size={20} />{/snippet}
+					</ActionButton>
 
-					<ActionButton
-						icon={Share2}
-						{...actionButtonContent.share}
-						variant="primary"
-						onclick={handleShare}
-					/>
+					<ActionButton {...actionButtonContent.share} variant="primary" onclick={handleShare}>
+						{#snippet icon()}<Share2 size={20} />{/snippet}
+					</ActionButton>
 				{:else}
 					<!-- Unpublished deck - show publish button -->
 					<ActionButton
-						icon={Upload}
 						{...actionButtonContent.publish}
 						variant="success"
 						onclick={handlePublish}
 						disabled={publishing}
-					/>
+					>
+						{#snippet icon()}<Upload size={20} />{/snippet}
+					</ActionButton>
 				{/if}
 
 				<!-- Always show generate and add card -->
 				{#if $user}
 					<ActionButton
-						icon={Wand2}
 						{...actionButtonContent.generateImages}
 						variant="success"
 						onclick={handleGenerateImages}
-					/>
+					>
+						{#snippet icon()}<WandSparkles size={20} />{/snippet}
+					</ActionButton>
 				{/if}
 
-				<ActionButton
-					icon={Plus}
-					{...actionButtonContent.addCard}
-					variant="primary"
-					onclick={handleAddCard}
-				/>
+				<ActionButton {...actionButtonContent.addCard} variant="primary" onclick={handleAddCard}>
+					{#snippet icon()}<Plus size={20} />{/snippet}
+				</ActionButton>
 			{/if}
 		</ActionBar>
 
@@ -781,28 +791,36 @@
 		<!-- Loading/Error states -->
 		<div class="import-content">
 			{#if loading}
-				<div class="importing">
-					<div class="spinner"></div>
-					<h2>🔗 Loading Deck</h2>
-					<p>Preparing preview...</p>
-					{#if decodedSlug}
-						<p class="slug">"{decodedSlug}"</p>
-					{/if}
-				</div>
+				<InfoBox variant="info">
+					{#snippet icon()}
+						<div class="spinner"></div>
+					{/snippet}
+					<div class="info-box-layout">
+						<h2>Loading Deck</h2>
+						<p>Preparing preview...</p>
+						{#if decodedSlug}
+							<p class="slug">"{decodedSlug}"</p>
+						{/if}
+					</div>
+				</InfoBox>
 			{:else if imported}
-				<div class="success">
-					<div class="checkmark">✅</div>
-					<h2>🎉 Added to Collection!</h2>
-					<p>Deck saved to your collection.</p>
-					<button class="success-button" onclick={() => goto('/')}> Open Deck </button>
-				</div>
+				<InfoBox variant="success">
+					{#snippet icon()}<CircleCheck size={48} />{/snippet}
+					<div class="info-box-layout">
+						<h2>Added to Collection!</h2>
+						<p>Deck saved to your collection.</p>
+						<button class="success-button" onclick={() => goto('/')}> Open Deck </button>
+					</div>
+				</InfoBox>
 			{:else if error}
-				<div class="error">
-					<div class="error-icon">❌</div>
-					<h2>Load Failed</h2>
-					<p>{error}</p>
-					<button class="retry-button" onclick={() => goto('/')}> Go to App </button>
-				</div>
+				<InfoBox variant="danger">
+					{#snippet icon()}<CircleX size={48} />{/snippet}
+					<div class="info-box-layout">
+						<h2>Load Failed</h2>
+						<p>{error}</p>
+						<button class="retry-button" onclick={() => goto('/')}> Go to App </button>
+					</div>
+				</InfoBox>
 			{/if}
 		</div>
 	{/if}
@@ -826,15 +844,6 @@
 		max-width: 400px;
 	}
 
-	.importing,
-	.success,
-	.error {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 1rem;
-	}
-
 	.spinner {
 		width: 32px;
 		height: 32px;
@@ -853,11 +862,6 @@
 		}
 	}
 
-	.checkmark {
-		font-size: 3rem;
-		animation: bounce 0.6s ease-out;
-	}
-
 	@keyframes bounce {
 		0% {
 			transform: scale(0.3);
@@ -871,11 +875,6 @@
 		100% {
 			transform: scale(1);
 		}
-	}
-
-	.error-icon {
-		font-size: 3rem;
-		color: var(--toast-error, #dc2626);
 	}
 
 	h2 {

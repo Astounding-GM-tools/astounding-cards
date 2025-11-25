@@ -1,8 +1,8 @@
 <script lang="ts">
-	import type { ComponentType } from 'svelte';
+	import type { Snippet } from 'svelte';
 
 	interface Props {
-		icon: ComponentType;
+		icon: Snippet;
 		title: string;
 		subtitle?: string;
 		variant?: 'primary' | 'secondary' | 'success' | 'warning' | 'danger';
@@ -13,7 +13,7 @@
 	}
 
 	let {
-		icon: Icon,
+		icon,
 		title,
 		subtitle,
 		variant = 'primary',
@@ -26,7 +26,7 @@
 
 <button class="action-button {variant}" {disabled} {onclick}>
 	<div class="action-icon" class:filled>
-		<Icon size={20} />
+		{@render icon()}
 	</div>
 	<div class="action-text">
 		<div class="action-title">{title}</div>
