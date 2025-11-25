@@ -83,7 +83,8 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 		const generationCount = cardsToGenerate.length;
 		const totalCost = generationCount * TOKEN_COSTS.IMAGE_GENERATION_COMMUNITY;
 
-			`💰 Cost calculation: ${generationCount} to generate, ${cachedResults.length} cached = ${totalCost} tokens`
+	console.log(
+		`💰 Cost calculation: ${generationCount} to generate, ${cachedResults.length} cached = ${totalCost} tokens`
 		);
 
 		// If everything is cached, return early
@@ -130,6 +131,7 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 	// Create generation function for a single card
 	const generateCardImage = async (card: CardData, index: number) => {
 		try {
+			console.log(
 				`🎨 Generating image ${index + 1}/${cardsToGenerate.length} for card "${card.title}"`
 			);
 
@@ -198,6 +200,7 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 		`Batch image generation: ${generatedCount} generated, ${cachedResults.length} cached, ${failedCount} failed (style: ${style})`
 	);
 
+	console.log(
 		`📊 Batch complete: ${generatedCount} generated, ${cachedResults.length} cached, ${failedCount} failed`
 	);
 

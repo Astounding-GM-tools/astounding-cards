@@ -53,7 +53,8 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 			return error(402, 'Insufficient tokens');
 		}
 
-			`🚀 Server-side deck generation: "${prompt.substring(0, 50)}..." (${cardCount} cards, ${cost} tokens)`
+	console.log(
+		`🚀 Server-side deck generation: "${prompt.substring(0, 50)}..." (${cardCount} cards, ${cost} tokens)`
 		);
 
 		// 5. Generate deck using existing logic
