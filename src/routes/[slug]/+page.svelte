@@ -1,17 +1,23 @@
 <script lang="ts">
-	import type { Deck, Layout } from '$lib/next/types/deck.js';
 	import type { PageData } from './$types';
+	import type { Deck, Layout } from '$lib/next/types/deck.js';
+	import type { DeckConflict, MergeResolution } from '$lib/next/utils/deckMerging.js';
+
+	import { applyMergeResolution } from '$lib/next/utils/deckMerging.js';
 
 	import { onMount } from 'svelte';
 	import { track } from '@vercel/analytics';
 
 	import Dialog from '$lib/next/components/dialog/Dialog.svelte';
+	import InfoBox from '$lib/next/components/ui/InfoBox.svelte';
+	import ActionBar from '$lib/next/components/actions/ActionBar.svelte';
+	import ActionButton from '$lib/next/components/actions/ActionButton.svelte';
+	import MergeTool from '$lib/next/components/merge/MergeTool.svelte';
 	import MainHeader from '$lib/next/components/nav/MainHeader.svelte';
 	import DeckPreview from '$lib/next/components/preview/DeckPreview.svelte';
 	import PrintLayout from '$lib/next/components/print/PrintLayout.svelte';
 	import DeckMetadata from '$lib/next/components/nav/DeckMetadata.svelte';
 	import AiBatchImageGenerationDialog from '$lib/next/components/dialogs/AiBatchImageGenerationDialog.svelte';
-	import InfoBox from '$lib/next/components/ui/InfoBox.svelte';
 
 	import { page } from '$app/stores';
 	import { user } from '$lib/next/stores/auth';
@@ -20,18 +26,11 @@
 	import { dialogStore } from '$lib/next/components/dialog/dialogStore.svelte.ts';
 	import { importFromUrl } from '$lib/next/utils/shareUrlUtils.js';
 	import { nextDeckStore } from '$lib/next/stores/deckStore.svelte.ts';
-	import { CardEditDialog, DeleteDeckDialog } from '$lib/next/components/dialogs/';
 	import { goto, replaceState } from '$app/navigation';
-	import MergeTool from '$lib/next/components/merge/MergeTool.svelte';
 	import { performThreeLayerMerge } from '$lib/next/utils/threeLayerMerge.js';
-	import {
-		type DeckConflict,
-		type MergeResolution,
-		applyMergeResolution
-	} from '$lib/next/utils/deckMerging.js';
-	import ActionBar from '$lib/next/components/actions/ActionBar.svelte';
-	import ActionButton from '$lib/next/components/actions/ActionButton.svelte';
+	import { CardEditDialog, DeleteDeckDialog } from '$lib/next/components/dialogs/';
 	import { actionButtonContent } from '$lib/next/components/actions/actionButtonContent';
+
 	import {
 		Share2,
 		Upload,
@@ -839,9 +838,15 @@
 	}
 
 	.import-content {
-		text-align: center;
 		padding: 2rem;
-		max-width: 400px;
+		max-width: 600px;
+		margin: 0 auto;
+	}
+
+	.info-box-layout {
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
 	}
 
 	.spinner {
