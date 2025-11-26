@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Card } from '../../types/card.js';
 	import { ImageUrlManager } from '$lib/utils/image-handler.js';
+	import { getOptimizedImageUrl, getSrcSet } from '$lib/utils/image-optimization.js';
 
 	const { card } = $props<{
 		card: Card;
@@ -22,6 +23,18 @@
 		}
 	});
 
+	let optimizedSrc = $derived(() => {
+		const url = imageUrl();
+		if (!url) return '';
+		return getOptimizedImageUrl(url, { width: 640, format: 'webp' });
+	});
+
+	let srcSet = $derived(() => {
+		const url = imageUrl();
+		if (!url) return '';
+		return getSrcSet(url);
+	});
+
 	// Check if image is currently being generated
 	let isGenerating = $derived(card.imageMetadata?.isGenerating || false);
 
@@ -35,7 +48,14 @@
 
 <div class="image-container">
 	{#if imageUrl()}
-		<img src={imageUrl()} alt={card.title} loading="lazy" class:generating={isGenerating} />
+		<img
+			src={optimizedSrc()}
+			srcset={srcSet()}
+			sizes="(max-width: 650px) 100vw, (max-width: 967px) 50vw, (max-width: 1279px) 33vw, 310px"
+			alt={card.title}
+			loading="lazy"
+			class:generating={isGenerating}
+		/>
 	{/if}
 
 	{#if isGenerating}

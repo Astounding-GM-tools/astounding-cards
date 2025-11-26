@@ -3,6 +3,7 @@
 	import { authenticatedFetch } from '$lib/utils/authenticated-fetch';
 	import { toasts } from '$lib/stores/toast';
 	import type { Card } from '$lib/next/types/card';
+	import { getOptimizedImageUrl } from '$lib/utils/image-optimization';
 
 	const props = $props<{
 		card: Card;
@@ -172,7 +173,14 @@
 							onclick={() => openPreview(getDisplayUrl(result))}
 							type="button"
 						>
-							<img src={getDisplayUrl(result)} alt="" />
+							<img
+								src={getOptimizedImageUrl(getDisplayUrl(result), {
+									width: 300,
+									height: 300,
+									fit: 'contain'
+								})}
+								alt=""
+							/>
 							<div class="style-badge">{getDisplayStyle(result)}</div>
 						</button>
 
@@ -239,7 +247,10 @@
 {#if previewUrl}
 	<div class="preview-overlay" onclick={closePreview}>
 		<div class="preview-content" onclick={(e) => e.stopPropagation()}>
-			<img src={previewUrl} alt="Preview" />
+			<img
+				src={getOptimizedImageUrl(previewUrl, { width: 1200, fit: 'scale-down' })}
+				alt="Preview"
+			/>
 			<button class="close-preview" onclick={closePreview} type="button">✕</button>
 		</div>
 	</div>
