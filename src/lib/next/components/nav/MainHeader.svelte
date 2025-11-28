@@ -1,17 +1,20 @@
 <script lang="ts">
-	import { user, isAuthenticated, authStore } from '$lib/next/stores/auth';
+	import type { Deck } from '$lib/next/types/deck.js';
+
+	import AiDeckGenerationDialog from '../dialogs/AiDeckGenerationDialog.svelte';
 	import AuthDialog from '../dialogs/AuthDialog.svelte';
 	import DeckSwitcher from './DeckSwitcher.svelte';
-	import { Library, LogIn, ChevronDown, Coins, Plus, Sparkles, Pencil } from 'lucide-svelte';
-	import type { Deck } from '$lib/next/types/deck.js';
+
+	import { onMount } from 'svelte';
+	import { goto } from '$app/navigation';
+	import { toasts } from '$lib/stores/toast';
+	import { nextDb } from '../../stores/database';
+	import { dialogStore } from '../dialog/dialogStore.svelte';
 	import { tokenAmount } from '$lib/next/stores/tokenBalance';
 	import { nextDeckStore } from '../../stores/deckStore.svelte';
-	import { toasts } from '$lib/stores/toast';
-	import { goto } from '$app/navigation';
-	import { dialogStore } from '../dialog/dialogStore.svelte';
-	import AiDeckGenerationDialog from '../dialogs/AiDeckGenerationDialog.svelte';
-	import { nextDb } from '../../stores/database';
-	import { onMount } from 'svelte';
+	import { user, isAuthenticated } from '$lib/next/stores/auth';
+
+	import { Library, LogIn, ChevronDown, Coins, Plus, Sparkles, Pencil } from 'lucide-svelte';
 
 	// Props for flexible header
 	interface Props {
@@ -49,8 +52,6 @@
 		isGalleryView = false,
 		showDeckSwitcher = false,
 		currentDeckId,
-		onSelectDeck,
-		onNewDeck,
 		actions,
 		metadata,
 		onTitleEdit
@@ -579,6 +580,25 @@
 	@media (max-width: 480px) {
 		.page-title {
 			font-size: 1.125rem;
+		}
+
+		.app-header {
+			.header-top-bar {
+				flex-wrap: nowrap;
+			}
+
+			.brand-name {
+				display: none;
+			}
+
+			.top-bar-actions {
+				flex-wrap: wrap;
+				justify-content: space-between;
+			}
+
+			.top-bar-link {
+				min-width: 140px;
+			}
 		}
 	}
 </style>
