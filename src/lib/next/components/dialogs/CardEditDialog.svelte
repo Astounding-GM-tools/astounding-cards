@@ -675,12 +675,12 @@
 			</div>
 
 			<div class="dialog-actions">
-				<button class="danger" onclick={deleteCard} disabled={isSaving}> Delete Card </button>
+				<button class="danger" onclick={deleteCard} disabled={isSaving}> Delete </button>
 				<div class="spacer"></div>
 				<button onclick={resetForm} disabled={!hasChanges || isSaving}> Reset </button>
 				<button onclick={cancelChanges} disabled={isSaving}> Cancel </button>
 				<button class="primary" onclick={saveChanges} disabled={!hasChanges || isSaving}>
-					{isSaving ? 'Saving...' : 'Save Changes'}
+					{isSaving ? 'Saving...' : 'Save'}
 				</button>
 			</div>
 		</footer>
