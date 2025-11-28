@@ -62,7 +62,9 @@
 
 	// Check if card has image for dialog display
 	// Check both card and formData since formData might not be initialized yet
-	let hasImage = $derived(!!(formData.imageBlob || formData.imageUrl || card?.imageBlob || card?.image));
+	let hasImage = $derived(
+		!!(formData.imageBlob || formData.imageUrl || card?.imageBlob || card?.image)
+	);
 
 	// Create preview card with live form data
 	let previewCard = $derived(
@@ -72,10 +74,10 @@
 					title: isFormInitialized ? formData.title : card.title,
 					subtitle: isFormInitialized ? formData.subtitle : card.subtitle,
 					description: isFormInitialized ? formData.description : card.description,
-					stats: isFormInitialized ? formData.stats : (card.stats || []),
-					traits: isFormInitialized ? formData.traits : (card.traits || []),
-					imageBlob: isFormInitialized ? formData.imageBlob : (card.imageBlob || null),
-					image: isFormInitialized ? formData.imageUrl : (card.image || null)
+					stats: isFormInitialized ? formData.stats : card.stats || [],
+					traits: isFormInitialized ? formData.traits : card.traits || [],
+					imageBlob: isFormInitialized ? formData.imageBlob : card.imageBlob || null,
+					image: isFormInitialized ? formData.imageUrl : card.image || null
 				}
 			: null
 	);
@@ -199,9 +201,7 @@
 		const cardTitle = card.title; // Save title before deletion
 		const cardId = card.id; // Save ID before closing dialog
 
-		const confirmed = confirm(
-			`Delete card "${cardTitle}"?\n\nThis action cannot be undone.`
-		);
+		const confirmed = confirm(`Delete card "${cardTitle}"?\n\nThis action cannot be undone.`);
 
 		if (!confirmed) return;
 
@@ -1124,6 +1124,7 @@
 	/* Footer Styles - More Compact */
 	.dialog-footer {
 		display: flex;
+		flex-direction: column;
 		justify-content: space-between;
 		align-items: center;
 		padding: 0.5rem 0.75rem;
@@ -1137,6 +1138,8 @@
 
 	.dialog-status {
 		font-size: 0.8rem;
+		padding: 0.2rem;
+		width: 100%;
 	}
 
 	.saving {
