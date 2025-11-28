@@ -719,7 +719,9 @@
 		flex-direction: column;
 		gap: 0.75rem;
 		overflow-y: auto;
+		overflow-x: hidden;
 		padding-right: 0.5rem;
+		min-width: 0; /* Allow flex children to shrink */
 	}
 
 	/* Fieldset Form Styles */
@@ -1249,6 +1251,36 @@
 
 		.preview-wrapper {
 			height: 200px;
+		}
+
+		/* Make stat rows wrap on mobile to prevent horizontal overflow */
+		.stat-compact-row,
+		.trait-compact-row {
+			flex-wrap: wrap;
+		}
+
+		.stat-compact-row .title-input,
+		.trait-compact-row .title-input {
+			min-width: 0; /* Remove minimum width constraint on mobile */
+			flex-basis: 100px; /* Smaller base width */
+		}
+
+		.value-input {
+			width: 60px; /* Smaller value input on mobile */
+		}
+
+		/* Make textareas taller on mobile for easier editing */
+		.form-fieldset textarea {
+			min-height: 4em; /* Increase from default 2 rows */
+		}
+
+		.description-input {
+			min-height: 3.5em; /* Comfortable height for descriptions */
+		}
+
+		.description-input.stat-description {
+			height: auto; /* Override fixed height */
+			min-height: 3.5em;
 		}
 	}
 </style>
