@@ -1,7 +1,7 @@
 // Astounding Cards Service Worker
 // Provides offline functionality and caching for PWA
 
-const CACHE_NAME = 'astounding-cards-v2';
+const CACHE_NAME = 'astounding-cards-v3';
 const STATIC_CACHE_URLS = [
   '/',
   '/manifest.json',

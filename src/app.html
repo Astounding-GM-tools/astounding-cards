@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" style="touch-action: manipulation;">
 	<head>
 		<meta charset="utf-8" />
 		<link rel="icon" href="%sveltekit.assets%/favicon.svg" />
-		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, shrink-to-fit=no" />
 
 		<!-- PWA Configuration -->
 		<link rel="manifest" href="%sveltekit.assets%/manifest.json" />
@@ -114,32 +114,19 @@
 	<body data-sveltekit-preload-data="hover">
 		<div style="display: contents">%sveltekit.body%</div>
 
-		<!-- Service Worker Registration (disabled in development) -->
+		<!-- Service Worker Registration (TEMPORARILY DISABLED FOR DEBUGGING) -->
 		<script>
-			// Only register service worker in production
-			if ('serviceWorker' in navigator && !window.location.hostname.includes('localhost')) {
-				window.addEventListener('load', () => {
-					navigator.serviceWorker
-						.register('/sw.js')
-						.then((registration) => {
-							console.log('🎉 Astounding Cards SW registered:', registration.scope);
-						})
-						.catch((error) => {
-							console.log('SW registration failed:', error);
-						});
-				});
-			} else if (window.location.hostname.includes('localhost')) {
-				console.log('🚫 Service worker disabled in development');
+			// TEMP: Disable service worker and unregister any existing ones
+			if ('serviceWorker' in navigator) {
+				console.log('🚫 Service worker DISABLED for debugging');
 
-				// Unregister any existing service workers in development
-				if ('serviceWorker' in navigator) {
-					navigator.serviceWorker.getRegistrations().then((registrations) => {
-						for (let registration of registrations) {
-							registration.unregister();
-							console.log('🧹 Unregistered service worker:', registration.scope);
-						}
-					});
-				}
+				// Unregister any existing service workers
+				navigator.serviceWorker.getRegistrations().then((registrations) => {
+					for (let registration of registrations) {
+						registration.unregister();
+						console.log('🧹 Unregistered service worker:', registration.scope);
+					}
+				});
 			}
 		</script>
 	</body>

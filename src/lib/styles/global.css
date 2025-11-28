@@ -8,6 +8,8 @@
 /* Global styles */
 html {
 	box-sizing: border-box;
+	/* Prevent scrollbar from affecting layout on mobile */
+	scrollbar-gutter: stable;
 }
 
 *,

@@ -289,7 +289,7 @@
 
 <style>
 	.gallery-page {
-		min-height: 100vh;
+		/* Removed min-height: 100vh to prevent iOS Safari layout shifts */
 		background: white;
 		color: var(--ui-text, #1a202c);
 	}

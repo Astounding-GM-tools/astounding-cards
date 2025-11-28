@@ -15,11 +15,14 @@
 	}
 </script>
 
-<button
+<article
 	class="card"
 	class:preview
+	role={!preview ? 'button' : undefined}
+	tabindex={!preview ? 0 : undefined}
 	onclick={!preview ? openCardEditor : null}
-	aria-label="Click to edit card"
+	onkeydown={!preview ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openCardEditor(); } } : null}
+	aria-label={!preview ? 'Click to edit card' : undefined}
 >
 	<div class="crop-mark top-left"></div>
 	<div class="crop-mark top-right"></div>
@@ -29,7 +32,7 @@
 	{#if children}
 		{@render children()}
 	{/if}
-</button>
+</article>
 
 <style>
 	.card {
@@ -56,20 +59,12 @@
 		opacity: 0.9;
 	}
 
-	.card:active {
-		transform: scale(0.98);
-	}
-
 	.card.preview {
 		cursor: default;
 		pointer-events: none;
 	}
 	.card.preview:hover {
 		opacity: 1;
-	}
-
-	.card.preview:active {
-		transform: none;
 	}
 
 	.crop-mark {

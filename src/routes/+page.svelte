@@ -241,10 +241,26 @@
 		</div>
 
 		<div class="hero-actions">
-			<button class="cta-primary" onclick={handleViewFullDeck}>
+			<button
+				class="cta-primary"
+				onclick={handleViewFullDeck}
+				ontouchend={(e) => {
+					e.preventDefault();
+					handleViewFullDeck();
+				}}
+			>
 				View Full Deck ({heroDeck?.cardCount || heroDeck?.cards?.length || 0} cards)
 			</button>
-			<button class="cta-secondary" onclick={handleCreateDeck}> Create Your Own </button>
+			<button
+				class="cta-secondary"
+				onclick={handleCreateDeck}
+				ontouchend={(e) => {
+					e.preventDefault();
+					handleCreateDeck();
+				}}
+			>
+				Create Your Own
+			</button>
 		</div>
 	{/if}
 
@@ -307,7 +323,8 @@
 
 <style>
 	.landing-page {
-		min-height: 100vh;
+		/* Don't use viewport height - just let content flow naturally */
+		/* This prevents layout shifts when iOS Safari address bar shows/hides */
 		background: white;
 	}
 

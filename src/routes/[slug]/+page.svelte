@@ -820,7 +820,7 @@
 
 <style>
 	.import-page {
-		min-height: 100vh;
+		/* Removed min-height: 100vh to prevent iOS Safari layout shifts */
 		align-items: center;
 		justify-content: center;
 		background: var(--ui-bg, #ffffff);

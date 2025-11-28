@@ -14,7 +14,10 @@ function createToastStore() {
 	const { subscribe, update } = writable<Toast[]>([]);
 
 	function addToast(message: string, type: ToastType = 'info', timeout = 5000, dismissible = true) {
-		const id = crypto.randomUUID();
+		// Use crypto.randomUUID if available (HTTPS), otherwise fallback to Date.now + random
+		const id = typeof crypto !== 'undefined' && crypto.randomUUID
+			? crypto.randomUUID()
+			: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 		update((toasts) => [...toasts, { id, type, message, timeout, dismissible }]);
 
 		// Log errors and warnings to console for debugging

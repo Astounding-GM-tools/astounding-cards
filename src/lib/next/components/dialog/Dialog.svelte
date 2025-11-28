@@ -29,8 +29,9 @@
 		if (dialogStore.isOpen && !isDialogOpen) {
 			dialog?.showModal();
 			isDialogOpen = true;
-			// Lock body scroll when dialog opens
+			// Prevent scrolling without changing position to avoid layout shifts
 			if (typeof window !== 'undefined') {
+				document.documentElement.style.overflow = 'hidden';
 				document.body.style.overflow = 'hidden';
 			}
 		} else if (!dialogStore.isOpen && isDialogOpen) {
@@ -44,8 +45,9 @@
 		isDialogOpen = false;
 		dialogStore.close();
 
-		// Explicitly restore body scroll - ensure it always happens
+		// Restore scrolling
 		if (typeof window !== 'undefined') {
+			document.documentElement.style.overflow = '';
 			document.body.style.overflow = '';
 		}
 	}
@@ -74,6 +76,7 @@
 			if (typeof window !== 'undefined') {
 				document.removeEventListener('keydown', handleDocumentKeyDown);
 				if (isDialogOpen) {
+					document.documentElement.style.overflow = '';
 					document.body.style.overflow = '';
 				}
 			}
@@ -90,7 +93,7 @@
 
 <style>
 	dialog {
-		min-width: 24em;
+		min-width: min(24em, 90vw); /* Don't force wider than viewport on mobile */
 		max-width: min(90vw, 48em);
 		max-height: 90vh;
 		padding: 0; /* Remove padding to let CardEditDialog control it */
