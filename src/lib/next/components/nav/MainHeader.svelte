@@ -153,9 +153,9 @@
 	}
 </script>
 
-<header class="app-header" role="navigation" aria-label="Main Header">
+<header class="app-header">
 	<!-- Row 1: App Navigation & Account -->
-	<div class="header-top-bar">
+	<nav class="header-top-bar" aria-label="Main navigation">
 		<a href="/" class="brand">
 			<svg class="brand-icon" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
 				<circle cx="256" cy="256" r="150" fill="white" />
@@ -230,7 +230,7 @@
 				</button>
 			{/if}
 		</div>
-	</div>
+	</nav>
 
 	<!-- Row 2: Title + Metadata (flexible via snippets) -->
 	{#if title || metadata}
