@@ -130,21 +130,23 @@
 							placeholder="you@example.com"
 							required
 							disabled={loading}
+							autocomplete="email"
 						/>
 					</div>
 
 					{#if mode !== 'reset'}
 						<div class="form-group">
 							<label for="password">Password</label>
-							<input
-								id="password"
-								type="password"
-								bind:value={password}
-								placeholder="••••••••"
-								required
-								disabled={loading}
-								minlength="6"
-							/>
+						<input
+							id="password"
+							type="password"
+							bind:value={password}
+							placeholder="••••••••"
+							required
+							disabled={loading}
+							minlength="6"
+							autocomplete={mode === 'sign-in' ? 'current-password' : 'new-password'}
+						/>
 						</div>
 					{/if}
 

@@ -4,6 +4,7 @@
 	import { toasts } from '$lib/stores/toast';
 	import type { Card } from '$lib/next/types/card';
 	import { getOptimizedImageUrl } from '$lib/utils/image-optimization';
+	import { isAuthenticated } from '$lib/next/stores/auth';
 
 	const props = $props<{
 		card: Card;
@@ -35,6 +36,7 @@
 	let searchResults = $state<SearchResult[]>([]);
 	let isLoading = $state(true);
 	let previewUrl = $state<string | null>(null);
+	let authError = $state(false);
 
 	// Track selected variant for each result (by original_id)
 	let selectedVariants = $state<Record<string, SelectedVariant>>({});
@@ -46,6 +48,7 @@
 
 	async function loadSimilarImages() {
 		isLoading = true;
+		authError = false;
 		try {
 			const response = await authenticatedFetch('/api/ai/search-similar-images', {
 				method: 'POST',
@@ -59,6 +62,7 @@
 
 			if (!response.ok) {
 				if (response.status === 401) {
+					authError = true;
 					throw new Error('Please sign in to search images');
 				}
 				throw new Error('Failed to search images');
@@ -157,6 +161,12 @@
 			<div class="loading-state">
 				<div class="spinner"></div>
 				<p>Searching community library...</p>
+			</div>
+		{:else if authError}
+			<div class="auth-error-state">
+				<p class="error-message">Authentication required</p>
+				<p class="hint">Please sign in to search the community image library.</p>
+				<p class="hint">Community images are contributed by other users and require authentication to access.</p>
 			</div>
 		{:else if searchResults.length === 0}
 			<div class="empty-state">
@@ -283,7 +293,8 @@
 	}
 
 	.loading-state,
-	.empty-state {
+	.empty-state,
+	.auth-error-state {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
@@ -291,6 +302,13 @@
 		padding: 3rem;
 		text-align: center;
 		color: var(--ui-muted, #64748b);
+	}
+
+	.auth-error-state .error-message {
+		font-size: 1.125rem;
+		font-weight: 600;
+		color: var(--ui-text, #1a202c);
+		margin: 0 0 1rem 0;
 	}
 
 	.spinner {

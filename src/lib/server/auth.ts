@@ -7,6 +7,7 @@
 
 import { supabase } from '$lib/supabaseClient';
 import type { Cookies, RequestEvent } from '@sveltejs/kit';
+import { dev } from '$app/environment';
 
 /**
  * Extract authenticated user ID from request
