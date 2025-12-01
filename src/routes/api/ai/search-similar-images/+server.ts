@@ -105,14 +105,16 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 		}
 
 		// Log detailed error information for debugging
-		console.error('❌ Search similar images API error:', {
-			error: err,
+		const errorDetails = {
 			message: err instanceof Error ? err.message : 'Unknown error',
 			stack: err instanceof Error ? err.stack : undefined,
 			type: typeof err,
-			keys: err && typeof err === 'object' ? Object.keys(err) : []
-		});
+			name: err instanceof Error ? err.name : undefined
+		};
 
+		console.error('❌ Search similar images API error:', errorDetails);
+
+		// Return user-friendly error (detailed logging is in console for debugging)
 		return error(500, err instanceof Error ? err.message : 'Failed to search images');
 	}
 };
