@@ -240,7 +240,10 @@
 					<div class="title-row">
 						<h1 class="page-title">{title}</h1>
 						{#if isGalleryView}
-							<span class="gallery-badge">📖 Gallery View</span>
+							<span class="gallery-badge">
+								<Library size={14} />
+								<span>Gallery View</span>
+							</span>
 						{/if}
 						{#if onTitleEdit}
 							<button class="title-edit-button" onclick={onTitleEdit} aria-label="Edit title">
@@ -401,13 +404,15 @@
 	.gallery-badge {
 		display: inline-flex;
 		align-items: center;
+		gap: 0.375rem;
 		padding: 0.25rem 0.75rem;
-		background: rgba(255, 255, 255, 0.25);
+		background: rgba(255, 255, 255, 0.2);
 		color: white;
 		font-size: 0.8125rem;
-		font-weight: 500;
+		font-weight: 600;
 		border-radius: 4px;
-		border: 1px solid rgba(255, 255, 255, 0.3);
+		border: 1.5px solid rgba(255, 255, 255, 0.5);
+		text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 	}
 
 	.title-edit-button {
