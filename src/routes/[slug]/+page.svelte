@@ -1,3 +1,8 @@
+<svelte:head>
+	<title>{activeDeck?.meta?.title ? `${activeDeck.meta.title} - Astounding Cards` : 'Deck - Astounding Cards'}</title>
+	<meta name="description" content={activeDeck?.meta?.title ? `View and edit the ${activeDeck.meta.title} card deck` : 'View and edit your card deck'} />
+</svelte:head>
+
 <script lang="ts">
 	import type { PageData } from './$types';
 	import type { Deck, Layout } from '$lib/next/types/deck.js';

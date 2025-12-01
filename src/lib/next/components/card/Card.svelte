@@ -15,7 +15,7 @@
 	}
 </script>
 
-<article
+<div
 	class="card"
 	class:preview
 	role={!preview ? 'button' : undefined}
@@ -32,7 +32,7 @@
 	{#if children}
 		{@render children()}
 	{/if}
-</article>
+</div>
 
 <style>
 	.card {

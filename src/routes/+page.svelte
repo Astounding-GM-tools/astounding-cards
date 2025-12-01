@@ -1,3 +1,8 @@
+<svelte:head>
+	<title>Astounding Cards - Create Printable RPG Character Cards</title>
+	<meta name="description" content="Create beautiful, printable character cards for tabletop RPGs and board games. Design custom cards with stats, traits, and images in your browser." />
+</svelte:head>
+
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';

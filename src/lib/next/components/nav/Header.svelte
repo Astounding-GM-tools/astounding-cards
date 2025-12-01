@@ -124,7 +124,6 @@
 	async function handleMigrationComplete(
 		migrationData: Record<string, { url: string; metadata: any }>
 	) {
-
 		try {
 			if (!deck) {
 				throw new Error('No deck loaded');
@@ -140,17 +139,14 @@
 				}
 			}));
 
-
 			// Import the nextDb to update the deck
 			const { nextDb } = await import('$lib/next/stores/database.js');
 
 			// Update the deck in the database
 			const updatedDeck = await nextDb.updateMultipleCards(deck.id, cardUpdates);
 
-
 			// Reload the deck in the store to reflect changes
 			await nextDeckStore.loadDeck(updatedDeck.id);
-
 
 			// Migration complete - generate URL from fresh data and copy to clipboard
 			const freshDeck = await nextDb.getDeck(updatedDeck.id);
@@ -221,7 +217,7 @@
 	}
 </script>
 
-<header class="app-header">
+<header class="app-header" role="navigation" aria-label="Main Header">
 	<div class="header-top">
 		<div class="header-left">
 			<h1 class="deck-title">{deckTitle}</h1>
