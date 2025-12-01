@@ -452,7 +452,10 @@
 										>{deck.cards.filter((card) => card.image).length} images</span
 									>
 									{#if getMostRelevantDate(deck)}
-										{@const dateInfo = getMostRelevantDate(deck)}
+										{@const dateInfo = getMostRelevantDate(deck) as {
+											timestamp: number;
+											label: string;
+										}};
 										{@const relativeDate = formatDateRelative(dateInfo.timestamp)}
 										{#if relativeDate}
 											<Pill
@@ -1081,7 +1084,7 @@
 
 	.footer-copyright {
 		font-size: 0.8rem;
-		color: var(--text-muted, #94a3b8);
+		color: black;
 		margin: 0;
 	}
 

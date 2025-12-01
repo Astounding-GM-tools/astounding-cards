@@ -1,118 +1,92 @@
 <!doctype html>
-<html lang="en" style="touch-action: manipulation;">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" href="%sveltekit.assets%/favicon.svg" />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, shrink-to-fit=no" />
+<html lang="en" style="touch-action: manipulation;" title="Astounding Cards">
 
-		<!-- PWA Configuration -->
-		<link rel="manifest" href="%sveltekit.assets%/manifest.json" />
-		<meta name="theme-color" content="#3b82f6" />
-		<meta name="mobile-web-app-capable" content="yes" />
-		<meta name="apple-mobile-web-app-capable" content="yes" />
-		<meta name="apple-mobile-web-app-status-bar-style" content="default" />
-		<meta name="apple-mobile-web-app-title" content="Astounding Cards" />
-		<link rel="apple-touch-icon" href="%sveltekit.assets%/favicon.svg" />
+<head>
+	<meta charset="utf-8" />
+	<link rel="icon" href="%sveltekit.assets%/favicon.svg" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, shrink-to-fit=no" />
 
-		<!-- Theme Fonts -->
-		<link
-			rel="stylesheet"
-			href="https://fonts.googleapis.com/css2?family=Graduate&family=Jim+Nightshade&family=Lato:wght@400;700&family=Montserrat:wght@400;700&family=Open+Sans:wght@400;700&family=Orbitron:wght@400;700&family=Roboto+Condensed:wght@400;700&family=Share+Tech+Mono&family=Ballet&family=Eagle+Lake&family=UnifrakturMaguntia&family=Kapakana&family=Tangerine:wght@400;700&display=swap"
-		/>
+	<!-- PWA Configuration -->
+	<link rel="manifest" href="%sveltekit.assets%/manifest.json" />
+	<meta name="theme-color" content="#3b82f6" />
+	<meta name="mobile-web-app-capable" content="yes" />
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+	<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+	<meta name="apple-mobile-web-app-title" content="Astounding Cards" />
+	<link rel="apple-touch-icon" href="%sveltekit.assets%/favicon.svg" />
 
-		<!-- SVG Sprite Sheet -->
-		<svg xmlns="http://www.w3.org/2000/svg" style="display: none">
-			<!-- Classic flourish -->
-			<symbol id="flourish-classic" viewBox="0 0 100 100">
-				<line x1="20" y1="0" x2="20" y2="100" stroke="currentColor" stroke-width="4" />
-				<line x1="0" y1="20" x2="100" y2="20" stroke="currentColor" stroke-width="4" />
-			</symbol>
+	<!-- Theme Fonts -->
+	<link rel="stylesheet"
+		href="https://fonts.googleapis.com/css2?family=Graduate&family=Jim+Nightshade&family=Lato:wght@400;700&family=Montserrat:wght@400;700&family=Open+Sans:wght@400;700&family=Orbitron:wght@400;700&family=Roboto+Condensed:wght@400;700&family=Share+Tech+Mono&family=Ballet&family=Eagle+Lake&family=UnifrakturMaguntia&family=Kapakana&family=Tangerine:wght@400;700&display=swap" />
 
-			<!-- Scriptorum flourish -->
-			<symbol id="flourish-scriptorum" viewBox="0 0 100 100">
-				<line x1="20" y1="0" x2="20" y2="100" stroke="currentColor" stroke-width="4" />
-				<line x1="0" y1="20" x2="100" y2="20" stroke="currentColor" stroke-width="4" />
-			</symbol>
+	<!-- SVG Sprite Sheet -->
+	<svg xmlns="http://www.w3.org/2000/svg" style="display: none">
+		<!-- Classic flourish -->
+		<symbol id="flourish-classic" viewBox="0 0 100 100">
+			<line x1="20" y1="0" x2="20" y2="100" stroke="currentColor" stroke-width="4" />
+			<line x1="0" y1="20" x2="100" y2="20" stroke="currentColor" stroke-width="4" />
+		</symbol>
 
-			<!-- Cyberdeck flourish -->
-			<symbol id="flourish-cyberdeck" viewBox="0 0 100 100">
-				<!-- Main circuit traces -->
-				<path d="M0 20 H15 L20 15 H40" stroke="currentColor" stroke-width="1.5" fill="none" />
-				<path d="M20 0 V15 L25 20 V40" stroke="currentColor" stroke-width="1.5" fill="none" />
-				<path d="M40 15 H55 L60 20 H75" stroke="currentColor" stroke-width="1.5" fill="none" />
-				<path d="M25 40 V55 L30 60 V75" stroke="currentColor" stroke-width="1.5" fill="none" />
+		<!-- Scriptorum flourish -->
+		<symbol id="flourish-scriptorum" viewBox="0 0 100 100">
+			<line x1="20" y1="0" x2="20" y2="100" stroke="currentColor" stroke-width="4" />
+			<line x1="0" y1="20" x2="100" y2="20" stroke="currentColor" stroke-width="4" />
+		</symbol>
 
-				<!-- Connection points -->
-				<circle cx="40" cy="15" r="2" fill="currentColor" />
-				<circle cx="25" cy="40" r="2" fill="currentColor" />
-				<circle cx="75" cy="20" r="2" fill="currentColor" />
-				<circle cx="30" cy="75" r="2" fill="currentColor" />
+		<!-- Cyberdeck flourish -->
+		<symbol id="flourish-cyberdeck" viewBox="0 0 100 100">
+			<!-- Main circuit traces -->
+			<path d="M0 20 H15 L20 15 H40" stroke="currentColor" stroke-width="1.5" fill="none" />
+			<path d="M20 0 V15 L25 20 V40" stroke="currentColor" stroke-width="1.5" fill="none" />
+			<path d="M40 15 H55 L60 20 H75" stroke="currentColor" stroke-width="1.5" fill="none" />
+			<path d="M25 40 V55 L30 60 V75" stroke="currentColor" stroke-width="1.5" fill="none" />
 
-				<!-- Circuit pads -->
-				<rect x="18" y="13" width="4" height="4" fill="currentColor" />
-				<rect
-					x="38"
-					y="13"
-					width="4"
-					height="4"
-					stroke="currentColor"
-					stroke-width="1"
-					fill="none"
-				/>
-				<rect
-					x="23"
-					y="38"
-					width="4"
-					height="4"
-					stroke="currentColor"
-					stroke-width="1"
-					fill="none"
-				/>
-				<rect x="58" y="18" width="4" height="4" fill="currentColor" />
-				<rect x="28" y="58" width="4" height="4" fill="currentColor" />
+			<!-- Connection points -->
+			<circle cx="40" cy="15" r="2" fill="currentColor" />
+			<circle cx="25" cy="40" r="2" fill="currentColor" />
+			<circle cx="75" cy="20" r="2" fill="currentColor" />
+			<circle cx="30" cy="75" r="2" fill="currentColor" />
 
-				<!-- Branch traces -->
-				<path d="M40 15 V30 L45 35" stroke="currentColor" stroke-width="1" fill="none" />
-				<path d="M25 40 H40 L45 45" stroke="currentColor" stroke-width="1" fill="none" />
-				<circle cx="45" cy="35" r="1.5" fill="none" stroke="currentColor" stroke-width="1" />
-				<circle cx="45" cy="45" r="1.5" fill="currentColor" />
+			<!-- Circuit pads -->
+			<rect x="18" y="13" width="4" height="4" fill="currentColor" />
+			<rect x="38" y="13" width="4" height="4" stroke="currentColor" stroke-width="1" fill="none" />
+			<rect x="23" y="38" width="4" height="4" stroke="currentColor" stroke-width="1" fill="none" />
+			<rect x="58" y="18" width="4" height="4" fill="currentColor" />
+			<rect x="28" y="58" width="4" height="4" fill="currentColor" />
 
-				<!-- Dotted continuation traces -->
-				<path d="M75 20 H90" stroke="currentColor" stroke-width="1" stroke-dasharray="4 2" />
-				<path d="M30 75 V90" stroke="currentColor" stroke-width="1" stroke-dasharray="4 2" />
-				<path d="M45 35 H60" stroke="currentColor" stroke-width="1" stroke-dasharray="3 2" />
-				<path d="M45 45 V60" stroke="currentColor" stroke-width="1" stroke-dasharray="3 2" />
-			</symbol>
+			<!-- Branch traces -->
+			<path d="M40 15 V30 L45 35" stroke="currentColor" stroke-width="1" fill="none" />
+			<path d="M25 40 H40 L45 45" stroke="currentColor" stroke-width="1" fill="none" />
+			<circle cx="45" cy="35" r="1.5" fill="none" stroke="currentColor" stroke-width="1" />
+			<circle cx="45" cy="45" r="1.5" fill="currentColor" />
 
-			<!-- Cordial flourish -->
-			<symbol id="flourish-cordial" viewBox="0 0 100 100">
-				<!-- Main flowing curve -->
-				<path
-					d="M0 30 C30 30, 40 10, 80 25 S95 35, 100 30"
-					stroke="currentColor"
-					stroke-width="1.5"
-					fill="none"
-				/>
+			<!-- Dotted continuation traces -->
+			<path d="M75 20 H90" stroke="currentColor" stroke-width="1" stroke-dasharray="4 2" />
+			<path d="M30 75 V90" stroke="currentColor" stroke-width="1" stroke-dasharray="4 2" />
+			<path d="M45 35 H60" stroke="currentColor" stroke-width="1" stroke-dasharray="3 2" />
+			<path d="M45 45 V60" stroke="currentColor" stroke-width="1" stroke-dasharray="3 2" />
+		</symbol>
 
-				<!-- Single elegant secondary curve -->
-				<path d="M30 27 C45 27, 55 15, 75 22" stroke="currentColor" stroke-width="1" fill="none" />
+		<!-- Cordial flourish -->
+		<symbol id="flourish-cordial" viewBox="0 0 100 100">
+			<!-- Main flowing curve -->
+			<path d="M0 30 C30 30, 40 10, 80 25 S95 35, 100 30" stroke="currentColor" stroke-width="1.5" fill="none" />
 
-				<!-- Subtle accent curve -->
-				<path
-					d="M40 25 C50 25, 60 18, 70 20"
-					stroke="currentColor"
-					stroke-width="0.75"
-					fill="none"
-				/>
-			</symbol>
+			<!-- Single elegant secondary curve -->
+			<path d="M30 27 C45 27, 55 15, 75 22" stroke="currentColor" stroke-width="1" fill="none" />
 
-			<!-- Add more flourish definitions here -->
-		</svg>
+			<!-- Subtle accent curve -->
+			<path d="M40 25 C50 25, 60 18, 70 20" stroke="currentColor" stroke-width="0.75" fill="none" />
+		</symbol>
 
-		%sveltekit.head%
-	</head>
-	<body data-sveltekit-preload-data="hover">
-		<div style="display: contents">%sveltekit.body%</div>
+		<!-- Add more flourish definitions here -->
+	</svg>
+
+	%sveltekit.head%
+</head>
+
+<body data-sveltekit-preload-data="hover">
+	<main style="display: contents">%sveltekit.body%</div>
 
 		<!-- Service Worker Registration (TEMPORARILY DISABLED FOR DEBUGGING) -->
 		<script>
@@ -129,5 +103,6 @@
 				});
 			}
 		</script>
-	</body>
+</body>
+
 </html>

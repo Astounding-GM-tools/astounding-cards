@@ -153,7 +153,7 @@
 	}
 </script>
 
-<header class="app-header">
+<header class="app-header" role="navigation" aria-label="Main Header">
 	<!-- Row 1: App Navigation & Account -->
 	<div class="header-top-bar">
 		<a href="/" class="brand">

@@ -4,7 +4,7 @@ export const whatIsAstounding: Blocks = [
     {
         type: 'headline',
         content: 'What is Astounding Cards?',
-        headerType: 'h3'
+        headerType: 'h2'
     },
     {
         type: 'text',
@@ -22,7 +22,7 @@ export const howItWorks: Blocks = [
     {
         type: 'headline',
         content: 'How It Works',
-        headerType: 'h3'
+        headerType: 'h2'
     },
     {
         type: 'text',
@@ -40,7 +40,7 @@ export const joinUss: Blocks = [
     {
         type: 'headline',
         content: 'Join the Community',
-        headerType: 'h3'
+        headerType: 'h2'
     },
     {
         type: 'text',
@@ -58,7 +58,7 @@ export const getStarted: Blocks = [
     {
         type: 'headline',
         content: "Free!",
-        headerType: 'h3'
+        headerType: 'h2'
     },
     {
         type: 'text',
@@ -83,7 +83,7 @@ export const getStarted: Blocks = [
     {
         type: 'headline',
         content: 'AI features cost extra tho',
-        headerType: 'h3'
+        headerType: 'h2'
     },
     {
         type: 'text',

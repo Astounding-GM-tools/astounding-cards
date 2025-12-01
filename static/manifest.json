@@ -38,6 +38,28 @@
           "sizes": "any"
         }
       ]
+    },
+    {
+      "name": "Browse Gallery",
+      "description": "Explore community card decks",
+      "url": "/gallery",
+      "icons": [
+        {
+          "src": "/favicon.svg",
+          "sizes": "any"
+        }
+      ]
+    },
+    {
+      "name": "My Decks",
+      "description": "View and manage your saved decks",
+      "url": "/dashboard",
+      "icons": [
+        {
+          "src": "/favicon.svg",
+          "sizes": "any"
+        }
+      ]
     }
   ]
 }
