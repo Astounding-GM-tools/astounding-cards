@@ -1,29 +1,13 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 
-	import CardEditDialog from '$lib/next/components/dialogs/CardEditDialog.svelte';
-	import { dialogStore } from '$lib/next/components/dialog/dialogStore.svelte.js';
-
-	const { children, preview, cardId } = $props<{
+	const { children, preview } = $props<{
 		children?: Snippet;
-		cardId?: string;
 		preview?: boolean;
 	}>();
-
-	function openCardEditor() {
-		dialogStore.setContent(CardEditDialog, { cardId: cardId || '' });
-	}
 </script>
 
-<div
-	class="card"
-	class:preview
-	role={!preview ? 'button' : undefined}
-	tabindex={!preview ? 0 : undefined}
-	onclick={!preview ? openCardEditor : null}
-	onkeydown={!preview ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openCardEditor(); } } : null}
-	aria-label={!preview ? 'Click to edit card' : undefined}
->
+<article class="card" class:preview>
 	<div class="crop-mark top-left"></div>
 	<div class="crop-mark top-right"></div>
 	<div class="crop-mark bottom-left"></div>
@@ -32,7 +16,7 @@
 	{#if children}
 		{@render children()}
 	{/if}
-</div>
+</article>
 
 <style>
 	.card {
@@ -45,26 +29,17 @@
 		flex: 0 0 auto;
 		font-family: var(--font-body);
 		position: relative;
-		cursor: pointer;
 		height: 100%;
 		width: 100%;
-		transition: opacity 0.2s ease;
 		direction: ltr;
 		z-index: 2;
 
 		container-type: inline-size;
 		container-name: card;
 	}
-	.card:hover {
-		opacity: 0.9;
-	}
 
 	.card.preview {
-		cursor: default;
 		pointer-events: none;
-	}
-	.card.preview:hover {
-		opacity: 1;
 	}
 
 	.crop-mark {
