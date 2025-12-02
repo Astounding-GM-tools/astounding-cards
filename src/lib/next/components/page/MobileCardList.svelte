@@ -72,17 +72,41 @@
 		}
 		showingBack = new Set(showingBack); // Trigger reactivity
 	}
+
+	// Setup passive touch listeners to improve scroll performance
+	onMount(() => {
+		const cardElements = document.querySelectorAll('.card-pair.mobile');
+		const listeners: Array<{ element: Element; handler: EventListener }> = [];
+
+		cardElements.forEach((element) => {
+			const cardId = element.getAttribute('data-card-id');
+			if (!cardId) return;
+
+			const touchStartHandler = (e: Event) => handleTouchStart(e as TouchEvent, cardId);
+			const touchEndHandler = (e: Event) => handleTouchEnd(e as TouchEvent, cardId);
+
+			element.addEventListener('touchstart', touchStartHandler, { passive: true });
+			element.addEventListener('touchend', touchEndHandler);
+
+			listeners.push(
+				{ element, handler: touchStartHandler },
+				{ element, handler: touchEndHandler }
+			);
+		});
+
+		return () => {
+			listeners.forEach(({ element, handler }) => {
+				element.removeEventListener('touchstart', handler);
+				element.removeEventListener('touchend', handler);
+			});
+		};
+	});
 </script>
 
 <div class="mobile-card-list">
 	{#if cards.length > 0}
 		{#each cards as card (card.id)}
-			<div
-				class="card-pair"
-				class:mobile={true}
-				ontouchstart={(e) => handleTouchStart(e, card.id)}
-				ontouchend={(e) => handleTouchEnd(e, card.id)}
-			>
+			<div class="card-pair" class:mobile={true} data-card-id={card.id}>
 				<!-- Desktop: Side-by-side front and back -->
 				<div class="desktop-pair">
 					<!-- Front card -->
