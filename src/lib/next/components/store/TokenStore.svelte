@@ -34,8 +34,10 @@
 
 	// Savings vs single pack
 	const SINGLE_PACK_TOTAL = PACK_PRICE_USD + BASE_FEE_USD + PACK_PRICE_USD * FEE_PERCENTAGE;
+	const SINGLE_PACK_IMAGES = Math.floor(TOKENS_PER_PACK / 100); // 50 images per pack
+	const SINGLE_PACK_COST_PER_IMAGE = SINGLE_PACK_TOTAL / SINGLE_PACK_IMAGES;
 	let savingsPercent = $derived(
-		selectedPacks > 1 ? (1 - costPerImage / (SINGLE_PACK_TOTAL / 100)) * 100 : 0
+		selectedPacks > 1 ? (1 - costPerImage / SINGLE_PACK_COST_PER_IMAGE) * 100 : 0
 	);
 
 	function formatPrice(amount: number): string {
