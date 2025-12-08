@@ -117,16 +117,24 @@ export const GET: RequestHandler = async ({ url }) => {
 			};
 		});
 
-		return json({
-			success: true,
-			decks: formattedDecks,
-			pagination: {
-				total: count || 0,
-				limit,
-				offset,
-				hasMore: (count || 0) > offset + limit
+		return json(
+			{
+				success: true,
+				decks: formattedDecks,
+				pagination: {
+					total: count || 0,
+					limit,
+					offset,
+					hasMore: (count || 0) > offset + limit
+				}
+			},
+			{
+				headers: {
+					// Cache for 2 minutes on client, 30 minutes on CDN, serve stale for 24 hours while revalidating
+					'Cache-Control': 'public, max-age=120, s-maxage=1800, stale-while-revalidate=86400'
+				}
 			}
-		});
+		);
 	} catch (err) {
 		console.error('Gallery error:', err);
 		return json({ error: 'An unexpected error occurred' }, { status: 500 });

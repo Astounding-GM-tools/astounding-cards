@@ -33,7 +33,7 @@
 	import { nextDeckStore } from '$lib/next/stores/deckStore.svelte.ts';
 	import { goto, replaceState } from '$app/navigation';
 	import { performThreeLayerMerge } from '$lib/next/utils/threeLayerMerge.js';
-	import { CardEditDialog, DeleteDeckDialog } from '$lib/next/components/dialogs/';
+	import { CardEditDialog, DeleteDeckDialog, LikeDeckDialog } from '$lib/next/components/dialogs/';
 	import { actionButtonContent } from '$lib/next/components/actions/actionButtonContent';
 
 	import {
@@ -89,6 +89,11 @@
 		// Compare timestamps: has deck been edited since last publish?
 		return deck.meta.lastPublished ? deck.meta.lastEdited > deck.meta.lastPublished : true; // Never published but has published_deck_id
 	});
+
+	// Like state
+	let hasLiked = $state(false);
+	let likeCount = $state(0);
+	let checkingLikeStatus = $state(false);
 
 	// Print mode state
 	let isPrintMode = $state(false);
@@ -199,6 +204,11 @@
 				// Wait a tick for the deck to be fully loaded
 				await new Promise((resolve) => setTimeout(resolve, 100));
 				dialogStore.setContent(CardEditDialog, { cardId: editCardId });
+			}
+
+			// Check like status if viewing a gallery deck
+			if (isGalleryView && data.curatedDeck) {
+				await checkLikeStatus();
 			}
 
 			// Initial load happens via $effect above
@@ -629,6 +639,82 @@
 		}
 	}
 
+	// Handle like/unlike - opens confirmation dialog
+	async function handleLike() {
+		if (!data.curatedDeck) return;
+
+		// Check if user is logged in
+		if (!$user) {
+			toasts.info('Please log in to like decks');
+			// TODO: Open auth dialog
+			return;
+		}
+
+		// If already liked, unlike directly
+		if (hasLiked) {
+			await handleUnlike();
+			return;
+		}
+
+		// Show confirmation dialog with token cost
+		dialogStore.setContent(LikeDeckDialog, {
+			deckId: data.curatedDeck.id,
+			deckTitle: data.curatedDeck.title,
+			isRemix: !!data.curatedDeck.remix_of,
+			creatorName: data.curatedDeck.creator_name,
+			parentCreatorName: data.curatedDeck.parent_creator_name, // TODO: Fetch if needed
+			onSuccess: async () => {
+				// Refresh like status
+				await checkLikeStatus();
+			}
+		});
+	}
+
+	async function handleUnlike() {
+		if (!data.curatedDeck) return;
+
+		try {
+			const response = await fetch(`/api/decks/${data.curatedDeck.id}/like`, {
+				method: 'DELETE'
+			});
+
+			const result = await response.json();
+
+			if (!response.ok || !result.success) {
+				toasts.error(result.error || 'Failed to unlike deck');
+				return;
+			}
+
+			toasts.info('Like removed');
+			await checkLikeStatus();
+		} catch (error) {
+			console.error('Unlike deck error:', error);
+			toasts.error('Failed to unlike deck');
+		}
+	}
+
+	async function checkLikeStatus() {
+		if (!data.curatedDeck) return;
+
+		checkingLikeStatus = true;
+
+		try {
+			const response = await fetch(`/api/decks/${data.curatedDeck.id}/like`);
+			const result = await response.json();
+
+			if (response.ok && result.success) {
+				hasLiked = result.has_liked;
+			}
+
+			// Update like count from curated deck data
+			likeCount = data.curatedDeck.like_count || 0;
+		} catch (error) {
+			console.error('Check like status error:', error);
+		} finally {
+			checkingLikeStatus = false;
+		}
+	}
+
 	// Handle delete deck - shows confirmation dialog
 	function handleDeleteDeck() {
 		if (!activeDeck) return;
@@ -679,9 +765,15 @@
 		<ActionBar>
 			{#if isGalleryView}
 				<!-- Gallery view: Like, Add to Library, Share -->
-				<!-- Like button (read-only, shows count) -->
-				<ActionButton {...actionButtonContent.like} variant="danger" filled={false} disabled>
-					{#snippet icon()}<Heart size={20} />{/snippet}
+				<!-- Like button (costs 10 tokens) -->
+				<ActionButton
+					{...(hasLiked ? actionButtonContent.liked : actionButtonContent.like)}
+					variant="danger"
+					filled={hasLiked}
+					onclick={handleLike}
+					disabled={checkingLikeStatus}
+				>
+					{#snippet icon()}<Heart size={20} fill={hasLiked ? 'currentColor' : 'none'} />{/snippet}
 				</ActionButton>
 
 				<!-- Add to Library button -->
