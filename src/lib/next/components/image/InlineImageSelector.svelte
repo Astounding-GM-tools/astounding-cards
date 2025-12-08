@@ -270,7 +270,12 @@
 
 {#if showSimilarImages && card}
 	<div class="similar-images-overlay">
-		<div class="overlay-backdrop" onclick={() => (showSimilarImages = false)}></div>
+		<button
+			type="button"
+			class="overlay-backdrop"
+			onclick={() => (showSimilarImages = false)}
+			aria-label="Close similar images dialog"
+		></button>
 		<div class="overlay-content">
 			<SimilarImagesDialog
 				{card}
@@ -503,22 +508,6 @@
 		color: #856404;
 	}
 
-	.remove-btn {
-		padding: 0.25rem 0.5rem;
-		border: 1px solid #fcc;
-		border-radius: 3px;
-		background: #fee;
-		color: #c53030;
-		cursor: pointer;
-		font-family: var(--font-body);
-		font-size: 0.75rem;
-		white-space: nowrap;
-	}
-
-	.remove-btn:hover {
-		background: #fed7d7;
-		border-color: #fc8181;
-	}
 
 	.unset-btn {
 		padding: 0.25rem 0.5rem;

@@ -175,8 +175,8 @@
 			<p class="help-text">Help users discover your deck (e.g., "fantasy", "combat", "villains")</p>
 		</div>
 
-		<div class="form-group">
-			<label>Visibility</label>
+		<fieldset class="form-group">
+			<legend>Visibility</legend>
 			<div class="visibility-options">
 				<label class="radio-option">
 					<input
@@ -205,7 +205,7 @@
 					</div>
 				</label>
 			</div>
-		</div>
+		</fieldset>
 	</div>
 
 	<div class="footer">

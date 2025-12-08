@@ -11,10 +11,8 @@ export class DevToolsHelper {
 	 * Enable dev mode to access dev tools
 	 */
 	async enableDevMode() {
-		await this.page.evaluate(() => {
-			// @ts-ignore - Using window global for E2E helpers
-			window.e2eHelpers.enableDevMode();
-		});
+		await this.page.goto('/?dev=true');
+		await this.page.waitForLoadState('networkidle');
 	}
 
 	/**
@@ -41,27 +39,7 @@ export class DevToolsHelper {
 	 * WARNING: This will delete all decks and cards!
 	 */
 	async clearDatabase() {
-		await this.ensureDevMode();
-		await this.openDeckManager();
-
-		const devSection = this.page.locator('.dev-controls');
-		await devSection.waitFor({ state: 'visible', timeout: 5000 });
-
-		const clearButton = devSection.locator('button:has-text("Clear Database")');
-		await clearButton.waitFor({ state: 'visible', timeout: 5000 });
-
-		// Set up dialog handler before clicking
-		this.page.once('dialog', async (dialog) => {
-			if (dialog.message().includes('delete all decks')) {
-				await dialog.accept();
-			}
-		});
-
-		// Click the button
-		await clearButton.click();
-
-		// Wait for page reload after clearing
-		await this.page.waitForLoadState('networkidle');
+		await this.clearDatabaseConsole();
 	}
 
 	/**
@@ -69,26 +47,7 @@ export class DevToolsHelper {
 	 * Creates a deck called "Tales of the Uncanny" with 3 sample cards
 	 */
 	async addSampleData() {
-		await this.ensureDevMode();
-		await this.openDeckManager();
-
-		const devSection = this.page.locator('.dev-controls');
-		await devSection.waitFor({ state: 'visible', timeout: 5000 });
-
-		const sampleButton = devSection.locator('button:has-text("Add Sample Data")');
-		await sampleButton.waitFor({ state: 'visible', timeout: 5000 });
-
-		// Set up dialog handler before clicking
-		this.page.once('dialog', async (dialog) => {
-			if (dialog.message().includes('Add sample deck')) {
-				await dialog.accept();
-			}
-		});
-
-		await sampleButton.click();
-
-		// Wait for page reload after adding sample data
-		await this.page.waitForLoadState('networkidle');
+		await this.addSampleDataConsole();
 	}
 
 	/**
@@ -203,6 +162,17 @@ export class DevToolsHelper {
 	 * Get information about sample data
 	 * Useful for tests that need to know what data is available
 	 */
+	getSampleDataInfo() {
+		return {
+			deckName: 'Tales of the Uncanny',
+			cardCount: 3,
+			cards: [
+				{ name: 'Dr. Blackwood', role: 'Enigmatic Professor', type: 'character' },
+				{ name: 'The Ethereal Compass', role: 'Mystical Device', type: 'item' },
+				{ name: 'The Misty Vale', role: 'Mysterious Location', type: 'location' }
+			]
+		};
+	}
 	getSampleDataInfo() {
 		return {
 			deckName: 'Tales of the Uncanny',

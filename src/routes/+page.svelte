@@ -405,14 +405,6 @@
 		color: var(--ui-text, #1e293b);
 	}
 
-	.placeholder {
-		padding: 3rem;
-		background: var(--ui-border, #e2e8f0);
-		border-radius: 8px;
-		text-align: center;
-		color: var(--ui-muted, #64748b);
-		font-style: italic;
-	}
 
 	.loading-state {
 		padding: 3rem;

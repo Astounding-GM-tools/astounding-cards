@@ -90,7 +90,7 @@
 							title={editButtonTitle}
 						>
 							<div class="button-icon">
-								<svelte:component this={editButtonIcon} size={16} />
+								{@render editButtonIcon({ size: 16 })}
 							</div>
 							<span class="button-text">{mode === 'deck' ? 'Open' : 'Edit'}</span>
 						</button>
