@@ -35,6 +35,7 @@
 	import { performThreeLayerMerge } from '$lib/next/utils/threeLayerMerge.js';
 	import { CardEditDialog, DeleteDeckDialog, LikeDeckDialog } from '$lib/next/components/dialogs/';
 	import { actionButtonContent } from '$lib/next/components/actions/actionButtonContent';
+	import { getAuthHeaders } from '$lib/utils/auth-helpers';
 
 	import {
 		Share2,
@@ -675,7 +676,8 @@
 
 		try {
 			const response = await fetch(`/api/decks/${data.curatedDeck.id}/like`, {
-				method: 'DELETE'
+				method: 'DELETE',
+				headers: getAuthHeaders()
 			});
 
 			const result = await response.json();
@@ -699,7 +701,10 @@
 		checkingLikeStatus = true;
 
 		try {
-			const response = await fetch(`/api/decks/${data.curatedDeck.id}/like`);
+			// Include auth header if user is logged in (getAuthHeaders handles this automatically)
+			const response = await fetch(`/api/decks/${data.curatedDeck.id}/like`, {
+				headers: getAuthHeaders()
+			});
 			const result = await response.json();
 
 			if (response.ok && result.success) {

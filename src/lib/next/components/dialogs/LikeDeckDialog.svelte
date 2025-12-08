@@ -2,6 +2,7 @@
 	import { dialogStore } from '$lib/next/components/dialog/dialogStore.svelte';
 	import { toasts } from '$lib/stores/toast';
 	import { user } from '$lib/next/stores/auth';
+	import { getAuthHeaders } from '$lib/utils/auth-helpers';
 
 	type Props = {
 		deckId: string;
@@ -28,9 +29,9 @@
 		try {
 			const response = await fetch(`/api/decks/${deckId}/like`, {
 				method: 'POST',
-				headers: {
+				headers: getAuthHeaders({
 					'Content-Type': 'application/json'
-				}
+				})
 			});
 
 			const result = await response.json();

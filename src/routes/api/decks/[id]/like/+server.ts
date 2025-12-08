@@ -42,12 +42,18 @@ export const POST: RequestHandler = async ({ params, cookies, request }) => {
 
 		if (rpcError) {
 			console.error('Like deck RPC error:', rpcError);
-			return error(500, 'Failed to process like');
+			return json({ success: false, error: 'Failed to process like' }, { status: 500 });
 		}
 
-		// 4. Check result
+		// 4. Check result - handle both null data and unsuccessful response
+		if (!data) {
+			console.error('Like deck: No data returned from RPC');
+			return json({ success: false, error: 'Failed to process like' }, { status: 500 });
+		}
+
 		if (!data.success) {
-			// Return specific error from function
+			// Return specific error from function (this is expected for business logic errors)
+			console.log('Like deck rejected:', data.error);
 			return json({ success: false, error: data.error }, { status: 400 });
 		}
 
@@ -91,12 +97,18 @@ export const DELETE: RequestHandler = async ({ params, cookies, request }) => {
 
 		if (rpcError) {
 			console.error('Unlike deck RPC error:', rpcError);
-			return error(500, 'Failed to process unlike');
+			return json({ success: false, error: 'Failed to process unlike' }, { status: 500 });
 		}
 
-		// 4. Check result
+		// 4. Check result - handle both null data and unsuccessful response
+		if (!data) {
+			console.error('Unlike deck: No data returned from RPC');
+			return json({ success: false, error: 'Failed to process unlike' }, { status: 500 });
+		}
+
 		if (!data.success) {
-			// Return specific error from function
+			// Return specific error from function (this is expected for business logic errors)
+			console.log('Unlike deck rejected:', data.error);
 			return json({ success: false, error: data.error }, { status: 400 });
 		}
 
