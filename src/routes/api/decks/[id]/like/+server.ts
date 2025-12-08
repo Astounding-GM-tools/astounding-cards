@@ -54,7 +54,20 @@ export const POST: RequestHandler = async ({ params, cookies, request }) => {
 		if (!data.success) {
 			// Return specific error from function (this is expected for business logic errors)
 			console.log('Like deck rejected:', data.error);
-			return json({ success: false, error: data.error }, { status: 400 });
+
+			// Determine appropriate status code based on error type
+			let statusCode = 400; // Default to Bad Request
+			if (data.error.includes('already liked')) {
+				statusCode = 409; // Conflict - already exists
+			} else if (data.error.includes('cannot like your own deck')) {
+				statusCode = 403; // Forbidden - permission denied
+			} else if (data.error.includes('Insufficient tokens')) {
+				statusCode = 402; // Payment Required
+			} else if (data.error.includes('not found')) {
+				statusCode = 404; // Not Found
+			}
+
+			return json({ success: false, error: data.error }, { status: statusCode });
 		}
 
 		// 5. Return success with details
@@ -109,7 +122,14 @@ export const DELETE: RequestHandler = async ({ params, cookies, request }) => {
 		if (!data.success) {
 			// Return specific error from function (this is expected for business logic errors)
 			console.log('Unlike deck rejected:', data.error);
-			return json({ success: false, error: data.error }, { status: 400 });
+
+			// Determine appropriate status code based on error type
+			let statusCode = 400; // Default to Bad Request
+			if (data.error.includes('not liked')) {
+				statusCode = 404; // Not Found - like doesn't exist
+			}
+
+			return json({ success: false, error: data.error }, { status: statusCode });
 		}
 
 		// 5. Return success
