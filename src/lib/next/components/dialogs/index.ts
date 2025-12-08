@@ -8,6 +8,7 @@ export { default as DeckManagerDialog } from './DeckManagerDialog.svelte';
 export { default as DeleteDeckDialog } from './DeleteDeckDialog.svelte';
 export { default as ImageMigrationDialog } from './ImageMigrationDialog.svelte';
 export { default as JsonImportDialog } from './JsonImportDialog.svelte';
+export { default as LikeDeckDialog } from './LikeDeckDialog.svelte';
 export { default as MergeToolDialog } from './MergeToolDialog.svelte';
 export { default as ShareUrlDialog } from './ShareUrlDialog.svelte';
 export { default as TokenStoreDialog } from './TokenStoreDialog.svelte';

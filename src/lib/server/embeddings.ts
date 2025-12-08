@@ -1,7 +1,7 @@
 /**
  * Text Embedding Generation
  *
- * Uses Gemini text-embedding-004 to generate 768-dimensional embeddings
+ * Uses Gemini text-embedding-001 to generate 768-dimensional embeddings
  * for semantic search in the community image library.
  */
 
@@ -13,7 +13,7 @@ if (!GEMINI_API_KEY) {
 }
 
 /**
- * Generate text embedding using Gemini text-embedding-004
+ * Generate text embedding using Gemini text-embedding-001
  *
  * @param text - The text to embed (typically the optimized image prompt)
  * @returns 768-dimensional embedding vector as number array
@@ -24,7 +24,7 @@ export async function generateEmbedding(text: string): Promise<number[]> {
 	try {
 		// Use embedContent with contents parameter (string or array)
 		const result = await ai.models.embedContent({
-			model: 'text-embedding-004',
+			model: 'text-embedding-001',
 			contents: text
 		});
 

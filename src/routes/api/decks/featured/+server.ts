@@ -98,10 +98,18 @@ export const GET: RequestHandler = async ({ url }) => {
 			};
 		});
 
-		return json({
-			success: true,
-			decks: formattedDecks
-		});
+		return json(
+			{
+				success: true,
+				decks: formattedDecks
+			},
+			{
+				headers: {
+					// Cache for 5 minutes on client, 1 hour on CDN, serve stale for 24 hours while revalidating
+					'Cache-Control': 'public, max-age=300, s-maxage=3600, stale-while-revalidate=86400'
+				}
+			}
+		);
 	} catch (err) {
 		console.error('Featured decks error:', err);
 		return json({ error: 'An unexpected error occurred' }, { status: 500 });
