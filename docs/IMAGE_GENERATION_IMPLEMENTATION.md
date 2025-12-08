@@ -83,7 +83,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 ```typescript
 /**
- * Generate text embedding using Gemini text-embedding-004
+ * Generate text embedding using Gemini text-embedding-001
  *
  * @param text - The optimized prompt text to embed
  * @returns 768-dimensional embedding vector as number array
@@ -95,7 +95,7 @@ export async function generateEmbedding(text: string): Promise<number[]> {
 	const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 
 	const result = await ai.models.embedContent({
-		model: 'text-embedding-004',
+		model: 'text-embedding-001',
 		content: text
 	});
 
