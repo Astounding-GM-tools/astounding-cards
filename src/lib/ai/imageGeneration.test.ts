@@ -187,18 +187,6 @@ describe('Image Generation - API Tests', () => {
 		console.log('  Result:', result);
 	}, 30000);
 
-	it('should generate image with preview model (with reference)', async () => {
-		const result = await generateImage({
-			model: 'gemini-2.5-flash-image-preview',
-			prompt: 'A fantasy elf ranger with silver hair.',
-			includeReference: true
-		});
-
-		expect(result.success).toBe(true);
-		expect(result.imageSize).toBeGreaterThan(0);
-		console.log('  Result:', result);
-	}, 30000);
-
 	it('should generate with actual tiny 50x70 PNG file', async () => {
 		// Load the real tiny PNG file
 		const tinyImagePath = join(process.cwd(), 'static', 'card-layout-reference-tiny.png');

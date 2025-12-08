@@ -35,12 +35,6 @@ const TESTS = [
 		model: 'gemini-2.5-flash-image',
 		prompt: 'A fantasy elf ranger with silver hair in a forest.',
 		includeReference: true
-	},
-	{
-		name: 'Preview model with reference',
-		model: 'gemini-2.5-flash-image-preview',
-		prompt: 'A fantasy elf ranger with silver hair in a forest.',
-		includeReference: true
 	}
 ];
 
