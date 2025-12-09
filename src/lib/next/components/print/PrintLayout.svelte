@@ -1,18 +1,21 @@
 <script lang="ts">
 	import type { Card as CardType } from '../../types/card.js';
-	import type { Layout } from '../../types/deck.js';
+	import type { Layout, Preset } from '../../types/deck.js';
 	import Card from '../card/Card.svelte';
+	import CardPresetMinimal from '../card/CardPresetMinimal.svelte';
 	import CardFrontContent from '../card/CardFrontContent.svelte';
 	import CardBackContent from '../card/CardBackContent.svelte';
 
 	interface Props {
 		cards: CardType[];
 		layout: Layout;
+		preset?: Preset;
 		showCardBacks?: boolean;
 		debugMode?: boolean; // When true, show print styles on screen for debugging
 	}
 
-	let { cards, layout, showCardBacks = true, debugMode = false }: Props = $props();
+	let { cards, layout, preset = 'trading', showCardBacks = true, debugMode = false }: Props =
+		$props();
 
 	// Working pagination function (from old PagedCards)
 	function getPagedCards(cards: CardType[], layout: Layout) {
@@ -40,9 +43,15 @@
 		>
 			<div class="card-grid">
 				{#each page as card (card.id)}
-					<Card cardId={card.id}>
-						<CardFrontContent {card} />
-					</Card>
+					{#if preset === 'minimal'}
+						<div class="card-container">
+							<CardPresetMinimal {card} showBack={false} />
+						</div>
+					{:else}
+						<Card cardId={card.id}>
+							<CardFrontContent {card} />
+						</Card>
+					{/if}
 				{/each}
 			</div>
 		</div>
@@ -52,9 +61,15 @@
 			<div class="page" data-layout={layout} class:last-page={pageIndex === pagedCards.length - 1}>
 				<div class="card-grid back-grid">
 					{#each page as card (card.id)}
-						<Card cardId={card.id}>
-							<CardBackContent {card} />
-						</Card>
+						{#if preset === 'minimal'}
+							<div class="card-container">
+								<CardPresetMinimal {card} showBack={true} />
+							</div>
+						{:else}
+							<Card cardId={card.id}>
+								<CardBackContent {card} />
+							</Card>
+						{/if}
 					{/each}
 				</div>
 			</div>
@@ -111,6 +126,16 @@
 	/* Remove page break from last page to prevent blank page */
 	.print-layout .last-page {
 		page-break-after: auto;
+	}
+
+	/* Card container for minimal preset (maintains aspect ratio and spacing) */
+	.print-layout .card-container {
+		aspect-ratio: 5/7;
+		width: 100%;
+		height: 100%;
+		background: white;
+		border-radius: 0.5rem;
+		overflow: hidden;
 	}
 
 	/* Ensure crop marks use border-box sizing in print layout */

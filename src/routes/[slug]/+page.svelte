@@ -36,6 +36,7 @@
 	import { CardEditDialog, DeleteDeckDialog, LikeDeckDialog } from '$lib/next/components/dialogs/';
 	import { actionButtonContent } from '$lib/next/components/actions/actionButtonContent';
 	import { getAuthHeaders } from '$lib/utils/auth-helpers';
+	import DeckSettingsPanel from '$lib/next/components/settings/DeckSettingsPanel.svelte';
 
 	import {
 		Share2,
@@ -47,7 +48,8 @@
 		BookPlus,
 		BookCheck,
 		CircleCheck,
-		CircleX
+		CircleX,
+		Settings
 	} from 'lucide-svelte';
 
 	// Server-side data
@@ -101,6 +103,9 @@
 	let layout = $state<Layout>('poker');
 	let showCardBacks = $state(true);
 	let printEventTimeout: ReturnType<typeof setTimeout> | null = null;
+
+	// Settings panel state
+	let showSettings = $state(false);
 
 	// Active deck - switches from previewDeck to store deck after import
 	// This ensures Canon Update reactivity works after editing
@@ -867,13 +872,34 @@
 				<ActionButton {...actionButtonContent.addCard} variant="primary" onclick={handleAddCard}>
 					{#snippet icon()}<Plus size={20} />{/snippet}
 				</ActionButton>
+
+				<!-- Settings button - always last in row -->
+				<ActionButton
+					title="Deck Settings"
+					subtitle="Configure deck"
+					variant="secondary"
+					filled={showSettings}
+					onclick={() => (showSettings = !showSettings)}
+				>
+					{#snippet icon()}<Settings size={20} />{/snippet}
+				</ActionButton>
 			{/if}
 		</ActionBar>
+
+		<!-- Deck Settings Panel (expandable) -->
+		{#if localDeck}
+			<DeckSettingsPanel deck={activeDeck} isExpanded={showSettings} />
+		{/if}
 
 		<!-- Deck viewer - switches to print layout when printing -->
 		<div class="preview-content">
 			{#if isPrintMode}
-				<PrintLayout cards={activeDeck.cards} {layout} {showCardBacks} />
+				<PrintLayout
+					cards={activeDeck.cards}
+					{layout}
+					preset={activeDeck.meta.preset}
+					{showCardBacks}
+				/>
 			{:else}
 				<DeckPreview deck={activeDeck} onEdit={handleEdit} />
 			{/if}

@@ -2,6 +2,8 @@
 	import type { Deck } from '../../types/deck.js';
 
 	import Card from '../card/Card.svelte';
+	import CardPresetMinimal from '../card/CardPresetMinimal.svelte';
+	import CardPresetTrading from '../card/CardPresetTrading.svelte';
 	import CardBackContent from '../card/CardBackContent.svelte';
 	import CardFrontContent from '../card/CardFrontContent.svelte';
 
@@ -14,6 +16,9 @@
 	}
 
 	let { deck, onEdit, mode = 'card' }: Props = $props();
+
+	// Get preset from deck meta, default to 'trading'
+	let preset = $derived(deck.meta.preset || 'trading');
 	let showingBack = $state(new Set<string>());
 
 	// Determine button labels and icons based on mode
@@ -40,13 +45,17 @@
 		{#each deck.cards as card (card.id)}
 			<div class="card-wrapper">
 				<div class="card-display">
-					<Card preview={true}>
-						{#if isShowingBack(card.id)}
-							<CardBackContent {card} />
-						{:else}
-							<CardFrontContent {card} />
-						{/if}
-					</Card>
+					{#if preset === 'minimal'}
+						<CardPresetMinimal {card} showBack={isShowingBack(card.id)} />
+					{:else}
+						<Card preview={true}>
+							{#if isShowingBack(card.id)}
+								<CardBackContent {card} />
+							{:else}
+								<CardFrontContent {card} />
+							{/if}
+						</Card>
+					{/if}
 				</div>
 				<div class="card-controls">
 					<button

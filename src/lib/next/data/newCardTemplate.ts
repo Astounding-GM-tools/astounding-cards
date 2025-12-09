@@ -15,7 +15,7 @@ export function getNewCardTemplate(): Partial<Card> {
 		title: 'New Card',
 		subtitle: 'Add your own content',
 		description:
-			'Click anywhere on this card to open the editor. Customize the title, description, traits, and stats to make this card your own!',
+			'Click the Edit button to open the editor. Customize the title, description, traits, and stats to make this card your own!',
 		image: null,
 		traits: [
 			{

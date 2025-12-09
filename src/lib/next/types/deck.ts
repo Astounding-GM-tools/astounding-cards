@@ -9,12 +9,15 @@ export type Theme = 'classic' | 'cordial' | 'scriptorum' | 'cyberdeck';
 
 export type ImageStyle = 'classic' | 'modern' | 'inked';
 
+export type Preset = 'minimal' | 'trading';
+
 interface DeckMeta {
 	title: string;
 	description?: string;
 	theme: Theme;
 	imageStyle: ImageStyle;
 	layout: Layout;
+	preset?: Preset; // Card display preset - defaults to 'trading'
 	lastEdited: number;
 	createdAt: number;
 	lastPublished?: number; // Timestamp of last publish (for detecting unpublished changes)
