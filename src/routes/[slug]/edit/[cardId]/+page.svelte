@@ -4,11 +4,13 @@
 	import { nextDeckStore } from '$lib/next/stores/deckStore.svelte.js';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
+	import { onMount } from 'svelte';
 
 	// Import actual card components
 	import CardComponent from '$lib/next/components/card/Card.svelte';
 	import CardFrontContent from '$lib/next/components/card/CardFrontContent.svelte';
 	import CardBackContent from '$lib/next/components/card/CardBackContent.svelte';
+	import CardPresetMinimal from '$lib/next/components/card/CardPresetMinimal.svelte';
 	import InlineImageSelector from '$lib/next/components/image/InlineImageSelector.svelte';
 	import BinaryToggle from '$lib/next/components/ui/BinaryToggle.svelte';
 	import AuthGatedCtaButton from '$lib/next/components/cta/AuthGatedCtaButton.svelte';
@@ -25,11 +27,20 @@
 		DRAG_CLASSES
 	} from '$lib/utils/drag-drop.svelte.js';
 
-	import { ArrowLeft, X } from 'lucide-svelte';
+	import { ArrowLeft, X, Save, Check, AlertCircle, Trash2 } from 'lucide-svelte';
+	import { getPresetCapabilities } from '$lib/next/utils/presetCapabilities.js';
 
 	// Get params from URL
 	let deckId = $derived($page.params.slug);
 	let cardId = $derived($page.params.cardId);
+
+	// Load the deck on mount
+	onMount(async () => {
+		// Check if deck is already loaded
+		if (!nextDeckStore.deck || nextDeckStore.deck.id !== deckId) {
+			await nextDeckStore.loadDeck(deckId);
+		}
+	});
 
 	// Get the card and deck from store
 	let card = $derived(nextDeckStore.getCard(cardId));
@@ -38,6 +49,16 @@
 	// Get all cards for sidebar navigation
 	let allCards = $derived(currentDeck?.cards || []);
 	let currentCardIndex = $derived(allCards.findIndex((c) => c.id === cardId));
+
+	// Get the deck's preset setting
+	let preset = $derived(currentDeck?.meta.preset || 'trading');
+
+	// Get preset capabilities to determine what form fields to show
+	let capabilities = $derived(getPresetCapabilities(preset));
+
+	// Check if deck shows card backs (for print layout)
+	// Only show back preview if the preset has a back card design
+	let showBackInPreview = $state(true);
 
 	// Working state for form (unsaved changes)
 	let formData = $state({
@@ -139,8 +160,9 @@
 
 	let isSaving = $state(false);
 	let hasChanges = $state(false);
+	let saveTimeoutId: number | null = null;
 
-	// Check for changes
+	// Auto-save with debounce
 	$effect(() => {
 		if (card && isFormInitialized) {
 			const imageChanged = formData.imageUrl !== (card.image || null);
@@ -153,7 +175,23 @@
 				formData.imageBlob !== (card.imageBlob || null) ||
 				imageChanged ||
 				JSON.stringify(formData.imageMetadata) !== JSON.stringify(card.imageMetadata || null);
+
+			// Auto-save after 500ms of no changes
+			if (hasChanges) {
+				if (saveTimeoutId !== null) {
+					clearTimeout(saveTimeoutId);
+				}
+				saveTimeoutId = window.setTimeout(() => {
+					saveChanges();
+				}, 500);
+			}
 		}
+
+		return () => {
+			if (saveTimeoutId !== null) {
+				clearTimeout(saveTimeoutId);
+			}
+		};
 	});
 
 	async function saveChanges() {
@@ -372,6 +410,26 @@
 			</button>
 			<h1 class="deck-title">{currentDeck.meta.title}</h1>
 			<div class="spacer"></div>
+
+			<!-- Status Indicator -->
+			<div class="header-status">
+				{#if isSaving}
+					<Save size={16} />
+					<span>Saving...</span>
+				{:else if hasChanges}
+					<AlertCircle size={16} />
+					<span>Unsaved changes</span>
+				{:else}
+					<Check size={16} />
+					<span>All saved</span>
+				{/if}
+			</div>
+
+			<!-- Actions -->
+			<button class="header-action-button danger" onclick={deleteCard} disabled={isSaving}>
+				<Trash2 size={16} />
+				<span>Delete Card</span>
+			</button>
 		</header>
 
 		<div class="edit-layout">
@@ -385,8 +443,13 @@
 							onclick={() => navigateToCard(sidebarCard.id)}
 							title={sidebarCard.title || 'Untitled'}
 						>
-							<div class="thumbnail-number">{index + 1}</div>
-							<div class="thumbnail-title">{sidebarCard.title || 'Untitled'}</div>
+							<CardComponent preview>
+								{#if preset === 'minimal'}
+									<CardPresetMinimal card={sidebarCard} showBack={false} />
+								{:else}
+									<CardFrontContent card={sidebarCard} />
+								{/if}
+							</CardComponent>
 						</button>
 					{/each}
 				</div>
@@ -394,27 +457,150 @@
 
 			<!-- Main Editor Area -->
 			<main class="editor-main">
-				<div class="editor-content">
-					<!-- Edit Form Section (same as dialog) -->
-					<section class="edit-section">
-						<fieldset class="form-fieldset">
-							<legend>Basic Info</legend>
-							<input type="text" bind:value={formData.title} placeholder="Card title" maxlength="100" />
+				<div class="editor-content-grid">
+					<!-- LEFT-TOP: Front Card Fields (Title, Subtitle, Traits) -->
+					<section class="left-top">
+						<!-- Title Field -->
+						<div class="field-row">
+							<label for="card-title">Title</label>
 							<input
+								id="card-title"
+								type="text"
+								bind:value={formData.title}
+								placeholder="Enter card title"
+								maxlength="100"
+								class="field-input"
+							/>
+						</div>
+
+						<!-- Subtitle Field -->
+						<div class="field-row">
+							<label for="card-subtitle">Subtitle</label>
+							<input
+								id="card-subtitle"
 								type="text"
 								bind:value={formData.subtitle}
-								placeholder="Subtitle (e.g., Character, Item)"
+								placeholder="Enter subtitle (optional)"
 								maxlength="50"
+								class="field-input"
 							/>
-							<textarea
-								bind:value={formData.description}
-								placeholder="Description"
-								rows="2"
-								maxlength="500"
-							></textarea>
-						</fieldset>
+						</div>
 
-						<!-- Image Section -->
+						<!-- Traits Section (if preset supports) -->
+						{#if capabilities.supportsTraits}
+							<fieldset class="form-fieldset" aria-labelledby="traits-legend-top">
+								<legend id="traits-legend-top">Traits</legend>
+							<div role="list" aria-label="Reorderable list of traits">
+								{#each formData.traits as trait, index}
+									<div
+										class="inline-attribute-editor {DRAG_CLASSES.draggable}"
+										draggable="true"
+										role="listitem"
+										aria-label="Trait: {trait.title || 'Untitled'} - Drag to reorder"
+										ondragstart={(e) => traitsHandlers.handleDragStart(e, index)}
+										ondragover={(e) => {
+											traitsHandlers.handleDragOver(e);
+											e.currentTarget.classList.add('drag-over');
+										}}
+										ondragleave={(e) => {
+											e.currentTarget.classList.remove('drag-over');
+										}}
+										ondrop={(e) => traitsHandlers.handleDrop(e, index)}
+										ondragend={traitsHandlers.handleDragEnd}
+										data-index={index}
+									>
+										<div class={DRAG_CLASSES.handle} title="Drag to reorder">⋮⋮</div>
+
+										<div class="attribute-content">
+											<div class="trait-compact-row">
+												<BinaryToggle
+													checked={trait.isPublic}
+													onToggle={(isPublic) => {
+														trait.isPublic = isPublic;
+													}}
+													trueLabel="◉ Public"
+													falseLabel="○ Secret"
+													size="sm"
+													name={`trait-public-${index}`}
+												/>
+												<input
+													type="text"
+													bind:value={trait.title}
+													placeholder="Trait title"
+													class="title-input"
+												/>
+												<button
+													class="delete-btn"
+													onclick={() => {
+														const newTraits = [...formData.traits];
+														newTraits.splice(index, 1);
+														formData.traits = newTraits;
+													}}
+												>
+													🗑️
+												</button>
+											</div>
+
+											<div class="description-row">
+												<textarea
+													bind:value={trait.description}
+													placeholder="Description"
+													class="description-input trait-description"
+													rows="1"
+													required
+												></textarea>
+											</div>
+										</div>
+									</div>
+								{/each}
+
+								<div
+									class="drop-zone-end"
+									role="region"
+									aria-label="Drop zone for traits"
+									ondragover={(e) => {
+										traitsHandlers.handleDragOver(e);
+										e.currentTarget.classList.add('drag-over');
+									}}
+									ondragleave={(e) => {
+										e.currentTarget.classList.remove('drag-over');
+									}}
+									ondrop={(e) => traitsHandlers.handleDrop(e, formData.traits.length)}
+								></div>
+							</div>
+
+								<button
+									class="add-attribute-btn"
+									onclick={() => {
+										formData.traits = [
+											...formData.traits,
+											{ title: '', isPublic: true, description: '' }
+										];
+									}}
+								>
+									+ Add Trait
+								</button>
+							</fieldset>
+						{/if}
+					</section>
+
+					<!-- CENTER-TOP: Front Card Preview -->
+					<section class="center-top">
+						{#if previewCard}
+							<div class="card-preview">
+								<CardComponent preview>
+									{#if preset === 'minimal'}
+										<CardPresetMinimal card={previewCard} showBack={false} />
+									{:else}
+										<CardFrontContent card={previewCard} />
+									{/if}
+								</CardComponent>
+							</div>
+						{/if}
+					</section>
+
+					<!-- RIGHT: Image Tools (spans both rows) -->
+					<section class="right-column">
 						<fieldset class="form-fieldset">
 							<legend>Image</legend>
 							<InlineImageSelector
@@ -445,9 +631,32 @@
 							</div>
 						</fieldset>
 
-						<!-- Stats Section (same as dialog) -->
-						<fieldset class="form-fieldset" aria-labelledby="stats-legend">
-							<legend id="stats-legend">Stats</legend>
+						<!-- TODO: Community Images Section -->
+						<fieldset class="form-fieldset">
+							<legend>Community Images</legend>
+							<p class="placeholder-text">Suggested images from community library (coming soon)</p>
+						</fieldset>
+					</section>
+
+					<!-- LEFT-BOTTOM: Back Card Fields (Description, Stats) -->
+					<section class="left-bottom">
+						<!-- Description Field -->
+						<div class="field-row field-row-tall">
+							<label for="card-description">Description</label>
+							<textarea
+								id="card-description"
+								bind:value={formData.description}
+								placeholder="Enter card description"
+								rows="6"
+								maxlength="500"
+								class="field-textarea"
+							></textarea>
+						</div>
+
+						<!-- Stats Section (only for presets that support stats) -->
+						{#if capabilities.supportsStats}
+							<fieldset class="form-fieldset" aria-labelledby="stats-legend-bottom">
+								<legend id="stats-legend-bottom">Stats</legend>
 							<div role="list" aria-label="Reorderable list of stats">
 								{#each formData.stats as stat, index}
 									<div
@@ -554,160 +763,36 @@
 								></div>
 							</div>
 
-							<button
-								class="add-attribute-btn"
-								onclick={() => {
-									formData.stats = [
-										...formData.stats,
-										{ title: '', isPublic: true, value: 0, tracked: false, description: '' }
-									];
-								}}
-							>
-								+ Add Stat
-							</button>
-						</fieldset>
-
-						<!-- Traits Section (same as dialog) -->
-						<fieldset class="form-fieldset" aria-labelledby="traits-legend">
-							<legend id="traits-legend">Traits</legend>
-							<div role="list" aria-label="Reorderable list of traits">
-								{#each formData.traits as trait, index}
-									<div
-										class="inline-attribute-editor {DRAG_CLASSES.draggable}"
-										draggable="true"
-										role="listitem"
-										aria-label="Trait: {trait.title || 'Untitled'} - Drag to reorder"
-										ondragstart={(e) => traitsHandlers.handleDragStart(e, index)}
-										ondragover={(e) => {
-											traitsHandlers.handleDragOver(e);
-											e.currentTarget.classList.add('drag-over');
-										}}
-										ondragleave={(e) => {
-											e.currentTarget.classList.remove('drag-over');
-										}}
-										ondrop={(e) => traitsHandlers.handleDrop(e, index)}
-										ondragend={traitsHandlers.handleDragEnd}
-										data-index={index}
-									>
-										<div class={DRAG_CLASSES.handle} title="Drag to reorder">⋮⋮</div>
-
-										<div class="attribute-content">
-											<div class="trait-compact-row">
-												<BinaryToggle
-													checked={trait.isPublic}
-													onToggle={(isPublic) => {
-														trait.isPublic = isPublic;
-													}}
-													trueLabel="◉ Public"
-													falseLabel="○ Secret"
-													size="sm"
-													name={`trait-public-${index}`}
-												/>
-												<input
-													type="text"
-													bind:value={trait.title}
-													placeholder="Trait title"
-													class="title-input"
-												/>
-												<button
-													class="delete-btn"
-													onclick={() => {
-														const newTraits = [...formData.traits];
-														newTraits.splice(index, 1);
-														formData.traits = newTraits;
-													}}
-												>
-													🗑️
-												</button>
-											</div>
-
-											<div class="description-row">
-												<textarea
-													bind:value={trait.description}
-													placeholder="Description"
-													class="description-input trait-description"
-													rows="1"
-													required
-												></textarea>
-											</div>
-										</div>
-									</div>
-								{/each}
-
-								<div
-									class="drop-zone-end"
-									role="region"
-									aria-label="Drop zone for traits"
-									ondragover={(e) => {
-										traitsHandlers.handleDragOver(e);
-										e.currentTarget.classList.add('drag-over');
+								<button
+									class="add-attribute-btn"
+									onclick={() => {
+										formData.stats = [
+											...formData.stats,
+											{ title: '', isPublic: true, value: 0, tracked: false, description: '' }
+										];
 									}}
-									ondragleave={(e) => {
-										e.currentTarget.classList.remove('drag-over');
-									}}
-									ondrop={(e) => traitsHandlers.handleDrop(e, formData.traits.length)}
-								></div>
-							</div>
-
-							<button
-								class="add-attribute-btn"
-								onclick={() => {
-									formData.traits = [
-										...formData.traits,
-										{ title: '', isPublic: true, description: '' }
-									];
-								}}
-							>
-								+ Add Trait
-							</button>
-						</fieldset>
+								>
+									+ Add Stat
+								</button>
+							</fieldset>
+						{/if}
 					</section>
 
-					<!-- Live Preview Section -->
-					<section class="preview-section">
-						{#if previewCard}
-							<div class="preview-cards">
-								<div class="card-preview">
-									<CardComponent preview>
-										<CardFrontContent card={previewCard} />
-									</CardComponent>
-								</div>
-
-								<div class="card-preview">
-									<CardComponent preview>
+					<!-- CENTER-BOTTOM: Back Card Preview -->
+					<section class="center-bottom">
+						{#if previewCard && showBackInPreview && capabilities.hasBackCard}
+							<div class="card-preview">
+								<CardComponent preview>
+									{#if preset === 'minimal'}
+										<CardPresetMinimal card={previewCard} showBack={true} />
+									{:else}
 										<CardBackContent card={previewCard} />
-									</CardComponent>
-								</div>
+									{/if}
+								</CardComponent>
 							</div>
 						{/if}
 					</section>
 				</div>
-
-				<!-- Footer Actions -->
-				<footer class="editor-footer">
-					<div class="footer-status">
-						{#if isSaving}
-							<span class="saving">💾 Saving...</span>
-						{:else if hasChanges}
-							<span class="changes">✏️ Unsaved changes</span>
-						{:else}
-							<span class="saved">✅ All changes saved</span>
-						{/if}
-					</div>
-
-					<div class="footer-actions">
-						<button class="danger" onclick={deleteCard} disabled={isSaving}>
-							Delete Card
-						</button>
-						<div class="spacer"></div>
-						<button onclick={resetForm} disabled={!hasChanges || isSaving}>
-							Reset
-						</button>
-						<button class="primary" onclick={saveChanges} disabled={!hasChanges || isSaving}>
-							{isSaving ? 'Saving...' : 'Save Changes'}
-						</button>
-					</div>
-				</footer>
 			</main>
 		</div>
 	</div>
@@ -770,6 +855,77 @@
 		flex: 1;
 	}
 
+	.header-status {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.5rem 0.75rem;
+		border-radius: 0.375rem;
+		font-size: 0.875rem;
+		font-weight: 500;
+		transition: all 0.15s ease;
+	}
+
+	.header-status :global(svg) {
+		flex-shrink: 0;
+	}
+
+	.header-status span {
+		white-space: nowrap;
+	}
+
+	/* Status colors */
+	.header-status:has(svg:first-child[data-lucide="save"]) {
+		color: #ff6b00;
+		background: #fff4ed;
+	}
+
+	.header-status:has(svg:first-child[data-lucide="alert-circle"]) {
+		color: #e67e22;
+		background: #fef3e9;
+	}
+
+	.header-status:has(svg:first-child[data-lucide="check"]) {
+		color: #27ae60;
+		background: #edf7f0;
+	}
+
+	.header-action-button {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.5rem 1rem;
+		border: 1px solid var(--ui-border, #e2e8f0);
+		border-radius: 0.375rem;
+		background: white;
+		color: var(--ui-text, #1e293b);
+		font-family: var(--font-body);
+		font-size: 0.875rem;
+		font-weight: 500;
+		cursor: pointer;
+		transition: all 0.15s ease;
+	}
+
+	.header-action-button:hover:not(:disabled) {
+		background: var(--ui-bg-secondary, #f8fafc);
+		border-color: var(--ui-text, #1e293b);
+	}
+
+	.header-action-button.danger {
+		background: #dc2626;
+		color: white;
+		border-color: #dc2626;
+	}
+
+	.header-action-button.danger:hover:not(:disabled) {
+		background: #b91c1c;
+	}
+
+	.header-action-button:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+
 	/* Layout */
 	.edit-layout {
 		display: grid;
@@ -793,47 +949,33 @@
 	}
 
 	.card-thumbnail {
-		display: flex;
-		flex-direction: column;
-		gap: 0.25rem;
-		padding: 0.75rem;
+		width: 100%;
+		padding: 0;
 		border: 2px solid var(--ui-border, #e2e8f0);
 		border-radius: 0.375rem;
 		background: white;
 		cursor: pointer;
-		text-align: left;
 		transition: all 0.15s ease;
 		font-family: var(--font-body);
+		overflow: hidden;
 	}
 
 	.card-thumbnail:hover {
-		background: var(--ui-bg-secondary, #f8fafc);
 		border-color: var(--ui-text, #1e293b);
+		transform: translateX(2px);
+		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 	}
 
 	.card-thumbnail.active {
 		border-color: var(--primary, #3b82f6);
-		background: var(--primary-light, #eff6ff);
-		box-shadow: 0 0 0 1px var(--primary, #3b82f6);
+		box-shadow: 0 0 0 3px var(--primary-light, #eff6ff);
 	}
 
-	.thumbnail-number {
-		font-size: 0.75rem;
-		font-weight: 600;
-		color: var(--ui-muted, #64748b);
-	}
-
-	.thumbnail-title {
-		font-size: 0.875rem;
-		font-weight: 500;
-		color: var(--ui-text, #1e293b);
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-	}
-
-	.card-thumbnail.active .thumbnail-title {
-		color: var(--primary, #3b82f6);
+	.card-thumbnail :global(.card) {
+		width: 100%;
+		border: none;
+		box-shadow: none;
+		border-radius: 0;
 	}
 
 	/* Main Editor */
@@ -843,22 +985,162 @@
 		overflow: hidden;
 	}
 
-	.editor-content {
+	.editor-content-grid {
 		display: grid;
-		grid-template-columns: 2fr 1fr;
-		gap: 1.5rem;
+		grid-template-columns: 1fr auto 1fr;
+		grid-template-rows: auto auto;
+		grid-template-areas:
+			'left-top center-top right'
+			'left-bottom center-bottom right';
+		gap: 2rem 2rem;
 		flex: 1;
 		overflow: hidden;
 		padding: 1.5rem;
 	}
 
-	.edit-section {
+	/* Grid areas */
+	.left-top {
+		grid-area: left-top;
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+		overflow-y: auto;
+		overflow-x: hidden;
+		padding-right: 0.5rem;
+		container-type: inline-size;
+		container-name: left-column;
+	}
+
+	.left-bottom {
+		grid-area: left-bottom;
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+		overflow-y: auto;
+		overflow-x: hidden;
+		padding-right: 0.5rem;
+		container-type: inline-size;
+		container-name: left-column;
+	}
+
+	.center-top {
+		grid-area: center-top;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: flex-start;
+		padding: 0 1.5rem;
+		min-width: 360px;
+		max-width: 400px;
+	}
+
+	.center-bottom {
+		grid-area: center-bottom;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: flex-start;
+		padding: 0 1.5rem;
+		min-width: 360px;
+		max-width: 400px;
+	}
+
+	.right-column {
+		grid-area: right;
 		display: flex;
 		flex-direction: column;
 		gap: 1rem;
 		overflow-y: auto;
 		overflow-x: hidden;
 		padding-right: 0.5rem;
+	}
+
+	/* Left column field layout */
+	.section-header {
+		margin-top: 1rem;
+		margin-bottom: 0.5rem;
+	}
+
+	.section-header:first-child {
+		margin-top: 0;
+	}
+
+	.section-header h3 {
+		font-size: 0.75rem;
+		font-weight: 700;
+		letter-spacing: 0.1em;
+		color: var(--ui-muted, #64748b);
+		margin: 0;
+		text-transform: uppercase;
+	}
+
+	.section-divider {
+		height: 1px;
+		background: var(--ui-border, #e2e8f0);
+		margin: 1.5rem 0;
+	}
+
+	.field-row {
+		display: grid;
+		grid-template-columns: 100px 1fr;
+		gap: 0.75rem;
+		align-items: center;
+		margin-bottom: 0.5rem;
+	}
+
+	/* Stack fields vertically when container is narrow */
+	@container left-column (max-width: 400px) {
+		.field-row {
+			grid-template-columns: 1fr;
+			gap: 0.25rem;
+		}
+
+		.field-row label {
+			text-align: left;
+			padding-top: 0;
+			font-size: 0.75rem;
+			font-weight: 600;
+			text-transform: uppercase;
+			letter-spacing: 0.05em;
+			color: var(--ui-muted, #64748b);
+		}
+	}
+
+	.field-row-tall {
+		align-items: start;
+	}
+
+	.field-row label {
+		font-size: 0.875rem;
+		font-weight: 500;
+		color: var(--ui-text, #1e293b);
+		text-align: right;
+		padding-top: 0.5rem;
+	}
+
+	.field-input,
+	.field-textarea {
+		width: 100%;
+		padding: 0.5rem 0.75rem;
+		border: 1px solid var(--ui-border, #e2e8f0);
+		border-radius: 0.375rem;
+		font-family: var(--font-body);
+		font-size: 0.9rem;
+		background: white;
+		transition: all 0.15s ease;
+	}
+
+	.field-input:focus,
+	.field-textarea:focus {
+		outline: none;
+		border-color: var(--primary, #3b82f6);
+		box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+	}
+
+	.field-textarea {
+		resize: vertical;
+		line-height: 1.5;
+		min-height: 120px;
 	}
 
 	/* Reuse all the form styles from CardEditDialog */
@@ -896,6 +1178,30 @@
 		outline: none;
 		border-color: var(--accent);
 		box-shadow: 0 0 0 2px rgba(74, 85, 104, 0.1);
+	}
+
+	/* Field-specific styles */
+	.field-title {
+		font-size: 1.1rem;
+		font-weight: 600;
+	}
+
+	.field-subtitle {
+		font-size: 0.95rem;
+	}
+
+	.field-description {
+		font-size: 0.9rem;
+		line-height: 1.5;
+		min-height: 120px;
+	}
+
+	.placeholder-text {
+		color: var(--ui-muted, #64748b);
+		font-size: 0.875rem;
+		text-align: center;
+		padding: 2rem 1rem;
+		font-style: italic;
 	}
 
 	/* All the inline attribute styles from dialog... */
@@ -1070,107 +1376,30 @@
 		gap: 0.5rem;
 	}
 
-	/* Preview Section */
-	.preview-section {
-		display: flex;
-		flex-direction: column;
-		overflow-y: auto;
-		overflow-x: hidden;
-	}
-
+	/* Preview cards in center column */
 	.preview-cards {
 		display: flex;
-		flex-direction: row;
-		gap: 0.75rem;
-		padding: 0.5rem;
+		flex-direction: column;
+		gap: 2rem;
+		align-items: center;
+		width: 100%;
+		padding: 1rem 0;
 	}
 
 	.card-preview {
-		flex: 1;
-		min-width: 0;
+		width: 100%;
+		max-width: 360px;
 	}
 
+	/* Ensure cards maintain aspect ratio */
 	.card-preview :global(.card) {
 		width: 100%;
-		max-width: 240px;
 		margin: 0 auto;
 		border: 1px solid #ddd;
 		background: white;
 		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-	}
-
-	/* Footer */
-	.editor-footer {
-		display: flex;
-		flex-direction: column;
-		gap: 0.5rem;
-		padding: 1rem 1.5rem;
-		border-top: 1px solid var(--ui-border, #e2e8f0);
-		background: white;
-		z-index: 10;
-	}
-
-	.footer-status {
-		font-size: 0.875rem;
-	}
-
-	.saving {
-		color: #ff6b00;
-	}
-
-	.changes {
-		color: #e67e22;
-	}
-
-	.saved {
-		color: #27ae60;
-	}
-
-	.footer-actions {
-		display: flex;
-		gap: 0.5rem;
-	}
-
-	.footer-actions button {
-		padding: 0.5rem 1rem;
-		border: 1px solid var(--ui-border, #e2e8f0);
-		border-radius: 0.375rem;
-		background: white;
-		color: var(--ui-text, #1e293b);
-		font-family: var(--font-body);
-		font-size: 0.875rem;
-		font-weight: 500;
-		cursor: pointer;
-		transition: all 0.15s ease;
-	}
-
-	.footer-actions button:hover:not(:disabled) {
-		background: var(--ui-bg-secondary, #f8fafc);
-	}
-
-	.footer-actions button.primary {
-		background: var(--primary, #3b82f6);
-		color: white;
-		border-color: var(--primary, #3b82f6);
-	}
-
-	.footer-actions button.primary:hover:not(:disabled) {
-		opacity: 0.9;
-	}
-
-	.footer-actions button.danger {
-		background: #dc2626;
-		color: white;
-		border-color: #dc2626;
-	}
-
-	.footer-actions button.danger:hover:not(:disabled) {
-		background: #b91c1c;
-	}
-
-	.footer-actions button:disabled {
-		opacity: 0.5;
-		cursor: not-allowed;
+		border-radius: 0.5rem;
+		overflow: hidden;
 	}
 
 	/* Error State */
