@@ -49,7 +49,8 @@
 		BookCheck,
 		CircleCheck,
 		CircleX,
-		Settings
+		Settings,
+		Edit
 	} from 'lucide-svelte';
 
 	// Server-side data
@@ -390,6 +391,16 @@
 	// Handle card backs toggle
 	function handleCardBacksChange(visible: boolean) {
 		showCardBacks = visible;
+	}
+
+	// Enter edit mode
+	function handleEnterEditMode() {
+		if (!activeDeck || activeDeck.cards.length === 0) {
+			toasts.error('Add cards to your deck first');
+			return;
+		}
+		const firstCardId = activeDeck.cards[0].id;
+		goto(`/${activeDeck.id}/edit/${firstCardId}`);
 	}
 
 	// Handle edit card - implicitly imports deck if needed
@@ -871,6 +882,16 @@
 
 				<ActionButton {...actionButtonContent.addCard} variant="primary" onclick={handleAddCard}>
 					{#snippet icon()}<Plus size={20} />{/snippet}
+				</ActionButton>
+
+				<!-- Edit Mode button -->
+				<ActionButton
+					title="Edit Mode"
+					subtitle="Full-screen editor"
+					variant="secondary"
+					onclick={handleEnterEditMode}
+				>
+					{#snippet icon()}<Edit size={20} />{/snippet}
 				</ActionButton>
 
 				<!-- Settings button - always last in row -->
