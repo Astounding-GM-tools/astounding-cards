@@ -193,17 +193,17 @@
 		</div>
 	{/if}
 
-	<!-- Browse Similar Images Button (always visible if card provided) -->
-	{#if card}
-		<button onclick={openSimilarImagesDialog} class="browse-similar-btn" type="button">
-			🔍 Browse Community Library (Free)
-		</button>
-	{/if}
-
 	{#if !hasExistingImage}
 		<!-- Generate/Select Button (prominent when no image) -->
 		{#if onGenerateImage}
 			<AuthGatedCtaButton config={IMAGE_GENERATION_CTA} onAuthenticatedClick={onGenerateImage} />
+		{/if}
+
+		<!-- Browse Community Images Button -->
+		{#if card}
+			<button type="button" class="browse-similar-btn" onclick={openSimilarImagesDialog}>
+				Browse Community Images
+			</button>
 		{/if}
 	{/if}
 

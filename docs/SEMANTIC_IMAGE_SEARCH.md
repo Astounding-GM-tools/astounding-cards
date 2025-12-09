@@ -127,9 +127,9 @@ Traits: [trait.title]: [trait.description]; ...
 
 **Authentication:** Required (bearer token)
 
-**Cost:** Very cheap (~$0.000025 per embedding with Gemini text-embedding-001)
+**Cost:** Very cheap (~$0.000025 per embedding with Gemini gemini-embedding-001)
 
-**Pricing Reference (Gemini text-embedding-001):**
+**Pricing Reference (Gemini gemini-embedding-001):**
 - Input: $0.00001 per 1,000 characters
 - For typical card (~200 chars): $0.000002
 - 1,000 card embeddings: ~$0.002
@@ -380,7 +380,7 @@ async function checkSimilarImageCount() {
 ## Cost Analysis
 
 **Embedding Generation:**
-- Gemini text-embedding-001: $0.00001 per 1K chars
+- Gemini gemini-embedding-001: $0.00001 per 1K chars
 - Typical card (~200 chars): ~$0.000002 per embedding
 - 1,000 card embeddings: ~$0.002 (negligible!)
 

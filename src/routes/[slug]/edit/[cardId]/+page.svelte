@@ -18,6 +18,9 @@
 	import { IMAGE_GENERATION_CTA } from '$lib/config/cta-configs.js';
 	import { toasts } from '$lib/stores/toast.js';
 	import { dialogStore } from '$lib/next/components/dialog/dialogStore.svelte.js';
+	import { authenticatedFetch } from '$lib/utils/authenticated-fetch.js';
+	import { getOptimizedImageUrl } from '$lib/utils/image-optimization.js';
+	import { isAuthenticated } from '$lib/next/stores/auth.js';
 
 	import { ImageUrlManager } from '$lib/utils/image-handler.js';
 	import { safeDeepClone } from '$lib/utils/clone-utils.js';
@@ -392,6 +395,112 @@
 			navigateToCard(allCards[currentCardIndex + 1].id);
 		}
 	}
+
+	// Community Images
+	interface SearchResult {
+		original_id: string;
+		original_url: string;
+		original_style: string;
+		variants: Array<{
+			id: string;
+			url: string;
+			style: string;
+			created_at: string;
+		}>;
+		similarity: number;
+		created_at: string;
+	}
+
+	interface SelectedVariant {
+		imageUrl: string;
+		imageId: string;
+		style: string;
+	}
+
+	let communityImages = $state<SearchResult[]>([]);
+	let communityImagesLoading = $state(false);
+	let communityImagesError = $state<string | null>(null);
+	let selectedVariants = $state<Record<string, SelectedVariant>>({});
+	let communityImagesPage = $state(1);
+	const imagesPerPage = 6;
+
+	// Load community images when card changes
+	$effect(() => {
+		if (card && previewCard) {
+			loadCommunityImages();
+		}
+	});
+
+	async function loadCommunityImages() {
+		if (!previewCard) return;
+
+		communityImagesLoading = true;
+		communityImagesError = null;
+
+		try {
+			const response = await authenticatedFetch('/api/ai/search-similar-images', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					card: previewCard,
+					preferredStyle: preset,
+					limit: 24 // Load more for pagination
+				})
+			});
+
+			if (!response.ok) {
+				if (response.status === 401) {
+					communityImagesError = 'auth';
+					return;
+				}
+				throw new Error('Failed to load community images');
+			}
+
+			const data = await response.json();
+			communityImages = data.results || [];
+
+			// Initialize selected variants
+			communityImages.forEach((result) => {
+				const preferredVariant = result.variants?.find((v) => v.style === preset);
+				if (preferredVariant) {
+					selectedVariants[result.original_id] = {
+						imageUrl: preferredVariant.url,
+						imageId: preferredVariant.id,
+						style: preferredVariant.style
+					};
+				} else {
+					selectedVariants[result.original_id] = {
+						imageUrl: result.original_url,
+						imageId: result.original_id,
+						style: result.original_style
+					};
+				}
+			});
+		} catch (err) {
+			console.error('Failed to load community images:', err);
+			communityImagesError = 'error';
+		} finally {
+			communityImagesLoading = false;
+		}
+	}
+
+	function handleCommunityImageSelected(imageUrl: string, imageId: string) {
+		handleImageChange(null, imageUrl, `community-${imageId}.png`);
+	}
+
+	function selectVariant(originalId: string, imageUrl: string, imageId: string, style: string) {
+		selectedVariants[originalId] = { imageUrl, imageId, style };
+	}
+
+	function isVariantSelected(originalId: string, variantId: string): boolean {
+		return selectedVariants[originalId]?.imageId === variantId;
+	}
+
+	let paginatedImages = $derived(
+		communityImages.slice((communityImagesPage - 1) * imagesPerPage, communityImagesPage * imagesPerPage)
+	);
+
+	let totalPages = $derived(Math.ceil(communityImages.length / imagesPerPage));
 </script>
 
 <svelte:window onkeydown={handleKeydown} />
@@ -631,10 +740,95 @@
 							</div>
 						</fieldset>
 
-						<!-- TODO: Community Images Section -->
-						<fieldset class="form-fieldset">
+						<!-- Community Images Section -->
+						<fieldset class="form-fieldset community-images-section">
 							<legend>Community Images</legend>
-							<p class="placeholder-text">Suggested images from community library (coming soon)</p>
+
+							{#if communityImagesLoading}
+								<div class="community-loading">
+									<div class="spinner"></div>
+									<p>Loading community images...</p>
+								</div>
+							{:else if communityImagesError === 'auth'}
+								<div class="community-auth-message">
+									<p>The community library of AI-generated images is free to use, but requires that you are logged in.</p>
+								</div>
+							{:else if communityImagesError}
+								<div class="community-error">
+									<p>Failed to load community images</p>
+								</div>
+							{:else if communityImages.length === 0}
+								<div class="community-empty">
+									<p>No similar images found in the community library</p>
+								</div>
+							{:else}
+								<div class="community-grid">
+									{#each paginatedImages as result}
+										<div class="community-image-card">
+											<button
+												class="community-image-preview"
+												onclick={() => handleCommunityImageSelected(selectedVariants[result.original_id]?.imageUrl || result.original_url, selectedVariants[result.original_id]?.imageId || result.original_id)}
+												type="button"
+											>
+												<img
+													src={getOptimizedImageUrl(selectedVariants[result.original_id]?.imageUrl || result.original_url, {
+														width: 200,
+														height: 200,
+														fit: 'contain'
+													})}
+													alt=""
+												/>
+												<div class="style-badge">{selectedVariants[result.original_id]?.style || result.original_style}</div>
+											</button>
+
+											<!-- Style variants -->
+											<div class="variants-row">
+												<button
+													class="variant-chip"
+													class:selected={isVariantSelected(result.original_id, result.original_id)}
+													onclick={() => selectVariant(result.original_id, result.original_url, result.original_id, result.original_style)}
+													type="button"
+												>
+													{result.original_style}
+												</button>
+
+												{#if result.variants && result.variants.length > 0}
+													{#each result.variants as variant}
+														<button
+															class="variant-chip"
+															class:selected={isVariantSelected(result.original_id, variant.id)}
+															onclick={() => selectVariant(result.original_id, variant.url, variant.id, variant.style)}
+															type="button"
+														>
+															{variant.style}
+														</button>
+													{/each}
+												{/if}
+											</div>
+										</div>
+									{/each}
+								</div>
+
+								{#if totalPages > 1}
+									<div class="pagination">
+										<button
+											onclick={() => communityImagesPage = Math.max(1, communityImagesPage - 1)}
+											disabled={communityImagesPage === 1}
+											type="button"
+										>
+											Previous
+										</button>
+										<span>Page {communityImagesPage} of {totalPages}</span>
+										<button
+											onclick={() => communityImagesPage = Math.min(totalPages, communityImagesPage + 1)}
+											disabled={communityImagesPage === totalPages}
+											type="button"
+										>
+											Next
+										</button>
+									</div>
+								{/if}
+							{/if}
 						</fieldset>
 					</section>
 
@@ -1374,6 +1568,163 @@
 		display: flex;
 		flex-direction: column;
 		gap: 0.5rem;
+	}
+
+	/* Community Images Section */
+	.community-images-section {
+		max-height: 600px;
+		overflow-y: auto;
+	}
+
+	.community-loading,
+	.community-auth-message,
+	.community-error,
+	.community-empty {
+		padding: 2rem 1rem;
+		text-align: center;
+		color: var(--ui-muted, #64748b);
+		font-size: 0.875rem;
+	}
+
+	.community-auth-message p {
+		color: var(--ui-text, #1e293b);
+	}
+
+	.community-error {
+		color: #dc2626;
+	}
+
+	.community-loading {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 1rem;
+	}
+
+	.spinner {
+		width: 32px;
+		height: 32px;
+		border: 3px solid var(--ui-border, #e2e8f0);
+		border-top-color: var(--primary, #3b82f6);
+		border-radius: 50%;
+		animation: spin 1s linear infinite;
+	}
+
+	@keyframes spin {
+		to {
+			transform: rotate(360deg);
+		}
+	}
+
+	.community-grid {
+		display: grid;
+		grid-template-columns: repeat(2, 1fr);
+		gap: 1rem;
+	}
+
+	.community-image-card {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+
+	.community-image-preview {
+		position: relative;
+		width: 100%;
+		aspect-ratio: 1;
+		border: 1px solid #ddd;
+		border-radius: 4px;
+		overflow: hidden;
+		background: #f9f9f9;
+		cursor: pointer;
+		transition: all 0.2s ease;
+		padding: 0;
+	}
+
+	.community-image-preview:hover {
+		border-color: var(--primary, #3b82f6);
+		box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
+	}
+
+	.community-image-preview img {
+		width: 100%;
+		height: 100%;
+		object-fit: contain;
+	}
+
+	.style-badge {
+		position: absolute;
+		top: 0.5rem;
+		right: 0.5rem;
+		background: rgba(0, 0, 0, 0.7);
+		color: white;
+		padding: 0.25rem 0.5rem;
+		border-radius: 3px;
+		font-size: 0.75rem;
+		text-transform: capitalize;
+	}
+
+	.variants-row {
+		display: flex;
+		gap: 0.25rem;
+		flex-wrap: wrap;
+	}
+
+	.variant-chip {
+		padding: 0.25rem 0.5rem;
+		border: 1px solid #ddd;
+		border-radius: 3px;
+		background: white;
+		font-size: 0.75rem;
+		cursor: pointer;
+		transition: all 0.15s ease;
+		text-transform: capitalize;
+	}
+
+	.variant-chip:hover {
+		border-color: var(--primary, #3b82f6);
+	}
+
+	.variant-chip.selected {
+		background: var(--primary, #3b82f6);
+		color: white;
+		border-color: var(--primary, #3b82f6);
+	}
+
+	.pagination {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 1rem;
+		padding: 1rem 0;
+		margin-top: 1rem;
+		border-top: 1px solid #ddd;
+	}
+
+	.pagination button {
+		padding: 0.5rem 1rem;
+		border: 1px solid #ddd;
+		border-radius: 4px;
+		background: white;
+		cursor: pointer;
+		font-size: 0.875rem;
+		transition: all 0.15s ease;
+	}
+
+	.pagination button:hover:not(:disabled) {
+		background: var(--primary, #3b82f6);
+		color: white;
+		border-color: var(--primary, #3b82f6);
+	}
+
+	.pagination button:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+
+	.pagination span {
+		font-size: 0.875rem;
+		color: var(--ui-text, #1e293b);
 	}
 
 	/* Preview cards in center column */

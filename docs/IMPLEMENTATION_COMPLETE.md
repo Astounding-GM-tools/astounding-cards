@@ -21,7 +21,7 @@
 **File**: `src/lib/server/embeddings.ts`
 
 - `generateEmbedding(text)` function
-- Uses Gemini `text-embedding-001` model
+- Uses Gemini `gemini-embedding-001` model
 - Returns 768-dimensional vector
 - Includes dimension validation
 - Error handling with detailed messages
@@ -324,7 +324,7 @@ The `sourceImageId` parameter is not yet used by the UI - this will be implement
 ### Error: "Failed to generate embedding"
 
 - Check GEMINI_API_KEY is set correctly
-- Verify API key has access to text-embedding-001 model
+- Verify API key has access to gemini-embedding-001 model
 - Check Gemini API quota/limits
 
 ### Error: "Failed to deduct tokens"

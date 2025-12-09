@@ -39,17 +39,17 @@ export type CtaConfig = {
 export const IMAGE_GENERATION_CTA: CtaConfig = {
 	id: 'image-generation',
 	unauthenticated: {
-		title: 'Generate or Select Image',
-		subtitle: 'Free account unlocks AI & library',
+		title: 'Generate AI Image',
+		subtitle: 'Requires login, costs tokens',
 		authGate: {
 			featureName: 'AI Image Generation',
 			description:
-				'Generate stunning card artwork with AI or browse our premium image library. Create a free account to unlock these exclusive features!'
+				'Generate stunning card artwork with AI. Create a free account to unlock AI image generation!'
 		}
 	},
 	authenticated: {
-		title: 'Generate or Select Image',
-		subtitle: 'AI generation & premium library'
+		title: 'Generate AI Image',
+		subtitle: 'Costs tokens'
 	}
 };
 

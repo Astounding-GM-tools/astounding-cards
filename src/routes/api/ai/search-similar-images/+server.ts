@@ -22,65 +22,49 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 
 		// 2. Parse request body
 		const { card, embedding, preferredStyle, limit = 10 } = await request.json();
+		console.log('🔍 Search request:', { hasCard: !!card, cardTitle: card?.title, hasEmbedding: !!embedding, preferredStyle, limit });
 
 		// 3. Get or generate embedding
-		let queryEmbedding: number[];
+		let queryEmbedding: number[] | null = null;
 
 		if (embedding && Array.isArray(embedding)) {
 			// Use provided embedding
 			queryEmbedding = embedding;
 		} else if (card) {
 			// Check if card has minimal content
-			if (!card.title && !card.description && !card.subtitle && (!card.traits || card.traits.length === 0)) {
-				console.warn('⚠️ Received empty card for similarity search');
-				return error(400, 'Card must have some content (title, description, or traits) for similarity search');
+			const hasContent = card.title || card.description || card.subtitle || (card.traits && card.traits.length > 0);
+
+			if (hasContent) {
+				// Use the same prompt optimization as image generation for consistency
+				const optimizedPrompt = createPromptOptimizationRequest(
+					card.title || 'Untitled',
+					card.subtitle || '',
+					card.description || '',
+					'classic', // Style doesn't matter for semantic search
+					card.traits || [],
+					card.stats || []
+				);
+
+				// Generate embedding from optimized prompt
+				queryEmbedding = await generateEmbedding(optimizedPrompt);
+			} else {
+				// For empty cards, we'll use a null embedding to get random/recent images
+				console.log('ℹ️ Empty card - will return random community images');
+				queryEmbedding = null;
 			}
-
-			// Generate embedding from card data
-
-			// TODO: The above log is an empty card:
-
-			/*
-			{
-				id: '1w72oe',
-				title: '',
-				subtitle: '',
-				description: '',
-				image: null,
-				traits: [],
-				stats: [],
-				imageBlob: null,
-				imageMetadata: null
-				}
-			*/
-
-			// Most likely, the incorrect content is included in the request from the server?
-
-			// Use the same prompt optimization as image generation for consistency
-			const optimizedPrompt = createPromptOptimizationRequest(
-				card.title || 'Untitled',
-				card.subtitle || '',
-				card.description || '',
-				'classic', // Style doesn't matter for semantic search
-				card.traits || [],
-				card.stats || []
-			);
-
-			// Generate embedding from optimized prompt
-			queryEmbedding = await generateEmbedding(optimizedPrompt);
 		} else {
-			return error(400, 'Either card or embedding must be provided');
+			return error(400, 'Card must be provided');
 		}
 
-		// 4. Validate embedding
-		if (!queryEmbedding || queryEmbedding.length !== 768) {
-			return error(400, 'Invalid embedding (must be 768-dimensional vector)');
+		// 4. Validate embedding (if one was generated)
+		if (queryEmbedding !== null && queryEmbedding.length !== 3072) {
+			return error(400, 'Invalid embedding (must be 3072-dimensional vector)');
 		}
 
 
 		// 5. Call Supabase search function
 		const { data, error: searchError } = await supabaseAdmin.rpc('search_similar_images', {
-			p_query_embedding: `[${queryEmbedding.join(',')}]`,
+			p_query_embedding: queryEmbedding ? `[${queryEmbedding.join(',')}]` : null,
 			p_preferred_style: preferredStyle || null,
 			p_limit: limit
 		});

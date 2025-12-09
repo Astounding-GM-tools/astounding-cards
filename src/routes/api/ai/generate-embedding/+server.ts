@@ -2,7 +2,7 @@
  * Generate Embedding API
  *
  * Server-side text embedding generation for cards and decks
- * Uses Gemini text-embedding-001 to create 768-dimensional vectors
+ * Uses Gemini embedding model to create 3072-dimensional vectors
  */
 
 import { json, error } from '@sveltejs/kit';

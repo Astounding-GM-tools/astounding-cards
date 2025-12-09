@@ -241,6 +241,8 @@ Visual prompt: ${optimizedPrompt}`;
 /**
  * Upload image to R2 and save to database.
  * Returns the public URL and image ID.
+ *
+ * @param optimizedPrompt - The optimized motif description (saved as 'description' field)
  */
 export async function uploadAndSaveImage(
 	userId: string,
@@ -294,6 +296,7 @@ export async function uploadAndSaveImage(
 			source_image_id: originalImageIdForSave,
 			embedding: embedding ? `[${embedding.join(',')}]` : null,
 			card_title: cardTitle,
+			description: optimizedPrompt, // Save optimized motif description
 			cost_tokens: TOKEN_COSTS.IMAGE_GENERATION_COMMUNITY
 		})
 		.select()

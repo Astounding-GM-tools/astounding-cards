@@ -7,7 +7,8 @@
 export const AI_MODELS = {
 	GEMINI_FLASH: 'gemini-2.0-flash-001',
 	GEMINI_PRO: 'gemini-1.5-pro',
-	GEMINI_FLASH_IMAGE: 'gemini-2.5-flash-image' // Stable version (was -preview)
+	GEMINI_FLASH_IMAGE: 'gemini-2.5-flash-image', // Stable version (was -preview)
+	GEMINI_EMBEDDING: 'gemini-embedding-001' // Text embedding model (was text-embedding-001)
 } as const;
 
 export const AI_CONFIGS = {
@@ -35,6 +36,10 @@ export const AI_CONFIGS = {
 	CONNECTION_TEST: {
 		model: AI_MODELS.GEMINI_FLASH,
 		temperature: 0
+	},
+	EMBEDDING: {
+		model: AI_MODELS.GEMINI_EMBEDDING,
+		dimensions: 3072 // Output dimension for embeddings (gemini-embedding-001 uses 3072, was 768 for text-embedding-001)
 	}
 } as const;
 
