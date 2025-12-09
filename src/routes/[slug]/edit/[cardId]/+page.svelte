@@ -102,6 +102,84 @@
 			: null
 	);
 
+	// Use $state for image display info and update via $effect
+	let imageDisplayInfo = $state<{
+		filename: string;
+		source: string;
+		timestamp: Date | null;
+		status: string;
+		message: string | null;
+	}>({
+		filename: 'No image added',
+		source: '',
+		timestamp: null,
+		status: 'add-image',
+		message: 'Add an image to enhance your card! 📸'
+	});
+
+	// Update imageDisplayInfo whenever formData or card changes
+	$effect(() => {
+		// Read reactive values to establish dependencies
+		const formUrl = formData.imageUrl;
+		const formMeta = formData.imageMetadata;
+		const formBlob = formData.imageBlob;
+		const cardImageData = card?.image;
+		const cardImageBlob = card?.imageBlob;
+		const cardMetadata = card?.imageMetadata;
+
+		const hasCardImageData = !!(cardImageBlob || cardImageData);
+		const hasFormImageData = !!(formBlob || formUrl);
+
+		const hasImageChanges =
+			isFormInitialized &&
+			(formBlob !== cardImageBlob ||
+				formUrl !== cardImageData ||
+				JSON.stringify(formMeta) !== JSON.stringify(cardMetadata));
+
+		if (!hasCardImageData && !hasFormImageData) {
+			imageDisplayInfo = {
+				filename: 'No image added',
+				source: '',
+				timestamp: null,
+				status: 'add-image',
+				message: 'Add an image to enhance your card! 📸'
+			};
+			return;
+		}
+
+		let filename = '';
+		let source = '';
+		let timestamp = null;
+		let status = 'ok'; // Always 'ok' since auto-save is fast (< 1 second)
+
+		const imageMetadata = hasImageChanges ? formMeta : cardMetadata;
+		const imageUrl = hasImageChanges ? formUrl : cardImageData;
+		const imageBlob = hasImageChanges ? formBlob : cardImageBlob;
+
+		if (imageMetadata?.originalName) {
+			filename = imageMetadata.originalName;
+			source = imageMetadata.source === 'url' ? 'downloaded' : 'uploaded';
+			timestamp = new Date(imageMetadata.addedAt!);
+		} else if (imageUrl) {
+			const urlFilename = getFilenameFromUrl(imageUrl);
+			filename = urlFilename || imageUrl.substring(0, 40) + '...';
+			source = `Using: ${imageUrl}`;
+			timestamp = null;
+		} else if (imageBlob) {
+			filename = 'Uploaded file';
+			source = 'Using: local file';
+			timestamp = null;
+		}
+
+		imageDisplayInfo = {
+			filename,
+			source,
+			timestamp,
+			status,
+			message: null
+		};
+	});
+
 	// Update form when card changes
 	$effect(() => {
 		if (card) {
@@ -201,22 +279,25 @@
 		if (!card || !hasChanges) return;
 
 		isSaving = true;
-		const success = await nextDeckStore.updateCard(
-			card.id,
-			{
-				title: formData.title,
-				subtitle: formData.subtitle,
-				description: formData.description,
-				stats: formData.stats,
-				traits: formData.traits,
-				image: formData.imageUrl,
-				imageBlob: formData.imageBlob,
-				imageMetadata: formData.imageMetadata
-			},
-			'Saving card changes...'
-		);
+
+		const updates = {
+			title: formData.title,
+			subtitle: formData.subtitle,
+			description: formData.description,
+			stats: formData.stats,
+			traits: formData.traits,
+			image: formData.imageUrl,
+			imageBlob: formData.imageBlob,
+			imageMetadata: formData.imageMetadata
+		};
+
+		const success = await nextDeckStore.updateCard(card.id, updates, 'Saving card changes...');
 
 		isSaving = false;
+
+		if (!success) {
+			console.error('[Edit] Failed to save changes');
+		}
 	}
 
 	function exitEditMode() {
@@ -293,7 +374,7 @@
 		let filename = '';
 		let source = '';
 		let timestamp = null;
-		let status = hasImageChanges ? 'ready-to-save' : 'ok';
+		let status = 'ok'; // Always 'ok' since auto-save is fast (< 1 second)
 
 		const imageMetadata = hasImageChanges ? formData.imageMetadata : card?.imageMetadata;
 		const imageUrl = hasImageChanges ? formData.imageUrl : card?.image;
@@ -424,11 +505,81 @@
 	let communityImagesPage = $state(1);
 	const imagesPerPage = 6;
 
-	// Load community images when card changes
+	// Track semantic text content to avoid unnecessary embedding regeneration
+	let lastSemanticText = $state('');
+	let communityReloadTimeoutId: number | null = null;
+
+	// Rate limiting: Track last embedding timestamp per card (max once per minute per card)
+	const lastEmbeddingTimestamps = new Map<string, number>();
+	const RATE_LIMIT_MS = 60000; // 1 minute
+
+	// Helper: Extract just the text content for comparison
+	function extractSemanticText(card: typeof previewCard): string {
+		if (!card) return '';
+
+		// Extract only the text that affects semantic meaning
+		const parts = [
+			card.title || '',
+			card.subtitle || '',
+			card.description || '',
+			...(card.traits || []).map((t) => `${t.title} ${t.description}`).filter(Boolean)
+		];
+
+		// Normalize: lowercase, collapse whitespace, trim
+		return parts.join(' ').toLowerCase().replace(/\s+/g, ' ').trim();
+	}
+
+	// Helper: Check if text changed significantly (> 30 chars or > 10% difference)
+	function hasSignificantTextChange(oldText: string, newText: string): boolean {
+		if (oldText === newText) return false;
+
+		const charDiff = Math.abs(newText.length - oldText.length);
+		const percentDiff = oldText.length > 0 ? charDiff / oldText.length : 1;
+
+		// Trigger if: > 30 char difference, or > 10% length change
+		return charDiff > 30 || percentDiff > 0.1;
+	}
+
+	// Load community images only when semantic text changes significantly
 	$effect(() => {
-		if (card && previewCard) {
-			loadCommunityImages();
+		if (card) {
+			const currentSemanticText = extractSemanticText(card);
+			const cardId = card.id;
+
+			// Check if this is a meaningful change
+			if (hasSignificantTextChange(lastSemanticText, currentSemanticText)) {
+				// Clear existing timeout
+				if (communityReloadTimeoutId !== null) {
+					clearTimeout(communityReloadTimeoutId);
+				}
+
+				// Debounce: wait 15 seconds after user stops editing
+				communityReloadTimeoutId = window.setTimeout(() => {
+					// Check rate limit: don't re-embed more than once per minute per card
+					const lastTimestamp = lastEmbeddingTimestamps.get(cardId) || 0;
+					const timeSinceLastEmbed = Date.now() - lastTimestamp;
+
+					if (timeSinceLastEmbed < RATE_LIMIT_MS) {
+						console.log(
+							`[Edit] Rate limit: skipping embedding (${Math.ceil((RATE_LIMIT_MS - timeSinceLastEmbed) / 1000)}s remaining)`
+						);
+						return;
+					}
+
+					console.log('[Edit] Regenerating embeddings for similar images');
+					lastSemanticText = currentSemanticText;
+					lastEmbeddingTimestamps.set(cardId, Date.now());
+					loadCommunityImages();
+				}, 15000); // 15 seconds debounce
+			}
 		}
+
+		// Cleanup timeout on unmount
+		return () => {
+			if (communityReloadTimeoutId !== null) {
+				clearTimeout(communityReloadTimeoutId);
+			}
+		};
 	});
 
 	async function loadCommunityImages() {
@@ -485,6 +636,7 @@
 	}
 
 	function handleCommunityImageSelected(imageUrl: string, imageId: string) {
+		console.log('[Edit] Community image selected:', { imageUrl, imageId });
 		handleImageChange(null, imageUrl, `community-${imageId}.png`);
 	}
 
@@ -497,7 +649,10 @@
 	}
 
 	let paginatedImages = $derived(
-		communityImages.slice((communityImagesPage - 1) * imagesPerPage, communityImagesPage * imagesPerPage)
+		communityImages.slice(
+			(communityImagesPage - 1) * imagesPerPage,
+			communityImagesPage * imagesPerPage
+		)
 	);
 
 	let totalPages = $derived(Math.ceil(communityImages.length / imagesPerPage));
@@ -506,7 +661,9 @@
 <svelte:window onkeydown={handleKeydown} />
 
 <svelte:head>
-	<title>Edit {card?.title || 'Card'} - {currentDeck?.meta?.title || 'Deck'} - Astounding Cards</title>
+	<title
+		>Edit {card?.title || 'Card'} - {currentDeck?.meta?.title || 'Deck'} - Astounding Cards</title
+	>
 </svelte:head>
 
 {#if card && currentDeck}
@@ -599,14 +756,74 @@
 						{#if capabilities.supportsTraits}
 							<fieldset class="form-fieldset" aria-labelledby="traits-legend-top">
 								<legend id="traits-legend-top">Traits</legend>
-							<div role="list" aria-label="Reorderable list of traits">
-								{#each formData.traits as trait, index}
+								<div role="list" aria-label="Reorderable list of traits">
+									{#each formData.traits as trait, index}
+										<div
+											class="inline-attribute-editor {DRAG_CLASSES.draggable}"
+											draggable="true"
+											role="listitem"
+											aria-label="Trait: {trait.title || 'Untitled'} - Drag to reorder"
+											ondragstart={(e) => traitsHandlers.handleDragStart(e, index)}
+											ondragover={(e) => {
+												traitsHandlers.handleDragOver(e);
+												e.currentTarget.classList.add('drag-over');
+											}}
+											ondragleave={(e) => {
+												e.currentTarget.classList.remove('drag-over');
+											}}
+											ondrop={(e) => traitsHandlers.handleDrop(e, index)}
+											ondragend={traitsHandlers.handleDragEnd}
+											data-index={index}
+										>
+											<div class={DRAG_CLASSES.handle} title="Drag to reorder">⋮⋮</div>
+
+											<div class="attribute-content">
+												<div class="trait-compact-row">
+													<BinaryToggle
+														checked={trait.isPublic}
+														onToggle={(isPublic) => {
+															trait.isPublic = isPublic;
+														}}
+														trueLabel="◉ Public"
+														falseLabel="○ Secret"
+														size="sm"
+														name={`trait-public-${index}`}
+													/>
+													<input
+														type="text"
+														bind:value={trait.title}
+														placeholder="Trait title"
+														class="title-input"
+													/>
+													<button
+														class="delete-btn"
+														onclick={() => {
+															const newTraits = [...formData.traits];
+															newTraits.splice(index, 1);
+															formData.traits = newTraits;
+														}}
+													>
+														🗑️
+													</button>
+												</div>
+
+												<div class="description-row">
+													<textarea
+														bind:value={trait.description}
+														placeholder="Description"
+														class="description-input trait-description"
+														rows="1"
+														required
+													></textarea>
+												</div>
+											</div>
+										</div>
+									{/each}
+
 									<div
-										class="inline-attribute-editor {DRAG_CLASSES.draggable}"
-										draggable="true"
-										role="listitem"
-										aria-label="Trait: {trait.title || 'Untitled'} - Drag to reorder"
-										ondragstart={(e) => traitsHandlers.handleDragStart(e, index)}
+										class="drop-zone-end"
+										role="region"
+										aria-label="Drop zone for traits"
 										ondragover={(e) => {
 											traitsHandlers.handleDragOver(e);
 											e.currentTarget.classList.add('drag-over');
@@ -614,69 +831,9 @@
 										ondragleave={(e) => {
 											e.currentTarget.classList.remove('drag-over');
 										}}
-										ondrop={(e) => traitsHandlers.handleDrop(e, index)}
-										ondragend={traitsHandlers.handleDragEnd}
-										data-index={index}
-									>
-										<div class={DRAG_CLASSES.handle} title="Drag to reorder">⋮⋮</div>
-
-										<div class="attribute-content">
-											<div class="trait-compact-row">
-												<BinaryToggle
-													checked={trait.isPublic}
-													onToggle={(isPublic) => {
-														trait.isPublic = isPublic;
-													}}
-													trueLabel="◉ Public"
-													falseLabel="○ Secret"
-													size="sm"
-													name={`trait-public-${index}`}
-												/>
-												<input
-													type="text"
-													bind:value={trait.title}
-													placeholder="Trait title"
-													class="title-input"
-												/>
-												<button
-													class="delete-btn"
-													onclick={() => {
-														const newTraits = [...formData.traits];
-														newTraits.splice(index, 1);
-														formData.traits = newTraits;
-													}}
-												>
-													🗑️
-												</button>
-											</div>
-
-											<div class="description-row">
-												<textarea
-													bind:value={trait.description}
-													placeholder="Description"
-													class="description-input trait-description"
-													rows="1"
-													required
-												></textarea>
-											</div>
-										</div>
-									</div>
-								{/each}
-
-								<div
-									class="drop-zone-end"
-									role="region"
-									aria-label="Drop zone for traits"
-									ondragover={(e) => {
-										traitsHandlers.handleDragOver(e);
-										e.currentTarget.classList.add('drag-over');
-									}}
-									ondragleave={(e) => {
-										e.currentTarget.classList.remove('drag-over');
-									}}
-									ondrop={(e) => traitsHandlers.handleDrop(e, formData.traits.length)}
-								></div>
-							</div>
+										ondrop={(e) => traitsHandlers.handleDrop(e, formData.traits.length)}
+									></div>
+								</div>
 
 								<button
 									class="add-attribute-btn"
@@ -717,16 +874,7 @@
 								card={previewCard}
 								currentStyle={currentDeck?.meta.imageStyle}
 								hasExistingImage={hasImage}
-								existingImageInfo={(() => {
-									const info = getImageDisplayInfo();
-									return {
-										filename: info.filename,
-										source: info.source,
-										timestamp: info.timestamp,
-										status: info.status,
-										message: info.message
-									};
-								})()}
+								existingImageInfo={imageDisplayInfo}
 								onImageChange={handleImageChange}
 								onRemoveImage={removeImage}
 							/>
@@ -751,7 +899,10 @@
 								</div>
 							{:else if communityImagesError === 'auth'}
 								<div class="community-auth-message">
-									<p>The community library of AI-generated images is free to use, but requires that you are logged in.</p>
+									<p>
+										The community library of AI-generated images is free to use, but requires that
+										you are logged in.
+									</p>
 								</div>
 							{:else if communityImagesError}
 								<div class="community-error">
@@ -767,18 +918,27 @@
 										<div class="community-image-card">
 											<button
 												class="community-image-preview"
-												onclick={() => handleCommunityImageSelected(selectedVariants[result.original_id]?.imageUrl || result.original_url, selectedVariants[result.original_id]?.imageId || result.original_id)}
+												onclick={() =>
+													handleCommunityImageSelected(
+														selectedVariants[result.original_id]?.imageUrl || result.original_url,
+														selectedVariants[result.original_id]?.imageId || result.original_id
+													)}
 												type="button"
 											>
 												<img
-													src={getOptimizedImageUrl(selectedVariants[result.original_id]?.imageUrl || result.original_url, {
-														width: 200,
-														height: 200,
-														fit: 'contain'
-													})}
+													src={getOptimizedImageUrl(
+														selectedVariants[result.original_id]?.imageUrl || result.original_url,
+														{
+															width: 200,
+															height: 200,
+															fit: 'contain'
+														}
+													)}
 													alt=""
 												/>
-												<div class="style-badge">{selectedVariants[result.original_id]?.style || result.original_style}</div>
+												<div class="style-badge">
+													{selectedVariants[result.original_id]?.style || result.original_style}
+												</div>
 											</button>
 
 											<!-- Style variants -->
@@ -786,7 +946,13 @@
 												<button
 													class="variant-chip"
 													class:selected={isVariantSelected(result.original_id, result.original_id)}
-													onclick={() => selectVariant(result.original_id, result.original_url, result.original_id, result.original_style)}
+													onclick={() =>
+														selectVariant(
+															result.original_id,
+															result.original_url,
+															result.original_id,
+															result.original_style
+														)}
 													type="button"
 												>
 													{result.original_style}
@@ -797,7 +963,13 @@
 														<button
 															class="variant-chip"
 															class:selected={isVariantSelected(result.original_id, variant.id)}
-															onclick={() => selectVariant(result.original_id, variant.url, variant.id, variant.style)}
+															onclick={() =>
+																selectVariant(
+																	result.original_id,
+																	variant.url,
+																	variant.id,
+																	variant.style
+																)}
 															type="button"
 														>
 															{variant.style}
@@ -812,7 +984,7 @@
 								{#if totalPages > 1}
 									<div class="pagination">
 										<button
-											onclick={() => communityImagesPage = Math.max(1, communityImagesPage - 1)}
+											onclick={() => (communityImagesPage = Math.max(1, communityImagesPage - 1))}
 											disabled={communityImagesPage === 1}
 											type="button"
 										>
@@ -820,7 +992,8 @@
 										</button>
 										<span>Page {communityImagesPage} of {totalPages}</span>
 										<button
-											onclick={() => communityImagesPage = Math.min(totalPages, communityImagesPage + 1)}
+											onclick={() =>
+												(communityImagesPage = Math.min(totalPages, communityImagesPage + 1))}
 											disabled={communityImagesPage === totalPages}
 											type="button"
 										>
@@ -851,14 +1024,101 @@
 						{#if capabilities.supportsStats}
 							<fieldset class="form-fieldset" aria-labelledby="stats-legend-bottom">
 								<legend id="stats-legend-bottom">Stats</legend>
-							<div role="list" aria-label="Reorderable list of stats">
-								{#each formData.stats as stat, index}
+								<div role="list" aria-label="Reorderable list of stats">
+									{#each formData.stats as stat, index}
+										<div
+											class="inline-attribute-editor {DRAG_CLASSES.draggable}"
+											draggable="true"
+											role="listitem"
+											aria-label="Stat: {stat.title || 'Untitled'} - Drag to reorder"
+											ondragstart={(e) => statsHandlers.handleDragStart(e, index)}
+											ondragover={(e) => {
+												statsHandlers.handleDragOver(e);
+												e.currentTarget.classList.add('drag-over');
+											}}
+											ondragleave={(e) => {
+												e.currentTarget.classList.remove('drag-over');
+											}}
+											ondrop={(e) => statsHandlers.handleDrop(e, index)}
+											ondragend={statsHandlers.handleDragEnd}
+											data-index={index}
+										>
+											<div class={DRAG_CLASSES.handle} title="Drag to reorder">⋮⋮</div>
+
+											<div class="attribute-content">
+												<div class="stat-compact-row">
+													<BinaryToggle
+														checked={stat.isPublic}
+														onToggle={(isPublic) => {
+															stat.isPublic = isPublic;
+															if (isPublic) {
+																stat.tracked = false;
+															}
+														}}
+														trueLabel="◉ Front"
+														falseLabel="○ Back"
+														size="sm"
+														name={`stat-public-${index}`}
+													/>
+													<input
+														type="text"
+														bind:value={stat.title}
+														placeholder="Stat title"
+														class="title-input"
+													/>
+													<input
+														type="number"
+														bind:value={stat.value}
+														placeholder="Value"
+														class="value-input"
+														min="0"
+														max="999"
+														oninput={(e: Event) => {
+															const num = parseInt((e.target as HTMLInputElement).value) || 0;
+															stat.value = Math.max(0, Math.min(999, num));
+														}}
+													/>
+													<BinaryToggle
+														checked={stat.tracked}
+														onToggle={(tracked) => {
+															stat.tracked = tracked;
+														}}
+														trueLabel="■ Track"
+														falseLabel="□ Track"
+														size="sm"
+														name={`stat-track-${index}`}
+														disabled={stat.isPublic}
+													/>
+													<button
+														class="delete-btn"
+														onclick={() => {
+															const newStats = [...formData.stats];
+															newStats.splice(index, 1);
+															formData.stats = newStats;
+														}}
+													>
+														🗑️
+													</button>
+												</div>
+
+												{#if !stat.isPublic}
+													<div class="description-row">
+														<textarea
+															bind:value={stat.description}
+															placeholder="Description (private stats only)"
+															class="description-input stat-description"
+															rows="2"
+														></textarea>
+													</div>
+												{/if}
+											</div>
+										</div>
+									{/each}
+
 									<div
-										class="inline-attribute-editor {DRAG_CLASSES.draggable}"
-										draggable="true"
-										role="listitem"
-										aria-label="Stat: {stat.title || 'Untitled'} - Drag to reorder"
-										ondragstart={(e) => statsHandlers.handleDragStart(e, index)}
+										class="drop-zone-end"
+										role="region"
+										aria-label="Drop zone for stats"
 										ondragover={(e) => {
 											statsHandlers.handleDragOver(e);
 											e.currentTarget.classList.add('drag-over');
@@ -866,96 +1126,9 @@
 										ondragleave={(e) => {
 											e.currentTarget.classList.remove('drag-over');
 										}}
-										ondrop={(e) => statsHandlers.handleDrop(e, index)}
-										ondragend={statsHandlers.handleDragEnd}
-										data-index={index}
-									>
-										<div class={DRAG_CLASSES.handle} title="Drag to reorder">⋮⋮</div>
-
-										<div class="attribute-content">
-											<div class="stat-compact-row">
-												<BinaryToggle
-													checked={stat.isPublic}
-													onToggle={(isPublic) => {
-														stat.isPublic = isPublic;
-														if (isPublic) {
-															stat.tracked = false;
-														}
-													}}
-													trueLabel="◉ Front"
-													falseLabel="○ Back"
-													size="sm"
-													name={`stat-public-${index}`}
-												/>
-												<input
-													type="text"
-													bind:value={stat.title}
-													placeholder="Stat title"
-													class="title-input"
-												/>
-												<input
-													type="number"
-													bind:value={stat.value}
-													placeholder="Value"
-													class="value-input"
-													min="0"
-													max="999"
-													oninput={(e: Event) => {
-														const num = parseInt((e.target as HTMLInputElement).value) || 0;
-														stat.value = Math.max(0, Math.min(999, num));
-													}}
-												/>
-												<BinaryToggle
-													checked={stat.tracked}
-													onToggle={(tracked) => {
-														stat.tracked = tracked;
-													}}
-													trueLabel="■ Track"
-													falseLabel="□ Track"
-													size="sm"
-													name={`stat-track-${index}`}
-													disabled={stat.isPublic}
-												/>
-												<button
-													class="delete-btn"
-													onclick={() => {
-														const newStats = [...formData.stats];
-														newStats.splice(index, 1);
-														formData.stats = newStats;
-													}}
-												>
-													🗑️
-												</button>
-											</div>
-
-											{#if !stat.isPublic}
-												<div class="description-row">
-													<textarea
-														bind:value={stat.description}
-														placeholder="Description (private stats only)"
-														class="description-input stat-description"
-														rows="2"
-													></textarea>
-												</div>
-											{/if}
-										</div>
-									</div>
-								{/each}
-
-								<div
-									class="drop-zone-end"
-									role="region"
-									aria-label="Drop zone for stats"
-									ondragover={(e) => {
-										statsHandlers.handleDragOver(e);
-										e.currentTarget.classList.add('drag-over');
-									}}
-									ondragleave={(e) => {
-										e.currentTarget.classList.remove('drag-over');
-									}}
-									ondrop={(e) => statsHandlers.handleDrop(e, formData.stats.length)}
-								></div>
-							</div>
+										ondrop={(e) => statsHandlers.handleDrop(e, formData.stats.length)}
+									></div>
+								</div>
 
 								<button
 									class="add-attribute-btn"
@@ -1069,17 +1242,17 @@
 	}
 
 	/* Status colors */
-	.header-status:has(svg:first-child[data-lucide="save"]) {
+	.header-status:has(svg:first-child[data-lucide='save']) {
 		color: #ff6b00;
 		background: #fff4ed;
 	}
 
-	.header-status:has(svg:first-child[data-lucide="alert-circle"]) {
+	.header-status:has(svg:first-child[data-lucide='alert-circle']) {
 		color: #e67e22;
 		background: #fef3e9;
 	}
 
-	.header-status:has(svg:first-child[data-lucide="check"]) {
+	.header-status:has(svg:first-child[data-lucide='check']) {
 		color: #27ae60;
 		background: #edf7f0;
 	}
@@ -1152,6 +1325,7 @@
 		transition: all 0.15s ease;
 		font-family: var(--font-body);
 		overflow: hidden;
+		text-align: initial;
 	}
 
 	.card-thumbnail:hover {

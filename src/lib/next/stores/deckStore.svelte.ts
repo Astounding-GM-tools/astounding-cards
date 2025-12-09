@@ -17,6 +17,7 @@ async function syncDeckToCloud(deck: Deck): Promise<void> {
 	try {
 		const authState = get(authStore);
 		if (!authState || !authState.user) {
+			console.log('[Sync] Skipping sync - not authenticated');
 			return; // Not authenticated, skip sync
 		}
 
@@ -50,12 +51,22 @@ async function syncDeckToCloud(deck: Deck): Promise<void> {
 
 		if (!response.ok) {
 			const errorText = await response.text();
+
+			// Handle ownership errors gracefully (deck belongs to another user)
+			if (response.status === 403) {
+				console.warn('[Sync] Skipping sync - deck belongs to another user (working locally only)');
+				return;
+			}
+
 			console.error('[Sync] Failed to sync deck:', response.status, errorText);
-			throw new Error(`Sync failed: ${response.status} ${errorText}`);
+			// Don't throw - sync is best-effort, local state is already saved
+			return;
 		}
+
+		console.log('[Sync] Successfully synced deck to cloud');
 	} catch (err) {
-		// Log but don't fail - sync is best-effort
-		console.error('[Sync] Failed to sync deck to cloud:', err);
+		// Log but don't fail - sync is best-effort, local IndexedDB is the source of truth
+		console.warn('[Sync] Failed to sync deck to cloud (local changes saved):', err);
 	}
 }
 
