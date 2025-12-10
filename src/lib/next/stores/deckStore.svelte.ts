@@ -10,13 +10,23 @@ import { get } from 'svelte/store';
 import { authStore } from './auth.js';
 
 /**
+ * Cloud sync rate limiting and debouncing
+ */
+let cloudSyncTimeoutId: number | null = null;
+let lastCloudSyncTimestamp = 0;
+let pendingDeckForSync: Deck | null = null;
+const CLOUD_SYNC_DEBOUNCE_MS = 30000; // 30 seconds - wait for user to finish editing
+const CLOUD_SYNC_RATE_LIMIT_MS = 30000; // 30 seconds - maximum sync frequency
+
+/**
  * Sync deck to cloud (user_decks table) if authenticated
  * This runs in the background after local IndexedDB updates
  */
-async function syncDeckToCloud(deck: Deck): Promise<void> {
+async function syncDeckToCloudImmediate(deck: Deck): Promise<void> {
 	try {
 		const authState = get(authStore);
 		if (!authState || !authState.user) {
+			console.log('[Sync] Skipping sync - not authenticated');
 			return; // Not authenticated, skip sync
 		}
 
@@ -50,13 +60,141 @@ async function syncDeckToCloud(deck: Deck): Promise<void> {
 
 		if (!response.ok) {
 			const errorText = await response.text();
+
+			// Handle ownership errors gracefully (deck belongs to another user)
+			if (response.status === 403) {
+				console.warn('[Sync] Skipping sync - deck belongs to another user (working locally only)');
+				return;
+			}
+
 			console.error('[Sync] Failed to sync deck:', response.status, errorText);
-			throw new Error(`Sync failed: ${response.status} ${errorText}`);
+			// Don't throw - sync is best-effort, local state is already saved
+			return;
+		}
+
+		console.log('[Sync] Successfully synced deck to cloud');
+		lastCloudSyncTimestamp = Date.now();
+	} catch (err) {
+		// Log but don't fail - sync is best-effort, local IndexedDB is the source of truth
+		console.warn('[Sync] Failed to sync deck to cloud (local changes saved):', err);
+	}
+}
+
+/**
+ * Debounced and rate-limited cloud sync
+ * - Waits 30 seconds after last change before syncing
+ * - Never syncs more than once per 30 seconds
+ * - Always syncs the latest deck state
+ */
+function syncDeckToCloud(deck: Deck): void {
+	// Store the latest deck for syncing
+	pendingDeckForSync = deck;
+
+	// Clear existing timeout
+	if (cloudSyncTimeoutId !== null) {
+		clearTimeout(cloudSyncTimeoutId);
+	}
+
+	// Check rate limit
+	const timeSinceLastSync = Date.now() - lastCloudSyncTimestamp;
+	const remainingTime = Math.max(0, CLOUD_SYNC_RATE_LIMIT_MS - timeSinceLastSync);
+
+	// Schedule sync with debounce (or rate limit delay if applicable)
+	const delayMs = Math.max(CLOUD_SYNC_DEBOUNCE_MS, remainingTime);
+
+	cloudSyncTimeoutId = window.setTimeout(() => {
+		if (pendingDeckForSync) {
+			console.log('[Sync] Debounced sync executing after', delayMs / 1000, 'seconds');
+			syncDeckToCloudImmediate(pendingDeckForSync);
+			pendingDeckForSync = null;
+		}
+	}, delayMs);
+
+	if (delayMs > CLOUD_SYNC_DEBOUNCE_MS) {
+		console.log('[Sync] Rate limited - will sync in', delayMs / 1000, 'seconds');
+	}
+}
+
+/**
+ * Force immediate sync using sendBeacon (for page unload scenarios)
+ * sendBeacon is guaranteed to complete even after page navigation/close
+ */
+function forceSyncWithBeacon(deck: Deck): void {
+	try {
+		const authState = get(authStore);
+		if (!authState || !authState.user) {
+			return; // Not authenticated, skip
+		}
+
+		// Strip blobs from cards
+		const cardsForSync = deck.cards.map((card) => {
+			const { imageBlob, ...cardWithoutBlob } = card;
+			return cardWithoutBlob;
+		});
+
+		const payload = {
+			id: deck.id,
+			title: deck.meta.title,
+			description: deck.meta.description || '',
+			theme: deck.meta.theme,
+			image_style: deck.meta.imageStyle,
+			layout: deck.meta.layout,
+			cards: cardsForSync,
+			tags: [],
+			is_synced: true,
+			published_deck_id: deck.meta.published_deck_id || null
+		};
+
+		const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+		const sent = navigator.sendBeacon('/api/user-decks', blob);
+
+		if (sent) {
+			console.log('[Sync] Critical sync sent via sendBeacon');
+			lastCloudSyncTimestamp = Date.now();
+		} else {
+			console.warn('[Sync] sendBeacon failed (queue full or network issue)');
 		}
 	} catch (err) {
-		// Log but don't fail - sync is best-effort
-		console.error('[Sync] Failed to sync deck to cloud:', err);
+		console.warn('[Sync] Failed to send beacon:', err);
 	}
+}
+
+/**
+ * Force immediate sync of pending changes (called on visibility change)
+ */
+function forceSyncPendingChanges(): void {
+	if (pendingDeckForSync && cloudSyncTimeoutId !== null) {
+		clearTimeout(cloudSyncTimeoutId);
+		console.log('[Sync] Force syncing pending changes (visibility change)');
+		syncDeckToCloudImmediate(pendingDeckForSync);
+		pendingDeckForSync = null;
+	}
+}
+
+// Setup event listeners for smart sync triggers
+if (typeof window !== 'undefined') {
+	// Sync when user switches tabs/minimizes (still time for fetch)
+	document.addEventListener('visibilitychange', () => {
+		if (document.hidden && pendingDeckForSync) {
+			forceSyncPendingChanges();
+		}
+	});
+
+	// Use sendBeacon for page close (guaranteed delivery)
+	window.addEventListener('pagehide', () => {
+		if (pendingDeckForSync) {
+			clearTimeout(cloudSyncTimeoutId!);
+			forceSyncWithBeacon(pendingDeckForSync);
+			pendingDeckForSync = null;
+		}
+	});
+
+	// Fallback for older browsers that don't support pagehide
+	window.addEventListener('beforeunload', () => {
+		if (pendingDeckForSync && !('onpagehide' in window)) {
+			forceSyncWithBeacon(pendingDeckForSync);
+		}
+	});
 }
 
 /**
@@ -500,7 +638,8 @@ function createNextDeckStore(): NextDeckStore {
 
 			try {
 				// Ensure deck is synced to user_decks first (publish API reads from there)
-				await syncDeckToCloud(currentDeck);
+				// Use immediate sync for publish (not debounced)
+				await syncDeckToCloudImmediate(currentDeck);
 
 				// NEW: Just pass the userDeckId, API will handle the rest
 				const body = {

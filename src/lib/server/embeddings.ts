@@ -1,30 +1,32 @@
 /**
  * Text Embedding Generation
  *
- * Uses Gemini text-embedding-001 to generate 768-dimensional embeddings
+ * Uses Gemini embedding model to generate 3072-dimensional embeddings
  * for semantic search in the community image library.
  */
 
 import { GoogleGenAI } from '@google/genai';
 import { GEMINI_API_KEY } from '$env/static/private';
+import { AI_CONFIGS } from '$lib/ai/config/models';
 
 if (!GEMINI_API_KEY) {
 	throw new Error('GEMINI_API_KEY is required for embedding generation');
 }
 
 /**
- * Generate text embedding using Gemini text-embedding-001
+ * Generate text embedding using Gemini embedding model
  *
  * @param text - The text to embed (typically the optimized image prompt)
- * @returns 768-dimensional embedding vector as number array
+ * @returns 3072-dimensional embedding vector as number array
  */
 export async function generateEmbedding(text: string): Promise<number[]> {
 	const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
+	const config = AI_CONFIGS.EMBEDDING;
 
 	try {
 		// Use embedContent with contents parameter (string or array)
 		const result = await ai.models.embedContent({
-			model: 'text-embedding-001',
+			model: config.model,
 			contents: text
 		});
 
@@ -34,9 +36,9 @@ export async function generateEmbedding(text: string): Promise<number[]> {
 			throw new Error('No embedding values returned from Gemini');
 		}
 
-		// Verify dimensionality (should be 768)
-		if (embedding.values.length !== 768) {
-			console.warn(`Unexpected embedding dimension: ${embedding.values.length} (expected 768)`);
+		// Verify dimensionality
+		if (embedding.values.length !== config.dimensions) {
+			console.warn(`Unexpected embedding dimension: ${embedding.values.length} (expected ${config.dimensions})`);
 		}
 
 		return embedding.values;

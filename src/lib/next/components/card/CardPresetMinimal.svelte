@@ -51,6 +51,8 @@
 		border-radius: 0.5rem;
 		overflow: hidden;
 		position: relative;
+		container-name: card;
+		container-type: inline-size;
 	}
 
 	/* Front side */
@@ -60,9 +62,9 @@
 		align-items: center;
 		justify-content: center;
 		height: 100%;
-		padding: 1.5rem;
+		padding: 5cqw;
 		text-align: center;
-		gap: 1rem;
+		gap: 3cqw;
 	}
 
 	.image-container {
@@ -95,7 +97,7 @@
 	}
 
 	.title {
-		font-size: 2rem;
+		font-size: 8cqw;
 		font-weight: 700;
 		line-height: 1.2;
 		margin: 0;
@@ -106,7 +108,7 @@
 	}
 
 	.subtitle {
-		font-size: 1.25rem;
+		font-size: 5cqw;
 		font-weight: 400;
 		line-height: 1.4;
 		margin: 0;
@@ -120,18 +122,17 @@
 		align-items: center;
 		justify-content: center;
 		height: 100%;
-		padding: 2rem;
+		padding: 6cqw;
 	}
 
 	.description {
-		font-size: 1.125rem;
+		font-size: 4.5cqw;
 		line-height: 1.6;
 		color: #334155;
 		margin: 0;
-		text-align: left;
+		text-align: center;
 		max-width: 100%;
 		overflow-wrap: break-word;
-		text-align: center;
 		text-wrap: balance;
 	}
 

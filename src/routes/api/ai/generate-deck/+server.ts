@@ -15,6 +15,7 @@ import { generateDeckFromPrompt } from '$lib/ai/generators/gemini';
 import { supabaseAdmin } from '$lib/server/supabase';
 import { getUserFromSession } from '$lib/server/auth';
 import { TOKEN_COSTS } from '$lib/config/token-costs';
+import { generateEmbedding } from '$lib/server/embeddings';
 
 export const POST: RequestHandler = async ({ request, cookies }) => {
 	try {
@@ -64,6 +65,20 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 			return error(500, result.error || 'Failed to generate deck');
 		}
 
+		// 5.5. Generate deck embedding from description (for community image suggestions)
+		const deckDescription = result.deck.deck.meta.description;
+		if (deckDescription) {
+			try {
+				console.log('🧮 Generating deck embedding from description...');
+				const embedding = await generateEmbedding(deckDescription);
+				// Add embedding to deck meta
+				result.deck.deck.meta.embedding = embedding;
+				console.log('✅ Deck embedding generated');
+			} catch (embedErr) {
+				console.warn('⚠️ Failed to generate deck embedding (non-critical):', embedErr);
+				// Continue without embedding - not critical for deck generation
+			}
+		}
 
 		// 6. Deduct tokens atomically
 		const { data: deductSuccess, error: deductError } = await supabaseAdmin.rpc('deduct_tokens', {

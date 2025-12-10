@@ -510,7 +510,7 @@
 									<!-- Current Image -->
 									{#if status?.isLoading}
 										<div class="image-thumb loading">
-											<div class="loading-spinner">⏳</div>
+											<div class="loading-spinner"></div>
 										</div>
 									{:else if status?.currentImageUrl}
 										<button
@@ -532,7 +532,7 @@
 									<!-- Target Image/Status -->
 									{#if status?.isLoading}
 										<div class="image-thumb loading">
-											<div class="loading-spinner">⏳</div>
+											<div class="loading-spinner"></div>
 										</div>
 									{:else if isChecked}
 										<!-- When checked: show target variant if different, "no change" if same, or "new image" -->
@@ -954,17 +954,17 @@
 	}
 
 	.loading-spinner {
-		font-size: 20px;
-		animation: pulse 1.5s ease-in-out infinite;
+		width: 24px;
+		height: 24px;
+		border: 3px solid rgba(59, 130, 246, 0.1);
+		border-top-color: #3b82f6;
+		border-radius: 50%;
+		animation: spin 1s linear infinite;
 	}
 
-	@keyframes pulse {
-		0%,
-		100% {
-			opacity: 1;
-		}
-		50% {
-			opacity: 0.5;
+	@keyframes spin {
+		to {
+			transform: rotate(360deg);
 		}
 	}
 

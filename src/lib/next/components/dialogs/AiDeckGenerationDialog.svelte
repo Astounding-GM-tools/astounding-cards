@@ -148,7 +148,7 @@
 		{#if isGenerating}
 			<!-- Generating State -->
 			<div class="generating-state">
-				<div class="spinner">🎴</div>
+				<div class="spinner"></div>
 				<h3>Generating Your Deck...</h3>
 				<p class="generating-prompt">{prompt.substring(0, 100)}...</p>
 				<div class="info-box">
@@ -321,14 +321,15 @@
 	}
 
 	.spinner {
-		font-size: 3rem;
-		animation: spin 2s linear infinite;
+		width: 48px;
+		height: 48px;
+		border: 4px solid rgba(59, 130, 246, 0.1);
+		border-top-color: #3b82f6;
+		border-radius: 50%;
+		animation: spin 1s linear infinite;
 	}
 
 	@keyframes spin {
-		from {
-			transform: rotate(0deg);
-		}
 		to {
 			transform: rotate(360deg);
 		}

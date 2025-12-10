@@ -24,27 +24,39 @@
 	import { dialogStore } from '../dialog/dialogStore.svelte.js';
 	import SimilarImagesDialog from '../dialogs/SimilarImagesDialog.svelte';
 
-	const props = $props();
-	const cardSize = (props.cardSize ?? 'tarot') as CardSize;
-	const onImageChange = props.onImageChange as
-		| ((blob: Blob | null, sourceUrl?: string, originalFileName?: string) => void)
-		| undefined;
-	const onRemoveImage = props.onRemoveImage as (() => void) | undefined;
-	const onGenerateImage = props.onGenerateImage as (() => void) | undefined;
-	const hasExistingImage = props.hasExistingImage as boolean | undefined;
-	const imageLocked = props.imageLocked as boolean | undefined;
-	const onToggleLock = props.onToggleLock as ((locked: boolean) => void) | undefined;
-	const existingImageInfo = props.existingImageInfo as
-		| {
-				filename?: string;
-				source?: string;
-				timestamp?: Date | null;
-				status?: string;
-				message?: string | null;
-		  }
-		| undefined;
-	const card = props.card as Card | undefined;
-	const currentStyle = props.currentStyle as string | undefined;
+	// Use $props() with destructuring to maintain reactivity
+	let {
+		cardSize = 'tarot' as CardSize,
+		onImageChange,
+		onRemoveImage,
+		onGenerateImage,
+		hasExistingImage,
+		imageLocked,
+		onToggleLock,
+		existingImageInfo,
+		card,
+		currentStyle
+	}: {
+		cardSize?: CardSize;
+		onImageChange?: (blob: Blob | null, sourceUrl?: string, originalFileName?: string) => void;
+		onRemoveImage?: () => void;
+		onGenerateImage?: () => void;
+		hasExistingImage?: boolean;
+		imageLocked?: boolean;
+		onToggleLock?: (locked: boolean) => void;
+		existingImageInfo?: {
+			filename?: string;
+			source?: string;
+			timestamp?: Date | null;
+			status?: string;
+			message?: string | null;
+		};
+		card?: Card;
+		currentStyle?: string;
+	} = $props();
+
+	// Note: existingImageInfo is passed from parent and should only change when image data changes
+	// If you see excessive rerenders, check the parent component's $effect that calculates this prop
 
 	let fileInput: HTMLInputElement | undefined = $state(undefined);
 	let urlInput: HTMLInputElement | undefined = $state(undefined);
@@ -66,7 +78,7 @@
 		// The image is already hosted on R2, so just pass the URL
 		// Pass null for blob, the URL, and a filename
 		onImageChange(null, imageUrl, `community-${imageId}.png`);
-		
+
 		showSimilarImages = false;
 	}
 
@@ -156,55 +168,44 @@
 </script>
 
 <section class="inline-image-selector">
-	{#if !hasExistingImage}
-		<!-- Single compact row: URL or File -->
-		<div class="compact-input-row">
-			<input
-				bind:this={urlInput}
-				bind:value={imageState.urlValue}
-				type="url"
-				id="url-input"
-				placeholder="Paste image URL..."
-				oninput={(e) =>
-					(imageState = updateUrlValue(imageState, (e.currentTarget as HTMLInputElement).value))}
-				disabled={isProcessing(imageState)}
-			/>
-			<button
-				onclick={handleUrl}
-				disabled={isProcessing(imageState) || !imageState.urlValue}
-				class="load-btn"
-				type="button"
-			>
-				{isProcessing(imageState) ? '...' : 'Load Image'}
-			</button>
-			<span class="divider">or</span>
-			<label class="file-btn">
-				<input
-					bind:this={fileInput}
-					type="file"
-					id="file-input"
-					accept="image/*"
-					onchange={handleFile}
-					disabled={isProcessing(imageState)}
-					hidden
-				/>
-				Choose File
-			</label>
-		</div>
-	{/if}
-
-	<!-- Browse Similar Images Button (always visible if card provided) -->
-	{#if card}
-		<button onclick={openSimilarImagesDialog} class="browse-similar-btn" type="button">
-			🔍 Browse Community Library (Free)
+	<!-- Always show URL or File input -->
+	<div class="compact-input-row">
+		<input
+			bind:this={urlInput}
+			bind:value={imageState.urlValue}
+			type="url"
+			id="url-input"
+			placeholder="Paste image URL..."
+			oninput={(e) =>
+				(imageState = updateUrlValue(imageState, (e.currentTarget as HTMLInputElement).value))}
+			disabled={isProcessing(imageState)}
+		/>
+		<button
+			onclick={handleUrl}
+			disabled={isProcessing(imageState) || !imageState.urlValue}
+			class="load-btn"
+			type="button"
+		>
+			{isProcessing(imageState) ? '...' : 'Load Image'}
 		</button>
-	{/if}
+		<span class="divider">or</span>
+		<label class="file-btn">
+			<input
+				bind:this={fileInput}
+				type="file"
+				id="file-input"
+				accept="image/*"
+				onchange={handleFile}
+				disabled={isProcessing(imageState)}
+				hidden
+			/>
+			Choose File
+		</label>
+	</div>
 
-	{#if !hasExistingImage}
-		<!-- Generate/Select Button (prominent when no image) -->
-		{#if onGenerateImage}
-			<AuthGatedCtaButton config={IMAGE_GENERATION_CTA} onAuthenticatedClick={onGenerateImage} />
-		{/if}
+	{#if !hasExistingImage && onGenerateImage}
+		<!-- Generate Button (prominent when no image) -->
+		<AuthGatedCtaButton config={IMAGE_GENERATION_CTA} onAuthenticatedClick={onGenerateImage} />
 	{/if}
 
 	<!-- Line 3: File info + Status -->
@@ -507,7 +508,6 @@
 		background: #fff3cd;
 		color: #856404;
 	}
-
 
 	.unset-btn {
 		padding: 0.25rem 0.5rem;
