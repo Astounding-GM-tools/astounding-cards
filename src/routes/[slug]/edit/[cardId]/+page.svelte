@@ -42,17 +42,17 @@
 	onMount(async () => {
 		// Check if deck is already loaded
 		if (!nextDeckStore.deck || nextDeckStore.deck.id !== deckId) {
-			await nextDeckStore.loadDeck(deckId);
+			await nextDeckStore.loadDeck(deckId as string);
 		}
 	});
 
 	// Get the card and deck from store
-	let card = $derived(nextDeckStore.getCard(cardId));
+	let card = $derived(nextDeckStore.getCard(cardId as string));
 	let currentDeck = $derived(nextDeckStore.deck);
 
 	// Get all cards for sidebar navigation
 	let allCards = $derived(currentDeck?.cards || []);
-	let currentCardIndex = $derived(allCards.findIndex((c) => c.id === cardId));
+	let currentCardIndex = $derived(allCards.findIndex((c) => c.id === (cardId as string)));
 
 	// Get the deck's preset setting
 	let preset = $derived(currentDeck?.meta.preset || 'trading');
@@ -323,7 +323,7 @@
 		}
 
 		// Then delete the card
-		const success = await nextDeckStore.removeCard(cardId);
+		const success = await nextDeckStore.removeCard(cardId as string);
 
 		if (success) {
 			toasts.success(`🗑️ Card "${cardTitle}" deleted`);
@@ -958,7 +958,7 @@
 							<legend>Image</legend>
 							<InlineImageSelector
 								cardSize="tarot"
-								card={previewCard}
+								card={previewCard as Card}
 								currentStyle={currentDeck?.meta.imageStyle}
 								hasExistingImage={hasImage}
 								existingImageInfo={imageDisplayInfo}
@@ -981,7 +981,11 @@
 								<div class="community-header">
 									<legend>Community Images</legend>
 									{#if !usingCardSpecificEmbedding && currentDeck?.meta?.description}
-										<button class="get-suggestions-btn" onclick={getCardSpecificSuggestions} type="button">
+										<button
+											class="get-suggestions-btn"
+											onclick={getCardSpecificSuggestions}
+											type="button"
+										>
 											<Target size={16} />
 											Get Better Suggestions for This Card
 										</button>
@@ -994,115 +998,118 @@
 								</div>
 
 								{#if communityImagesLoading}
-								<div class="community-loading">
-									<div class="spinner"></div>
-									<p>Loading community images...</p>
-								</div>
-							{:else if communityImagesError === 'auth'}
-								<div class="community-auth-message">
-									<p>
-										The community library of AI-generated images is free to use, but requires that
-										you are logged in.
-									</p>
-								</div>
-							{:else if communityImagesError}
-								<div class="community-error">
-									<p>Failed to load community images</p>
-								</div>
-							{:else if communityImages.length === 0}
-								<div class="community-empty">
-									<p>No similar images found in the community library</p>
-								</div>
-							{:else}
-								<div class="community-grid">
-									{#each paginatedImages as result}
-										<div class="community-image-card">
-											<button
-												class="community-image-preview"
-												onclick={() =>
-													handleCommunityImageSelected(
-														selectedVariants[result.original_id]?.imageUrl || result.original_url,
-														selectedVariants[result.original_id]?.imageId || result.original_id
-													)}
-												type="button"
-											>
-												<img
-													src={getOptimizedImageUrl(
-														selectedVariants[result.original_id]?.imageUrl || result.original_url,
-														{
-															width: 200,
-															height: 200,
-															fit: 'contain'
-														}
-													)}
-													alt=""
-												/>
-												<div class="style-badge">
-													{selectedVariants[result.original_id]?.style || result.original_style}
-												</div>
-											</button>
-
-											<!-- Style variants -->
-											<div class="variants-row">
+									<div class="community-loading">
+										<div class="spinner"></div>
+										<p>Loading community images...</p>
+									</div>
+								{:else if communityImagesError === 'auth'}
+									<div class="community-auth-message">
+										<p>
+											The community library of AI-generated images is free to use, but requires that
+											you are logged in.
+										</p>
+									</div>
+								{:else if communityImagesError}
+									<div class="community-error">
+										<p>Failed to load community images</p>
+									</div>
+								{:else if communityImages.length === 0}
+									<div class="community-empty">
+										<p>No similar images found in the community library</p>
+									</div>
+								{:else}
+									<div class="community-grid">
+										{#each paginatedImages as result}
+											<div class="community-image-card">
 												<button
-													class="variant-chip"
-													class:selected={isVariantSelected(result.original_id, result.original_id)}
+													class="community-image-preview"
 													onclick={() =>
-														selectVariant(
-															result.original_id,
-															result.original_url,
-															result.original_id,
-															result.original_style
+														handleCommunityImageSelected(
+															selectedVariants[result.original_id]?.imageUrl || result.original_url,
+															selectedVariants[result.original_id]?.imageId || result.original_id
 														)}
 													type="button"
 												>
-													{result.original_style}
+													<img
+														src={getOptimizedImageUrl(
+															selectedVariants[result.original_id]?.imageUrl || result.original_url,
+															{
+																width: 200,
+																height: 200,
+																fit: 'contain'
+															}
+														)}
+														alt=""
+													/>
+													<div class="style-badge">
+														{selectedVariants[result.original_id]?.style || result.original_style}
+													</div>
 												</button>
 
-												{#if result.variants && result.variants.length > 0}
-													{#each result.variants as variant}
-														<button
-															class="variant-chip"
-															class:selected={isVariantSelected(result.original_id, variant.id)}
-															onclick={() =>
-																selectVariant(
-																	result.original_id,
-																	variant.url,
-																	variant.id,
-																	variant.style
-																)}
-															type="button"
-														>
-															{variant.style}
-														</button>
-													{/each}
-												{/if}
-											</div>
-										</div>
-									{/each}
-								</div>
+												<!-- Style variants -->
+												<div class="variants-row">
+													<button
+														class="variant-chip"
+														class:selected={isVariantSelected(
+															result.original_id,
+															result.original_id
+														)}
+														onclick={() =>
+															selectVariant(
+																result.original_id,
+																result.original_url,
+																result.original_id,
+																result.original_style
+															)}
+														type="button"
+													>
+														{result.original_style}
+													</button>
 
-								{#if totalPages > 1}
-									<div class="pagination">
-										<button
-											onclick={() => (communityImagesPage = Math.max(1, communityImagesPage - 1))}
-											disabled={communityImagesPage === 1}
-											type="button"
-										>
-											Previous
-										</button>
-										<span>Page {communityImagesPage} of {totalPages}</span>
-										<button
-											onclick={() =>
-												(communityImagesPage = Math.min(totalPages, communityImagesPage + 1))}
-											disabled={communityImagesPage === totalPages}
-											type="button"
-										>
-											Next
-										</button>
+													{#if result.variants && result.variants.length > 0}
+														{#each result.variants as variant}
+															<button
+																class="variant-chip"
+																class:selected={isVariantSelected(result.original_id, variant.id)}
+																onclick={() =>
+																	selectVariant(
+																		result.original_id,
+																		variant.url,
+																		variant.id,
+																		variant.style
+																	)}
+																type="button"
+															>
+																{variant.style}
+															</button>
+														{/each}
+													{/if}
+												</div>
+											</div>
+										{/each}
 									</div>
+
+									{#if totalPages > 1}
+										<div class="pagination">
+											<button
+												onclick={() => (communityImagesPage = Math.max(1, communityImagesPage - 1))}
+												disabled={communityImagesPage === 1}
+												type="button"
+											>
+												Previous
+											</button>
+											<span>Page {communityImagesPage} of {totalPages}</span>
+											<button
+												onclick={() =>
+													(communityImagesPage = Math.min(totalPages, communityImagesPage + 1))}
+												disabled={communityImagesPage === totalPages}
+												type="button"
+											>
+												Next
+											</button>
+										</div>
+									{/if}
 								{/if}
-							{/if}
 							</fieldset>
 						{/if}
 					</section>
