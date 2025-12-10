@@ -258,14 +258,14 @@
 				imageChanged ||
 				JSON.stringify(formData.imageMetadata) !== JSON.stringify(card.imageMetadata || null);
 
-			// Auto-save after 500ms of no changes
+			// Auto-save after 2 seconds of no changes
 			if (hasChanges) {
 				if (saveTimeoutId !== null) {
 					clearTimeout(saveTimeoutId);
 				}
 				saveTimeoutId = window.setTimeout(() => {
 					saveChanges();
-				}, 500);
+				}, 2000);
 			}
 		}
 

@@ -55,11 +55,8 @@
 		currentStyle?: string;
 	} = $props();
 
-	// Debug: log when existingImageInfo changes
-	$effect(() => {
-		$inspect(existingImageInfo);
-		// console.log('[InlineImageSelector] existingImageInfo updated:', existingImageInfo);
-	});
+	// Note: existingImageInfo is passed from parent and should only change when image data changes
+	// If you see excessive rerenders, check the parent component's $effect that calculates this prop
 
 	let fileInput: HTMLInputElement | undefined = $state(undefined);
 	let urlInput: HTMLInputElement | undefined = $state(undefined);
