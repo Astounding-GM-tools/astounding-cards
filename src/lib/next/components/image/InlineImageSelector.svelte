@@ -57,7 +57,8 @@
 
 	// Debug: log when existingImageInfo changes
 	$effect(() => {
-		console.log('[InlineImageSelector] existingImageInfo updated:', existingImageInfo);
+		$inspect(existingImageInfo);
+		// console.log('[InlineImageSelector] existingImageInfo updated:', existingImageInfo);
 	});
 
 	let fileInput: HTMLInputElement | undefined = $state(undefined);
@@ -80,7 +81,7 @@
 		// The image is already hosted on R2, so just pass the URL
 		// Pass null for blob, the URL, and a filename
 		onImageChange(null, imageUrl, `community-${imageId}.png`);
-		
+
 		showSimilarImages = false;
 	}
 
@@ -510,7 +511,6 @@
 		background: #fff3cd;
 		color: #856404;
 	}
-
 
 	.unset-btn {
 		padding: 0.25rem 0.5rem;

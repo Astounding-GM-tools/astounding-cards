@@ -15,6 +15,7 @@
 	import BinaryToggle from '$lib/next/components/ui/BinaryToggle.svelte';
 	import AuthGatedCtaButton from '$lib/next/components/cta/AuthGatedCtaButton.svelte';
 	import AiImageGenerationDialog from '$lib/next/components/dialogs/AiImageGenerationDialog.svelte';
+	import Dialog from '$lib/next/components/dialog/Dialog.svelte';
 	import { IMAGE_GENERATION_CTA } from '$lib/config/cta-configs.js';
 	import { toasts } from '$lib/stores/toast.js';
 	import { dialogStore } from '$lib/next/components/dialog/dialogStore.svelte.js';
@@ -1170,6 +1171,8 @@
 		<button onclick={exitEditMode}>Back to Deck</button>
 	</div>
 {/if}
+
+<Dialog />
 
 <style>
 	.edit-mode {
