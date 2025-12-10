@@ -506,30 +506,62 @@
 	let communityImagesPage = $state(1);
 	const imagesPerPage = 6;
 	let usingCardSpecificEmbedding = $state(false);
-	let loadImagesTimeoutId: number | null = null;
+	let lastLoadedCardId = $state<string | null>(null);
 
-	// Load community images when card changes or on mount (debounced)
-	$effect(() => {
-		if (card) {
-			usingCardSpecificEmbedding = false; // Reset to deck-level on card change
+	// Track semantic content and rate limiting for "Get Better Suggestions" button
+	const lastCardEmbeddingTimestamps = new Map<string, number>();
+	const lastCardSemanticText = new Map<string, string>();
+	const CARD_RATE_LIMIT_MS = 60000; // 1 minute between card-specific embeddings
 
-			// Clear existing timeout
-			if (loadImagesTimeoutId !== null) {
-				clearTimeout(loadImagesTimeoutId);
+	// Helper: Extract semantic text from card content
+	function extractSemanticText(card: typeof previewCard): string {
+		if (!card) return '';
+
+		const parts = [
+			card.title || '',
+			card.subtitle || '',
+			card.description || '',
+			...(card.traits || []).map((t) => `${t.title} ${t.description}`).filter(Boolean)
+		];
+
+		// Normalize: lowercase, collapse whitespace, trim
+		return parts.join(' ').toLowerCase().replace(/\s+/g, ' ').trim();
+	}
+
+	// Helper: Check if text changed significantly
+	function hasSignificantTextChange(oldText: string, newText: string): boolean {
+		if (oldText === newText) return false;
+
+		const charDiff = Math.abs(newText.length - oldText.length);
+		const percentDiff = oldText.length > 0 ? charDiff / oldText.length : 1;
+
+		// Trigger if: > 30 char difference, or > 10% length change
+		return charDiff > 30 || percentDiff > 0.1;
+	}
+
+	// Helper: Compare if two result sets are identical
+	function areResultsIdentical(results1: SearchResult[], results2: SearchResult[]): boolean {
+		if (results1.length !== results2.length) return false;
+
+		for (let i = 0; i < results1.length; i++) {
+			if (results1[i].original_id !== results2[i].original_id) {
+				return false;
 			}
-
-			// Debounce: wait 500ms after card changes before loading images
-			loadImagesTimeoutId = window.setTimeout(() => {
-				loadCommunityImages();
-			}, 500);
 		}
 
-		// Cleanup timeout on unmount
-		return () => {
-			if (loadImagesTimeoutId !== null) {
-				clearTimeout(loadImagesTimeoutId);
-			}
-		};
+		return true;
+	}
+
+	// Load community images ONLY when navigating to a different card (not on content changes)
+	$effect(() => {
+		// Watch cardId (from URL), not card content
+		const currentCardId = cardId;
+
+		if (currentCardId && currentCardId !== lastLoadedCardId && card) {
+			lastLoadedCardId = currentCardId;
+			usingCardSpecificEmbedding = false; // Reset to deck-level on card navigation
+			loadCommunityImages();
+		}
 	});
 
 	async function loadCommunityImages() {
@@ -593,7 +625,28 @@
 	}
 
 	async function getCardSpecificSuggestions() {
-		if (!previewCard) return;
+		if (!previewCard || !card) return;
+
+		const currentCardId = card.id;
+		const currentSemanticText = extractSemanticText(previewCard);
+
+		// Check rate limit: don't re-embed more than once per minute
+		const lastTimestamp = lastCardEmbeddingTimestamps.get(currentCardId) || 0;
+		const timeSinceLastEmbed = Date.now() - lastTimestamp;
+
+		if (timeSinceLastEmbed < CARD_RATE_LIMIT_MS) {
+			const remainingSeconds = Math.ceil((CARD_RATE_LIMIT_MS - timeSinceLastEmbed) / 1000);
+			toasts.info(`⏱️ Please wait ${remainingSeconds}s before requesting new suggestions`);
+			return;
+		}
+
+		// Check if content has changed significantly since last embedding
+		const lastSemanticText = lastCardSemanticText.get(currentCardId) || '';
+		if (lastSemanticText && !hasSignificantTextChange(lastSemanticText, currentSemanticText)) {
+			console.log('[Edit] Content unchanged - skipping re-embedding');
+			toasts.info('💡 Card content unchanged - suggestions are already optimized');
+			return;
+		}
 
 		usingCardSpecificEmbedding = true;
 		communityImagesLoading = true;
@@ -622,7 +675,20 @@
 			}
 
 			const data = await response.json();
-			communityImages = data.results || [];
+			const newResults = data.results || [];
+
+			// Check if results are identical to current results (avoid unnecessary UI updates)
+			if (areResultsIdentical(communityImages, newResults)) {
+				console.log('[Edit] Results unchanged - keeping current suggestions');
+				toasts.info('✨ Suggestions are already optimal for this card');
+				// Update tracking even if results are the same
+				lastCardEmbeddingTimestamps.set(currentCardId, Date.now());
+				lastCardSemanticText.set(currentCardId, currentSemanticText);
+				return;
+			}
+
+			// Results are different - update display
+			communityImages = newResults;
 
 			// Initialize selected variants
 			communityImages.forEach((result) => {
@@ -641,6 +707,12 @@
 					};
 				}
 			});
+
+			// Update tracking
+			lastCardEmbeddingTimestamps.set(currentCardId, Date.now());
+			lastCardSemanticText.set(currentCardId, currentSemanticText);
+
+			toasts.success('🎯 Updated suggestions based on card content!');
 		} catch (err) {
 			console.error('Failed to get card-specific suggestions:', err);
 			communityImagesError = 'error';
