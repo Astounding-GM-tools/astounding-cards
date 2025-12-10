@@ -31,7 +31,7 @@
 		DRAG_CLASSES
 	} from '$lib/utils/drag-drop.svelte.js';
 
-	import { ArrowLeft, X, Save, Check, AlertCircle, Trash2 } from 'lucide-svelte';
+	import { ArrowLeft, X, Save, Check, AlertCircle, Trash2, Target, Sparkles } from 'lucide-svelte';
 	import { getPresetCapabilities } from '$lib/next/utils/presetCapabilities.js';
 
 	// Get params from URL
@@ -505,122 +505,52 @@
 	let selectedVariants = $state<Record<string, SelectedVariant>>({});
 	let communityImagesPage = $state(1);
 	const imagesPerPage = 6;
+	let usingCardSpecificEmbedding = $state(false);
+	let loadImagesTimeoutId: number | null = null;
 
-	// Track semantic text content to avoid unnecessary embedding regeneration
-	let lastSemanticText = $state('');
-	let communityReloadTimeoutId: number | null = null;
-
-	// Rate limiting: Track last embedding timestamp per card (max once per minute per card)
-	const lastEmbeddingTimestamps = new Map<string, number>();
-	const RATE_LIMIT_MS = 60000; // 1 minute
-
-	// Helper: Extract just the text content for comparison
-	function extractSemanticText(card: typeof previewCard): string {
-		if (!card) return '';
-
-		// Extract only the text that affects semantic meaning
-		const parts = [
-			card.title || '',
-			card.subtitle || '',
-			card.description || '',
-			...(card.traits || []).map((t) => `${t.title} ${t.description}`).filter(Boolean)
-		];
-
-		// Normalize: lowercase, collapse whitespace, trim
-		return parts.join(' ').toLowerCase().replace(/\s+/g, ' ').trim();
-	}
-
-	// Helper: Check if text changed significantly (> 30 chars or > 10% difference)
-	function hasSignificantTextChange(oldText: string, newText: string): boolean {
-		if (oldText === newText) return false;
-
-		const charDiff = Math.abs(newText.length - oldText.length);
-		const percentDiff = oldText.length > 0 ? charDiff / oldText.length : 1;
-
-		// Trigger if: > 30 char difference, or > 10% length change
-		return charDiff > 30 || percentDiff > 0.1;
-	}
-
-	// Load community images immediately when card changes (uses persisted embedding if available)
+	// Load community images when card changes or on mount (debounced)
 	$effect(() => {
 		if (card) {
-			// Initialize semantic text tracking for this card
-			const currentSemanticText = extractSemanticText(card);
-			if (lastSemanticText === '' || lastSemanticText !== currentSemanticText) {
-				lastSemanticText = currentSemanticText;
+			usingCardSpecificEmbedding = false; // Reset to deck-level on card change
+
+			// Clear existing timeout
+			if (loadImagesTimeoutId !== null) {
+				clearTimeout(loadImagesTimeoutId);
 			}
 
-			// Load images immediately using persisted embedding (instant if embedding exists!)
-			loadCommunityImages(false);
-		}
-	});
-
-	// Regenerate embedding only when semantic text changes significantly
-	$effect(() => {
-		if (card) {
-			const currentSemanticText = extractSemanticText(card);
-			const cardId = card.id;
-
-			// Check if this is a meaningful change
-			if (hasSignificantTextChange(lastSemanticText, currentSemanticText)) {
-				// Clear existing timeout
-				if (communityReloadTimeoutId !== null) {
-					clearTimeout(communityReloadTimeoutId);
-				}
-
-				// Debounce: wait 15 seconds after user stops editing
-				communityReloadTimeoutId = window.setTimeout(() => {
-					// Check rate limit: don't re-embed more than once per minute per card
-					const lastTimestamp = lastEmbeddingTimestamps.get(cardId) || 0;
-					const timeSinceLastEmbed = Date.now() - lastTimestamp;
-
-					if (timeSinceLastEmbed < RATE_LIMIT_MS) {
-						console.log(
-							`[Edit] Rate limit: skipping embedding (${Math.ceil((RATE_LIMIT_MS - timeSinceLastEmbed) / 1000)}s remaining)`
-						);
-						return;
-					}
-
-					console.log('[Edit] Regenerating embeddings for similar images');
-					lastSemanticText = currentSemanticText;
-					lastEmbeddingTimestamps.set(cardId, Date.now());
-					// Force regenerate embedding when content changes significantly
-					loadCommunityImages(true);
-				}, 15000); // 15 seconds debounce
-			}
+			// Debounce: wait 500ms after card changes before loading images
+			loadImagesTimeoutId = window.setTimeout(() => {
+				loadCommunityImages();
+			}, 500);
 		}
 
 		// Cleanup timeout on unmount
 		return () => {
-			if (communityReloadTimeoutId !== null) {
-				clearTimeout(communityReloadTimeoutId);
+			if (loadImagesTimeoutId !== null) {
+				clearTimeout(loadImagesTimeoutId);
 			}
 		};
 	});
 
-	async function loadCommunityImages(forceRegenerate = false) {
-		if (!previewCard || !card) return;
+	async function loadCommunityImages() {
+		if (!previewCard) return;
+
+		// If card has an image, don't show community images
+		if (card?.image) {
+			communityImages = [];
+			return;
+		}
 
 		communityImagesLoading = true;
 		communityImagesError = null;
 
 		try {
-			// Try to use persisted embedding if available and not forcing regeneration
-			const hasEmbedding = card.embedding && Array.isArray(card.embedding) && card.embedding.length === 3072;
-			const shouldUsePersistedEmbedding = hasEmbedding && !forceRegenerate;
-
-			console.log('[Edit] Loading community images:', {
-				cardId: card.id,
-				hasEmbedding,
-				usingPersisted: shouldUsePersistedEmbedding
-			});
-
 			const response = await authenticatedFetch('/api/ai/search-similar-images', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
 					card: previewCard,
-					embedding: shouldUsePersistedEmbedding ? card.embedding : undefined,
+					deckDescription: currentDeck?.meta?.description,
 					preferredStyle: preset,
 					limit: 24 // Load more for pagination
 				})
@@ -654,19 +584,67 @@
 					};
 				}
 			});
-
-			// If we generated a new embedding (didn't use persisted), save it to the card
-			if (!shouldUsePersistedEmbedding && data.generatedEmbedding) {
-				console.log('[Edit] Persisting new embedding to card');
-				const currentSemanticText = extractSemanticText(previewCard);
-				await nextDeckStore.updateCard(card.id, {
-					embedding: data.generatedEmbedding,
-					embeddingContentHash: currentSemanticText
-				});
-			}
 		} catch (err) {
 			console.error('Failed to load community images:', err);
 			communityImagesError = 'error';
+		} finally {
+			communityImagesLoading = false;
+		}
+	}
+
+	async function getCardSpecificSuggestions() {
+		if (!previewCard) return;
+
+		usingCardSpecificEmbedding = true;
+		communityImagesLoading = true;
+		communityImagesError = null;
+
+		try {
+			console.log('[Edit] Generating card-specific embedding for better suggestions');
+
+			const response = await authenticatedFetch('/api/ai/search-similar-images', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					card: previewCard,
+					// Don't send deck description - force card-specific embedding
+					preferredStyle: preset,
+					limit: 24
+				})
+			});
+
+			if (!response.ok) {
+				if (response.status === 401) {
+					communityImagesError = 'auth';
+					return;
+				}
+				throw new Error('Failed to generate card-specific suggestions');
+			}
+
+			const data = await response.json();
+			communityImages = data.results || [];
+
+			// Initialize selected variants
+			communityImages.forEach((result) => {
+				const preferredVariant = result.variants?.find((v) => v.style === preset);
+				if (preferredVariant) {
+					selectedVariants[result.original_id] = {
+						imageUrl: preferredVariant.url,
+						imageId: preferredVariant.id,
+						style: preferredVariant.style
+					};
+				} else {
+					selectedVariants[result.original_id] = {
+						imageUrl: result.original_url,
+						imageId: result.original_id,
+						style: result.original_style
+					};
+				}
+			});
+		} catch (err) {
+			console.error('Failed to get card-specific suggestions:', err);
+			communityImagesError = 'error';
+			usingCardSpecificEmbedding = false;
 		} finally {
 			communityImagesLoading = false;
 		}
@@ -926,10 +904,24 @@
 						</fieldset>
 
 						<!-- Community Images Section -->
-						<fieldset class="form-fieldset community-images-section">
-							<legend>Community Images</legend>
+						{#if !card?.image && (currentDeck?.meta?.description || communityImages.length > 0)}
+							<fieldset class="form-fieldset community-images-section">
+								<div class="community-header">
+									<legend>Community Images</legend>
+									{#if !usingCardSpecificEmbedding && currentDeck?.meta?.description}
+										<button class="get-suggestions-btn" onclick={getCardSpecificSuggestions} type="button">
+											<Target size={16} />
+											Get Better Suggestions for This Card
+										</button>
+									{:else if usingCardSpecificEmbedding}
+										<span class="suggestions-label">
+											<Sparkles size={16} />
+											Showing card-specific suggestions
+										</span>
+									{/if}
+								</div>
 
-							{#if communityImagesLoading}
+								{#if communityImagesLoading}
 								<div class="community-loading">
 									<div class="spinner"></div>
 									<p>Loading community images...</p>
@@ -1039,7 +1031,8 @@
 									</div>
 								{/if}
 							{/if}
-						</fieldset>
+							</fieldset>
+						{/if}
 					</section>
 
 					<!-- LEFT-BOTTOM: Back Card Fields (Description, Stats) -->
@@ -1787,6 +1780,53 @@
 	.community-images-section {
 		max-height: 600px;
 		overflow-y: auto;
+	}
+
+	.community-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 1rem;
+		margin-bottom: 1rem;
+	}
+
+	.community-header legend {
+		margin-bottom: 0;
+	}
+
+	.get-suggestions-btn {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.5rem 1rem;
+		background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+		color: white;
+		border: none;
+		border-radius: 0.375rem;
+		font-size: 0.875rem;
+		font-weight: 500;
+		cursor: pointer;
+		transition: all 0.2s;
+		white-space: nowrap;
+	}
+
+	.get-suggestions-btn:hover {
+		transform: translateY(-1px);
+		box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+	}
+
+	.get-suggestions-btn:active {
+		transform: translateY(0);
+	}
+
+	.suggestions-label {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		font-size: 0.875rem;
+		color: #667eea;
+		font-weight: 500;
+		white-space: nowrap;
 	}
 
 	.community-loading,

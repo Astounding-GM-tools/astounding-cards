@@ -21,21 +21,33 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 		}
 
 		// 2. Parse request body
-		const { card, embedding, preferredStyle, limit = 10 } = await request.json();
-		console.log('🔍 Search request:', { hasCard: !!card, cardTitle: card?.title, hasEmbedding: !!embedding, preferredStyle, limit });
+		const { card, embedding, deckDescription, preferredStyle, limit = 10 } = await request.json();
+		console.log('🔍 Search request:', {
+			hasCard: !!card,
+			cardTitle: card?.title,
+			hasEmbedding: !!embedding,
+			hasDeckDescription: !!deckDescription,
+			preferredStyle,
+			limit
+		});
 
 		// 3. Get or generate embedding
 		let queryEmbedding: number[] | null = null;
 
 		if (embedding && Array.isArray(embedding)) {
-			// Use provided embedding
+			// Use provided embedding (from explicit user action)
+			console.log('✅ Using provided embedding');
 			queryEmbedding = embedding;
+		} else if (deckDescription) {
+			// Use deck description for embedding (default behavior)
+			console.log('📝 Generating embedding from deck description');
+			queryEmbedding = await generateEmbedding(deckDescription);
 		} else if (card) {
-			// Check if card has minimal content
+			// Fallback: generate from card content
 			const hasContent = card.title || card.description || card.subtitle || (card.traits && card.traits.length > 0);
 
 			if (hasContent) {
-				// Use the same prompt optimization as image generation for consistency
+				console.log('🃏 Generating embedding from card content');
 				const optimizedPrompt = createPromptOptimizationRequest(
 					card.title || 'Untitled',
 					card.subtitle || '',
@@ -44,16 +56,14 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 					card.traits || [],
 					card.stats || []
 				);
-
-				// Generate embedding from optimized prompt
 				queryEmbedding = await generateEmbedding(optimizedPrompt);
 			} else {
-				// For empty cards, we'll use a null embedding to get random/recent images
-				console.log('ℹ️ Empty card - will return random community images');
+				// For empty cards/decks, return random/recent images
+				console.log('ℹ️ No content - will return random community images');
 				queryEmbedding = null;
 			}
 		} else {
-			return error(400, 'Card must be provided');
+			return error(400, 'Card or deck description must be provided');
 		}
 
 		// 4. Validate embedding (if one was generated)
@@ -80,9 +90,7 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 		return json({
 			success: true,
 			results,
-			totalFound: results.length,
-			// Return the generated embedding so it can be persisted on the card
-			generatedEmbedding: embedding && !Array.isArray(embedding) ? queryEmbedding : undefined
+			totalFound: results.length
 		});
 	} catch (err) {
 		// If it's a SvelteKit error (like 401/400), rethrow it
