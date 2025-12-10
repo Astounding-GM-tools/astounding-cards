@@ -541,7 +541,21 @@
 		return charDiff > 30 || percentDiff > 0.1;
 	}
 
-	// Load community images only when semantic text changes significantly
+	// Load community images immediately when card changes (uses persisted embedding if available)
+	$effect(() => {
+		if (card) {
+			// Initialize semantic text tracking for this card
+			const currentSemanticText = extractSemanticText(card);
+			if (lastSemanticText === '' || lastSemanticText !== currentSemanticText) {
+				lastSemanticText = currentSemanticText;
+			}
+
+			// Load images immediately using persisted embedding (instant if embedding exists!)
+			loadCommunityImages(false);
+		}
+	});
+
+	// Regenerate embedding only when semantic text changes significantly
 	$effect(() => {
 		if (card) {
 			const currentSemanticText = extractSemanticText(card);
@@ -570,7 +584,8 @@
 					console.log('[Edit] Regenerating embeddings for similar images');
 					lastSemanticText = currentSemanticText;
 					lastEmbeddingTimestamps.set(cardId, Date.now());
-					loadCommunityImages();
+					// Force regenerate embedding when content changes significantly
+					loadCommunityImages(true);
 				}, 15000); // 15 seconds debounce
 			}
 		}
@@ -583,18 +598,29 @@
 		};
 	});
 
-	async function loadCommunityImages() {
-		if (!previewCard) return;
+	async function loadCommunityImages(forceRegenerate = false) {
+		if (!previewCard || !card) return;
 
 		communityImagesLoading = true;
 		communityImagesError = null;
 
 		try {
+			// Try to use persisted embedding if available and not forcing regeneration
+			const hasEmbedding = card.embedding && Array.isArray(card.embedding) && card.embedding.length === 3072;
+			const shouldUsePersistedEmbedding = hasEmbedding && !forceRegenerate;
+
+			console.log('[Edit] Loading community images:', {
+				cardId: card.id,
+				hasEmbedding,
+				usingPersisted: shouldUsePersistedEmbedding
+			});
+
 			const response = await authenticatedFetch('/api/ai/search-similar-images', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
 					card: previewCard,
+					embedding: shouldUsePersistedEmbedding ? card.embedding : undefined,
 					preferredStyle: preset,
 					limit: 24 // Load more for pagination
 				})
@@ -628,6 +654,16 @@
 					};
 				}
 			});
+
+			// If we generated a new embedding (didn't use persisted), save it to the card
+			if (!shouldUsePersistedEmbedding && data.generatedEmbedding) {
+				console.log('[Edit] Persisting new embedding to card');
+				const currentSemanticText = extractSemanticText(previewCard);
+				await nextDeckStore.updateCard(card.id, {
+					embedding: data.generatedEmbedding,
+					embeddingContentHash: currentSemanticText
+				});
+			}
 		} catch (err) {
 			console.error('Failed to load community images:', err);
 			communityImagesError = 'error';

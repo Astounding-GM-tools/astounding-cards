@@ -80,7 +80,9 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 		return json({
 			success: true,
 			results,
-			totalFound: results.length
+			totalFound: results.length,
+			// Return the generated embedding so it can be persisted on the card
+			generatedEmbedding: embedding && !Array.isArray(embedding) ? queryEmbedding : undefined
 		});
 	} catch (err) {
 		// If it's a SvelteKit error (like 401/400), rethrow it
