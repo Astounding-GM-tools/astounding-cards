@@ -51,6 +51,8 @@
 		border-radius: 0.5rem;
 		overflow: hidden;
 		position: relative;
+		container-name: card;
+		container-type: inline-size;
 	}
 
 	/* Front side */
