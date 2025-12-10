@@ -1,11 +1,33 @@
 # Current Roadmap
 
-**Last Updated:** 2025-12-08
+**Last Updated:** 2025-12-10
 **Status:** Active Development
 
 ---
 
 ## ✅ Recently Completed
+
+### Deck Presets (Ready to Deploy)
+- Minimal preset (CAH-style simple cards)
+- Trading preset (detailed cards with stats/traits)
+- DeckSettingsPanel component with expandable accordion
+- Print size UI improvements
+- Preset switching fully integrated
+
+**Date:** 2025-12-10
+**Impact:** Flexible card styles for different use cases
+
+### Edit Mode Route (Ready to Deploy)
+- Full-screen editor at `/[slug]/edit/[cardId]`
+- Card list sidebar with quick switching
+- Keyboard navigation (← → Esc)
+- Auto-save with 2-second debounce
+- Cloud sync optimization (30s debounce + rate limiting + sendBeacon)
+- Community image suggestions with smart refresh logic
+- Performance optimized (no excessive rerenders or API calls)
+
+**Date:** 2025-12-10
+**Impact:** Professional editing experience, improved UX, reduced cloud sync costs
 
 ### Deck Likes Feature (Deployed)
 - Token-based like system (10 tokens)
@@ -20,68 +42,26 @@
 
 ---
 
-## 🚀 Current Priority: Deck Presets
+## 🚀 Current Priority: Payment System (Lemon Squeezy)
 
-**Target:** Next deployment
-**Status:** Planning complete, ready to implement
+**Target:** Next sprint
+**Status:** Ready to implement
+**Priority:** HIGH - Revenue generation!
 
 ### Features
-1. **Minimal Preset** - CAH-style simple cards (title, subtitle, image only)
-2. **Trading Preset** - Current detailed cards (default)
-3. **Deck Settings Panel** - Expandable accordion on deck page
-4. **Print Size UI** - Rename "Layout" to "Small/Large" with visual previews
-
-### Implementation Tasks
-- [ ] Add `preset` field to DeckMeta type
-- [ ] Create CardPresetMinimal.svelte
-- [ ] Refactor CardPresetTrading.svelte
-- [ ] Update CardPreview switcher
-- [ ] Build DeckSettingsPanel component
-- [ ] Wire up settings to deck page
-- [ ] Test preset switching with Canon Update
-- [ ] Update print layout to respect presets
-
-**Docs:** `/docs/DECK_PRESETS.md`
-**Estimate:** 6-8 hours
-**Dependencies:** None
-
----
-
-## 📋 Backlog (Prioritized)
-
-### 1. Edit Mode Route (Medium Priority)
-**Why:** Current edit modal is cramped
-**What:** Full-screen editor at `/[slug]/edit/[cardId]`
-
-**Features:**
-- Spacious full-page editor
-- Card list sidebar (quick switching)
-- View Transitions API (smooth animations)
-- Keyboard navigation (← → Esc)
-- Future: Quick Edit dialog for single fields
-
-**Docs:** `/docs/EDIT_MODE.md`
-**Estimate:** 8-10 hours
-**Blocks:** None
-
----
-
-### 2. Payment System (Lemon Squeezy) (High Priority - Revenue!)
-**Why:** Approved by Lemon Squeezy, ready to monetize
-**What:** Token purchase flow + payment webhook
-
-**Features:**
 - Token packages (100, 500, 1000 tokens)
 - Lemon Squeezy checkout integration
 - Webhook for payment confirmation
 - Credits update via transaction system
 - Purchase history in dashboard
 
-**Implementation:**
-- `/api/tokens/purchase` - Create checkout session
-- `/api/tokens/webhook` - Handle Lemon Squeezy webhook
-- TokenStoreDialog - Update with real pricing
-- Transaction logging (already in DB)
+### Implementation Tasks
+- [ ] Create `/api/tokens/purchase` endpoint
+- [ ] Create `/api/tokens/webhook` endpoint
+- [ ] Update TokenStoreDialog with real pricing
+- [ ] Add transaction logging
+- [ ] Test webhook integration
+- [ ] Add purchase history UI
 
 **Docs:** TODO - Need to create `/docs/PAYMENT_SYSTEM.md`
 **Estimate:** 10-12 hours
@@ -89,7 +69,22 @@
 
 ---
 
-### 3. Themes System (Medium Priority)
+## 📋 Backlog (Prioritized)
+
+### 1. Simplify Edit Modal/Dialog (Low Priority)
+**Why:** Current edit modal on base route is cramped
+**What:** Simplify quick-edit dialog or redirect to Edit Route
+
+**Options:**
+- Option A: Simplify modal to edit only title/type
+- Option B: Remove modal, always use Edit Route
+- Option C: Keep as-is (works, just cramped)
+
+**Decision:** Table for now - Edit Route is the primary editing experience
+
+---
+
+### 2. Themes System (Medium Priority)
 **Why:** Visual variety, monetization opportunity
 **What:** Multiple themes per preset
 
@@ -114,11 +109,11 @@
 
 **Docs:** TODO
 **Estimate:** 12-15 hours
-**Dependencies:** Deck Presets complete
+**Dependencies:** None (Presets already complete)
 
 ---
 
-### 4. Pro Printing Export (Low Priority)
+### 3. Pro Printing Export (Low Priority)
 **Why:** Print services like Ludocards need specific format
 **What:** Export print-ready PDFs or SVGs
 
@@ -134,7 +129,7 @@
 
 ---
 
-### 5. Community Features (Future)
+### 4. Community Features (Future)
 **Why:** User engagement and growth
 **What:** Social features around decks
 
@@ -154,9 +149,9 @@
 
 ### By End of January
 - ✅ Deck Likes (Done!)
-- [ ] Deck Presets (In progress)
-- [ ] Edit Mode Route
-- [ ] Payment System (Lemon Squeezy)
+- ✅ Edit Mode Route (Done!)
+- ✅ Deck Presets (Done!)
+- [ ] Payment System (Lemon Squeezy) - **CURRENT FOCUS**
 
 ### By End of February
 - [ ] Themes System
@@ -340,5 +335,5 @@
 
 ---
 
-Last Updated: 2025-12-08
-Next Review: 2025-12-15
+Last Updated: 2025-12-10
+Next Review: 2025-12-17
