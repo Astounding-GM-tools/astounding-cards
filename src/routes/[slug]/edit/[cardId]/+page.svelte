@@ -25,17 +25,15 @@
 
 	import { ImageUrlManager } from '$lib/utils/image-handler.js';
 	import { safeDeepClone } from '$lib/utils/clone-utils.js';
-	import {
-		createDragState,
-		createDragHandlers,
-		DRAG_CLASSES
-	} from '$lib/utils/drag-drop.svelte.js';
 	import { hasCardChanges, formDataToCardUpdate, type CardFormData } from '$lib/next/utils/cardChangeDetection.js';
 	import { createDebounce } from '$lib/next/utils/debounce.svelte.js';
+	import { computeImageDisplayInfo, getFilenameFromUrl, type ImageDisplayInfo } from '$lib/next/utils/imageDisplayInfo.js';
 
 	import { ArrowLeft, X, Save, Check, AlertCircle, Trash2 } from 'lucide-svelte';
 	import { getPresetCapabilities } from '$lib/next/utils/presetCapabilities.js';
 	import CommunityImagesSection from './CommunityImagesSection.svelte';
+	import TraitsEditor from '$lib/next/components/editors/TraitsEditor.svelte';
+	import StatsEditor from '$lib/next/components/editors/StatsEditor.svelte';
 
 	// Get params from URL
 	let deckId = $derived($page.params.slug);
@@ -106,83 +104,18 @@
 			: null
 	);
 
-	// Use $state for image display info and update via $effect
-	let imageDisplayInfo = $state<{
-		filename: string;
-		source: string;
-		timestamp: Date | null;
-		status: string;
-		message: string | null;
-	}>({
-		filename: 'No image added',
-		source: '',
-		timestamp: null,
-		status: 'add-image',
-		message: 'Add an image to enhance your card! 📸'
-	});
-
-	// Update imageDisplayInfo whenever formData or card changes
-	$effect(() => {
-		// Read reactive values to establish dependencies
-		const formUrl = formData.imageUrl;
-		const formMeta = formData.imageMetadata;
-		const formBlob = formData.imageBlob;
-		const cardImageData = card?.image;
-		const cardImageBlob = card?.imageBlob;
-		const cardMetadata = card?.imageMetadata;
-
-		const hasCardImageData = !!(cardImageBlob || cardImageData);
-		const hasFormImageData = !!(formBlob || formUrl);
-
-		const hasImageChanges =
-			isFormInitialized &&
-			(formBlob !== cardImageBlob ||
-				formUrl !== cardImageData ||
-				JSON.stringify(formMeta) !== JSON.stringify(cardMetadata));
-
-		if (!hasCardImageData && !hasFormImageData) {
-			imageDisplayInfo = {
-				filename: 'No image added',
-				source: '',
-				timestamp: null,
-				status: 'add-image',
-				message: 'Add an image to enhance your card! 📸'
-			};
-			return;
-		}
-
-		let filename = '';
-		let source = '';
-		let timestamp = null;
-		let status = 'ok'; // Always 'ok' since auto-save is fast (< 1 second)
-
-		const imageMetadata = hasImageChanges ? formMeta : cardMetadata;
-		const imageUrl = hasImageChanges ? formUrl : cardImageData;
-		const imageBlob = hasImageChanges ? formBlob : cardImageBlob;
-
-		if (imageMetadata?.originalName) {
-			filename = imageMetadata.originalName;
-			source = imageMetadata.source === 'url' ? 'downloaded' : 'uploaded';
-			timestamp = new Date(imageMetadata.addedAt!);
-		} else if (imageUrl) {
-			const urlFilename = getFilenameFromUrl(imageUrl);
-			filename = urlFilename || imageUrl.substring(0, 40) + '...';
-			source = `Using: ${imageUrl}`;
-			timestamp = null;
-		} else if (imageBlob) {
-			filename = 'Uploaded file';
-			source = 'Using: local file';
-			timestamp = null;
-		}
-
-		imageDisplayInfo = {
-			filename,
-			source,
-			timestamp,
-			status,
-			message: null
-		};
-	});
+	// Compute image display info reactively
+	let imageDisplayInfo = $derived<ImageDisplayInfo>(
+		computeImageDisplayInfo({
+			formBlob: formData.imageBlob,
+			formUrl: formData.imageUrl,
+			formMetadata: formData.imageMetadata,
+			cardImageBlob: card?.imageBlob,
+			cardImageUrl: card?.image,
+			cardMetadata: card?.imageMetadata,
+			isFormInitialized
+		})
+	);
 
 	// Update form when card changes
 	$effect(() => {
@@ -321,94 +254,7 @@
 		}
 	}
 
-	// Helper functions for image info
-	function getImageDisplayInfo() {
-		const hasCardImageData = !!(card?.imageBlob || card?.image);
-		const hasFormImageData = !!(formData.imageBlob || formData.imageUrl);
 
-		const cardImageBlob = card?.imageBlob || null;
-		const cardImageUrl = card?.image || null;
-		const cardImageMetadata = card?.imageMetadata || null;
-
-		const hasImageChanges =
-			isFormInitialized &&
-			(formData.imageBlob !== cardImageBlob ||
-				formData.imageUrl !== cardImageUrl ||
-				JSON.stringify(formData.imageMetadata) !== JSON.stringify(cardImageMetadata));
-
-		if (!hasCardImageData && !hasFormImageData) {
-			return {
-				filename: 'No image added',
-				source: '',
-				timestamp: null,
-				status: 'add-image',
-				message: 'Add an image to enhance your card! 📸'
-			};
-		}
-
-		let filename = '';
-		let source = '';
-		let timestamp = null;
-		let status = 'ok'; // Always 'ok' since auto-save is fast (< 1 second)
-
-		const imageMetadata = hasImageChanges ? formData.imageMetadata : card?.imageMetadata;
-		const imageUrl = hasImageChanges ? formData.imageUrl : card?.image;
-		const imageBlob = hasImageChanges ? formData.imageBlob : card?.imageBlob;
-
-		if (imageMetadata?.originalName) {
-			filename = imageMetadata.originalName;
-			source = imageMetadata.source === 'url' ? 'downloaded' : 'uploaded';
-			timestamp = new Date(imageMetadata.addedAt!);
-		} else if (imageUrl) {
-			const urlFilename = getFilenameFromUrl(imageUrl);
-			filename = urlFilename || imageUrl.substring(0, 40) + '...';
-			source = `Using: ${imageUrl}`;
-			timestamp = null;
-		} else if (imageBlob) {
-			filename = 'Uploaded file';
-			source = 'Using: local file';
-			timestamp = null;
-		}
-
-		return {
-			filename,
-			source,
-			timestamp,
-			status,
-			message: null
-		};
-	}
-
-	function getFilenameFromUrl(url?: string | null): string | null {
-		if (!url) return null;
-		try {
-			const urlObj = new URL(url);
-			const filename = urlObj.pathname.split('/').pop() || '';
-			return filename.includes('.') ? filename : null;
-		} catch {
-			return null;
-		}
-	}
-
-	// Drag and drop for stats
-	const statsDrag = createDragState<Stat>();
-	const statsHandlers = createDragHandlers(
-		statsDrag,
-		(newStats) => {
-			formData.stats = [...newStats];
-		},
-		() => formData.stats
-	);
-
-	// Drag and drop for traits
-	const traitsDrag = createDragState<Trait>();
-	const traitsHandlers = createDragHandlers(
-		traitsDrag,
-		(newTraits) => {
-			formData.traits = [...newTraits];
-		},
-		() => formData.traits
-	);
 
 	// Open AI Image Generation Dialog
 	function openImageGenerationDialog() {
@@ -554,99 +400,12 @@
 
 						<!-- Traits Section (if preset supports) -->
 						{#if capabilities.supportsTraits}
-							<fieldset class="form-fieldset" aria-labelledby="traits-legend-top">
-								<legend id="traits-legend-top">Traits</legend>
-								<div role="list" aria-label="Reorderable list of traits">
-									{#each formData.traits as trait, index}
-										<div
-											class="inline-attribute-editor {DRAG_CLASSES.draggable}"
-											draggable="true"
-											role="listitem"
-											aria-label="Trait: {trait.title || 'Untitled'} - Drag to reorder"
-											ondragstart={(e) => traitsHandlers.handleDragStart(e, index)}
-											ondragover={(e) => {
-												traitsHandlers.handleDragOver(e);
-												e.currentTarget.classList.add('drag-over');
-											}}
-											ondragleave={(e) => {
-												e.currentTarget.classList.remove('drag-over');
-											}}
-											ondrop={(e) => traitsHandlers.handleDrop(e, index)}
-											ondragend={traitsHandlers.handleDragEnd}
-											data-index={index}
-										>
-											<div class={DRAG_CLASSES.handle} title="Drag to reorder">⋮⋮</div>
-
-											<div class="attribute-content">
-												<div class="trait-compact-row">
-													<BinaryToggle
-														checked={trait.isPublic}
-														onToggle={(isPublic) => {
-															trait.isPublic = isPublic;
-														}}
-														trueLabel="◉ Public"
-														falseLabel="○ Secret"
-														size="sm"
-														name={`trait-public-${index}`}
-													/>
-													<input
-														type="text"
-														bind:value={trait.title}
-														placeholder="Trait title"
-														class="title-input"
-													/>
-													<button
-														class="delete-btn"
-														onclick={() => {
-															const newTraits = [...formData.traits];
-															newTraits.splice(index, 1);
-															formData.traits = newTraits;
-														}}
-													>
-														🗑️
-													</button>
-												</div>
-
-												<div class="description-row">
-													<textarea
-														bind:value={trait.description}
-														placeholder="Description"
-														class="description-input trait-description"
-														rows="1"
-														required
-													></textarea>
-												</div>
-											</div>
-										</div>
-									{/each}
-
-									<div
-										class="drop-zone-end"
-										role="region"
-										aria-label="Drop zone for traits"
-										ondragover={(e) => {
-											traitsHandlers.handleDragOver(e);
-											e.currentTarget.classList.add('drag-over');
-										}}
-										ondragleave={(e) => {
-											e.currentTarget.classList.remove('drag-over');
-										}}
-										ondrop={(e) => traitsHandlers.handleDrop(e, formData.traits.length)}
-									></div>
-								</div>
-
-								<button
-									class="add-attribute-btn"
-									onclick={() => {
-										formData.traits = [
-											...formData.traits,
-											{ title: '', isPublic: true, description: '' }
-										];
-									}}
-								>
-									+ Add Trait
-								</button>
-							</fieldset>
+							<TraitsEditor
+								traits={formData.traits}
+								onUpdate={(newTraits) => {
+									formData.traits = newTraits;
+								}}
+							/>
 						{/if}
 					</section>
 
@@ -716,126 +475,12 @@
 
 						<!-- Stats Section (only for presets that support stats) -->
 						{#if capabilities.supportsStats}
-							<fieldset class="form-fieldset" aria-labelledby="stats-legend-bottom">
-								<legend id="stats-legend-bottom">Stats</legend>
-								<div role="list" aria-label="Reorderable list of stats">
-									{#each formData.stats as stat, index}
-										<div
-											class="inline-attribute-editor {DRAG_CLASSES.draggable}"
-											draggable="true"
-											role="listitem"
-											aria-label="Stat: {stat.title || 'Untitled'} - Drag to reorder"
-											ondragstart={(e) => statsHandlers.handleDragStart(e, index)}
-											ondragover={(e) => {
-												statsHandlers.handleDragOver(e);
-												e.currentTarget.classList.add('drag-over');
-											}}
-											ondragleave={(e) => {
-												e.currentTarget.classList.remove('drag-over');
-											}}
-											ondrop={(e) => statsHandlers.handleDrop(e, index)}
-											ondragend={statsHandlers.handleDragEnd}
-											data-index={index}
-										>
-											<div class={DRAG_CLASSES.handle} title="Drag to reorder">⋮⋮</div>
-
-											<div class="attribute-content">
-												<div class="stat-compact-row">
-													<BinaryToggle
-														checked={stat.isPublic}
-														onToggle={(isPublic) => {
-															stat.isPublic = isPublic;
-															if (isPublic) {
-																stat.tracked = false;
-															}
-														}}
-														trueLabel="◉ Front"
-														falseLabel="○ Back"
-														size="sm"
-														name={`stat-public-${index}`}
-													/>
-													<input
-														type="text"
-														bind:value={stat.title}
-														placeholder="Stat title"
-														class="title-input"
-													/>
-													<input
-														type="number"
-														bind:value={stat.value}
-														placeholder="Value"
-														class="value-input"
-														min="0"
-														max="999"
-														oninput={(e: Event) => {
-															const num = parseInt((e.target as HTMLInputElement).value) || 0;
-															stat.value = Math.max(0, Math.min(999, num));
-														}}
-													/>
-													<BinaryToggle
-														checked={stat.tracked}
-														onToggle={(tracked) => {
-															stat.tracked = tracked;
-														}}
-														trueLabel="■ Track"
-														falseLabel="□ Track"
-														size="sm"
-														name={`stat-track-${index}`}
-														disabled={stat.isPublic}
-													/>
-													<button
-														class="delete-btn"
-														onclick={() => {
-															const newStats = [...formData.stats];
-															newStats.splice(index, 1);
-															formData.stats = newStats;
-														}}
-													>
-														🗑️
-													</button>
-												</div>
-
-												{#if !stat.isPublic}
-													<div class="description-row">
-														<textarea
-															bind:value={stat.description}
-															placeholder="Description (private stats only)"
-															class="description-input stat-description"
-															rows="2"
-														></textarea>
-													</div>
-												{/if}
-											</div>
-										</div>
-									{/each}
-
-									<div
-										class="drop-zone-end"
-										role="region"
-										aria-label="Drop zone for stats"
-										ondragover={(e) => {
-											statsHandlers.handleDragOver(e);
-											e.currentTarget.classList.add('drag-over');
-										}}
-										ondragleave={(e) => {
-											e.currentTarget.classList.remove('drag-over');
-										}}
-										ondrop={(e) => statsHandlers.handleDrop(e, formData.stats.length)}
-									></div>
-								</div>
-
-								<button
-									class="add-attribute-btn"
-									onclick={() => {
-										formData.stats = [
-											...formData.stats,
-											{ title: '', isPublic: true, value: 0, tracked: false, description: '' }
-										];
-									}}
-								>
-									+ Add Stat
-								</button>
-							</fieldset>
+							<StatsEditor
+								stats={formData.stats}
+								onUpdate={(newStats) => {
+									formData.stats = newStats;
+								}}
+							/>
 						{/if}
 					</section>
 
