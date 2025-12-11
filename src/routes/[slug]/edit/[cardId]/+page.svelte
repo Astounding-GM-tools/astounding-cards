@@ -282,6 +282,20 @@
 	function handleCommunityImageSelected(imageUrl: string, imageId: string) {
 		handleImageChange(null, imageUrl, `community-${imageId}.png`);
 	}
+
+	// Mobile navigation: scroll to section
+	function scrollToSection(sectionId: string) {
+		const element = document.getElementById(sectionId);
+		if (element) {
+			element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+		}
+	}
+
+	// Toggle card sidebar visibility (mobile only)
+	let showCardSidebar = $state(false);
+	function toggleCardSidebar() {
+		showCardSidebar = !showCardSidebar;
+	}
 </script>
 
 <svelte:window onkeydown={handleKeydown} />
@@ -294,8 +308,52 @@
 
 {#if card && currentDeck}
 	<div class="edit-mode">
-		<!-- Header -->
-		<header class="edit-header">
+		<!-- Mobile Header (hidden on desktop) -->
+		<header class="mobile-header">
+			<nav class="mobile-nav">
+				<button class="nav-button exit-button" onclick={exitEditMode}>
+					<ArrowLeft size={16} />
+					<span>Exit</span>
+				</button>
+				<button
+					class="nav-button cards-button"
+					class:active={showCardSidebar}
+					onclick={toggleCardSidebar}
+				>
+					Cards
+				</button>
+				<button class="nav-button" onclick={() => scrollToSection('text-fields')}>Text</button>
+				<button class="nav-button" onclick={() => scrollToSection('image-settings')}>Image</button>
+				<button class="nav-button" onclick={() => scrollToSection('preview-front')}>Preview</button>
+			</nav>
+
+			<!-- Collapsible Card Sidebar (mobile only) -->
+			{#if showCardSidebar}
+				<div class="mobile-card-sidebar">
+					{#each allCards as sidebarCard}
+						<button
+							class="card-thumbnail-small"
+							class:active={sidebarCard.id === cardId}
+							onclick={() => {
+								navigateToCard(sidebarCard.id);
+								showCardSidebar = false;
+							}}
+						>
+							<CardComponent preview>
+								{#if preset === 'minimal'}
+									<CardPresetMinimal card={sidebarCard} showBack={false} />
+								{:else}
+									<CardFrontContent card={sidebarCard} />
+								{/if}
+							</CardComponent>
+						</button>
+					{/each}
+				</div>
+			{/if}
+		</header>
+
+		<!-- Desktop Header (hidden on mobile) -->
+		<header class="desktop-header">
 			<button class="exit-button" onclick={exitEditMode}>
 				<ArrowLeft size={20} />
 				<span>Exit Edit Mode</span>
@@ -328,163 +386,140 @@
 			</button>
 		</header>
 
-		<div class="edit-layout">
-			<!-- Card List Sidebar -->
-			<aside class="card-sidebar">
-				<div class="card-list">
-					{#each allCards as sidebarCard, index}
-						<button
-							class="card-thumbnail"
-							class:active={sidebarCard.id === cardId}
-							onclick={() => navigateToCard(sidebarCard.id)}
-							title={sidebarCard.title || 'Untitled'}
-						>
-							<CardComponent preview>
-								{#if preset === 'minimal'}
-									<CardPresetMinimal card={sidebarCard} showBack={false} />
-								{:else}
-									<CardFrontContent card={sidebarCard} />
-								{/if}
-							</CardComponent>
-						</button>
-					{/each}
+		<!-- Main Content (flat structure, positioned by CSS Grid on desktop) -->
+		<main class="editor-main">
+			<!-- Text Fields (Title & Subtitle) -->
+			<section class="text-fields" id="text-fields">
+				<div class="field-row">
+					<label for="card-title">Title</label>
+					<input
+						id="card-title"
+						type="text"
+						bind:value={formData.title}
+						placeholder="Enter card title"
+						maxlength="100"
+						class="field-input"
+					/>
 				</div>
-			</aside>
 
-			<!-- Main Editor Area -->
-			<main class="editor-main">
-				<div class="editor-content-grid">
-					<!-- LEFT-TOP: Front Card Fields (Title, Subtitle, Traits) -->
-					<section class="left-top">
-						<!-- Title Field -->
-						<div class="field-row">
-							<label for="card-title">Title</label>
-							<input
-								id="card-title"
-								type="text"
-								bind:value={formData.title}
-								placeholder="Enter card title"
-								maxlength="100"
-								class="field-input"
-							/>
-						</div>
+				<div class="field-row">
+					<label for="card-subtitle">Subtitle</label>
+					<input
+						id="card-subtitle"
+						type="text"
+						bind:value={formData.subtitle}
+						placeholder="Enter subtitle (optional)"
+						maxlength="50"
+						class="field-input"
+					/>
+				</div>
+			</section>
 
-						<!-- Subtitle Field -->
-						<div class="field-row">
-							<label for="card-subtitle">Subtitle</label>
-							<input
-								id="card-subtitle"
-								type="text"
-								bind:value={formData.subtitle}
-								placeholder="Enter subtitle (optional)"
-								maxlength="50"
-								class="field-input"
-							/>
-						</div>
+			<!-- Traits Section -->
+			{#if capabilities.supportsTraits}
+				<section class="traits-section" id="traits">
+					<TraitsEditor
+						traits={formData.traits}
+						onUpdate={(newTraits) => {
+							formData.traits = newTraits;
+						}}
+					/>
+				</section>
+			{/if}
 
-						<!-- Traits Section (if preset supports) -->
-						{#if capabilities.supportsTraits}
-							<TraitsEditor
-								traits={formData.traits}
-								onUpdate={(newTraits) => {
-									formData.traits = newTraits;
-								}}
-							/>
-						{/if}
-					</section>
+			<!-- Description Field -->
+			<section class="description-field" id="description">
+				<div class="field-row field-row-tall">
+					<label for="card-description">Description</label>
+					<textarea
+						id="card-description"
+						bind:value={formData.description}
+						placeholder="Enter card description"
+						rows="6"
+						maxlength="500"
+						class="field-textarea"
+					></textarea>
+				</div>
+			</section>
 
-					<!-- CENTER-TOP: Front Card Preview -->
-					<section class="center-top">
-						{#if previewCard}
-							<div class="card-preview">
-								<CardComponent preview>
-									{#if preset === 'minimal'}
-										<CardPresetMinimal card={previewCard} showBack={false} />
-									{:else}
-										<CardFrontContent card={previewCard} />
-									{/if}
-								</CardComponent>
-							</div>
-						{/if}
-					</section>
+			<!-- Stats Section -->
+			{#if capabilities.supportsStats}
+				<section class="stats-section" id="stats">
+					<StatsEditor
+						stats={formData.stats}
+						onUpdate={(newStats) => {
+							formData.stats = newStats;
+						}}
+					/>
+				</section>
+			{/if}
 
-					<!-- RIGHT: Image Tools (spans both rows) -->
-					<section class="right-column">
-						<fieldset class="form-fieldset">
-							<legend>Image</legend>
-							<InlineImageSelector
-								cardSize="tarot"
-								card={previewCard as Card}
-								currentStyle={currentDeck?.meta.imageStyle}
-								hasExistingImage={hasImage}
-								existingImageInfo={imageDisplayInfo}
-								onImageChange={handleImageChange}
-								onRemoveImage={removeImage}
-							/>
+			<!-- Front Card Preview -->
+			<section class="preview-front" id="preview-front">
+				{#if previewCard}
+					<div class="card-preview">
+						<CardComponent preview>
+							{#if preset === 'minimal'}
+								<CardPresetMinimal card={previewCard} showBack={false} />
+							{:else}
+								<CardFrontContent card={previewCard} />
+							{/if}
+						</CardComponent>
+					</div>
+				{/if}
+			</section>
 
-							<!-- AI Image Generation -->
-							<div class="ai-image-generation">
-								<AuthGatedCtaButton
-									config={IMAGE_GENERATION_CTA}
-									onAuthenticatedClick={openImageGenerationDialog}
-								/>
-							</div>
-						</fieldset>
+			<!-- Back Card Preview -->
+			<section class="preview-back" id="preview-back">
+				{#if previewCard && showBackInPreview && capabilities.hasBackCard}
+					<div class="card-preview">
+						<CardComponent preview>
+							{#if preset === 'minimal'}
+								<CardPresetMinimal card={previewCard} showBack={true} />
+							{:else}
+								<CardBackContent card={previewCard} />
+							{/if}
+						</CardComponent>
+					</div>
+				{/if}
+			</section>
 
-						<!-- Community Images Section -->
-						<CommunityImagesSection
-							{card}
-							{cardId}
-							{previewCard}
-							deckDescription={currentDeck?.meta?.description}
-							{preset}
-							onImageSelected={handleCommunityImageSelected}
+			<!-- Image Settings -->
+			<section class="image-settings" id="image-settings">
+				<fieldset class="form-fieldset">
+					<legend>Image</legend>
+					<InlineImageSelector
+						cardSize="tarot"
+						card={previewCard as Card}
+						currentStyle={currentDeck?.meta.imageStyle}
+						hasExistingImage={hasImage}
+						existingImageInfo={imageDisplayInfo}
+						onImageChange={handleImageChange}
+						onRemoveImage={removeImage}
+					/>
+
+					<!-- AI Image Generation -->
+					<div class="ai-image-generation">
+						<AuthGatedCtaButton
+							config={IMAGE_GENERATION_CTA}
+							onAuthenticatedClick={openImageGenerationDialog}
 						/>
-					</section>
+					</div>
+				</fieldset>
+			</section>
 
-					<!-- LEFT-BOTTOM: Back Card Fields (Description, Stats) -->
-					<section class="left-bottom">
-						<!-- Description Field -->
-						<div class="field-row field-row-tall">
-							<label for="card-description">Description</label>
-							<textarea
-								id="card-description"
-								bind:value={formData.description}
-								placeholder="Enter card description"
-								rows="6"
-								maxlength="500"
-								class="field-textarea"
-							></textarea>
-						</div>
-
-						<!-- Stats Section (only for presets that support stats) -->
-						{#if capabilities.supportsStats}
-							<StatsEditor
-								stats={formData.stats}
-								onUpdate={(newStats) => {
-									formData.stats = newStats;
-								}}
-							/>
-						{/if}
-					</section>
-
-					<!-- CENTER-BOTTOM: Back Card Preview -->
-					<section class="center-bottom">
-						{#if previewCard && showBackInPreview && capabilities.hasBackCard}
-							<div class="card-preview">
-								<CardComponent preview>
-									{#if preset === 'minimal'}
-										<CardPresetMinimal card={previewCard} showBack={true} />
-									{:else}
-										<CardBackContent card={previewCard} />
-									{/if}
-								</CardComponent>
-							</div>
-						{/if}
-					</section>
-				</div>
-			</main>
-		</div>
+			<!-- Community Images Gallery -->
+			<section class="image-gallery" id="image-gallery">
+				<CommunityImagesSection
+					{card}
+					{cardId}
+					{previewCard}
+					deckDescription={currentDeck?.meta?.description}
+					{preset}
+					onImageSelected={handleCommunityImageSelected}
+				/>
+			</section>
+		</main>
 	</div>
 {:else}
 	<div class="error-state">
@@ -497,6 +532,12 @@
 <Dialog />
 
 <style>
+	*,
+	*::before,
+	*::after {
+		box-sizing: border-box;
+	}
+
 	.edit-mode {
 		display: flex;
 		flex-direction: column;
@@ -504,21 +545,25 @@
 		background: var(--ui-bg, #f8fafc);
 	}
 
-	/* Header */
-	.edit-header {
-		display: flex;
-		align-items: center;
-		gap: 1rem;
-		padding: 1rem 1.5rem;
+	/* ===== MOBILE HEADER (hidden on desktop) ===== */
+	.mobile-header {
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
 		background: white;
 		border-bottom: 1px solid var(--ui-border, #e2e8f0);
-		z-index: 10;
+		z-index: 100;
 	}
 
-	.exit-button {
+	.mobile-nav {
 		display: flex;
-		align-items: center;
 		gap: 0.5rem;
+		padding: 0.5rem;
+		overflow-x: auto;
+	}
+
+	.nav-button {
 		padding: 0.5rem 1rem;
 		border: 1px solid var(--ui-border, #e2e8f0);
 		border-radius: 0.375rem;
@@ -528,246 +573,86 @@
 		font-size: 0.875rem;
 		font-weight: 500;
 		cursor: pointer;
-		transition: all 0.15s ease;
-	}
-
-	.exit-button:hover {
-		background: var(--ui-bg-secondary, #f8fafc);
-		border-color: var(--ui-text, #1e293b);
-	}
-
-	.deck-title {
-		font-size: 1.25rem;
-		font-weight: 600;
-		color: var(--ui-text, #1e293b);
-		margin: 0;
-	}
-
-	.spacer {
-		flex: 1;
-	}
-
-	.header-status {
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-		padding: 0.5rem 0.75rem;
-		border-radius: 0.375rem;
-		font-size: 0.875rem;
-		font-weight: 500;
-		transition: all 0.15s ease;
-	}
-
-	.header-status :global(svg) {
-		flex-shrink: 0;
-	}
-
-	.header-status span {
 		white-space: nowrap;
-	}
-
-	.header-action-button {
+		transition: all 0.15s ease;
 		display: flex;
 		align-items: center;
-		gap: 0.5rem;
-		padding: 0.5rem 1rem;
-		border: 1px solid var(--ui-border, #e2e8f0);
-		border-radius: 0.375rem;
-		background: white;
-		color: var(--ui-text, #1e293b);
-		font-family: var(--font-body);
-		font-size: 0.875rem;
-		font-weight: 500;
-		cursor: pointer;
-		transition: all 0.15s ease;
+		gap: 0.25rem;
 	}
 
-	.header-action-button:hover:not(:disabled) {
+	.nav-button:hover {
 		background: var(--ui-bg-secondary, #f8fafc);
-		border-color: var(--ui-text, #1e293b);
 	}
 
-	.header-action-button.danger {
-		background: #dc2626;
+	.nav-button.active,
+	.nav-button.cards-button.active {
+		background: var(--primary, #3b82f6);
 		color: white;
-		border-color: #dc2626;
+		border-color: var(--primary, #3b82f6);
 	}
 
-	.header-action-button.danger:hover:not(:disabled) {
-		background: #b91c1c;
-	}
-
-	.header-action-button:disabled {
-		opacity: 0.5;
-		cursor: not-allowed;
-	}
-
-	/* Layout */
-	.edit-layout {
-		display: grid;
-		grid-template-columns: 200px 1fr;
-		flex: 1;
-		overflow: hidden;
-	}
-
-	/* Sidebar */
-	.card-sidebar {
-		background: white;
-		border-right: 1px solid var(--ui-border, #e2e8f0);
-		overflow-y: auto;
-		padding: 0.75rem;
-	}
-
-	.card-list {
+	.mobile-card-sidebar {
 		display: flex;
-		flex-direction: column;
 		gap: 0.5rem;
+		padding: 0.5rem;
+		overflow-x: auto;
+		background: var(--ui-bg-secondary, #f8fafc);
+		border-top: 1px solid var(--ui-border, #e2e8f0);
 	}
 
-	.card-thumbnail {
-		width: 100%;
+	.card-thumbnail-small {
+		flex-shrink: 0;
+		width: 80px;
 		padding: 0;
 		border: 2px solid var(--ui-border, #e2e8f0);
 		border-radius: 0.375rem;
 		background: white;
 		cursor: pointer;
-		transition: all 0.15s ease;
-		font-family: var(--font-body);
 		overflow: hidden;
-		text-align: initial;
 	}
 
-	.card-thumbnail:hover {
-		border-color: var(--ui-text, #1e293b);
-		transform: translateX(2px);
-		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-	}
-
-	.card-thumbnail.active {
+	.card-thumbnail-small.active {
 		border-color: var(--primary, #3b82f6);
 		box-shadow: 0 0 0 3px var(--primary-light, #eff6ff);
 	}
 
-	.card-thumbnail :global(.card) {
+	.card-thumbnail-small :global(.card) {
 		width: 100%;
 		border: none;
 		box-shadow: none;
-		border-radius: 0;
 	}
 
-	/* Main Editor */
+	/* ===== MAIN CONTENT (mobile: vertical scroll, desktop: grid) ===== */
 	.editor-main {
-		display: flex;
-		flex-direction: column;
-		overflow: hidden;
-	}
-
-	.editor-content-grid {
-		display: grid;
-		grid-template-columns: 1fr auto 1fr;
-		grid-template-rows: auto auto;
-		grid-template-areas:
-			'left-top center-top right'
-			'left-bottom center-bottom right';
-		gap: 2rem 2rem;
 		flex: 1;
-		overflow: hidden;
-		padding: 1.5rem;
-	}
-
-	/* Grid areas */
-	.left-top {
-		grid-area: left-top;
-		display: flex;
-		flex-direction: column;
-		gap: 0.75rem;
 		overflow-y: auto;
 		overflow-x: hidden;
-		padding-right: 0.5rem;
-		container-type: inline-size;
-		container-name: left-column;
+		padding: 1rem;
+		margin-top: 60px; /* Space for fixed mobile header */
 	}
 
-	.left-bottom {
-		grid-area: left-bottom;
-		display: flex;
-		flex-direction: column;
-		gap: 0.75rem;
-		overflow-y: auto;
-		overflow-x: hidden;
-		padding-right: 0.5rem;
-		container-type: inline-size;
-		container-name: left-column;
+	.editor-main > section {
+		background: white;
+		padding: 1rem;
+		margin-bottom: 1rem;
+		border-radius: 0.5rem;
+		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 	}
 
-	.center-top {
-		grid-area: center-top;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: flex-start;
-		padding: 0 1.5rem;
-		min-width: 360px;
-		max-width: 400px;
-	}
-
-	.center-bottom {
-		grid-area: center-bottom;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: flex-start;
-		padding: 0 1.5rem;
-		min-width: 360px;
-		max-width: 400px;
-	}
-
-	.right-column {
-		grid-area: right;
-		display: flex;
-		flex-direction: column;
-		gap: 1rem;
-		overflow-y: auto;
-		overflow-x: hidden;
-		padding-right: 0.5rem;
-	}
-
+	/* Form fields */
 	.field-row {
-		display: grid;
-		grid-template-columns: 100px 1fr;
-		gap: 0.75rem;
-		align-items: center;
-		margin-bottom: 0.5rem;
-	}
-
-	/* Stack fields vertically when container is narrow */
-	@container left-column (max-width: 400px) {
-		.field-row {
-			grid-template-columns: 1fr;
-			gap: 0.25rem;
-		}
-
-		.field-row label {
-			text-align: left;
-			padding-top: 0;
-			font-size: 0.75rem;
-			font-weight: 600;
-			text-transform: uppercase;
-			letter-spacing: 0.05em;
-			color: var(--ui-muted, #64748b);
-		}
-	}
-
-	.field-row-tall {
-		align-items: start;
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+		margin-bottom: 1rem;
 	}
 
 	.field-row label {
-		font-size: 0.875rem;
-		font-weight: 500;
-		color: var(--ui-text, #1e293b);
-		text-align: right;
-		padding-top: 0.5rem;
+		font-size: 0.75rem;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		color: var(--ui-muted, #64748b);
 	}
 
 	.field-input,
@@ -795,7 +680,6 @@
 		min-height: 120px;
 	}
 
-	/* Reuse all the form styles from CardEditDialog */
 	.form-fieldset {
 		border: 1px solid #ddd;
 		border-radius: 4px;
@@ -823,12 +707,11 @@
 	.card-preview {
 		width: 100%;
 		max-width: 360px;
+		margin: 0 auto;
 	}
 
-	/* Ensure cards maintain aspect ratio */
 	.card-preview :global(.card) {
 		width: 100%;
-		margin: 0 auto;
 		border: 1px solid #ddd;
 		background: white;
 		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -865,20 +748,190 @@
 		cursor: pointer;
 	}
 
-	/* Responsive */
-	@media (max-width: 1024px) {
-		.edit-layout {
-			grid-template-columns: 150px 1fr;
-		}
-	}
-
-	@media (max-width: 768px) {
-		.edit-layout {
-			grid-template-columns: 1fr;
-		}
-
-		.card-sidebar {
+	/* ===== DESKTOP LAYOUT (899px+) ===== */
+	@media screen and (min-width: 899px) {
+		/* Hide mobile header, show desktop header */
+		.mobile-header {
 			display: none;
+		}
+
+		.desktop-header {
+			display: flex;
+			align-items: center;
+			gap: 1rem;
+			padding: 1rem 1.5rem;
+			background: white;
+			border-bottom: 1px solid var(--ui-border, #e2e8f0);
+			z-index: 10;
+		}
+
+		.exit-button {
+			display: flex;
+			align-items: center;
+			gap: 0.5rem;
+			padding: 0.5rem 1rem;
+			border: 1px solid var(--ui-border, #e2e8f0);
+			border-radius: 0.375rem;
+			background: white;
+			color: var(--ui-text, #1e293b);
+			font-family: var(--font-body);
+			font-size: 0.875rem;
+			font-weight: 500;
+			cursor: pointer;
+			transition: all 0.15s ease;
+		}
+
+		.exit-button:hover {
+			background: var(--ui-bg-secondary, #f8fafc);
+			border-color: var(--ui-text, #1e293b);
+		}
+
+		.deck-title {
+			font-size: 1.25rem;
+			font-weight: 600;
+			color: var(--ui-text, #1e293b);
+			margin: 0;
+		}
+
+		.spacer {
+			flex: 1;
+		}
+
+		.header-status {
+			display: flex;
+			align-items: center;
+			gap: 0.5rem;
+			padding: 0.5rem 0.75rem;
+			border-radius: 0.375rem;
+			font-size: 0.875rem;
+			font-weight: 500;
+		}
+
+		.header-status :global(svg) {
+			flex-shrink: 0;
+		}
+
+		.header-status span {
+			white-space: nowrap;
+		}
+
+		.header-action-button {
+			display: flex;
+			align-items: center;
+			gap: 0.5rem;
+			padding: 0.5rem 1rem;
+			border: 1px solid var(--ui-border, #e2e8f0);
+			border-radius: 0.375rem;
+			background: white;
+			color: var(--ui-text, #1e293b);
+			font-family: var(--font-body);
+			font-size: 0.875rem;
+			font-weight: 500;
+			cursor: pointer;
+			transition: all 0.15s ease;
+		}
+
+		.header-action-button:hover:not(:disabled) {
+			background: var(--ui-bg-secondary, #f8fafc);
+			border-color: var(--ui-text, #1e293b);
+		}
+
+		.header-action-button.danger {
+			background: #dc2626;
+			color: white;
+			border-color: #dc2626;
+		}
+
+		.header-action-button.danger:hover:not(:disabled) {
+			background: #b91c1c;
+		}
+
+		.header-action-button:disabled {
+			opacity: 0.5;
+			cursor: not-allowed;
+		}
+
+		/* Grid layout on desktop */
+		.editor-main {
+			display: grid;
+			grid-template-columns: clamp(300px, 30cqw, 500px) clamp(300px, 30cqw, 300px) clamp(300px, 30cqw, 300px);
+			grid-template-rows: auto auto auto auto auto;
+			grid-auto-flow: column;
+			min-width: 900px;
+			margin-top: 0;
+			padding: 1.5rem;
+			gap: 1.5rem;
+			grid-template-areas:
+				'text-fields    preview-front   image-settings'
+				'traits-section preview-front   image-settings'
+				'traits-section preview-front   image-gallery'
+				'description    preview-back    image-gallery'
+				'stats-section  preview-back    image-gallery';
+		}
+
+		.text-fields {
+			grid-area: text-fields;
+		}
+
+		.traits-section {
+			grid-area: traits-section;
+		}
+
+		.description-field {
+			grid-area: description;
+		}
+
+		.stats-section {
+			grid-area: stats-section;
+		}
+
+		.preview-front {
+			grid-area: preview-front;
+			grid-row: span 3;
+		}
+
+		.preview-back {
+			grid-area: preview-back;
+			grid-row: span 2;
+		}
+
+		.image-settings {
+			grid-area: image-settings;
+			grid-row: span 2;
+		}
+
+		.image-gallery {
+			grid-area: image-gallery;
+			grid-row: span 3;
+		}
+
+		/* Remove mobile styling on desktop */
+		.editor-main > section {
+			margin-bottom: 0;
+		}
+
+		.field-row {
+			flex-direction: row;
+			align-items: center;
+			gap: 0.75rem;
+		}
+
+		.field-row label {
+			min-width: 100px;
+			text-align: right;
+			font-size: 0.875rem;
+			font-weight: 500;
+			text-transform: none;
+			letter-spacing: normal;
+			color: var(--ui-text, #1e293b);
+		}
+
+		.field-row-tall {
+			align-items: flex-start;
+		}
+
+		.field-row-tall label {
+			padding-top: 0.5rem;
 		}
 	}
 </style>
