@@ -1,39 +1,36 @@
 <script lang="ts">
 	import type { Card } from '$lib/next/types/card.js';
 	import type { Stat, Trait } from '$lib/next/types/card.js';
-	import { nextDeckStore } from '$lib/next/stores/deckStore.svelte.js';
-	import { goto } from '$app/navigation';
-	import { page } from '$app/stores';
-	import { onMount } from 'svelte';
+	import type { ImageDisplayInfo } from '$lib/next/utils/imageDisplayInfo.js';
+	import type { CardFormData } from '$lib/next/utils/cardChangeDetection.js';
 
-	// Import actual card components
+	import { onMount } from 'svelte';
+	import { page } from '$app/stores';
+	import { goto } from '$app/navigation';
+	import { ArrowLeft, Save, Check, CircleAlert, Trash2 } from 'lucide-svelte';
+
+	import Dialog from '$lib/next/components/dialog/Dialog.svelte';
+	import StatsEditor from '$lib/next/components/editors/StatsEditor.svelte';
+	import TraitsEditor from '$lib/next/components/editors/TraitsEditor.svelte';
 	import CardComponent from '$lib/next/components/card/Card.svelte';
 	import CardFrontContent from '$lib/next/components/card/CardFrontContent.svelte';
 	import CardBackContent from '$lib/next/components/card/CardBackContent.svelte';
 	import CardPresetMinimal from '$lib/next/components/card/CardPresetMinimal.svelte';
 	import InlineImageSelector from '$lib/next/components/image/InlineImageSelector.svelte';
-	import BinaryToggle from '$lib/next/components/ui/BinaryToggle.svelte';
 	import AuthGatedCtaButton from '$lib/next/components/cta/AuthGatedCtaButton.svelte';
+	import CommunityImagesSection from '$lib/next/components/image/CommunityImagesSection.svelte';
 	import AiImageGenerationDialog from '$lib/next/components/dialogs/AiImageGenerationDialog.svelte';
-	import Dialog from '$lib/next/components/dialog/Dialog.svelte';
-	import { IMAGE_GENERATION_CTA } from '$lib/config/cta-configs.js';
+
 	import { toasts } from '$lib/stores/toast.js';
 	import { dialogStore } from '$lib/next/components/dialog/dialogStore.svelte.js';
-	import { authenticatedFetch } from '$lib/utils/authenticated-fetch.js';
-	import { getOptimizedImageUrl } from '$lib/utils/image-optimization.js';
-	import { isAuthenticated } from '$lib/next/stores/auth.js';
-
-	import { ImageUrlManager } from '$lib/utils/image-handler.js';
 	import { safeDeepClone } from '$lib/utils/clone-utils.js';
-	import { hasCardChanges, formDataToCardUpdate, type CardFormData } from '$lib/next/utils/cardChangeDetection.js';
+	import { nextDeckStore } from '$lib/next/stores/deckStore.svelte.js';
+	import { ImageUrlManager } from '$lib/utils/image-handler.js';
 	import { createDebounce } from '$lib/next/utils/debounce.svelte.js';
-	import { computeImageDisplayInfo, getFilenameFromUrl, type ImageDisplayInfo } from '$lib/next/utils/imageDisplayInfo.js';
-
-	import { ArrowLeft, X, Save, Check, AlertCircle, Trash2 } from 'lucide-svelte';
+	import { IMAGE_GENERATION_CTA } from '$lib/config/cta-configs.js';
 	import { getPresetCapabilities } from '$lib/next/utils/presetCapabilities.js';
-	import CommunityImagesSection from './CommunityImagesSection.svelte';
-	import TraitsEditor from '$lib/next/components/editors/TraitsEditor.svelte';
-	import StatsEditor from '$lib/next/components/editors/StatsEditor.svelte';
+	import { hasCardChanges, formDataToCardUpdate } from '$lib/next/utils/cardChangeDetection.js';
+	import { computeImageDisplayInfo, getFilenameFromUrl } from '$lib/next/utils/imageDisplayInfo.js';
 
 	// Get params from URL
 	let deckId = $derived($page.params.slug);
@@ -239,23 +236,6 @@
 		}
 	}
 
-	function resetForm() {
-		if (card) {
-			formData.title = card.title;
-			formData.subtitle = card.subtitle;
-			formData.description = card.description;
-			formData.stats = safeDeepClone(card.stats || []);
-			formData.traits = safeDeepClone(card.traits || []);
-			formData.imageBlob = card.imageBlob || null;
-			formData.imageUrl = card.image || null;
-			formData.imageMetadata = card.imageMetadata ? safeDeepClone(card.imageMetadata) : null;
-
-			imageUrlManager.updateBlob(card.imageBlob);
-		}
-	}
-
-
-
 	// Open AI Image Generation Dialog
 	function openImageGenerationDialog() {
 		if (!card) return;
@@ -329,7 +309,7 @@
 					<Save size={16} />
 					<span>{nextDeckStore.loadingMessage || 'Saving...'}</span>
 				{:else if hasChanges}
-					<AlertCircle size={16} />
+					<CircleAlert size={16} />
 					<span>Unsaved changes</span>
 				{:else}
 					<Check size={16} />
@@ -338,7 +318,11 @@
 			</div>
 
 			<!-- Actions -->
-			<button class="header-action-button danger" onclick={deleteCard} disabled={nextDeckStore.isLoading}>
+			<button
+				class="header-action-button danger"
+				onclick={deleteCard}
+				disabled={nextDeckStore.isLoading}
+			>
 				<Trash2 size={16} />
 				<span>Delete Card</span>
 			</button>
@@ -582,22 +566,6 @@
 		white-space: nowrap;
 	}
 
-	/* Status colors */
-	.header-status:has(svg:first-child[data-lucide='save']) {
-		color: #ff6b00;
-		background: #fff4ed;
-	}
-
-	.header-status:has(svg:first-child[data-lucide='alert-circle']) {
-		color: #e67e22;
-		background: #fef3e9;
-	}
-
-	.header-status:has(svg:first-child[data-lucide='check']) {
-		color: #27ae60;
-		background: #edf7f0;
-	}
-
 	.header-action-button {
 		display: flex;
 		align-items: center;
@@ -764,31 +732,6 @@
 		padding-right: 0.5rem;
 	}
 
-	/* Left column field layout */
-	.section-header {
-		margin-top: 1rem;
-		margin-bottom: 0.5rem;
-	}
-
-	.section-header:first-child {
-		margin-top: 0;
-	}
-
-	.section-header h3 {
-		font-size: 0.75rem;
-		font-weight: 700;
-		letter-spacing: 0.1em;
-		color: var(--ui-muted, #64748b);
-		margin: 0;
-		text-transform: uppercase;
-	}
-
-	.section-divider {
-		height: 1px;
-		background: var(--ui-border, #e2e8f0);
-		margin: 1.5rem 0;
-	}
-
 	.field-row {
 		display: grid;
 		grid-template-columns: 100px 1fr;
@@ -871,228 +814,10 @@
 		padding: 0 0.5rem;
 	}
 
-	.form-fieldset input,
-	.form-fieldset textarea {
-		width: 100%;
-		padding: 0.4rem 0.5rem;
-		border: 1px solid #ddd;
-		border-radius: 3px;
-		font-family: var(--font-body);
-		font-size: 0.9rem;
-		resize: vertical;
-	}
-
-	.form-fieldset input:focus,
-	.form-fieldset textarea:focus {
-		outline: none;
-		border-color: var(--accent);
-		box-shadow: 0 0 0 2px rgba(74, 85, 104, 0.1);
-	}
-
-	/* Field-specific styles */
-	.field-title {
-		font-size: 1.1rem;
-		font-weight: 600;
-	}
-
-	.field-subtitle {
-		font-size: 0.95rem;
-	}
-
-	.field-description {
-		font-size: 0.9rem;
-		line-height: 1.5;
-		min-height: 120px;
-	}
-
-	.placeholder-text {
-		color: var(--ui-muted, #64748b);
-		font-size: 0.875rem;
-		text-align: center;
-		padding: 2rem 1rem;
-		font-style: italic;
-	}
-
-	/* All the inline attribute styles from dialog... */
-	.inline-attribute-editor {
-		border: 1px solid #eee;
-		border-radius: 4px;
-		padding: 0.375rem;
-		background: #fafafa;
-		margin-bottom: 0.375rem;
-		display: flex;
-		gap: 0.375rem;
-		align-items: flex-start;
-		transition: all 0.2s ease;
-		position: relative;
-	}
-
-	.inline-attribute-editor:hover {
-		border-color: #ddd;
-		background: #f5f5f5;
-	}
-
-	.inline-attribute-editor.drag-over::before {
-		content: '';
-		position: absolute;
-		top: -2px;
-		left: 0;
-		right: 0;
-		height: 3px;
-		background: var(--accent, #4a90e2);
-		border-radius: 1.5px;
-		z-index: 10;
-	}
-
-	.drop-zone-end {
-		height: 4px;
-		margin: 0.375rem 0;
-		background: transparent;
-		border-radius: 2px;
-		transition: background-color 0.2s ease;
-	}
-
-	.drop-zone-end.drag-over {
-		background: var(--accent, #4a90e2);
-	}
-
-	.drag-handle {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: 20px;
-		height: 100%;
-		color: #999;
-		cursor: grab;
-		font-size: 14px;
-		line-height: 1;
-		user-select: none;
-		flex-shrink: 0;
-		padding: 0.25rem 0;
-	}
-
-	.drag-handle:hover {
-		color: var(--accent, #4a90e2);
-	}
-
-	.drag-handle:active {
-		cursor: grabbing;
-	}
-
-	.attribute-content {
-		flex: 1;
-		display: flex;
-		flex-direction: column;
-		gap: 0.15rem;
-	}
-
-	.stat-compact-row,
-	.trait-compact-row {
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-		margin-bottom: 0.15rem;
-	}
-
-	.stat-compact-row .title-input,
-	.trait-compact-row .title-input {
-		flex: 1;
-		min-width: 120px;
-	}
-
-	.description-row {
-		width: 100%;
-		margin-bottom: 0.15rem;
-	}
-
-	.description-row .description-input {
-		width: 100%;
-	}
-
-	.title-input {
-		padding: 0.375rem 0.5rem;
-		border: 1px solid #ddd;
-		border-radius: 3px;
-		font-family: var(--font-body);
-		font-size: 0.85rem;
-		min-width: 0;
-	}
-
-	.value-input {
-		width: 80px;
-		padding: 0.375rem 0.5rem;
-		border: 1px solid #ddd;
-		border-radius: 3px;
-		font-family: var(--font-body);
-		font-size: 0.85rem;
-		text-align: center;
-	}
-
-	.description-input {
-		padding: 0.375rem 0.5rem;
-		border: 1px solid #ddd;
-		border-radius: 3px;
-		font-family: var(--font-body);
-		font-size: 0.85rem;
-		resize: vertical;
-		min-height: 32px;
-	}
-
-	.description-input.stat-description {
-		height: 2.7em;
-		padding: 2px 4px;
-		resize: none;
-	}
-
-	.delete-btn {
-		padding: 0.25rem 0.375rem;
-		border: 1px solid #ddd;
-		border-radius: 3px;
-		background: white;
-		cursor: pointer;
-		font-size: 0.8rem;
-		color: #999;
-		flex-shrink: 0;
-	}
-
-	.delete-btn:hover {
-		background: #fee;
-		border-color: #e74c3c;
-		color: #e74c3c;
-	}
-
-	.add-attribute-btn {
-		padding: 0.5rem;
-		border: 1px dashed #ccc;
-		border-radius: 3px;
-		background: white;
-		cursor: pointer;
-		font-family: var(--font-body);
-		font-size: 0.8rem;
-		color: #666;
-		text-align: center;
-	}
-
-	.add-attribute-btn:hover {
-		background: #f9f9f9;
-		border-color: var(--accent);
-		color: var(--accent);
-	}
-
 	.ai-image-generation {
 		display: flex;
 		flex-direction: column;
 		gap: 0.5rem;
-	}
-
-	/* Preview cards in center column */
-	.preview-cards {
-		display: flex;
-		flex-direction: column;
-		gap: 2rem;
-		align-items: center;
-		width: 100%;
-		padding: 1rem 0;
 	}
 
 	.card-preview {
@@ -1145,14 +870,6 @@
 		.edit-layout {
 			grid-template-columns: 150px 1fr;
 		}
-
-		.editor-content {
-			grid-template-columns: 1fr;
-		}
-
-		.preview-section {
-			display: none;
-		}
 	}
 
 	@media (max-width: 768px) {
@@ -1162,10 +879,6 @@
 
 		.card-sidebar {
 			display: none;
-		}
-
-		.editor-content {
-			padding: 1rem;
 		}
 	}
 </style>
