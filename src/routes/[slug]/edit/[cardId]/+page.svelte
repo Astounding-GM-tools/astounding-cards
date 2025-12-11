@@ -308,55 +308,18 @@
 
 {#if card && currentDeck}
 	<div class="edit-mode">
-		<!-- Mobile Header (hidden on desktop) -->
-		<header class="mobile-header">
-			<nav class="mobile-nav">
-				<button class="nav-button exit-button" onclick={exitEditMode}>
-					<ArrowLeft size={16} />
-					<span>Exit</span>
-				</button>
-				<button
-					class="nav-button cards-button"
-					class:active={showCardSidebar}
-					onclick={toggleCardSidebar}
-				>
-					Cards
-				</button>
-				<button class="nav-button" onclick={() => scrollToSection('text-fields')}>Text</button>
-				<button class="nav-button" onclick={() => scrollToSection('image-settings')}>Image</button>
-				<button class="nav-button" onclick={() => scrollToSection('preview-front')}>Preview</button>
-			</nav>
-
-			<!-- Collapsible Card Sidebar (mobile only) -->
-			{#if showCardSidebar}
-				<div class="mobile-card-sidebar">
-					{#each allCards as sidebarCard}
-						<button
-							class="card-thumbnail-small"
-							class:active={sidebarCard.id === cardId}
-							onclick={() => {
-								navigateToCard(sidebarCard.id);
-								showCardSidebar = false;
-							}}
-						>
-							<CardComponent preview>
-								{#if preset === 'minimal'}
-									<CardPresetMinimal card={sidebarCard} showBack={false} />
-								{:else}
-									<CardFrontContent card={sidebarCard} />
-								{/if}
-							</CardComponent>
-						</button>
-					{/each}
-				</div>
-			{/if}
-		</header>
-
-		<!-- Desktop Header (hidden on mobile) -->
-		<header class="desktop-header">
+		<!-- Main Header (always visible) -->
+		<header class="main-header">
 			<button class="exit-button" onclick={exitEditMode}>
 				<ArrowLeft size={20} />
-				<span>Exit Edit Mode</span>
+				<span>Exit</span>
+			</button>
+			<button
+				class="nav-button cards-button"
+				class:active={showCardSidebar}
+				onclick={toggleCardSidebar}
+			>
+				Cards
 			</button>
 			<h1 class="deck-title">{currentDeck.meta.title}</h1>
 			<div class="spacer"></div>
@@ -385,6 +348,37 @@
 				<span>Delete Card</span>
 			</button>
 		</header>
+
+		<!-- Card Sidebar (toggleable, shown below header) -->
+		{#if showCardSidebar}
+			<div class="card-sidebar-dropdown">
+				{#each allCards as sidebarCard}
+					<button
+						class="card-thumbnail-small"
+						class:active={sidebarCard.id === cardId}
+						onclick={() => {
+							navigateToCard(sidebarCard.id);
+							showCardSidebar = false;
+						}}
+					>
+						<CardComponent preview>
+							{#if preset === 'minimal'}
+								<CardPresetMinimal card={sidebarCard} showBack={false} />
+							{:else}
+								<CardFrontContent card={sidebarCard} />
+							{/if}
+						</CardComponent>
+					</button>
+				{/each}
+			</div>
+		{/if}
+
+		<!-- Mobile Navigation (mobile only, below header) -->
+		<nav class="mobile-nav-bar">
+			<button class="nav-button" onclick={() => scrollToSection('text-fields')}>Text</button>
+			<button class="nav-button" onclick={() => scrollToSection('image-settings')}>Image</button>
+			<button class="nav-button" onclick={() => scrollToSection('preview-front')}>Preview</button>
+		</nav>
 
 		<!-- Main Content (flat structure, positioned by CSS Grid on desktop) -->
 		<main class="editor-main">
@@ -545,22 +539,37 @@
 		background: var(--ui-bg, #f8fafc);
 	}
 
-	/* ===== MOBILE HEADER (hidden on desktop) ===== */
-	.mobile-header {
-		position: fixed;
-		top: 0;
-		left: 0;
-		right: 0;
+	/* ===== MAIN HEADER (always visible) ===== */
+	.main-header {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.75rem 1rem;
 		background: white;
 		border-bottom: 1px solid var(--ui-border, #e2e8f0);
 		z-index: 100;
+		flex-wrap: wrap;
 	}
 
-	.mobile-nav {
+	.exit-button {
 		display: flex;
+		align-items: center;
 		gap: 0.5rem;
-		padding: 0.5rem;
-		overflow-x: auto;
+		padding: 0.5rem 1rem;
+		border: 1px solid var(--ui-border, #e2e8f0);
+		border-radius: 0.375rem;
+		background: white;
+		color: var(--ui-text, #1e293b);
+		font-family: var(--font-body);
+		font-size: 0.875rem;
+		font-weight: 500;
+		cursor: pointer;
+		transition: all 0.15s ease;
+	}
+
+	.exit-button:hover {
+		background: var(--ui-bg-secondary, #f8fafc);
+		border-color: var(--ui-text, #1e293b);
 	}
 
 	.nav-button {
@@ -575,9 +584,6 @@
 		cursor: pointer;
 		white-space: nowrap;
 		transition: all 0.15s ease;
-		display: flex;
-		align-items: center;
-		gap: 0.25rem;
 	}
 
 	.nav-button:hover {
@@ -591,13 +597,84 @@
 		border-color: var(--primary, #3b82f6);
 	}
 
-	.mobile-card-sidebar {
+	.deck-title {
+		font-size: 1rem;
+		font-weight: 600;
+		color: var(--ui-text, #1e293b);
+		margin: 0;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.spacer {
+		flex: 1;
+		min-width: 1rem;
+	}
+
+	.header-status {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.5rem 0.75rem;
+		border-radius: 0.375rem;
+		font-size: 0.875rem;
+		font-weight: 500;
+	}
+
+	.header-status :global(svg) {
+		flex-shrink: 0;
+	}
+
+	.header-status span {
+		white-space: nowrap;
+	}
+
+	.header-action-button {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.5rem 1rem;
+		border: 1px solid var(--ui-border, #e2e8f0);
+		border-radius: 0.375rem;
+		background: white;
+		color: var(--ui-text, #1e293b);
+		font-family: var(--font-body);
+		font-size: 0.875rem;
+		font-weight: 500;
+		cursor: pointer;
+		transition: all 0.15s ease;
+	}
+
+	.header-action-button:hover:not(:disabled) {
+		background: var(--ui-bg-secondary, #f8fafc);
+		border-color: var(--ui-text, #1e293b);
+	}
+
+	.header-action-button.danger {
+		background: #dc2626;
+		color: white;
+		border-color: #dc2626;
+	}
+
+	.header-action-button.danger:hover:not(:disabled) {
+		background: #b91c1c;
+	}
+
+	.header-action-button:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+
+	/* ===== CARD SIDEBAR DROPDOWN (toggleable) ===== */
+	.card-sidebar-dropdown {
 		display: flex;
 		gap: 0.5rem;
-		padding: 0.5rem;
+		padding: 0.75rem 1rem;
 		overflow-x: auto;
 		background: var(--ui-bg-secondary, #f8fafc);
-		border-top: 1px solid var(--ui-border, #e2e8f0);
+		border-bottom: 1px solid var(--ui-border, #e2e8f0);
+		z-index: 99;
 	}
 
 	.card-thumbnail-small {
@@ -609,6 +686,13 @@
 		background: white;
 		cursor: pointer;
 		overflow: hidden;
+		container-type: inline-size;
+		container-name: card-thumbnail;
+		transition: all 0.15s ease;
+	}
+
+	.card-thumbnail-small:hover {
+		border-color: var(--ui-text, #1e293b);
 	}
 
 	.card-thumbnail-small.active {
@@ -622,13 +706,22 @@
 		box-shadow: none;
 	}
 
+	/* ===== MOBILE NAVIGATION BAR (mobile only) ===== */
+	.mobile-nav-bar {
+		display: flex;
+		gap: 0.5rem;
+		padding: 0.5rem 1rem;
+		background: white;
+		border-bottom: 1px solid var(--ui-border, #e2e8f0);
+		overflow-x: auto;
+	}
+
 	/* ===== MAIN CONTENT (mobile: vertical scroll, desktop: grid) ===== */
 	.editor-main {
 		flex: 1;
 		overflow-y: auto;
 		overflow-x: hidden;
 		padding: 1rem;
-		margin-top: 60px; /* Space for fixed mobile header */
 	}
 
 	.editor-main > section {
@@ -750,105 +843,24 @@
 
 	/* ===== DESKTOP LAYOUT (899px+) ===== */
 	@media screen and (min-width: 899px) {
-		/* Hide mobile header, show desktop header */
-		.mobile-header {
+		/* Hide mobile nav bar on desktop */
+		.mobile-nav-bar {
 			display: none;
 		}
 
-		.desktop-header {
-			display: flex;
-			align-items: center;
-			gap: 1rem;
+		/* Larger header on desktop */
+		.main-header {
 			padding: 1rem 1.5rem;
-			background: white;
-			border-bottom: 1px solid var(--ui-border, #e2e8f0);
-			z-index: 10;
-		}
-
-		.exit-button {
-			display: flex;
-			align-items: center;
-			gap: 0.5rem;
-			padding: 0.5rem 1rem;
-			border: 1px solid var(--ui-border, #e2e8f0);
-			border-radius: 0.375rem;
-			background: white;
-			color: var(--ui-text, #1e293b);
-			font-family: var(--font-body);
-			font-size: 0.875rem;
-			font-weight: 500;
-			cursor: pointer;
-			transition: all 0.15s ease;
-		}
-
-		.exit-button:hover {
-			background: var(--ui-bg-secondary, #f8fafc);
-			border-color: var(--ui-text, #1e293b);
+			gap: 1rem;
 		}
 
 		.deck-title {
 			font-size: 1.25rem;
-			font-weight: 600;
-			color: var(--ui-text, #1e293b);
-			margin: 0;
 		}
 
-		.spacer {
-			flex: 1;
-		}
-
-		.header-status {
-			display: flex;
-			align-items: center;
-			gap: 0.5rem;
-			padding: 0.5rem 0.75rem;
-			border-radius: 0.375rem;
-			font-size: 0.875rem;
-			font-weight: 500;
-		}
-
-		.header-status :global(svg) {
-			flex-shrink: 0;
-		}
-
-		.header-status span {
-			white-space: nowrap;
-		}
-
-		.header-action-button {
-			display: flex;
-			align-items: center;
-			gap: 0.5rem;
-			padding: 0.5rem 1rem;
-			border: 1px solid var(--ui-border, #e2e8f0);
-			border-radius: 0.375rem;
-			background: white;
-			color: var(--ui-text, #1e293b);
-			font-family: var(--font-body);
-			font-size: 0.875rem;
-			font-weight: 500;
-			cursor: pointer;
-			transition: all 0.15s ease;
-		}
-
-		.header-action-button:hover:not(:disabled) {
-			background: var(--ui-bg-secondary, #f8fafc);
-			border-color: var(--ui-text, #1e293b);
-		}
-
-		.header-action-button.danger {
-			background: #dc2626;
-			color: white;
-			border-color: #dc2626;
-		}
-
-		.header-action-button.danger:hover:not(:disabled) {
-			background: #b91c1c;
-		}
-
-		.header-action-button:disabled {
-			opacity: 0.5;
-			cursor: not-allowed;
+		/* Larger card thumbnails on desktop */
+		.card-sidebar-dropdown .card-thumbnail-small {
+			width: 120px;
 		}
 
 		/* Grid layout on desktop */

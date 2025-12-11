@@ -136,29 +136,6 @@
 		text-wrap: balance;
 	}
 
-	/* Responsive sizing */
-	@media (max-width: 768px) {
-		.title {
-			font-size: 1.5rem;
-		}
-
-		.subtitle {
-			font-size: 1rem;
-		}
-
-		.description {
-			font-size: 1rem;
-		}
-
-		.minimal-front {
-			padding: 1rem;
-		}
-
-		.minimal-back {
-			padding: 1.5rem;
-		}
-	}
-
 	/* Print styles */
 	@media print {
 		.card-preset-minimal {
