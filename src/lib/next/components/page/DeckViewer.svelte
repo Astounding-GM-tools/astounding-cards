@@ -1,9 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { goto } from '$app/navigation';
 	import DeckPreview from '../preview/DeckPreview.svelte';
 	import Dialog from '../dialog/Dialog.svelte';
-	import { dialogStore } from '../dialog/dialogStore.svelte.js';
-	import { CardEditDialog } from '../dialogs/index.js';
 	import { nextDeckStore } from '$lib/next/stores/deckStore.svelte.js';
 	import { nextDb } from '$lib/next/stores/database.js';
 	import { toasts } from '$lib/stores/toast.js';
@@ -75,8 +74,8 @@
 				await nextDeckStore.loadDeck(activeDeck.id);
 			}
 
-			// Now open the edit dialog - card will exist in store
-			dialogStore.setContent(CardEditDialog, { cardId });
+			// Navigate to Edit Mode with this card
+			goto(`/${activeDeck.id}/edit/${cardId}`);
 		} catch (err) {
 			console.error('Failed to open editor:', err);
 			toasts.error('Failed to open editor');
