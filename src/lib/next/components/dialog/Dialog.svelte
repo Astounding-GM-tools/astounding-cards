@@ -96,7 +96,7 @@
 		min-width: min(24em, 90vw); /* Don't force wider than viewport on mobile */
 		max-width: min(90vw, 48em);
 		max-height: 90vh;
-		padding: 0; /* Remove padding to let CardEditDialog control it */
+		padding: 0; /* Remove padding to let dialog content control it */
 		border: none;
 		border-radius: 6px;
 		box-shadow:

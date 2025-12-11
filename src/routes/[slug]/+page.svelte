@@ -33,7 +33,7 @@
 	import { nextDeckStore } from '$lib/next/stores/deckStore.svelte.ts';
 	import { goto, replaceState } from '$app/navigation';
 	import { performThreeLayerMerge } from '$lib/next/utils/threeLayerMerge.js';
-	import { CardEditDialog, DeleteDeckDialog, LikeDeckDialog } from '$lib/next/components/dialogs/';
+	import { DeleteDeckDialog, LikeDeckDialog } from '$lib/next/components/dialogs/';
 	import { actionButtonContent } from '$lib/next/components/actions/actionButtonContent';
 	import { getAuthHeaders } from '$lib/utils/auth-helpers';
 	import DeckSettingsPanel from '$lib/next/components/settings/DeckSettingsPanel.svelte';
@@ -210,7 +210,8 @@
 			if (editCardId && localDeck) {
 				// Wait a tick for the deck to be fully loaded
 				await new Promise((resolve) => setTimeout(resolve, 100));
-				dialogStore.setContent(CardEditDialog, { cardId: editCardId });
+				// Navigate to Edit Mode instead of opening dialog
+				goto(`/${localDeck.id}/edit/${editCardId}`);
 			}
 
 			// Check like status if viewing a gallery deck
@@ -483,8 +484,11 @@
 				}
 			}
 
-			// Now open the edit dialog - card will exist in store (only if not redirecting)
-			dialogStore.setContent(CardEditDialog, { cardId });
+			// Now navigate to Edit Mode - card will exist in store (only if not redirecting)
+			const deckId = nextDeckStore.deck?.id;
+			if (deckId) {
+				goto(`/${deckId}/edit/${cardId}`);
+			}
 		} catch (err) {
 			console.error('Failed to open editor:', err);
 			toasts.error('Failed to open editor');
@@ -581,10 +585,13 @@
 				toasts.success(`Deck "${previewDeck.meta.title}" added to your collection!`);
 			}
 
-			// Create a new card first, then open dialog to edit it
+			// Create a new card first, then navigate to Edit Mode to edit it
 			const newCard = await nextDeckStore.addCard({});
 			if (newCard) {
-				dialogStore.setContent(CardEditDialog, { cardId: newCard.id });
+				const deckId = nextDeckStore.deck?.id;
+				if (deckId) {
+					goto(`/${deckId}/edit/${newCard.id}`);
+				}
 			} else {
 				toasts.error('Failed to create card');
 			}

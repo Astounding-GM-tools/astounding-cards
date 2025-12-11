@@ -10,8 +10,6 @@
 	import DeckPreview from '$lib/next/components/preview/DeckPreview.svelte';
 	import MainHeader from '$lib/next/components/nav/MainHeader.svelte';
 	import Dialog from '$lib/next/components/dialog/Dialog.svelte';
-	import { dialogStore } from '$lib/next/components/dialog/dialogStore.svelte.js';
-	import { CardEditDialog } from '$lib/next/components/dialogs/index.js';
 	import { nextDeckStore } from '$lib/next/stores/deckStore.svelte.js';
 	import { nextDevStore } from '$lib/next/stores/devStore.svelte.js';
 	import { nextDb } from '$lib/next/stores/database.js';
@@ -205,8 +203,8 @@
 			if (deck) {
 				const cardIndex = heroDeck.cards.findIndex((c: any) => c.id === cardId);
 				if (cardIndex !== -1 && deck.cards[cardIndex]) {
-					// Open the card editor with the corresponding card
-					dialogStore.setContent(CardEditDialog, { cardId: deck.cards[cardIndex].id });
+					// Navigate to Edit Mode with the corresponding card
+					goto(`/${deck.id}/edit/${deck.cards[cardIndex].id}`);
 				}
 			}
 		} catch (err) {

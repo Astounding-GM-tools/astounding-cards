@@ -1,6 +1,6 @@
 # Current Roadmap
 
-**Last Updated:** 2025-12-10
+**Last Updated:** 2025-12-11
 **Status:** Active Development
 
 ---
@@ -17,7 +17,7 @@
 **Date:** 2025-12-10
 **Impact:** Flexible card styles for different use cases
 
-### Edit Mode Route (Ready to Deploy)
+### Edit Mode Route (Deployed)
 - Full-screen editor at `/[slug]/edit/[cardId]`
 - Card list sidebar with quick switching
 - Keyboard navigation (← → Esc)
@@ -25,9 +25,10 @@
 - Cloud sync optimization (30s debounce + rate limiting + sendBeacon)
 - Community image suggestions with smart refresh logic
 - Performance optimized (no excessive rerenders or API calls)
+- **All edit buttons now navigate to Edit Mode** (CardEditDialog removed)
 
-**Date:** 2025-12-10
-**Impact:** Professional editing experience, improved UX, reduced cloud sync costs
+**Date:** 2025-12-11
+**Impact:** Professional editing experience, improved UX, reduced cloud sync costs, cleaner codebase
 
 ### Deck Likes Feature (Deployed)
 - Token-based like system (10 tokens)
@@ -71,16 +72,12 @@
 
 ## 📋 Backlog (Prioritized)
 
-### 1. Simplify Edit Modal/Dialog (Low Priority)
+### ✅ 1. Simplify Edit Modal/Dialog (COMPLETED)
 **Why:** Current edit modal on base route is cramped
 **What:** Simplify quick-edit dialog or redirect to Edit Route
 
-**Options:**
-- Option A: Simplify modal to edit only title/type
-- Option B: Remove modal, always use Edit Route
-- Option C: Keep as-is (works, just cramped)
-
-**Decision:** Table for now - Edit Route is the primary editing experience
+**Decision:** ✅ Option B implemented - Removed CardEditDialog, all edit actions now navigate to Edit Mode route
+**Date:** 2025-12-11
 
 ---
 
@@ -321,11 +318,12 @@
 ## 🤝 Decision Log
 
 ### Recent Decisions
-1. **Like System = Token-Based** - Prevents spam, funds creators
-2. **Presets Before Themes** - Core UX before visual polish
-3. **Table Pro Printing** - Complex, low ROI for now
-4. **SVG Export Alternative** - Simpler path to pro printing
-5. **Keep beforeprint/afterprint** - Works well, don't fix
+1. **Remove CardEditDialog** - All edit actions now use Edit Mode route exclusively
+2. **Like System = Token-Based** - Prevents spam, funds creators
+3. **Presets Before Themes** - Core UX before visual polish
+4. **Table Pro Printing** - Complex, low ROI for now
+5. **SVG Export Alternative** - Simpler path to pro printing
+6. **Keep beforeprint/afterprint** - Works well, don't fix
 
 ### Pending Decisions
 - [ ] Payment packages & pricing
@@ -335,5 +333,5 @@
 
 ---
 
-Last Updated: 2025-12-10
-Next Review: 2025-12-17
+Last Updated: 2025-12-11
+Next Review: 2025-12-18

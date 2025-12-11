@@ -1,8 +1,9 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import { nextDeckStore } from '$lib/next/stores/deckStore.svelte.js';
 	import { nextDevStore } from '$lib/next/stores/devStore.svelte.js';
 	import { dialogStore } from '../dialog/dialogStore.svelte.js';
-	import { DeckManagerDialog, CardEditDialog, ImageMigrationDialog } from '../dialogs/index.js';
+	import { DeckManagerDialog, ImageMigrationDialog } from '../dialogs/index.js';
 	import AiBatchImageGenerationDialog from '../dialogs/AiBatchImageGenerationDialog.svelte';
 	import { generateShareUrl } from '$lib/next/utils/shareUrlUtils.js';
 	import { toasts } from '$lib/stores/toast.js';
@@ -53,10 +54,10 @@
 	async function handleAddCard() {
 		// Create a new card with template content in the database
 		const newCard = await nextDeckStore.addCard();
-		if (newCard) {
+		if (newCard && deck) {
 			// The card will appear on the page automatically due to reactive updates
-			// Now open the edit dialog for the newly created card so user can customize it
-			dialogStore.setContent(CardEditDialog, { cardId: newCard.id });
+			// Navigate to Edit Mode for the newly created card so user can customize it
+			goto(`/${deck.id}/edit/${newCard.id}`);
 		}
 	}
 
