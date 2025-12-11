@@ -30,6 +30,8 @@
 		createDragHandlers,
 		DRAG_CLASSES
 	} from '$lib/utils/drag-drop.svelte.js';
+	import { hasCardChanges, formDataToCardUpdate, type CardFormData } from '$lib/next/utils/cardChangeDetection.js';
+	import { createDebounce } from '$lib/next/utils/debounce.svelte.js';
 
 	import { ArrowLeft, X, Save, Check, AlertCircle, Trash2 } from 'lucide-svelte';
 	import { getPresetCapabilities } from '$lib/next/utils/presetCapabilities.js';
@@ -66,7 +68,7 @@
 	let showBackInPreview = $state(true);
 
 	// Working state for form (unsaved changes)
-	let formData = $state({
+	let formData = $state<CardFormData>({
 		title: '',
 		subtitle: '',
 		description: '',
@@ -241,66 +243,37 @@
 		};
 	});
 
-	let isSaving = $state(false);
-	let hasChanges = $state(false);
-	let saveTimeoutId: number | null = null;
+	// Detect unsaved changes
+	let hasChanges = $derived(isFormInitialized && hasCardChanges(formData, card));
 
-	// Auto-save with debounce
-	$effect(() => {
-		if (card && isFormInitialized) {
-			const imageChanged = formData.imageUrl !== (card.image || null);
-			hasChanges =
-				formData.title !== card.title ||
-				formData.subtitle !== card.subtitle ||
-				formData.description !== card.description ||
-				JSON.stringify(formData.stats) !== JSON.stringify(card.stats) ||
-				JSON.stringify(formData.traits) !== JSON.stringify(card.traits) ||
-				formData.imageBlob !== (card.imageBlob || null) ||
-				imageChanged ||
-				JSON.stringify(formData.imageMetadata) !== JSON.stringify(card.imageMetadata || null);
-
-			// Auto-save after 2 seconds of no changes
-			if (hasChanges) {
-				if (saveTimeoutId !== null) {
-					clearTimeout(saveTimeoutId);
-				}
-				saveTimeoutId = window.setTimeout(() => {
-					saveChanges();
-				}, 2000);
-			}
-		}
-
-		return () => {
-			if (saveTimeoutId !== null) {
-				clearTimeout(saveTimeoutId);
-			}
-		};
-	});
-
+	// Auto-save with 2-second debounce
 	async function saveChanges() {
 		if (!card || !hasChanges) return;
 
-		isSaving = true;
-
-		const updates = {
-			title: formData.title,
-			subtitle: formData.subtitle,
-			description: formData.description,
-			stats: formData.stats,
-			traits: formData.traits,
-			image: formData.imageUrl,
-			imageBlob: formData.imageBlob,
-			imageMetadata: formData.imageMetadata
-		};
-
+		const updates = formDataToCardUpdate(formData);
 		const success = await nextDeckStore.updateCard(card.id, updates, 'Saving card changes...');
-
-		isSaving = false;
 
 		if (!success) {
 			console.error('[Edit] Failed to save changes');
 		}
 	}
+
+	// Create debounced save function
+	const debouncedSave = createDebounce(saveChanges, 2000);
+
+	// Auto-save effect
+	$effect(() => {
+		if (hasChanges) {
+			debouncedSave();
+		}
+	});
+
+	// Cleanup on destroy
+	$effect(() => {
+		return () => {
+			debouncedSave.cancel();
+		};
+	});
 
 	function exitEditMode() {
 		goto(`/${deckId}`);
@@ -506,9 +479,9 @@
 
 			<!-- Status Indicator -->
 			<div class="header-status">
-				{#if isSaving}
+				{#if nextDeckStore.isLoading}
 					<Save size={16} />
-					<span>Saving...</span>
+					<span>{nextDeckStore.loadingMessage || 'Saving...'}</span>
 				{:else if hasChanges}
 					<AlertCircle size={16} />
 					<span>Unsaved changes</span>
@@ -519,7 +492,7 @@
 			</div>
 
 			<!-- Actions -->
-			<button class="header-action-button danger" onclick={deleteCard} disabled={isSaving}>
+			<button class="header-action-button danger" onclick={deleteCard} disabled={nextDeckStore.isLoading}>
 				<Trash2 size={16} />
 				<span>Delete Card</span>
 			</button>
