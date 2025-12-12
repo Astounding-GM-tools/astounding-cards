@@ -33,8 +33,8 @@
 	import { computeImageDisplayInfo, getFilenameFromUrl } from '$lib/next/utils/imageDisplayInfo.js';
 
 	// Get params from URL
-	let deckId = $derived($page.params.slug);
-	let cardId = $derived($page.params.cardId);
+	let deckId = $derived($page.params.slug) as string;
+	let cardId = $derived($page.params.cardId) as string;
 
 	// Load the deck on mount
 	onMount(async () => {
@@ -866,7 +866,11 @@
 		/* Grid layout on desktop */
 		.editor-main {
 			display: grid;
-			grid-template-columns: clamp(300px, 30cqw, 500px) clamp(300px, 30cqw, 300px) clamp(300px, 30cqw, 300px);
+			grid-template-columns: clamp(300px, 30cqw, 500px) clamp(300px, 30cqw, 300px) clamp(
+					300px,
+					30cqw,
+					300px
+				);
 			grid-template-rows: auto auto auto auto auto;
 			grid-auto-flow: column;
 			min-width: 900px;

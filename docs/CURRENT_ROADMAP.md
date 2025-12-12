@@ -45,28 +45,35 @@
 
 ## 🚀 Current Priority: Payment System (Lemon Squeezy)
 
-**Target:** Next sprint
-**Status:** Ready to implement
+**Target:** This week
+**Status:** IN PROGRESS - Implementation started
 **Priority:** HIGH - Revenue generation!
 
 ### Features
-- Token packages (100, 500, 1000 tokens)
+- Token packages (5k-50k tokens, 1-10 packs)
 - Lemon Squeezy checkout integration
 - Webhook for payment confirmation
 - Credits update via transaction system
 - Purchase history in dashboard
 
 ### Implementation Tasks
+- [x] Create `/docs/PAYMENT_SYSTEM.md` documentation
+- [x] Create database migration for transactions table
+- [x] Create Lemon Squeezy API client helpers
+- [x] Create variant mapping file
 - [ ] Create `/api/tokens/purchase` endpoint
 - [ ] Create `/api/tokens/webhook` endpoint
-- [ ] Update TokenStoreDialog with real pricing
+- [ ] Create `/api/tokens/transactions` endpoint
+- [ ] Update TokenStore component to call purchase endpoint
 - [ ] Add transaction logging
+- [ ] Set up Lemon Squeezy products and variants
+- [ ] Configure webhook endpoint
 - [ ] Test webhook integration
-- [ ] Add purchase history UI
+- [ ] Add purchase history UI to Dashboard
 
-**Docs:** TODO - Need to create `/docs/PAYMENT_SYSTEM.md`
-**Estimate:** 10-12 hours
-**Dependencies:** Lemon Squeezy API keys
+**Docs:** ✅ `/docs/PAYMENT_SYSTEM.md` (Complete)
+**Estimate:** 10-12 hours (4 hours completed)
+**Dependencies:** Lemon Squeezy API keys (getting now)
 
 ---
 
@@ -236,7 +243,7 @@
 - ⚠️ `/docs/USAGE.md` - Add likes, presets
 
 ### Missing/TODO
-- ❌ `/docs/PAYMENT_SYSTEM.md` - Need to create
+- ✅ `/docs/PAYMENT_SYSTEM.md` - Complete (2025-12-11)
 - ❌ `/docs/THEMES.md` - Future
 - ❌ `/docs/API.md` - Document all endpoints
 
