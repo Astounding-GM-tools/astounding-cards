@@ -39,6 +39,7 @@
 	import { downloadDeckAsJson } from '$lib/next/utils/jsonExporter';
 	import RenameDeckDialog from '$lib/next/components/dialogs/RenameDeckDialog.svelte';
 	import MergeDecksDialog from '$lib/next/components/dialogs/MergeDecksDialog.svelte';
+	import { getAuthHeaders } from '$lib/utils/auth-helpers';
 
 	// Check if user is authenticated
 	let isAuthenticated = $derived(!!$user);
@@ -49,6 +50,11 @@
 	let isLoadingDecks = $state(true);
 	let isExporting = $state(false);
 	let editingDeck = $state<{ id: string; title: string } | null>(null);
+
+	// Transaction history state
+	let transactions = $state<any[]>([]);
+	let isLoadingTransactions = $state(false);
+	let hasLoadedTransactions = $state(false);
 
 	// Email consent state
 	let emailConsent = $state(false);
@@ -122,6 +128,39 @@
 			toasts.error('Failed to load your decks');
 		} finally {
 			isLoadingDecks = false;
+		}
+	}
+
+	// Load transaction history
+	async function loadTransactions() {
+		if (hasLoadedTransactions) return; // Only load once
+
+		isLoadingTransactions = true;
+		try {
+			const response = await fetch('/api/tokens/transactions?limit=20', {
+				headers: getAuthHeaders()
+			});
+			const data = await response.json();
+
+			if (data.success) {
+				transactions = data.transactions || [];
+				hasLoadedTransactions = true;
+			} else {
+				toasts.error('Failed to load transaction history');
+			}
+		} catch (err) {
+			console.error('Failed to load transactions:', err);
+			toasts.error('Failed to load transaction history');
+		} finally {
+			isLoadingTransactions = false;
+		}
+	}
+
+	// Handle details toggle
+	function handleTransactionToggle(event: Event) {
+		const details = event.target as HTMLDetailsElement;
+		if (details.open && !hasLoadedTransactions) {
+			loadTransactions();
 		}
 	}
 
@@ -239,8 +278,21 @@
 		if (isAuthenticated) {
 			loadUserDecks();
 			loadEmailConsent();
+			checkPurchaseSuccess();
 		}
 	});
+
+	// Check for purchase success URL parameter
+	function checkPurchaseSuccess() {
+		if (typeof window === 'undefined') return;
+
+		const params = new URLSearchParams(window.location.search);
+		if (params.get('purchase') === 'success') {
+			toasts.success('🎉 Purchase complete! Your tokens have been added to your account.');
+			// Clean up URL
+			window.history.replaceState({}, '', '/dashboard');
+		}
+	}
 
 	async function handleCreateNewDeck() {
 		const newDeck = await nextDeckStore.createNewDeck();
@@ -392,12 +444,6 @@
 							</p>
 						</div>
 					</div>
-					<InfoBox variant="warning">
-						{#snippet icon()}<Sparkles size={18} />{/snippet}
-						<strong>Coming Soon!</strong> Token purchasing will become available after Lemon Squeezy
-						(hopefully) approves this website.
-					</InfoBox>
-
 					<InfoBox variant="info">
 						{#snippet icon()}<BookOpenCheck size={18} />{/snippet}
 						<strong>Beta prices!</strong> We are testing the sustainability of our pricing model. It
@@ -407,11 +453,9 @@
 
 					<InfoBox variant="info">
 						{#snippet icon()}<LibraryBigIcon size={18} />{/snippet}
-						<strong>Terms of service</strong>
-						Remember to read the full terms of service, but the most important bit is that Astounding
-						Cards is a <strong>community driven service</strong>: All images generated on the
-						platform becomes accessible to ALL members of the community as part of the Astounding
-						Community Image Library!
+						<strong>Community Image Library</strong>
+						All AI-generated images become accessible to ALL community members as part of the Astounding
+						Community Image Library. This helps keep costs down and enables amazing creative possibilities!
 					</InfoBox>
 				</div>
 
@@ -423,6 +467,59 @@
 					<TokenStore compact={true} />
 				</div>
 			</div>
+
+			<!-- Transaction History (Collapsible) -->
+			<details class="transaction-history" ontoggle={handleTransactionToggle}>
+				<summary class="history-summary">
+					<h3 class="history-title">Purchase History</h3>
+					<span class="history-count"
+						>{hasLoadedTransactions ? `${transactions.length} purchase${transactions.length !== 1 ? 's' : ''}` : 'View history'}</span
+					>
+				</summary>
+
+				<div class="history-content">
+					{#if isLoadingTransactions}
+						<div class="history-loading">
+							<p>Loading transactions...</p>
+						</div>
+					{:else if transactions.length === 0}
+						<div class="history-empty">
+							<p>No purchases yet.</p>
+							<p class="muted">Your purchase history will appear here after you buy tokens.</p>
+						</div>
+					{:else}
+						<div class="transaction-list">
+							{#each transactions as tx}
+								<div class="transaction-item" class:refunded={tx.status === 'refunded'}>
+									<div class="tx-main">
+										<div class="tx-info">
+											<span class="tx-tier">{tx.variant_name}</span>
+											<span class="tx-date"
+												>{new Date(tx.created_at).toLocaleDateString('en-US', {
+													month: 'short',
+													day: 'numeric',
+													year: 'numeric'
+												})}</span
+											>
+										</div>
+										<div class="tx-details">
+											<span class="tx-tokens">+{tx.tokens_purchased.toLocaleString()} tokens</span>
+											<span class="tx-amount">${tx.amount_usd.toFixed(2)}</span>
+										</div>
+									</div>
+									{#if tx.status === 'refunded'}
+										<Pill variant="warning">Refunded</Pill>
+									{:else if tx.status === 'pending'}
+										<Pill variant="info">Pending</Pill>
+									{:else if tx.status === 'completed'}
+										<Pill variant="success">Completed</Pill>
+									{/if}
+								</div>
+							{/each}
+						</div>
+					{/if}
+				</div>
+			</details>
 		</section>
 
 		<!-- My Decks Section -->
@@ -1088,6 +1185,125 @@
 		margin: 0;
 	}
 
+	/* Transaction History */
+	.transaction-history {
+		margin-top: 1.5rem;
+		border: 1px solid var(--ui-border, #e2e8f0);
+		border-radius: 8px;
+		background: white;
+	}
+
+	.history-summary {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		padding: 1rem 1.5rem;
+		cursor: pointer;
+		user-select: none;
+		transition: background 0.2s;
+	}
+
+	.history-summary:hover {
+		background: var(--ui-hover-bg, #f8fafc);
+	}
+
+	.history-summary::marker {
+		color: var(--ui-muted, #64748b);
+	}
+
+	.history-title {
+		margin: 0;
+		font-size: 1rem;
+		font-weight: 600;
+		color: var(--ui-text, #1a202c);
+	}
+
+	.history-count {
+		font-size: 0.875rem;
+		color: var(--ui-muted, #64748b);
+	}
+
+	.history-content {
+		border-top: 1px solid var(--ui-border, #e2e8f0);
+		padding: 1rem;
+	}
+
+	.history-loading,
+	.history-empty {
+		padding: 2rem;
+		text-align: center;
+		color: var(--ui-muted, #64748b);
+	}
+
+	.history-empty p {
+		margin: 0 0 0.5rem 0;
+	}
+
+	.transaction-list {
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+	}
+
+	.transaction-item {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		gap: 1rem;
+		padding: 1rem;
+		background: var(--ui-bg-secondary, #f9fafb);
+		border: 1px solid var(--ui-border, #e2e8f0);
+		border-radius: 6px;
+		transition: all 0.2s;
+	}
+
+	.transaction-item:hover {
+		border-color: var(--button-primary-bg, #3b82f6);
+	}
+
+	.transaction-item.refunded {
+		opacity: 0.6;
+	}
+
+	.tx-main {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+		flex: 1;
+	}
+
+	.tx-info {
+		display: flex;
+		align-items: baseline;
+		gap: 0.75rem;
+	}
+
+	.tx-tier {
+		font-weight: 600;
+		color: var(--ui-text, #1a202c);
+	}
+
+	.tx-date {
+		font-size: 0.875rem;
+		color: var(--ui-muted, #64748b);
+	}
+
+	.tx-details {
+		display: flex;
+		align-items: baseline;
+		gap: 1rem;
+		font-size: 0.875rem;
+	}
+
+	.tx-tokens {
+		color: #059669;
+		font-weight: 600;
+	}
+
+	.tx-amount {
+		color: var(--ui-muted, #64748b);
+	}
+
 	/* Responsive */
 	@media (max-width: 768px) {
 		.dashboard {
@@ -1114,6 +1330,16 @@
 
 		.site-footer {
 			margin-top: 2rem;
+		}
+
+		.transaction-item {
+			flex-direction: column;
+			align-items: flex-start;
+		}
+
+		.tx-info,
+		.tx-details {
+			flex-wrap: wrap;
 		}
 	}
 </style>
