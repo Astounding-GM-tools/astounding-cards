@@ -14,6 +14,9 @@ import {
 	getTierInfo,
 	isValidPackCount
 } from '$lib/payment/lemonSqueezyVariants';
+import { LEMON_SQUEEZY_TEST_MODE } from '$env/static/private';
+
+const TEST_MODE = LEMON_SQUEEZY_TEST_MODE === 'true';
 
 export const POST: RequestHandler = async ({ request, cookies }) => {
 	try {
@@ -27,23 +30,21 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 		const body = await request.json();
 		const { packs } = body;
 
-		if (!isValidPackCount(packs)) {
+		if (!(await isValidPackCount(packs))) {
 			return json(
-				{ success: false, error: 'Invalid pack count. Must be 1, 3, or 5.' },
+				{ success: false, error: 'Invalid pack count. Check available options.' },
 				{ status: 400 }
 			);
 		}
 
 		// 3. Get variant ID and tier info
-		const variantId = getVariantId(packs);
-		const tierInfo = getTierInfo(packs);
+		const variantId = await getVariantId(packs);
+		const tierInfo = await getTierInfo(packs);
 
 		if (!variantId || !tierInfo) {
 			console.error('[Purchase] No variant ID found for packs:', packs);
 			return json({ success: false, error: 'Invalid pack configuration' }, { status: 500 });
 		}
-
-		console.log(`[Purchase] User ${userId} purchasing ${packs} pack(s) (${tierInfo.name})`);
 
 		// 4. Create Lemon Squeezy checkout session
 		let checkoutUrl: string;
@@ -83,7 +84,8 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 				variant_name: tierInfo.name,
 				amount_usd: totalPrice,
 				tokens_purchased: tierInfo.tokens,
-				status: 'pending'
+				status: 'pending',
+				test_mode: TEST_MODE
 			});
 
 			if (insertError) {
@@ -95,8 +97,6 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 			console.error('[Purchase] Database error:', dbError);
 			// Continue anyway - webhook will create the record
 		}
-
-		console.log(`[Purchase] Checkout created: ${checkoutUrl}`);
 
 		// 7. Return checkout URL
 		return json({

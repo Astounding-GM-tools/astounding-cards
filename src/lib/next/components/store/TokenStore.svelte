@@ -2,7 +2,7 @@
 	import { ShoppingCart, Zap, TrendingUp, Rocket, Check } from 'lucide-svelte';
 	import { goto } from '$app/navigation';
 	import { toasts } from '$lib/stores/toast';
-	import { TOKEN_PACK_TIERS, type TokenTier } from '$lib/payment/lemonSqueezyVariants';
+	import type { TokenTier } from '$lib/payment/lemonSqueezyVariants';
 	import Pill from '$lib/next/components/ui/Pill.svelte';
 	import { getAuthHeaders } from '$lib/utils/auth-helpers';
 
@@ -11,44 +11,82 @@
 	}>();
 
 	// State
-	let selectedTier = $state<TokenTier>('POPULAR'); // Default to Popular
+	let tiers = $state<TokenTier[]>([]);
+	let selectedTierIndex = $state(1); // Default to middle tier (usually "Popular")
 	let acceptedTerms = $state(false);
 	let isPurchasing = $state(false);
-
-	// Get tier configurations
-	const tiers = [
-		{
-			key: 'STARTER' as TokenTier,
-			config: TOKEN_PACK_TIERS.STARTER,
-			icon: Zap,
-			color: 'var(--ui-text, #1a202c)',
-			description: 'Perfect for trying out AI features'
-		},
-		{
-			key: 'POPULAR' as TokenTier,
-			config: TOKEN_PACK_TIERS.POPULAR,
-			icon: TrendingUp,
-			color: 'var(--brand, #c90019)',
-			description: 'Best value for regular creators',
-			recommended: true
-		},
-		{
-			key: 'POWER' as TokenTier,
-			config: TOKEN_PACK_TIERS.POWER,
-			icon: Rocket,
-			color: 'var(--ui-text, #1a202c)',
-			description: 'Maximum savings for power users'
-		}
-	];
+	let isLoading = $state(true);
+	let loadError = $state<string | null>(null);
 
 	// Derived values
-	const selectedConfig = $derived(TOKEN_PACK_TIERS[selectedTier]);
+	const selectedTier = $derived(tiers[selectedTierIndex]);
 	const BASE_FEE = 0.5;
 	const FEE_PERCENTAGE = 0.05;
-	const discountedPrice = $derived(selectedConfig.price * (1 - selectedConfig.discount));
+	const discountedPrice = $derived(
+		selectedTier ? selectedTier.price * (1 - selectedTier.discount) : 0
+	);
 	const transactionFee = $derived(BASE_FEE + discountedPrice * FEE_PERCENTAGE);
 	const totalPrice = $derived(discountedPrice + transactionFee);
-	const imagesCount = $derived(Math.floor(selectedConfig.tokens / 100));
+	const imagesCount = $derived(selectedTier ? Math.floor(selectedTier.tokens / 100) : 0);
+
+	// Fetch tiers on mount
+	$effect(() => {
+		async function loadTiers() {
+			try {
+				isLoading = true;
+				loadError = null;
+
+				const response = await fetch('/api/tokens/tiers');
+				const data = await response.json();
+
+				if (!data.success || !data.tiers) {
+					throw new Error(data.error || 'Failed to load token tiers');
+				}
+
+				tiers = data.tiers;
+
+				// Find the "Popular" tier or default to middle
+				const popularIndex = tiers.findIndex(
+					(t) => t.name.toLowerCase().includes('popular') || t.packs === 3
+				);
+				if (popularIndex !== -1) {
+					selectedTierIndex = popularIndex;
+				} else {
+					selectedTierIndex = Math.floor(tiers.length / 2);
+				}
+			} catch (error) {
+				console.error('Failed to load token tiers:', error);
+				loadError = error instanceof Error ? error.message : 'Failed to load pricing options';
+				toasts.error('Failed to load pricing options');
+			} finally {
+				isLoading = false;
+			}
+		}
+
+		loadTiers();
+	});
+
+	// Get icon and color for tier based on pack count
+	function getTierIcon(packs: number) {
+		if (packs <= 1) return Zap;
+		if (packs <= 3) return TrendingUp;
+		return Rocket;
+	}
+
+	function getTierColor(packs: number) {
+		if (packs === 3) return 'var(--brand, #c90019)';
+		return 'var(--ui-text, #1a202c)';
+	}
+
+	function getTierDescription(packs: number) {
+		if (packs <= 1) return 'Perfect for trying out AI features';
+		if (packs <= 3) return 'Best value for regular creators';
+		return 'Maximum savings for power users';
+	}
+
+	function isRecommended(packs: number) {
+		return packs === 3; // Middle tier is usually recommended
+	}
 
 	function formatPrice(amount: number): string {
 		return `$${amount.toFixed(2)}`;
@@ -57,6 +95,11 @@
 	async function handlePurchase() {
 		if (!acceptedTerms) {
 			toasts.error('Please accept the terms of service');
+			return;
+		}
+
+		if (!selectedTier) {
+			toasts.error('Please select a token pack');
 			return;
 		}
 
@@ -69,7 +112,7 @@
 					'Content-Type': 'application/json'
 				}),
 				body: JSON.stringify({
-					packs: selectedConfig.packs
+					packs: selectedTier.packs
 				})
 			});
 
@@ -99,131 +142,153 @@
 </script>
 
 <div class="token-store" class:compact={props.compact}>
-	<!-- Tier Selection Cards -->
-	<div class="tier-grid">
-		{#each tiers as tier}
-			{@const isSelected = selectedTier === tier.key}
-			{@const savings = tier.config.discount > 0 ? Math.round(tier.config.discount * 100) : 0}
-
+	{#if isLoading}
+		<div class="loading-state">
+			<div class="spinner"></div>
+			<p>Loading pricing options...</p>
+		</div>
+	{:else if loadError}
+		<div class="error-state">
+			<p class="error-message">{loadError}</p>
 			<button
-				class="tier-card"
-				class:selected={isSelected}
-				class:recommended={tier.recommended}
-				onclick={() => (selectedTier = tier.key)}
+				class="retry-button"
+				onclick={() => window.location.reload()}
 				type="button"
 			>
-				{#if tier.recommended}
-					<div class="recommended-badge">
-						<Pill variant="success">
-							{#snippet icon()}<TrendingUp size={12} />{/snippet}
-							Recommended
-						</Pill>
-					</div>
-				{/if}
-
-				<div class="tier-header">
-					<div class="tier-icon" style="color: {tier.color}">
-						<svelte:component this={tier.icon} size={32} />
-					</div>
-					<h3 class="tier-name">{tier.config.name}</h3>
-					<p class="tier-description">{tier.description}</p>
-				</div>
-
-				<div class="tier-details">
-					<div class="token-count">
-						<Zap size={16} />
-						<span>{tier.config.tokens.toLocaleString()} tokens</span>
-					</div>
-					<div class="image-count">~{Math.floor(tier.config.tokens / 100)} images</div>
-				</div>
-
-				<div class="tier-pricing">
-					<div class="price-main">{formatPrice(tier.config.price)}</div>
-					{#if savings > 0}
-						<div class="savings-badge">
-							<Pill variant="success">Save {savings}%</Pill>
-						</div>
-					{/if}
-				</div>
-
-				<div class="selection-indicator">
-					{#if isSelected}
-						<div class="radio-selected">
-							<Check size={16} />
-						</div>
-					{:else}
-						<div class="radio-unselected"></div>
-					{/if}
-				</div>
+				Retry
 			</button>
-		{/each}
-	</div>
-
-	<!-- Price Summary -->
-	<div class="price-summary">
-		<div class="summary-row">
-			<span>{selectedConfig.name} ({selectedConfig.tokens.toLocaleString()} tokens)</span>
-			<span class="price">{formatPrice(selectedConfig.price)}</span>
 		</div>
+	{:else if selectedTier}
+		<!-- Tier Selection Cards -->
+		<div class="tier-grid">
+			{#each tiers as tier, index}
+				{@const isSelected = index === selectedTierIndex}
+				{@const savings = tier.discount > 0 ? Math.round(tier.discount * 100) : 0}
+				{@const recommended = isRecommended(tier.packs)}
+				{@const icon = getTierIcon(tier.packs)}
+				{@const color = getTierColor(tier.packs)}
+				{@const description = getTierDescription(tier.packs)}
 
-		{#if selectedConfig.discount > 0}
-			<div class="summary-row discount">
-				<span>Bulk Discount ({Math.round(selectedConfig.discount * 100)}%)</span>
-				<span class="price"
-					>-{formatPrice(selectedConfig.price - discountedPrice)}</span
+				<button
+					class="tier-card"
+					class:selected={isSelected}
+					class:recommended
+					onclick={() => (selectedTierIndex = index)}
+					type="button"
 				>
+					{#if recommended}
+						<div class="recommended-badge">
+							<Pill variant="success">
+								{#snippet icon()}<TrendingUp size={12} />{/snippet}
+								Recommended
+							</Pill>
+						</div>
+					{/if}
+
+					<div class="tier-header">
+						<div class="tier-icon" style="color: {color}">
+							<svelte:component this={icon} size={32} />
+						</div>
+						<h3 class="tier-name">{tier.name}</h3>
+						<p class="tier-description">{description}</p>
+					</div>
+
+					<div class="tier-details">
+						<div class="token-count">
+							<Zap size={16} />
+							<span>{tier.tokens.toLocaleString()} tokens</span>
+						</div>
+						<div class="image-count">~{Math.floor(tier.tokens / 100)} images</div>
+					</div>
+
+					<div class="tier-pricing">
+						<div class="price-main">{formatPrice(tier.price)}</div>
+						{#if savings > 0}
+							<div class="savings-badge">
+								<Pill variant="success">Save {savings}%</Pill>
+							</div>
+						{/if}
+					</div>
+
+					<div class="selection-indicator">
+						{#if isSelected}
+							<div class="radio-selected">
+								<Check size={16} />
+							</div>
+						{:else}
+							<div class="radio-unselected"></div>
+						{/if}
+					</div>
+				</button>
+			{/each}
+		</div>
+
+		<!-- Price Summary -->
+		<div class="price-summary">
+			<div class="summary-row">
+				<span>{selectedTier.name} ({selectedTier.tokens.toLocaleString()} tokens)</span>
+				<span class="price">{formatPrice(selectedTier.price)}</span>
 			</div>
-		{:else}
-			<div class="summary-row no-discount">
-				<span>No bulk discount</span>
-				<span class="price">—</span>
+
+			{#if selectedTier.discount > 0}
+				<div class="summary-row discount">
+					<span>Bulk Discount ({Math.round(selectedTier.discount * 100)}%)</span>
+					<span class="price"
+						>-{formatPrice(selectedTier.price - discountedPrice)}</span
+					>
+				</div>
+			{:else}
+				<div class="summary-row no-discount">
+					<span>No bulk discount</span>
+					<span class="price">—</span>
+				</div>
+			{/if}
+
+			<div class="summary-row fee">
+				<span>Lemon Squeezy fee</span>
+				<span class="price">{formatPrice(transactionFee)}</span>
 			</div>
-		{/if}
 
-		<div class="summary-row fee">
-			<span>Lemon Squeezy fee</span>
-			<span class="price">{formatPrice(transactionFee)}</span>
+			<div class="summary-row total">
+				<span>Total</span>
+				<span class="price">{formatPrice(totalPrice)}</span>
+			</div>
+
+			<div class="value-indicator">
+				<span class="images-count">Enough for <strong>{imagesCount}</strong> images</span>
+				<span class="cost-per">{formatPrice(totalPrice / imagesCount)} per image</span>
+			</div>
 		</div>
 
-		<div class="summary-row total">
-			<span>Total</span>
-			<span class="price">{formatPrice(totalPrice)}</span>
+		<!-- Terms Acceptance -->
+		<div class="terms-acceptance">
+			<label class="terms-checkbox">
+				<input type="checkbox" bind:checked={acceptedTerms} />
+				<span class="terms-text">
+					I have read and accept the
+					<a href="/terms" target="_blank" rel="noopener noreferrer">Terms of Service</a>, including
+					that AI-generated images become part of the
+					<strong>Community Image Library</strong>.
+				</span>
+			</label>
 		</div>
 
-		<div class="value-indicator">
-			<span class="images-count">Enough for <strong>{imagesCount}</strong> images</span>
-			<span class="cost-per">{formatPrice(totalPrice / imagesCount)} per image</span>
-		</div>
-	</div>
-
-	<!-- Terms Acceptance -->
-	<div class="terms-acceptance">
-		<label class="terms-checkbox">
-			<input type="checkbox" bind:checked={acceptedTerms} />
-			<span class="terms-text">
-				I have read and accept the
-				<a href="/terms" target="_blank" rel="noopener noreferrer">Terms of Service</a>, including
-				that AI-generated images become part of the
-				<strong>Community Image Library</strong>.
-			</span>
-		</label>
-	</div>
-
-	<!-- Purchase Button -->
-	<button
-		class="purchase-button"
-		disabled={!acceptedTerms || isPurchasing}
-		onclick={handlePurchase}
-		type="button"
-	>
-		{#if isPurchasing}
-			<div class="spinner"></div>
-			<span>Creating checkout...</span>
-		{:else}
-			<ShoppingCart size={20} />
-			<span>Pay {formatPrice(totalPrice)}</span>
-		{/if}
-	</button>
+		<!-- Purchase Button -->
+		<button
+			class="purchase-button"
+			disabled={!acceptedTerms || isPurchasing}
+			onclick={handlePurchase}
+			type="button"
+		>
+			{#if isPurchasing}
+				<div class="spinner"></div>
+				<span>Creating checkout...</span>
+			{:else}
+				<ShoppingCart size={20} />
+				<span>Pay {formatPrice(totalPrice)}</span>
+			{/if}
+		</button>
+	{/if}
 </div>
 
 <style>
@@ -235,6 +300,42 @@
 
 	.token-store.compact {
 		gap: 1rem;
+	}
+
+	/* Loading and Error States */
+	.loading-state,
+	.error-state {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		padding: 3rem 1rem;
+		text-align: center;
+	}
+
+	.loading-state p,
+	.error-state p {
+		margin-top: 1rem;
+		color: var(--ui-muted, #64748b);
+	}
+
+	.error-message {
+		color: var(--error, #dc2626);
+		font-weight: 500;
+	}
+
+	.retry-button {
+		margin-top: 1rem;
+		padding: 0.5rem 1rem;
+		background: var(--button-primary-bg, #3b82f6);
+		color: white;
+		border: none;
+		border-radius: 6px;
+		cursor: pointer;
+	}
+
+	.retry-button:hover {
+		background: var(--button-primary-hover, #2563eb);
 	}
 
 	/* Tier Grid */

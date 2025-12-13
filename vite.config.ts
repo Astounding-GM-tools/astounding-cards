@@ -14,6 +14,9 @@ export default defineConfig({
 		sveltekit(),
 		devtoolsJson()
 	],
+	server: {
+		allowedHosts: ['imitable-stormless-angela.ngrok-free.dev']
+	},
 	resolve: {
 		alias: {
 			'@styles': '/src/lib/styles'

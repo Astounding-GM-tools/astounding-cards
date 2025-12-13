@@ -25,8 +25,6 @@ export const GET: RequestHandler = async ({ request, cookies, url }) => {
 		const validLimit = Math.min(Math.max(limit, 1), 100); // Max 100 per page
 		const validOffset = Math.max(offset, 0);
 
-		console.log(`[Transactions] Fetching for user ${userId}, limit: ${validLimit}, offset: ${validOffset}`);
-
 		// 3. Fetch transactions
 		const { data: transactions, error: fetchError, count } = await supabaseAdmin
 			.from('transactions')

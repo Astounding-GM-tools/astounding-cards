@@ -147,6 +147,23 @@ npm run test
 npm run test:e2e
 ```
 
+### Testing Payment Webhooks (Development)
+
+The payment integration uses Lemon Squeezy webhooks to process transactions. To test webhooks locally:
+
+1. **Install ngrok**: `brew install ngrok` (or download from [ngrok.com](https://ngrok.com))
+2. **Start your dev server**: `npm run dev`
+3. **Start ngrok tunnel**: `ngrok http 5173`
+4. **Update configuration**:
+   - Add ngrok hostname to `vite.config.ts` → `server.allowedHosts`
+   - Add ngrok HTTPS URL to Lemon Squeezy webhook settings (e.g., `https://xyz.ngrok-free.app/api/tokens/webhook`)
+5. **Restart dev server** to apply vite.config.ts changes
+6. **Test purchases** using test card `4242 4242 4242 4242`
+
+**Note**: Free ngrok URLs change on each restart. You'll need to update vite.config.ts and Lemon Squeezy webhook URL accordingly.
+
+For detailed webhook testing instructions, see `docs/WEBHOOK_TESTING.md`.
+
 ### Building for Production
 
 ```bash

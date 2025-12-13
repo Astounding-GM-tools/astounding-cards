@@ -95,6 +95,8 @@ async function handleOrderCreated(userId: string, packs: number, webhookData: an
 		// Note: These should ideally be in a database transaction, but we'll handle errors gracefully
 
 		// 1. Create or update transaction record
+		const testMode = fullPayload?.meta?.test_mode ?? false;
+
 		const { error: txError } = await supabaseAdmin.from('transactions').upsert(
 			{
 				lemon_squeezy_order_id: orderId,
@@ -104,6 +106,7 @@ async function handleOrderCreated(userId: string, packs: number, webhookData: an
 				amount_usd: webhookData.total / 100, // Lemon Squeezy returns cents
 				tokens_purchased: tokensToAdd,
 				status: 'completed',
+				test_mode: testMode,
 				webhook_payload: fullPayload,
 				updated_at: new Date().toISOString()
 			},
