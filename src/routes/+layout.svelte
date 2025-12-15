@@ -1,5 +1,7 @@
 <script lang="ts">
 	import Toasts from '$lib/components/ui/Toasts.svelte';
+	import FeedbackFab from '$lib/components/feedback/FeedbackFab.svelte';
+	import { FEEDBACK_FAB_ENABLED, FEEDBACK_FAB_PULSE } from '$lib/config/feedbackFab';
 
 	import { authenticatedFetch } from '$lib/utils/authenticated-fetch';
 	import { refreshTokenBalance } from '$lib/next/stores/tokenBalance';
@@ -70,3 +72,6 @@
 
 <slot />
 <Toasts />
+{#if FEEDBACK_FAB_ENABLED}
+	<FeedbackFab pulse={FEEDBACK_FAB_PULSE} />
+{/if}
