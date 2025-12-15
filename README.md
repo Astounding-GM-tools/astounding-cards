@@ -30,14 +30,14 @@ Browser tool for creating and managing custom cards for tabletop RPGs, board gam
 
 ## 🎯 How It Works
 
-Card Deck Creator is a **client-side only** application:
+Card Deck Creator uses a **hybrid architecture**:
 
-- ✅ All data stored in your browser (IndexedDB)
-- ✅ Images stored locally as blobs
-- ✅ No servers, databases, or accounts needed
-- ✅ Works offline once loaded
-- ✅ Your data stays on your device
-- ✅ Share decks via URL serialization
+- ✅ Core deck editing, storage, and printing run entirely in your browser (IndexedDB, offline-first)
+- ✅ Share decks via URL serialization (local-only decks never leave your device)
+- 🌐 Minimal backend services power publishing, gallery, likes, tokens, and payments:
+  - Supabase: auth, gallery storage, tokens/transactions (with RLS)
+  - Lemon Squeezy: checkout + payment webhooks
+  - Optional R2/S3 storage for hosted images
 
 ## Printing Instructions
 
@@ -95,26 +95,21 @@ This second method gives you sturdy, card-stock quality character cards that fee
 
 ## 📚 Documentation
 
-### For Users:
+### For Users
+- **[Usage Guide](docs/USAGE.md)** — Complete user guide and feature walkthrough
 
-- **[Usage Guide](docs/USAGE.md)** - Complete user guide and feature walkthrough
+### For Developers
+- **[Architecture Overview](docs/ARCHITECTURE.md)** — System design and technical patterns
+- **[Canon Update Pattern](docs/CANON_UPDATE_PATTERN.md)** — State management system
+- **[Development Rules](docs/DEVELOPMENT_RULES.md)** — Svelte 5 runes mode standards
+- **[Development Methodology](docs/DEVELOPMENT_METHODOLOGY.md)** — Project development approach
 
-### For Developers:
+### Project Status & Planning
+- **[Roadmap](docs/ROADMAP.md)** — Current priorities and upcoming work
 
-- **[Architecture Overview](docs/ARCHITECTURE.md)** - System design and technical patterns
-- **[Canon Update Pattern](docs/CANON_UPDATE_PATTERN.md)** - State management system
-- **[Development Rules](docs/DEVELOPMENT_RULES.md)** - Svelte 5 runes mode standards
-- **[Development Methodology](docs/DEVELOPMENT_METHODOLOGY.md)** - Project development approach
-
-### Project Status & Planning:
-
-- **[Development Roadmap](docs/ROADMAP.md)** - Future plans and feature roadmap
-- **[Logic Extraction Roadmap](docs/LOGIC_EXTRACTION_ROADMAP.md)** - Component refactoring progress
-- **[Refactoring Checklist](docs/REFACTORING_CHECKLIST.md)** - Systematic refactoring tracking
-
-### Testing & Quality:
-
-- **[Dev Tools Summary](docs/DEV_TOOLS_SUMMARY.md)** - E2E testing infrastructure
+### Testing & Quality
+- **[Testing Guide](docs/TESTING_GUIDE.md)** — How to run and structure tests
+- **[E2E Test Patterns](docs/E2E_TEST_PATTERNS.md)** — Playwright patterns and helpers
 - **Current Test Status**: 244+ tests (231 unit + 13+ E2E) with comprehensive coverage
 
 ## 🛠️ Development

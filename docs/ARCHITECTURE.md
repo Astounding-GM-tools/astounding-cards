@@ -2,16 +2,18 @@
 
 ## Overview
 
-Card Deck Creator is a **client-side only** application built with SvelteKit. It runs entirely in the browser with no server-side dependencies, making it easy to deploy to any static hosting service.
+Card Deck Creator is primarily a client-side application built with SvelteKit. Core creation, editing, and printing run in the browser (offline-first). A minimal backend supports publishing, gallery, likes, tokens, and payments via Supabase and Lemon Squeezy webhooks.
 
 ## Key Design Decisions
 
-### 1. Client-Side Only
+### 1. Client-First with Minimal Backend
 
-- All data is stored in the browser using IndexedDB
-- No server-side API or database required
-- Sharing via URL serialization
-- Images stored as blobs in IndexedDB
+- IndexedDB for local-first storage (decks/cards; offline)
+- URL serialization for sharing
+- Images can be local blobs; hosted images use R2/S3 for published content
+- Backend services:
+  - Supabase (auth, published/user decks, tokens/transactions, RLS)
+  - Lemon Squeezy (checkout; webhook endpoint updates credits)
 
 ### 2. Data Persistence
 
@@ -102,12 +104,12 @@ Card Deck Creator is a **client-side only** application built with SvelteKit. It
 
 ## Deployment
 
-The application can be deployed to any static hosting service:
+Deployed as a static frontend plus serverless API routes:
 
-- No special server requirements
-- No database setup needed
-- No environment variables required
-- No API dependencies
+- Frontend: SvelteKit static adapter
+- API routes: `/api/*` for tokens (purchase, webhook), gallery, publishing
+- Environment: Supabase project + Lemon Squeezy webhook URL
+- No dedicated servers required; APIs run on edge/serverless
 
 ## Future Considerations
 

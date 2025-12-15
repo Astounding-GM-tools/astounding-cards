@@ -1,132 +1,87 @@
-# Card Deck Creator Usage Guide
+# Developer Usage
 
-## Overview
+This document is for developers working on Card Deck Creator. For product overview and user features, see README and the UI.
 
-Card Deck Creator is a flexible tool for creating, managing, and printing reference cards for RPG campaigns. It works equally well for characters, items, locations, and other campaign elements.
+## Quickstart
 
-## Card Types and Their Stats
+1. Install dependencies: `npm install`
+2. Copy `.env.example` to `.env.local` and fill in values (see Environment)
+3. Start dev server: `npm run dev`
+4. Run tests: `npm run test` (see Testing)
 
-### Characters
+## Environment
 
-- **Age** (when known) appears in top right corner
-- Observable information on front
-- Game stats and secrets on back
+Create `.env.local` with the following (adjust to your project):
 
-### Items
+```env
+# Supabase (required for publishing, gallery, likes, tokens)
+PUBLIC_SUPABASE_URL= https://<your-project>.supabase.co
+PUBLIC_SUPABASE_ANON_KEY= <anon-key>
+SUPABASE_SERVICE_ROLE_KEY= <service-role-key>
 
-- **Portability** in top right corner indicates how easily an item can be transported or concealed
-- Includes documents, artifacts, evidence, and other physical objects
+# Payments (Lemon Squeezy)
+LEMON_SQUEEZY_WEBHOOK_SECRET= <webhook-secret>
+LEMON_SQUEEZY_STORE_ID= <store-id>
 
-#### Portability Categories
+# Optional image hosting
+PUBLIC_R2_PUBLIC_URL= https://cdn.example.com
+R2_ACCOUNT_ID= <id>
+R2_ACCESS_KEY_ID= <key>
+R2_SECRET_ACCESS_KEY= <secret>
+R2_BUCKET= astounding-cards
+```
 
-- **Negligible:** Can be palmed or slipped into a pocket (photos, documents, small evidence)
-- **Light:** Pocketable but detectable on search (pistol, dagger, book)
-- **Medium:** Designed to be carried but visible (sword, rifle, laptop)
-- **Heavy:** Carryable but obvious/awkward (spear, chair, large chest)
-- **Stationary:** Fixed in place or part of the scene (can be documented/recorded)
+Notes
+- Frontend never uses the service role key; it’s only read inside serverless routes.
+- For webhook testing, see `docs/WEBHOOK_TESTING.md`.
 
-### Locations
+## Commands
 
-- **Area** in top right corner shows where the location can be found
-- Can reference either:
-  - Another location card in the deck ("hard link")
-  - A named area or district ("soft link")
-- Examples:
-  - "Secret Chamber" area: [Banker's Guild] (hard link to another card)
-  - "Banker's Guild" area: "Bjørvika" (soft link to district)
-  - "Abandoned Warehouse" area: "The Docks" (soft link)
+- Dev: `npm run dev`
+- Build: `npm run build` and `npm run preview`
+- Typecheck/Lint/Format: `npm run check`, `npm run lint`, `npm run format`
+- Tests: `npm run test`, `npm run test:e2e`
 
-## Card Structure
+## Architecture (essentials)
 
-Each card has two sides:
+- Client-first app with IndexedDB and URL serialization
+- Minimal backend for publishing/gallery/likes/tokens/payments
+- Svelte 5 (runes); see `docs/DEVELOPMENT_RULES.md`
+- Canon Update Pattern; see `docs/CANON_UPDATE_PATTERN.md`
 
-- **Front:** Observable information that players can see
-- **Back:** GM-only information (stats, secrets, notes)
+## API Surface (serverless)
 
-For player handouts, print only the front sides (odd-numbered pages), leaving the backs blank for player notes.
+- Tokens/Payments: `/api/tokens/*` (purchase, webhook, transactions)
+- Gallery/Publishing: `/api/decks/*`, `/api/deck/[id]`
+- Auth handled via Supabase; routes expect Authorization/cookies as applicable
 
-## Usage Tips
+Check route files under `src/routes/api/` for exact payloads. If a route isn’t present, it’s not enabled in this build.
 
-1. **Front Card Information**
-   - Keep to observable facts
-   - Use traits for notable features
-   - Include appropriate stat for card type:
-     - Characters: Age (if known)
-     - Items: Portability
-     - Locations: Area
-   - Use traits for other relationships/states
+## Testing
 
-2. **Back Card Information**
-   - Game stats and mechanics
-   - Hidden information
-   - GM notes and hooks
-   - Secret relationships
+- Unit tests (Vitest): fast logic tests for `.svelte.ts` files
+  - Run: `npm run test` or `npm run test:unit`
+- E2E tests (Playwright): user workflows
+  - Run: `npm run test:e2e`
+- See: `docs/TESTING_GUIDE.md` and `docs/E2E_TEST_PATTERNS.md`
 
-3. **Location Areas**
-   - Use hard links (other cards) for significant contained locations
-   - Use soft links (text) for districts and general areas
-   - Keep area names evocative and setting-appropriate
-   - Areas are optional but help organize related locations
+## Webhooks (local)
 
-4. **Player Handouts**
-   - Print odd-numbered pages only
-   - Players get front information
-   - Blank backs for their notes
-   - Perfect for investigation handouts
+- Start dev server
+- Start ngrok: `ngrok http 5173`
+- Update `vite.config.ts` allowedHosts and Lemon Squeezy webhook URL to your ngrok HTTPS URL
+- Follow `docs/WEBHOOK_TESTING.md` for test cards and endpoints
 
-5. **GM Reference**
-   - Print all pages
-   - Complete information
-   - Quick reference during play
-   - Easy secret management
+## Build & Deploy
 
-## Image Handling
+- Frontend is static (SvelteKit adapter-static)
+- Serverless API routes handle publishing, tokens, and webhooks
+- Configure environment variables in your hosting provider (Supabase + Lemon Squeezy)
 
-### Portrait Images
+## Useful References
 
-Each card can have a portrait image that appears on the front. Images are:
-
-- Automatically scaled and center-cropped to fit
-- Converted to WebP format for efficiency
-- Stored locally for offline use
-- Optimized for common AI art dimensions (1024px width)
-
-### Adding Images
-
-You can add images in two ways:
-
-1. **Local Files**
-   - Select an image file from your device
-   - Image is processed and stored locally
-   - Perfect for offline use
-   - Best for AI-generated art or prepared images
-
-2. **Image URLs**
-   - Paste a URL to an online image
-   - Image is downloaded, processed, and stored locally
-   - Original URL is preserved for sharing
-   - Good for web-sourced images
-
-### Image Tips
-
-- **Recommended Size:** 1024×1434 pixels (5:7 ratio)
-- **Preparation:** Pre-crop images if specific positioning is needed
-- **Sources:**
-  - AI art generators (Midjourney, DALL-E, etc.)
-  - Stock photos
-  - Personal artwork
-  - Campaign artwork
-- **Sharing:**
-  - URLs are preferred for sharing decks (smaller file size)
-  - Local images are included as data when sharing (larger file size)
-  - Warning shown when shared deck size is large
-  - Consider using image URLs for large decks
-
-## Printing Instructions
-
-See the print dialog in the app for detailed instructions on:
-
-- Paper sizes and margins
-- Double-sided printing
-- Creating player handouts
-- Card sizes and layouts
+- `docs/ARCHITECTURE.md`
+- `docs/ROADMAP.md`
+- `docs/DEVELOPMENT_METHODOLOGY.md`
+- `docs/DEVELOPMENT_RULES.md`
+- `docs/CANON_UPDATE_PATTERN.md`
