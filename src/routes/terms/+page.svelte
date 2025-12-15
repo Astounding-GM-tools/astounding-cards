@@ -1,6 +1,9 @@
 <script lang="ts">
+	import MainHeader from '$lib/next/components/nav/MainHeader.svelte';
 	import { page } from '$app/stores';
 </script>
+
+<MainHeader title="Terms" />
 
 <svelte:head>
 	<title>Terms of Service - Astounding Cards</title>

@@ -1,6 +1,9 @@
 <script lang="ts">
+	import MainHeader from '$lib/next/components/nav/MainHeader.svelte';
 	import { page } from '$app/stores';
 </script>
+
+<MainHeader title="Privacy" />
 
 <svelte:head>
 	<title>Privacy Policy - Astounding Cards</title>

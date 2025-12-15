@@ -1,7 +1,9 @@
 <script lang="ts">
 	import Toasts from '$lib/components/ui/Toasts.svelte';
 	import FeedbackFab from '$lib/components/feedback/FeedbackFab.svelte';
+	import BetaRibbon from '$lib/components/beta/BetaRibbon.svelte';
 	import { FEEDBACK_FAB_ENABLED, FEEDBACK_FAB_PULSE } from '$lib/config/feedbackFab';
+	import { IS_BETA } from '$lib/config/app';
 
 	import { authenticatedFetch } from '$lib/utils/authenticated-fetch';
 	import { refreshTokenBalance } from '$lib/next/stores/tokenBalance';
@@ -69,6 +71,10 @@
 		);
 	});
 </script>
+
+{#if IS_BETA}
+	<BetaRibbon />
+{/if}
 
 <slot />
 <Toasts />
