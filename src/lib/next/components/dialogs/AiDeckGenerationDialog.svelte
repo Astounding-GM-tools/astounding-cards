@@ -204,8 +204,8 @@
 						id="cardCount"
 						type="range"
 						bind:value={cardCount}
-						min="3"
-						max="52"
+						min="4"
+						max="30"
 						step="1"
 						class="slider"
 					/>
@@ -232,9 +232,7 @@
 							You have <strong>{formatTokenBalance(userTokenBalance)}</strong> ❌ You need
 							<strong>{generationCost} tokens</strong> to generate this deck.
 						</p>
-						<button class="buy-tokens-btn" onclick={handleBuyTokens}>
-							💰 Buy More Tokens
-						</button>
+						<button class="buy-tokens-btn" onclick={handleBuyTokens}> 💰 Buy More Tokens </button>
 					{/if}
 				</div>
 			{/if}
@@ -498,12 +496,13 @@
 		border-radius: 3px;
 		background: #e2e8f0;
 		outline: none;
+		appearance: none;
 		-webkit-appearance: none;
 	}
 
 	.slider::-webkit-slider-thumb {
-		-webkit-appearance: none;
 		appearance: none;
+		-webkit-appearance: none;
 		width: 20px;
 		height: 20px;
 		border-radius: 50%;
