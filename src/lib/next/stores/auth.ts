@@ -38,13 +38,33 @@ function createAuthStore() {
 		}));
 
 		// Listen for auth changes
-		supabase.auth.onAuthStateChange((_event, session) => {
+		supabase.auth.onAuthStateChange(async (event, session) => {
 			update((state) => ({
 				...state,
 				user: session?.user ?? null,
 				session: session ?? null,
 				loading: false
 			}));
+
+			// When a user signs in (including OAuth), ensure they have a user record
+			if (event === 'SIGNED_IN' && session?.user) {
+				try {
+					await fetch('/api/auth/create-user', {
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+							Authorization: `Bearer ${session.access_token}`
+						},
+						body: JSON.stringify({
+							userId: session.user.id,
+							email: session.user.email
+						})
+					});
+				} catch (error) {
+					// Non-critical - user record might already exist or will be created later
+					console.warn('Failed to ensure user record exists:', error);
+				}
+			}
 		});
 	}
 
@@ -60,10 +80,10 @@ function createAuthStore() {
 			}
 		});
 
-		// If signup successful, create user record with welcome bonus
+		// Explicitly create user record for email/password signup
+		// (onAuthStateChange also handles this for OAuth and as a backup)
 		if (data.user && !error) {
 			try {
-				// Create user record via API (will use supabaseAdmin to bypass RLS)
 				await fetch('/api/auth/create-user', {
 					method: 'POST',
 					headers: {
@@ -77,7 +97,7 @@ function createAuthStore() {
 				});
 			} catch (userCreateError) {
 				console.warn('Failed to create user record:', userCreateError);
-				// Non-critical - they can still use the app, just need to create manually
+				// Non-critical - onAuthStateChange will retry
 			}
 		}
 

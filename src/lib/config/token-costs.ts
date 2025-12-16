@@ -8,15 +8,16 @@
 /**
  * Welcome bonus for new users (in tokens)
  *
- * 500 tokens = 5 NOK value = ~5 community image generations
- * This gives new users a chance to try the AI generation features.
+ * 1110 tokens = 11.10 NOK value
+ * Allows new users to:
+ * - Create a 10-card deck (100 tokens)
+ * - Generate images for all 10 cards (1000 tokens)
+ * - Award a "Like" to another deck (10 tokens)
  *
- * To change this value:
- * 1. Update this constant
- * 2. Update the value in grant_welcome_bonus() function in supabase/schema.sql
- * 3. Apply the migration via Supabase dashboard or migration script
+ * This is the single source of truth - the API endpoint uses this value directly.
+ * No database changes needed when updating this value.
  */
-export const NEW_USER_WELCOME_BONUS = 500;
+export const NEW_USER_WELCOME_BONUS = 1110;
 
 export const TOKEN_COSTS = {
 	/** Community image generation (100 tokens = 1 NOK) */

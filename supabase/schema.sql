@@ -183,23 +183,9 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Function to grant welcome bonus to new users
--- This is called automatically when a user row is created
-CREATE OR REPLACE FUNCTION grant_welcome_bonus()
-RETURNS TRIGGER AS $$
-BEGIN
-  -- Set credits to welcome bonus (500 tokens)
-  -- This value should match NEW_USER_WELCOME_BONUS in src/lib/config/token-costs.ts
-  NEW.credits = 500;
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
--- Trigger to grant welcome bonus on user creation
-CREATE TRIGGER grant_welcome_bonus_trigger
-BEFORE INSERT ON users
-FOR EACH ROW
-EXECUTE FUNCTION grant_welcome_bonus();
+-- Welcome bonus is set by the application code (NEW_USER_WELCOME_BONUS in src/lib/config/token-costs.ts)
+-- The /api/auth/create-user endpoint passes the value when creating the user record
+-- No database trigger needed - this keeps the config in one place
 
 -- Comments for documentation
 COMMENT ON TABLE users IS 'Extends Supabase auth.users with app-specific fields';
